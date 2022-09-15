@@ -1,0 +1,112 @@
+.TH "gt_fill_met_cache" 3gt "Tue Aug 9 2022" "Version 0.8" "gigatraj" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+gt_fill_met_cache \- gt_fill_met_cache: Fetch and cache meteorological data 
+The gt_fill_met_cache program runs through a set of times, reading data from a meteorological data source, and thereby triggering the creation of cache files\&. The cache files can then be used in a trajectory model run\&.
+.PP
+Although it is not necessary to run this program before running a trajectory model, is can be convenient to verify that all the data that are needed for the trajectory run, are in fact available before the run begins\&.
+.PP
+The calling secuence is: 
+.PP
+.nf
+gt_fill_met_cache [ --help|-h ] [ --list ] [ --verbose ] [--debug level]  [ --config|-c configFile ] [ --rc|-r resourcefile ] \\
+               [--cachedir|-d directory ] [ --source|-s metsource ] \\
+               [ --begdate|-b yyyy-mm-ddThh ] [ --enddate|-e yyyy-mm-ddThh ] [ --tdelta|-t timeDelta ] \\
+               [ --quantities|-q quantityList ] [ --vertical|-v verticalCoord ] \\
+               [ --thin thinfactor [ --thinoff thinoffset ] ] \\
+               [--metbasehr metDataBaseHour] \\
+               [--metspacinghr metDataSpacingHour] [--delay opentime ] 
+
+.fi
+.PP
+.PP
+The command-line options are:
+.PP
+.PD 0
+.IP "\(bu" 2
+\fChelp\fP : prints out a description of options and then stops 
+.IP "\(bu" 2
+\fClist\fP : lists the available meteorological data sources (with brief descriptions) and then stops 
+.IP "\(bu" 2
+\fCverbose\fP : prints out messages to let the user know what progress is being made 
+.IP "\(bu" 2
+\fCdebug\fP : prints out copious technical debugging messages from met field reading functions 
+.IP "\(bu" 2
+\fCconfig\fP : specifies the name of a configation file\&. The default is 'gt_fill_met_cache\&.config' Configuration files are plain text files\&. Blank lines and lines starting with '#' are comments and are ignored\&. Other lines are of the form 'keyword=value', where the keyword is a long option name (e\&.g\&., 'begdate', 'source') and the value is what is assigned ot the keyword\&. For example, the line 
+.PP
+.nf
+begdate=2007-10-23T13
+
+.fi
+.PP
+ specifies that the beginning date is to be set to '2007-10-23T13' 
+.IP "\(bu" 2
+\fCrc\fP : specifies the name of a resource file\&. The default is '$HOME/\&.gigatrajrc' Resource files have the same syntax as configuration files, but they are intended to be shared among different standalone programs\&. Thus, a resource file would contain settings that would apply to many different tools, such as the default meteorological source, while a configuration file would contain settings that are specific to a single tool or even a single run of a tool\&. 
+.IP "\(bu" 2
+\fCcachedir\fP : specifies a directory into which the cached data files are to be placed\&. 
+.IP "\(bu" 2
+\fCsource\fP : specifies the meteorological data source\&. This may be one of:
+.IP "  \(bu" 4
+SBROT = solid-body earth rotation, a test data set only
+.IP "  \(bu" 4
+MERRA = the NASA Goddard GMAO MERRA reanalysis
+.IP "  \(bu" 4
+MERRA2 = the NASA Goddard GMAO MERRA-2 reanalysis 
+.br
+ 
+.PP
+
+.IP "\(bu" 2
+\fCbegdate\fP : the starting timestamp of the data that are to be cached, in 'yyyy-mm-ddThh' format 
+.IP "\(bu" 2
+\fCenddate\fP : the ending timestamp of the data that are to be cached, in 'yyyy-mm-ddThh' format
+.PP
+.PD 0
+.IP "\(bu" 2
+\fCtdelta\fP : the time delta, in hours, between data timestamps\&. 
+.IP "\(bu" 2
+\fCquantities\fP : a comma-separated list of meteorologicsl data fields to be obtained from the source\&. The names (and the defaults) depend on the source, but typically include the two components of the horizontal wind as well as a quantity that is analogous to the vertical wind\&. 
+.IP "\(bu" 2
+\fCvertical\fP : the quantity that is to be used as the vertical coordinate of the cached data\&. The name of the quantity and its default will depend on the data source\&.
+.PP
+.PD 0
+.IP "\(bu" 2
+\fCthinfactor\fP : fector (default 1) by which the thin the horizontal data grid\&. For example, a thinfactor of 2 retains only every other longitude, and every other latitude\&.
+.PP
+.PD 0
+.IP "\(bu" 2
+\fCthinoffset\fP : an offset (default 0) into the longitude index, used when thinning\&. If thinfactor is 2 and thinoffset is 0, then the longitudes 0, 2, 4,\&.\&.\&. are retained\&. If thinfactor is 2 and thinoffset is 1, the longitudes 1, 3, 5, \&.\&.\&. are retained\&. 
+.IP "\(bu" 2
+\fCmetbasehr\fP : imposes a base hour--the first time snapshot in a day for which data are available\&. (The default is 00Z\&.)
+.PP
+.PD 0
+.IP "\(bu" 2
+\fCmetspacinghr\fP : imposes a spacing between successive time snapshots\&.
+.PP
+.PD 0
+.IP "\(bu" 2
+\fCdelay\fP : sets a delay, in seconds, to used each time a URL is opened\&.
+.PP
+Note that the begdate, enddate, and source settings are mandatory: they must be defined somewhere, usually in the command line options\&.
+.PP
+Settings are applied in this order: first, built-in default values are loaded\&. These defaults are:
+.IP "\(bu" 2
+verbose = off
+.IP "\(bu" 2
+help = off
+.IP "\(bu" 2
+list = off
+.IP "\(bu" 2
+config = gt_fill_met_cache\&.config
+.IP "\(bu" 2
+rc = $HOME/\&.gigatrajrc
+.IP "\(bu" 2
+cachedir = '\&./'
+.PP
+.PP
+Next, settings from the resource file are loaded, overwriting any previously-loaded settings\&.
+.PP
+After that, settings from the configuration file are loaded, overwriting any previously-loaded settings\&.
+.PP
+Finally, settings from the command-line options are loaded, overwriting any previously-loaded settings\&. 

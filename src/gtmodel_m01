@@ -1,0 +1,112 @@
+#!/bin/bash
+#
+#  This is the MPI-based parallel-processing version of the gtmodel_s01
+#  trajectory model. In fact, this is a script wrapper around 
+#  gtmodel_s01 which has mpirun run it in MPI mode.
+#
+#  This script takes all of the command-line options that gtmodel_s01
+#  takes, and passes those options on to gtmodel_s01.
+# 
+#  In addition, this script takes these extra command-line options
+#  not used by gtmodel_s01:
+#     -n number
+#        the number of processors to use. By default, the number
+#        of CPUs is determined from the 'proc/cpuinfo file, and
+#        the number of processors to use is set to half that.
+#     -l logfile
+#        the name of a log file to received the stderr output of the model
+#        (Only the root processor should output to stdout, and only
+#        for outputting parcel information, so you should be able to
+#        redirect stdout to a file or program to use the model output.)
+#     -w 
+#        If specified, then all stdout and stderr output is tagged by mpirun
+#        with the processor and file ID. (E.g., "[1,3]stderr:")
+#
+#
+# Note that gtmodel_s00 is run with the "--mpi" option, which causes
+# OpenMPI multiprocessing to be used.
+
+
+
+
+
+# name of this script
+ME="$0"
+# extract the directory name, so we'll have the location
+# of the actual binary
+MYDIR=`dirname "${ME}"`
+if [ "x${MYDIR}" = "x" ] ; then
+   MYDIR="."
+fi
+
+# number of processors to use
+NPROCS=4
+if [ -f /proc/cpuinfo ] ; then
+   NPROCS=`cat /proc/cpuinfo | egrep '^processor\s+:' | wc -l`
+   NPROCS=`expr ${NPROCS} / 2`
+fi
+
+# log file
+LOG=""
+
+# processor output labelling
+LABL=""
+
+USAGE="gtmodel_m01 [-n number] [ -w ] [-u ] [-l logfile] [ gtmodel_options ]"
+
+# This is the compiled model binary executable file
+PROG="${MYDIR}/gtmodel_s01"
+#echo "PROG=${PROG}" >&2
+
+# this array holds options for the actual model binary
+OPTS=( "--mpi" )
+
+# loop through rach each command-line option
+# We catch "-n", "-l" and "-h" ourselves.
+# Everything else will be passed on the the model binary
+while [ $# -gt 0 ] 
+do
+    ARG="$1"
+    
+    case "${ARG}" in
+    '-n') shift
+          NPROCS="$1"
+          ;;
+    '-l') shift
+          LOG="$1"
+          ;;
+    '-w') LABL="${LABL} --tag-output"
+          ;;
+    '-u') LABL="${LABL} --timestamp-output"
+          ;;
+    '-h') echo "Usage: $USAGE" >&2
+          echo "" >&2
+          echo "     gtmodel_options:" >&2
+          ${PROG} --help >&2
+           exit 1
+           ;;
+    *) OCNT=`expr ${OCNT} + 1`
+       #echo "ARG $OCNT = <<${ARG}>>" >&2
+       OPTS[${OCNT}]="${ARG}"
+       ;;
+    esac
+    
+    shift
+done
+
+# Do we want to log the MPI-tagged output to a file?
+LOGARG=();
+if [ "X${LOG}" != "X" ] ; then
+   LOGARG=( "--output-filename" "${LOG}" )
+fi
+
+echo "Using ${NPROCS} processors, running:" >&2
+echo "${PROG} ${OPTS[@]}" >&2
+#echo "${#OPTS[@]} elements" >&2
+#set -x
+
+# run the model, distributed among NPROCS processors
+# and possible logging (processor-tagged) output to a file
+#mpirun -np ${NPROCS} ${LABL} "${LOGARG[@]}" stdbuf -eL "${PROG}" "${OPTS[@]}"
+mpirun -np ${NPROCS} ${LABL} "${LOGARG[@]}" "${PROG}" "${OPTS[@]}"
+
