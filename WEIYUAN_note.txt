@@ -1,0 +1,15 @@
+Build in discover
+
+1) module load comp/gcc/12.1.0
+2) module load mpi/openmpi/4.1.3/gcc-12.1.0
+
+--enable-mpi is not used in configure but it is searching for mpi.h ( bug in Makefile)
+without changing Makefile
+
+3) senenv CC mpicc
+4) setenv CXX mpicxx
+5) ./configure
+6) make
+ 
+If there is erro "Makefile:351: recipe for target 'aclocal.m4' failed"
+try running 'autoreconf -f -i' before running ./configure
