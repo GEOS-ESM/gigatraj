@@ -13,5 +13,4 @@ add_subdirectory (metsources)
 
 set (BASEDIR $ENV{BASEDIR})
 add_library (${this} ${srcs})
-target_link_libraries(${this} filters metsources)
 include_directories (${this} ${CMAKE_SOURCE_DIR}/include ${BASEDIR}/Linux/include/netcdf)
