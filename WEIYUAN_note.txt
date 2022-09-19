@@ -8,8 +8,7 @@ without changing Makefile
 
 3) setenv CC mpicc
 4) setenv CXX mpicxx
-5) ./configure
-6) make
+5) autoreconf -f -i  ( optional, If there is erro "Makefile:351: recipe for target 'aclocal.m4' failed")
+6) ./configure
+7) make
  
-If there is erro "Makefile:351: recipe for target 'aclocal.m4' failed"
-try running 'autoreconf -f -i' before running ./configure
