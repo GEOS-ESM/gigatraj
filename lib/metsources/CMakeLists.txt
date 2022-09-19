@@ -14,9 +14,10 @@ GridLatLonField3D.cc      MetGridData.cc        ThetaDotOTF.cc
 GridLatLonFieldSfc.cc     MetGridLatLonData.cc  ThetaOTF.cc
 Hinterp.cc                MetGridSBRot.cc       TropOTF.cc
 LinearVinterp.cc          MetMERRA2.cc          Vinterp.cc)
-
-
+set (BASEDIR $ENV{BASEDIR})
+include_directories(${BASEDIR}/Linux/include/netcdf)
 add_library (${this} ${srcs})
 target_include_directories (${this} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-  $<BUILD_INTERFACE:${BASEDIR}/include/netcdf>)
+  $<BUILD_INTERFACE:${BASEDIR}/Linux/include/netcdf>)
+
