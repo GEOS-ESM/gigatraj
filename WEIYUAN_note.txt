@@ -6,7 +6,7 @@ Build in discover
 --enable-mpi is not used in configure but it is searching for mpi.h ( bug in Makefile)
 without changing Makefile
 
-3) senenv CC mpicc
+3) setenv CC mpicc
 4) setenv CXX mpicxx
 5) ./configure
 6) make
