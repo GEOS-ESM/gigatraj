@@ -370,7 +370,7 @@ namespace gigatraj {
 #endif
 
 //     use the MPI library for parallel processing
-#define DO_MPI 1
+#define DO_MPI 0
 #if DO_MPI == 1
 #define USE_MPI
 #endif
@@ -395,19 +395,19 @@ namespace gigatraj {
 #endif
 
 // Use MERRA met data
-#define DO_MERRA 1
+#define DO_MERRA 0
 #if DO_MERRA == 1
 #define USE_MERRA
 #endif
 
 // Use MERRA2 met data
-#define DO_MERRA2 1
+#define DO_MERRA2 0
 #if DO_MERRA2 == 1
 #define USE_MERRA2
 #endif
 
 // Use GEOS FP met data
-#define DO_GEOSFP 1
+#define DO_GEOSFP 0
 #if DO_GEOSFP == 1
 #define USE_GEOSFP
 #endif

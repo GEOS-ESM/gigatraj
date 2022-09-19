@@ -5,7 +5,7 @@
 #include <vector>
 #include <map>
 
-#include <netcdf.h>
+#include "netcdf.h"
 #include <stdlib.h>
 #include <sstream>
 
