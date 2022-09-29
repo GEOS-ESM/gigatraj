@@ -10,9 +10,9 @@
 
 /*!
 
-\page  gtmodel_s01 gtmodel_s01: simple trajectory model
+\page  gtmodel_s02 gtmodel_s02: simple trajectory model, using Swarm objects
 
-gtmodel_s01 is a simple implementation of a parcel trajectory model,
+gtmodel_s02 is a simple implementation of a parcel trajectory model,
 based on the gigzatraj library toolkit. It reads parcel positions from
 a text file and traces their histories. This model does not use
 multiprocessing, but it can use cached data, if a cache directory is defined.
@@ -20,7 +20,7 @@ multiprocessing, but it can use cached data, if a cache directory is defined.
 
 The calling secuence is:
 \code
-gtmodel_s01 [ --help|-h ] [ --list ] [ --verbose ] [--debug level] [ --config|-c configFile ] [ --rc|-r resourcefile ] \\
+gtmodel_s02 [ --help|-h ] [ --list ] [ --verbose ] [--debug level] [ --config|-c configFile ] [ --rc|-r resourcefile ] \\
                [--cachedir|-d directory ] [ --source|-s metsource ] \\
                [ --begdate|-b yyyy-mm-ddThh:mm:ss ] [ --enddate|-e yyyy-mm-ddThh:mm:ss ] --zerodate|-z yymmddThh:mm:ss\\
                [ --tstep|-t timeDelta ] \\
@@ -157,7 +157,7 @@ Settings are applied in this order: first, built-in default values are loaded. T
       - verbose = off
       - help = off
       - list = off
-      - config = gtmodel_s01.config
+      - config = gtmodel_s02.config
       - rc = $HOME/.gigatrajrc
       - parcels = "-"
       - format = "%t, %i, %o, %a, %v"
@@ -243,7 +243,7 @@ int getconfig(int argc, char * const argv[], Configuration& conf, MetSelector &m
     std::vector<std::string> srclist;
     
     
-    usage = "gtmodel_s01 ";
+    usage = "gtmodel_s02 ";
     
     // start pout assuming all is well
     status = 0;
@@ -274,7 +274,7 @@ int getconfig(int argc, char * const argv[], Configuration& conf, MetSelector &m
     usage += " [--rc|-r resourcefile] ";
     conf.add("rc", cConfig, string(getenv("HOME")) + "/.gigatrajrc", "r" );
     usage +=  " [--config|-c configfile]";
-    conf.add("config", cConfig, "gtmodel_s01.config", "c" );
+    conf.add("config", cConfig, "gtmodel_s02.config", "c" );
 
     // and now the settings themselves
     usage +=  " [ --parcels parcelfile ]";

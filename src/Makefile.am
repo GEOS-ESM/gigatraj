@@ -8,6 +8,7 @@ AM_LDFLAGS = -L ../lib/
 # this to decide whether to re-make the documentation
 TRIGGER_DOCS_REMAKE = ../doc/.remake_trigger
 noinst_DATA = $(TRIGGER_DOCS_REMAKE)
+EXTRA_DIST = tools.dox
 
 $(TRIGGER_DOCS_REMAKE): tools.dox gt_fill_met_cache.cc gtmodel_s01.cc gtmodel_s02.cc 
 	touch $@

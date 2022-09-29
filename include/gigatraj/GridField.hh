@@ -489,8 +489,8 @@ class GridField {
 
       /// writes the current object to an ostream
       /*! This method serializes the object and writes the serialization to an ostream.
+
           \param os the output ostream
-          \return a reference to the modified output ostream.
       */
       virtual void serialize(std::ostream& os) const = 0;
 
@@ -498,7 +498,6 @@ class GridField {
       /*!  This method reads a GridField serialization from an istream, and
             deserialized it into the current object.
             
-          \return a reference to the modified input istream.
           \param is the input ostream
       */
       virtual void deserialize(std::istream& is) = 0;

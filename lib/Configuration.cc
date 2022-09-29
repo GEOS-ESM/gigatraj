@@ -206,7 +206,32 @@ void Configuration::set(const std::string &name, const int &value)
 
 }
 
-void Configuration::set(const std::string &name, const real &value)
+void Configuration::set(const std::string &name, const float &value)
+{
+
+     struct param p;
+     std::ostringstream *numstr; 
+     
+     p = this->findParam(name);
+     
+     if ( p.type == cFloat || p.type == cDouble ) {
+        numstr = new std::ostringstream;
+        *numstr << value;
+        p.value = (*numstr).str();
+        delete numstr;
+     
+        p.status = p.status | ParamWasSet;  
+     } else {
+        throw(Configuration::badcfgformat());     
+     }
+     
+     // all is ok at this point, so replace the value in the map
+     params[name] = p;
+     
+     return;
+
+}
+void Configuration::set(const std::string &name, const double &value)
 {
 
      struct param p;
@@ -1022,14 +1047,28 @@ void Configuration::fetchParam(const std::string &name, int &value)
 }
 
 
-void Configuration::fetchParam(const std::string &name, real &value)
+void Configuration::fetchParam(const std::string &name, float &value)
 {
      struct param p;
 
      p = this->findParam(name);
 
      if ( p.type == cFloat || p.type == cDouble ) {
-        value = static_cast<real>( this->str2dbl( p.value ) );
+        value = static_cast<float>( this->str2dbl( p.value ) );
+     } else {
+        std::cerr << "Expected real type for parameter " << name << std::endl;
+        throw(badparamtype());
+     }
+   
+}
+void Configuration::fetchParam(const std::string &name, double &value)
+{
+     struct param p;
+
+     p = this->findParam(name);
+
+     if ( p.type == cFloat || p.type == cDouble ) {
+        value = static_cast<double>( this->str2dbl( p.value ) );
      } else {
         std::cerr << "Expected real type for parameter " << name << std::endl;
         throw(badparamtype());

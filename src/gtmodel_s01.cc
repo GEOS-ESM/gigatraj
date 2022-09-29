@@ -821,6 +821,8 @@ std::cerr << "Doing a serial process group" << std::endl;
     // set up the Flock of Parcels
     if ( status == 0 ) {
        
+       accumul_time = 0.0;
+       
        if ( do_restore == 0 ) {  
               
           // read in the parcels
@@ -852,9 +854,6 @@ std::cerr << "Doing a serial process group" << std::endl;
        
           time = begtime;
           
-          // we dump parcels states every accumul_time interval 
-          double accumul_time = 0.0;
-
        } else {
        
           // restore the Flock from a previous, interrupted run

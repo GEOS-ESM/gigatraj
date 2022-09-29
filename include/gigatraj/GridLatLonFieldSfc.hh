@@ -426,8 +426,8 @@ class GridLatLonFieldSfc : public GridFieldSfc {
 
       /// writes the current object to an ostream
       /*! This method serializes the object and writes the serialization to an ostream.
+
           \param os the output ostream
-          \return a reference to the modified output ostream.
       */
       void serialize(std::ostream& os) const;
 
@@ -435,7 +435,6 @@ class GridLatLonFieldSfc : public GridFieldSfc {
       /*!  This method reads a GridField serialization from an istream, and
             deserialized it into the current object.
             
-          \return a reference to the modified input istream.
           \param is the input ostream
       */
       void deserialize(std::istream& is);

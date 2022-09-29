@@ -82,9 +82,20 @@ int main()
     z = q.getZ();
     q.getPos( &lon, &lat );
     time = q.getTime();
-    if ( mismatch( lat, 43.4568709) || mismatch( lon, 30.2345768 ) 
-       || mismatch(z,12.3457869 ) || mismatch(time,234550.0) ) {
-       cerr << "Bad restore from parcel file" << endl;
+    if ( mismatch( lat, 43.4568709) ) {
+       cerr << "Bad restore from parcel file: lat " << lat << endl;
+       exit(1);
+    }
+    if ( mismatch( lon, 30.2345768 ) ) {
+       cerr << "Bad restore from parcel file: lon " << lon << endl;
+       exit(1);
+    }
+    if ( mismatch(z,12.3457869 ) ) {
+       cerr << "Bad restore from parcel file: z " << z << endl;
+       exit(1);
+    }
+    if ( mismatch(time,234550.0) ) {
+       cerr << "Bad restore from parcel file: time " << time << endl;
        exit(1);
     }
     delete si;

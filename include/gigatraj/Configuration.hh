@@ -380,7 +380,7 @@ class Configuration {
       */    
       void set(const std::string &name, const int &value);
 
-      /// sets an integer configuration parameter 
+      /// sets a floating-point configuration parameter 
       /*! This version of the set method loads a single parameter setting of type cFloat or cDouble.  
           It is intended
           for use in situations in which the parameter's default value should
@@ -391,7 +391,20 @@ class Configuration {
           \param name the name of the desired parameter
           \param value the real value of the parameter
       */    
-      void set(const std::string &name, const real &value);
+      void set(const std::string &name, const float &value);
+
+      /// sets a double-precision configuration parameter 
+      /*! This version of the set method loads a single parameter setting of type cFloat or cDouble.  
+          It is intended
+          for use in situations in which the parameter's default value should
+          depend on some internal logic of the application. Remember that
+          configuration values are always stored as strings, so some precision
+          may be lost in converting the real value to a string. 
+          
+          \param name the name of the desired parameter
+          \param value the real value of the parameter
+      */    
+      void set(const std::string &name, const double &value);
 
       /// sets an boolean configuration parameter 
       /*! This version of the set method loads a single parameter setting of type cBoolean.  
@@ -457,7 +470,15 @@ class Configuration {
           \param name the name of the parameter being requested
           \param value returns the value of the parameter
       */
-      void fetchParam(const std::string &name, real &value);
+      void fetchParam(const std::string &name, float &value);
+
+      /// retrieves a double-precision floating-point parameter value 
+      /*! fetchParam returns a given parameter as its proper type.
+      
+          \param name the name of the parameter being requested
+          \param value returns the value of the parameter
+      */
+      void fetchParam(const std::string &name, double &value);
       
       /// retrieves a boolean parameter value 
       /*! fetchParam returns a given parameter as its proper type.

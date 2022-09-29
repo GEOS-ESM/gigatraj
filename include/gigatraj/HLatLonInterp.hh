@@ -153,9 +153,6 @@ class HLatLonInterp : public Hinterp {
          This function interpolates a meteorological field on a quasi-horizontal surface 
          to an array of locations.
          
-       \return  a pointer to a newly-allocated array that contains the interpolated values.
-          It is the calling routine's responsibility to free this returned
-          variable when it is no longer needed.
        \param  n the number of coordinates to interpolate to
        \param  lons an array of longitudes to interpolate to
        \param  lats an array of latitudes to interpolate to

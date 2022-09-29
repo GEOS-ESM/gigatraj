@@ -35,7 +35,6 @@ libgigatraj_a_SOURCES = ../include/gigatraj/RandomSrc.hh        RandomSrc.cc \
                         ../include/gigatraj/Earth.hh            Earth.cc \
                         ../include/gigatraj/ProcessGrp.hh       ProcessGrp.cc \
                         ../include/gigatraj/SerialGrp.hh        SerialGrp.cc \
-                        ../include/gigatraj/MPIGrp.hh           MPIGrp.cc \
                         ../include/gigatraj/GridField.hh        metsources/GridField.cc \
                         ../include/gigatraj/GridFieldSfc.hh     metsources/GridFieldSfc.cc \
                         ../include/gigatraj/GridLatLonFieldSfc.hh   metsources/GridLatLonFieldSfc.cc \
@@ -61,6 +60,9 @@ libgigatraj_a_SOURCES = ../include/gigatraj/RandomSrc.hh        RandomSrc.cc \
                         ../include/gigatraj/MetGridLatLonData.hh  metsources/MetGridLatLonData.cc \
                         ../include/gigatraj/MetSBRot.hh         metsources/MetSBRot.cc \
                         ../include/gigatraj/MetGridSBRot.hh     metsources/MetGridSBRot.cc 
+if MPI
+   libgigatraj_a_SOURCES +=  ../include/gigatraj/MPIGrp.hh           MPIGrp.cc 
+endif
 
 if MERRA
    libgigatraj_a_SOURCES += ../include/gigatraj/MERRA_Directory.hh  metsources/MERRA_Directory_Data.hh metsources/MERRA_Directory.cc

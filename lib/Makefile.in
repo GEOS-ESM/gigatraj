@@ -77,17 +77,18 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-@MERRA_TRUE@am__append_1 = ../include/gigatraj/MERRA_Directory.hh \
+@MPI_TRUE@am__append_1 = ../include/gigatraj/MPIGrp.hh           MPIGrp.cc 
+@MERRA_TRUE@am__append_2 = ../include/gigatraj/MERRA_Directory.hh \
 @MERRA_TRUE@	metsources/MERRA_Directory_Data.hh \
 @MERRA_TRUE@	metsources/MERRA_Directory.cc \
 @MERRA_TRUE@	../include/gigatraj/MetMERRA.hh \
 @MERRA_TRUE@	metsources/MetMERRA.cc
-@MERRA2_TRUE@am__append_2 = ../include/gigatraj/MERRA2_Directory.hh \
+@MERRA2_TRUE@am__append_3 = ../include/gigatraj/MERRA2_Directory.hh \
 @MERRA2_TRUE@	metsources/MERRA2_Directory_Data.hh \
 @MERRA2_TRUE@	metsources/MERRA2_Directory.cc \
 @MERRA2_TRUE@	../include/gigatraj/MetMERRA2.hh \
 @MERRA2_TRUE@	metsources/MetMERRA2.cc
-@GEOSFP_TRUE@am__append_3 =  \
+@GEOSFP_TRUE@am__append_4 =  \
 @GEOSFP_TRUE@	../include/gigatraj/GEOSfpFcast_Directory.hh \
 @GEOSFP_TRUE@	metsources/GEOSfpFcast_Directory_Data.hh \
 @GEOSFP_TRUE@	metsources/GEOSfpFcast_Directory.cc \
@@ -159,7 +160,6 @@ am__libgigatraj_a_SOURCES_DIST = ../include/gigatraj/RandomSrc.hh \
 	../include/gigatraj/Earth.hh Earth.cc \
 	../include/gigatraj/ProcessGrp.hh ProcessGrp.cc \
 	../include/gigatraj/SerialGrp.hh SerialGrp.cc \
-	../include/gigatraj/MPIGrp.hh MPIGrp.cc \
 	../include/gigatraj/GridField.hh metsources/GridField.cc \
 	../include/gigatraj/GridFieldSfc.hh metsources/GridFieldSfc.cc \
 	../include/gigatraj/GridLatLonFieldSfc.hh \
@@ -190,6 +190,7 @@ am__libgigatraj_a_SOURCES_DIST = ../include/gigatraj/RandomSrc.hh \
 	metsources/MetGridLatLonData.cc \
 	../include/gigatraj/MetSBRot.hh metsources/MetSBRot.cc \
 	../include/gigatraj/MetGridSBRot.hh metsources/MetGridSBRot.cc \
+	../include/gigatraj/MPIGrp.hh MPIGrp.cc \
 	../include/gigatraj/MERRA_Directory.hh \
 	metsources/MERRA_Directory_Data.hh \
 	metsources/MERRA_Directory.cc ../include/gigatraj/MetMERRA.hh \
@@ -233,11 +234,12 @@ am__libgigatraj_a_SOURCES_DIST = ../include/gigatraj/RandomSrc.hh \
 	../include/gigatraj/ChangeVertical.hh \
 	filters/ChangeVertical.cc
 am__dirstamp = $(am__leading_dot)dirstamp
-@MERRA_TRUE@am__objects_1 = metsources/MERRA_Directory.$(OBJEXT) \
+@MPI_TRUE@am__objects_1 = MPIGrp.$(OBJEXT)
+@MERRA_TRUE@am__objects_2 = metsources/MERRA_Directory.$(OBJEXT) \
 @MERRA_TRUE@	metsources/MetMERRA.$(OBJEXT)
-@MERRA2_TRUE@am__objects_2 = metsources/MERRA2_Directory.$(OBJEXT) \
+@MERRA2_TRUE@am__objects_3 = metsources/MERRA2_Directory.$(OBJEXT) \
 @MERRA2_TRUE@	metsources/MetMERRA2.$(OBJEXT)
-@GEOSFP_TRUE@am__objects_3 =  \
+@GEOSFP_TRUE@am__objects_4 =  \
 @GEOSFP_TRUE@	metsources/GEOSfpFcast_Directory.$(OBJEXT) \
 @GEOSFP_TRUE@	metsources/GEOSfpAssim_Directory.$(OBJEXT) \
 @GEOSFP_TRUE@	metsources/MetGEOSPortal.$(OBJEXT) \
@@ -248,8 +250,7 @@ am_libgigatraj_a_OBJECTS = RandomSrc.$(OBJEXT) FilePath.$(OBJEXT) \
 	FileLock.$(OBJEXT) Configuration.$(OBJEXT) \
 	CalGregorian.$(OBJEXT) PlanetNav.$(OBJEXT) \
 	PlanetSphereNav.$(OBJEXT) Earth.$(OBJEXT) ProcessGrp.$(OBJEXT) \
-	SerialGrp.$(OBJEXT) MPIGrp.$(OBJEXT) \
-	metsources/GridField.$(OBJEXT) \
+	SerialGrp.$(OBJEXT) metsources/GridField.$(OBJEXT) \
 	metsources/GridFieldSfc.$(OBJEXT) \
 	metsources/GridLatLonFieldSfc.$(OBJEXT) \
 	metsources/GridField3D.$(OBJEXT) \
@@ -269,7 +270,7 @@ am_libgigatraj_a_OBJECTS = RandomSrc.$(OBJEXT) FilePath.$(OBJEXT) \
 	metsources/MetGridLatLonData.$(OBJEXT) \
 	metsources/MetSBRot.$(OBJEXT) \
 	metsources/MetGridSBRot.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3) \
+	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
 	metsources/MetSelector.$(OBJEXT) Parcel.$(OBJEXT) \
 	Flock.$(OBJEXT) Swarm.$(OBJEXT) trace.$(OBJEXT) \
 	Integrator.$(OBJEXT) IntegRK4a.$(OBJEXT) \
@@ -521,7 +522,6 @@ libgigatraj_a_SOURCES = ../include/gigatraj/RandomSrc.hh RandomSrc.cc \
 	../include/gigatraj/Earth.hh Earth.cc \
 	../include/gigatraj/ProcessGrp.hh ProcessGrp.cc \
 	../include/gigatraj/SerialGrp.hh SerialGrp.cc \
-	../include/gigatraj/MPIGrp.hh MPIGrp.cc \
 	../include/gigatraj/GridField.hh metsources/GridField.cc \
 	../include/gigatraj/GridFieldSfc.hh metsources/GridFieldSfc.cc \
 	../include/gigatraj/GridLatLonFieldSfc.hh \
@@ -553,9 +553,9 @@ libgigatraj_a_SOURCES = ../include/gigatraj/RandomSrc.hh RandomSrc.cc \
 	../include/gigatraj/MetSBRot.hh metsources/MetSBRot.cc \
 	../include/gigatraj/MetGridSBRot.hh metsources/MetGridSBRot.cc \
 	$(am__append_1) $(am__append_2) $(am__append_3) \
-	../include/gigatraj/MetSelector.hh metsources/MetSelector.cc \
-	../include/gigatraj/Parcel.hh Parcel.cc \
-	../include/gigatraj/Flock.hh Flock.cc \
+	$(am__append_4) ../include/gigatraj/MetSelector.hh \
+	metsources/MetSelector.cc ../include/gigatraj/Parcel.hh \
+	Parcel.cc ../include/gigatraj/Flock.hh Flock.cc \
 	../include/gigatraj/Swarm.hh Swarm.cc \
 	../include/gigatraj/trace.hh trace.cc \
 	../include/gigatraj/Integrator.hh Integrator.cc \
