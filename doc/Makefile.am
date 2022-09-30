@@ -344,7 +344,8 @@ doc_DATA = $(docarchive)
 dist_man_MANS = $(manpages)
 
 # these files/directories should be part of the package distribution
-EXTRA_DIST = $(docarchive)
+EXTRA_DIST = $(docarchive) \
+             check_doxygen.sh
 
 # (and of course we do not install these files)
 noinst_DATA =  $(DOC_TRIGGER) $(TRIGGER_DOCS_REMAKE)
