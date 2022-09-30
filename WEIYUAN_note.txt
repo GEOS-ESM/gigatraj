@@ -11,4 +11,11 @@ without changing Makefile
 5) autoreconf -f -i  ( optional, If there is erro "Makefile:351: recipe for target 'aclocal.m4' failed")
 6) ./configure
 7) make
+
+
+For intel ifort
+
+1) module load comp/intel/2021.6.0
+2) module load mpi/impi/2021.6.0
+
  

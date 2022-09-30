@@ -48,7 +48,6 @@ eval/mpi/test_*.err
 eval/mpi/test_*.txt
 eval/mpi/test_*.init
 include/gigatraj/Makefile.in
-include/gigatraj/gigatraj.hh
 lib/.deps/
 lib/filters/Makefile.in
 lib/metsources/Makefile.in

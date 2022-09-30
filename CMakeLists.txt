@@ -35,6 +35,7 @@ endif ()
 #esma_mepo_style(env env_dir)
 #esma_add_subdirectory (${env_dir})
 # Recursively build source tree
+set (GIGATRAJ_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 add_subdirectory (lib)
 add_subdirectory (src)
 

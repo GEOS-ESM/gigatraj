@@ -13,4 +13,4 @@ add_subdirectory (metsources)
 
 set (BASEDIR $ENV{BASEDIR})
 add_library (${this} ${srcs})
-include_directories (${this} ${CMAKE_SOURCE_DIR}/include ${BASEDIR}/Linux/include/netcdf)
+include_directories (${this} ${GIGATRAJ_SOURCE_DIR}/include ${BASEDIR}/Linux/include/netcdf)

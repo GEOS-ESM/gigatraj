@@ -6,7 +6,7 @@ set (srcs
    StreamPrint.cc  StreamRead.cc
     )
 
-include_directories (${this} ${CMAKE_SOURCE_DIR}/include)
+include_directories (${this} ${GIGATRAJ_SOURCE_DIR}/include)
 add_library (${this} ${srcs})
 target_link_libraries(${this} gigatraj)
 

@@ -1,0 +1,535 @@
+
+
+/*!
+
+\mainpage  The gigatraj Trajectory Model
+
+\author Leslie R. Lait (SSAI)
+
+\section sec_intro  Introduction
+
+The gigatraj model was written to calculate the trajectories of 
+very large numbers of parcels throughout the atmosphere.
+
+The phrase "thoughout the atmosphere" is significant, because it
+indicates a desire to calculate trajectories in widely different 
+altitude regimes.  Calculating trajectories 
+is simple and straightforward in the stratosphere, where the flow tends
+to be laminar and effects of diabatic heating are often negligible over 
+periods of a few days.  But such calculations are more
+difficult in the troposphere, where the flow is more turbulent 
+(especially in the vicinity of strong convection) and diabatic effects
+(including those from latent heating) cannot be ignored.
+A model needs to be extensible, so that different modules 
+can be added or removed as needed to handle various physical
+conditions.  Note also that the phrase is, "the atmosphere", not "the Earth's atmosphere":
+the gigatraj model is designed to be straightforward to adapt for use on other
+planetary atmospheres, given availability of meteorological fields
+for those atmospheres.
+
+The phrase "very large numbers" is significant, because it drives several
+fundamental design decisions.  A trajectory model that handles a fewer parcels
+might well be a single monolithic program that when run writes its parcel
+histories to output for later analysis.  But when billions of parcels are being
+modeled, writing their entire histories--even at reduced time
+resolution--becomes  problematic.  Consequently, parcel analysis needs to be
+done on a statistical basis, and it must be done internal to the model.
+This implies that rather than require all researchers to use a single model,
+we should make it easy for each researcher to construct a model that is tailored
+to his or her specific analysis needs.  Thus, Gigatraj is at its core 
+a tool kit of routines that a researcher can put together
+to explore a scientific question of interest.  A standalone
+executable model is included with the package, both to handle
+the most common cases and as an example that researchers can
+adapt for their own specialized needs. 
+
+Given the flexibility in specifying, supplying, and replacing model 
+physics and parcel analysis
+methods, it seems useful also to make it possible for researchers to 
+add new model integration schemes, interpolation schemes, and
+meteorological data sources.  However, all of this flexibility comes at a cost:
+the researcher must write any such customizations.
+Atmospheric scientists
+are not only permitted but encouraged to write their own 
+trajectory models using the components of the gigatraj toolkit
+and indeed to add useful new components to the toolkit.
+
+This raises the question of which computer language the toolkit 
+should be written in.  For compatibility with
+most modelers' experience, some version of Fortran would have been
+desirable.  However, limited resources available for developing gigatraj
+led to using an object-oriented language.  Object-oriented programming (OOP)
+does not have a good reputation in the atmospheric sciences community,
+possibly because it may be perceived to be yet another trendy
+computer science buzzword.  But properly applied, OOP can make it
+easier to develop large, high-quality software projects.  
+Defining objects in a way that closely parallels the physical problem 
+makes the software easier to write and debug, 
+and it makes it easier for others to understand
+and modify as needed.  Object-oriented versions of Fortran 
+are not yet in wide use, but good C++ comilers are freely available on
+nearly every Unix-type computer.  And because it is usually easier
+to access C++ libraries from another language such as Python, IDL, or even Fortram
+than it is to access Fortran libraries, C++ seemed to be a good choice
+for a toolkit which might be embedded in applications written in 
+a variety of languages.
+
+
+
+\section sec_overview Overview
+
+The key advantage of using object-oriented programming is that
+it aids in writing computer code that follows the terms
+of a scientific problem very closely.  This tends to make the
+code easier to understand and maintain.  Generally, the nouns in 
+a problem will correspond to objects in the program, and the
+verbs in the problem will corresponds to methods in the program.
+Keeping this object-noun and method-verb correspondence in mind,
+an overview of the gigatraj model begins with a
+description of the basic nouns---the objects---of the problem
+of tracking parcel trajectories.
+
+The fundamental object class in this model is the Parcel. A typical model run
+will use multitudes of Parcel objects. A basic Parcel
+contains a time value and  three values of location: longitude, latitude, and
+vertical position.  Collections of Parcels can be aggregated into arrays and standard C++ containers:
+vectors, lists, and deques. They can also be held in a special container called a Flock,
+or a not-quite-a-container class called a Swarm (think: more tightly integerated
+than a Flock). A programmer can iterate over the elements of such containers
+just as he or she might normally iterate over the elements of an array.
+
+The point of a trajectory model is to simulate how Parcels are blown about by
+the winds, and that leads to the second fundamental object class, MetData, which
+is the source  of meteorological fields such as winds.  A MetData object will
+return the  values of meteorological fields at specific points in space and
+time.  The underlying structure of the original data source can be anything: a
+mathematical model that is evaluated at those points and times, or spectral
+coefficients which are  combined to obtain the value, or gridded arrays of
+numbers which are interpolated to the points and times.   In addition to the
+spatial structure of their data, meteorological data sources also have different
+mappings between the times at which their data are valid, and the internal model
+time. Most real data sources will use the Gregorian calendar. but some model
+output may use  a uniform 365-day or even 360-day calendar. The gigatraj model
+tries to be completely flexible about how the spatial structure and time mapping
+work for any given data source; a MetData object merely provides the field
+values at the requested times and locations.
+
+Of course at some level the software has to deal with the spatial structure and
+time mapping of the underlying data, and that is done by defining sub-classes of
+the MetData class, nested in a way that puts more general capabilities (such as 
+cache management) in classes near the MetData class at the top, and more
+specific capabilities (such as the ability to read specific data files) near the bottom
+of the hierarchiy.
+For the typical case of gridded numerical fields, the
+MetGridData is defined.  And for those particular grids whose longitudes and
+latitudes vary regularly, the MetGridLatLonData class is defined as a sub-class
+of MetGridData.  Finally, individual data sources, such as NASA's Modern-Era
+Retrospective analysis for Research and Applications version 2 (MERRA2), sub-classes of
+MetGridLatLonData are defined such as MetMERRA2.  That is, MetMERRA2 holds all of
+the information and methods that are unique to the MERRA2 data set, but as a
+sub-class of MetGridLatLonData it also has all of the information and methods
+associated with regular latitude-longitude grids.  It also has access to the
+information and methods of the more general MetGridData class, whose horizontal
+grids might not be straight longitude-latitude arrays.  And finally the MetMERRA2
+objects have the information and methods of the most general MetData class.  
+It is those MetData methods which are most used by the trajectory model.   If you wish to
+add a new data source, you can write the lowest-level class to  read the data,
+and use the magic of class inheritance to let  the upper-level classes do most
+of the hard work.  For gridded data, this is made easier by the (internal) use
+of a class of GridField objects that hold  gridded data.  That is, a sub-class
+of MetGridData will handle finding and reading gridded data arrays, and
+internally it stores those data it reads in a GridField object.
+
+Just as the hierarchy for data sources goes from MetData to MetGridData to MetGridLatLonData
+to say, MetMERRA2; in the same way the hierarchy for 
+GridField objects goes from GridField to GridField3D to GridLatLonField3D,
+which holds a (longitude, latitude, vertical-coordinate) three-dimensional
+array of data at a given moment in time.  In the same way, there is
+also a set of data objects to hold surface data; this goes from
+GridField to GridfieldSfc to GridLatLonFieldSfc, which holds
+a (longitude, latitude) two-dimensional 
+array of data on a quasi-horizontal surface (e.g., the tropopause or
+the 1000 mb pressure surface).
+
+Not every meteorological data source has every data field that you might want,
+but they all usually provide fields from which most missing fields can be
+calculated.  For example, some data sources provide air potential temperature
+as a separate field that can be read in, while other sources provide
+air temperature and pressure and expect the user to calculate 
+potential temparature from those.  In gigatraj, the user simply calls
+a method of the high-level MetData class to request values
+of potential temperature, and it is the lower-level sub-class (that corresponds
+to the exact data source being used) that will either read the potential
+temperatures or will calculate them on the fly from other
+quantities.  To make it easier to write such lower-level sub-classes
+for new data sources, gigatraj provides the MetOnTheFly class
+and its various sub-classes (whose names all end with "OTF").  
+These take GridField objects holding various physical quantities as input 
+and produce a new GridField object as output that contains the desired
+quantity.  
+
+A third basic object class in gigatraj is the ParcelFilter.   When a
+ParcelFiler object is applied to a Parcel, it takes some action as a result. 
+It may report on the Parcel's state; this would make it a child class of the
+ParcelFilter, the ParcelReporter. It may set the Parcel to a known state; such
+a ParcelFilters is known as a ParcelInitializer.  Other ParcelFilters might
+disable Parcels if they try to exit the domain of the meteorological data
+(either running into the bottom or the top of the model atmosphere). Or they
+may compile statistics from the Parcels they encounter. ParcelFilters will
+provide most of the information that answers the scientific questions for which
+the model is being run.  A typical model run will use a handful of assorted
+ParcelFilters.
+
+
+\section sec_parallel Parallel Processing
+
+Tracing billions of parcel trajectories is a natural task for parallel
+processing.  gigatraj provides to object classes to  help with this.  The
+ProcessGrp class defines and manages a group of processors, among which tasks
+may be apportioned.   The special case of a single-processor machine (or using
+a single processor of a multiple-processor machine) is handled by a particular
+kind of ProcessorGrp, the SerialGrp class.  If using the optional OpenMPI
+software package, the MPIGrp class provides the ability to manage and
+coordinate the work  among the processors as desired. A MetData object, or
+example, can assign some processors to read meteorological data from files and
+send specific gridpoints upon request to the other processors as they
+interpolate wind fields to compute parcel trajectories.  In this way the model
+can use very high-resolution data sets which might be cost-prohibitive if held
+simultaneously in memory across many processors. 
+
+Parallel programming can be a daunting topic to learn, so gigatraj provides the
+Flock class to make it easier.  As a C++ "container class", a Flock holds Parcel
+objects and can iterate over them in a loop. What makes the Flock special is
+that it automatically divides its Parcels  up among a ProcessGrp's processors. 
+What to the programmer looks like a simple iterative loop, becomes in reality
+several loops (possible running on several machines) running in parallel, 
+each handling a distinct subset of the Flock's parcels.
+
+Even using a Flock, however, certain inefficiencies still exist. To remedy this,
+the Swarm class exists. It works very much like a Flock container (especially 
+with repsect to parallel processing), but the
+Parcel information is stored differently internally.
+
+
+\section installation Installation
+
+To install the gigatraj model on your system you must have a C++ compiler.  If
+you want to use the MERRA2 or GEOSfp meteorological data sets, you will need the netcdf library
+compiled with OPeNDAP support.  (You can get the netcdf library
+from http://www.unidata.ucar.edu/software/netcdf/) If you want to use parallel
+processing with the MPI library, you must have that library installed as well.
+(You can get  as free version of the library from http://www.open-mpi.org.)
+
+Once you have the prerequisites installed, then obtain a copy
+of the compressed tar file for gigatraj, such as gigatraj-1.1.tar.gz.
+(The version number will change.)
+Unpack this with:
+\code
+  tar -xvzf gigatraj-1.1.tar.gz
+\endcode
+
+This will create a directory with the name and version
+of the package ("gigatraj-1.1", in this case).
+Change to that working directory and configure
+the package for your system:
+\code
+ cd gigatraj-1.1
+ ./configure
+\endcode
+
+You can specify several configuration options in the 
+configure command.  "--enable-mpi" will enable use
+of the MPI library for parallel processing.
+"--enable-merra2" will enable the ability to read MERRA2
+meteorological data.  "--enable-double" will compile the library to use 
+double-precision floating-point numbers throughout.
+If you want to install the software somewhere other
+than the default system disk space, then you will need
+to use an option something like "--prefix=/my/installation/destination/path/here".
+To install with MPI and MERRA2 data enabled into your home directory,
+you would do something like this:
+\code
+./configure --enable-mpi --enable-merra2 --prefix=/home/myusername/
+\endcode
+
+For more details, simply run:
+\code
+./configure --help
+\endcode
+
+Once the package has been configured for your computer,
+you compile it with
+\code
+make
+\endcode
+
+You can then verify that it is working correctly with
+\code
+make check
+\endcode
+
+
+Finally, you can install it with
+\code
+make install
+\endcode
+
+
+
+\section Other pages of interest
+
+ - \ref Tools
+   If running a simple model will meet your needs, then you do not need to 
+   write your own model using the gigatraj toolkit. Instead you can
+   run one or more of these standalone programs that come with the 
+   toolkit. And if you need want to write your own model, the source
+   code for these programs can serve as a useful guide.
+
+*/
+
+
+
+
+#ifndef GIGATRAJ_H
+#define GIGATRAJ_H
+
+#include <iostream>
+#include <string>
+
+
+using std::string;
+
+/*! \namespace gigatraj
+    \brief The gigatraj namespace isolates components of the gigatraj model from the default namespace
+
+\details
+    
+The gigatraj namespace includes all of the classes and variables
+that are related to the gigatraj model.  
+
+
+\par \b Using
+    
+When you write your own model that uses gigatraj, 
+you can begin accessing classes in this namespace by including the base header
+file at the top of your code:
+    
+    
+\code
+#include "gigatraj/gigatraj.hh"
+\endcode
+
+Then you can either put in a 
+"using namespace gigatraj" under that, or you
+can prefix each mention of a gigatraj type or class with "gigatraj::".
+For example, in the first case your code might look like this:
+
+\code
+using namespace gigatraj;
+Parcel *p = new Parcel();
+\endcode
+
+But in the second case (if, for example, there is a name clash
+between a gigatraj class and something else you are using),
+then you would need to say:
+
+\code
+gigatraj::Parcel *p = new gigatraj::Parcel();
+\endcode
+
+Note that in most cases, if you say "using namespace gigatraj;"
+you will also want to say "using namespace std;" as well.
+Otherwise you would need to prefix all of the standard 
+system and toolkit classes with "std::".  these should be no conflicts between
+the std namespace and the gigatraj namespace.
+
+
+*/    
+namespace gigatraj {
+
+/*
+  There are several C/C++ macros which may be defined with the -D option on the compiler command line
+  during compilation of this library.
+  These will set characteristics and/or capabilities of the gigatraj library
+  as it is installed on the local system. They are usually set by the GNU Autoconf configure script.
+  They are NOT settable for individual user applications that use the library.
+*/
+
+
+
+//     use double-precision instead of regular floats
+#define DO_DOUBLE 0
+#if DO_DOUBLE == 1
+#define USE_DOUBLE
+#endif
+
+// use longargs for commad-line option parsing
+#define DO_LONGARGS 1
+#if DO_LONGARGS == 1
+#define USE_LONGARGS
+#endif
+
+//     use the MPI library for parallel processing
+#define DO_MPI 0
+#if DO_MPI == 1
+#define USE_MPI
+#endif
+
+//     make longitudes run from 0 to 360
+#define DO_WRAP0 0
+#if DO_WRAP0 == 1
+#define WRAP_0
+#endif
+
+//     make longitudes run form -180 to 180
+#define DO_WRAP180 0
+#if DO_WRAP180 == 1
+#define WRAP_180
+#endif
+
+// set the default value of WRAP_180
+#ifndef WRAP_0
+#ifndef WRAP_180
+#define WRAP_180
+#endif
+#endif
+
+// Use MERRA met data
+#define DO_MERRA 0
+#if DO_MERRA == 1
+#define USE_MERRA
+#endif
+
+// Use MERRA2 met data
+#define DO_MERRA2 0
+#if DO_MERRA2 == 1
+#define USE_MERRA2
+#endif
+
+// Use GEOS FP met data
+#define DO_GEOSFP 0
+#if DO_GEOSFP == 1
+#define USE_GEOSFP
+#endif
+
+
+
+// In POSIX environments, the usual convetion is for
+// programs to exit eith 0 on success and some number 1-255
+// to indicate failure.  By defining these symbolically here,
+// we can make it easier to adapt gigatraj to other environments.
+#ifndef EXIT_SUCCESS
+#   define EXIT_SUCCESS 0
+#   define EXIT_FAILURE 1
+#endif
+
+
+
+// defines the value of the null pointer,
+//  in anticipation of a better construct in the 
+//  upcoming new C++ standard
+#define NULLPTR NULL
+
+
+#ifdef USE_DOUBLE
+
+/*! \brief defines whether floats or doubles are used.
+
+    By setting the -DUSE_DOUBLE compiler flag, you can force the
+    model to use double-precision floating-point numbers throughout
+    (i.e., type double), instead of the default single precision
+    (type float).  This determination is made at compile time, not run-time.
+    And any user programs using the gigatraj library must be linked with 
+    a version of the library that has itself been compiled with
+    the same flag setting.
+*/
+typedef double real;
+
+#ifdef USE_MPI
+// define something similar to "real" for use in MPI routines
+#define MPI_REAL_VALUE MPI::DOUBLE
+#endif
+
+// use the double-precision version of these math functions
+#define COS cos
+#define SIN sin
+#define TAN tan
+#define ACOS acos
+#define ASIN asin
+#define ATAN atan
+#define ATAN2 atan2
+#define SQRT sqrt
+#define ABS fabs
+#define POW pow
+#define LOG log
+#define EXP exp
+#define ISOK(x) (isnan(x) != 1)
+#define TRUNC trunc
+#define RNAN nan
+#define FINITE finite
+
+#else
+
+/*! \brief defines whether floats or doubles are used.
+
+    By setting the -DUSE_DOUBLE compiler flag, you can force the
+    model to use double-precision floating-point numbers throughout
+    (i.e., type double), instead of the default single precision
+    (type float).  This determination is made at compile time, not run-time.
+    And any user programs using the gigatraj library must be linked with 
+    a version of the library that has itself been compiled with
+    the same flag setting.
+*/
+typedef float real;
+
+
+// define something similar to "real" for use in MPI routines
+#ifdef USE_MPI
+#define MPI_REAL_VALUE MPI::FLOAT
+#endif
+
+// use the single-precision version of these math functions
+#define COS cosf
+#define SIN sinf
+#define TAN tanf
+#define ACOS acosf
+#define ASIN asinf
+#define ATAN atanf
+#define ATAN2 atan2f
+#define SQRT sqrtf
+#define ABS fabsf
+#define POW powf
+#define LOG logf
+#define EXP expf
+#define ISOK(x) (isnan(x) != 1 )
+#define TRUNC truncf
+#define RNAN nanf
+#define FINITE finitef
+
+#endif
+
+
+
+/// the mathematical constant pi
+const real PI = 3.1415926535897931159979634685441851615905761718750;
+/// a factor to convert from degrees to radians
+const real RCONV = PI/180.0;
+
+
+}
+
+
+
+
+#endif /* !GIGATRAJ_H */
+
+
+
+/******************************************************************************* 
+***  Written by: 
+***     L. R. Lait (SSAI) 
+***     Code 614 
+***     NASA Goddard Space Flight Center 
+***     Greenbelt, MD 20771 
+***  (Please see the COPYING file for more information.) 
+********************************************************************************/

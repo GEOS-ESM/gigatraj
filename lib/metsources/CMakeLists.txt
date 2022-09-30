@@ -19,5 +19,6 @@ include_directories(${BASEDIR}/Linux/include/netcdf)
 add_library (${this} ${srcs})
 target_include_directories (${this} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${GIGATRAJ_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${BASEDIR}/Linux/include/netcdf>)
 target_link_libraries(${this} gigatraj)
