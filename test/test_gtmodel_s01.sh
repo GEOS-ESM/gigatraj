@@ -32,7 +32,7 @@ esac
 
 IFILE="gtmodel_s01_input.txt"
 
-FMT="%t, %i, %14.9o, %14.9a, %v"
+FMT="%t, %i, %10.2o, %10.2a, %v"
 
 OFILE="gtmodel_s01_output.txt"
 
