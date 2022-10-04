@@ -1,0 +1,61 @@
+netcdf GEOS_output_example {
+dimensions:
+	id = 2 ;
+	time = UNLIMITED ; // (2 currently)
+variables:
+	double id(id) ;
+		id:long_name = "parcels id" ;
+		id:units = "1" ;
+	double time(time) ;
+		time:units = "hours since 1992-1-1" ;
+	float lat(time, id) ;
+		lat:long_name = "latitude" ;
+		lat:units = "degrees_north" ;
+	float lon(time, id) ;
+		lon:long_name = "longitude" ;
+		lon:units = "degrees_east" ;
+	float lev(time, id) ;
+		lev:coordinate = "eta" ;
+		lev:formulaTerms = "ap: ak b: bk ps: ps p0: p00" ;
+		lev:long_name = "sigma at layer midpoints" ;
+		lev:positive = "down" ;
+		lev:units = "layer" ;
+	float U(time, id) ;
+		U:long_name = "eastward_wind" ;
+		U:units = "m s-1" ;
+	float V(time, id) ;
+		V:long_name = "northward_wind" ;
+		V:units = "m s-1" ;
+	float W(time, id) ;
+		W:long_name = "vertical_velocity" ;
+		W:units = "m s-1" ;
+data:
+
+ id = 0, 1 ;
+
+ time = 0, 30 ;
+
+ lat =
+  45, 46,
+  30, 31 ;
+
+ lon =
+  100, 101,
+  400, 401 ;
+
+ lev =
+  20, 21,
+  19, 20 ;
+
+ U =
+  0, 0,
+  0, 0 ;
+
+ V =
+  0, 0,
+  0, 0 ;
+
+ W =
+  0, 0,
+  0, 0 ;
+}
