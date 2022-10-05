@@ -57,6 +57,7 @@ lib/metsources/MERRA_File_Specification.pdf
 lib/Makefile.in
 src/.deps
 src/gt_fill_met_cache
+src/gt_generate_parcels
 src/gtmodel_s01
 src/gtmodel_s02
 test/Makefile.in

@@ -33,6 +33,39 @@ class PGenRnd : public ParcelGenerator {
 
    public:
    
+      /// Constructor
+      /*! This is the constructor for the PGenRnd class
+          This sets us a rectangle in lat-lon space in which the parcels will be distirbuted.
+          By default, the rectangle covers the globe.
+          
+      \param LLlat the latitude of the southern westernmost corner of the rectangle 
+      \param LLlon the longitude of the southern westernmost corner of the rectangle
+      \param URlat the latitude of the northern easternmost corner of the rectangle
+      \param URlon the longitude of the northern easternmost corner of the rectangle
+      */
+      PGenRnd( float LLlat=-90.0, float LLlon=0.0, float URlat=90.0, float URlon=359.999 ); 
+
+      /// sets the longitude.latitude rectangular domain
+      /*!
+          This sets us a rectangle in lat-lon space in which the parcels will be distirbuted.
+          By default, the rectangle covers the globe.
+          
+      \param LLlat the latitude of the southern westernmost corner of the rectangle 
+      \param LLlon the longitude of the southern westernmost corner of the rectangle
+      \param URlat the latitude of the northern easternmost corner of the rectangle
+      \param URlon the longitude of the northern easternmost corner of the rectangle
+      
+      */
+      void setBox( float LLlat, float LLlon, float URlat, float URlon );
+
+      /// Sets vertical boundaries
+      /*! This sets the vertical bounaries of a PGenRnd object.
+             
+         \param zlow the lower vertical boundary
+         \param zhigh the upper vertical boundary
+      */
+      void setZ( float zlow=0.0, float zhigh=1.0 ); 
+   
       /// Create an array of Parcels 
       /*! This method creates an array of randomly-distributed Parcels. 
       
@@ -42,7 +75,6 @@ class PGenRnd : public ParcelGenerator {
          \return a Parcel pointer that points to an array of Parcel objects.
       */
       Parcel * create_array(Parcel parcel, int n );   
-
 
       /// Create an vector Container of Parcel objects 
       /*! This method creates a vector Container of randomly-distributed Parcel objects. 
@@ -59,6 +91,8 @@ class PGenRnd : public ParcelGenerator {
       
         \param parcel copy this parcel
         \param n  the size of the list object; the number of parcels to create
+        \param z0 the lower vertical boundary
+        \param z1 the upper vertical boundary
          
          \return a pointer to a list of Parcel obejcts; the calling routine must delete this list once it is no longer needed.
       */
@@ -114,12 +148,28 @@ class PGenRnd : public ParcelGenerator {
          \param saw a pointer to a seed for the random number generator.
                     If NULL, then an internal seed generator is used.
       */
-      void seed( unsigned const int *saw=NULL);
+      void seed( unsigned const int *saw=NULL );
 
    
    private:
      
        RandomSrc rnd; 
+       
+       /// westernmost longoitude
+       float lon0;
+       /// easternmost longitude
+       float lon1;
+       /// sine of the starting latitude
+       float slat0;
+       /// sine of the ending latitude
+       float slat1;
+       /// flag: use vertical levels
+       int use_z;
+       /// lower vertical boundary
+       float z0;
+       /// upper verticla boundary
+       float z1;
+       
 
       /// initialize parcels positions in a sequence container
       /*! initialize parcels positions in a sequence container
