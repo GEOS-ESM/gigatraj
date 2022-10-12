@@ -91,8 +91,6 @@ class PGenRnd : public ParcelGenerator {
       
         \param parcel copy this parcel
         \param n  the size of the list object; the number of parcels to create
-        \param z0 the lower vertical boundary
-        \param z1 the upper vertical boundary
          
          \return a pointer to a list of Parcel obejcts; the calling routine must delete this list once it is no longer needed.
       */
