@@ -6323,8 +6323,6 @@ _ACEOF
 
   LIBS="-lmpi_cxx $LIBS"
 
-else
-  as_fn_error $? "no MPI_CXX library file was found" "$LINENO" 5
 fi
 
 fi

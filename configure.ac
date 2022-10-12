@@ -189,7 +189,7 @@ fi
 if test x$do_mpi = xtrue ; then
 AC_CHECK_HEADERS([mpi.h], [], [AC_MSG_ERROR(no MPI header file was  found)])
 AC_SEARCH_LIBS([MPI_Init],[mpi], [], [AC_MSG_ERROR(no MPI library file was found)] )
-AC_CHECK_LIB([mpi_cxx], [MPI_Init], [], [AC_MSG_ERROR(no MPI_CXX library file was found)] )
+AC_CHECK_LIB([mpi_cxx], [MPI_Init], [], [] )
 fi
 
 #    check for netcdf v4 if we are using MERRA, MERRAS2, or GEOSFP

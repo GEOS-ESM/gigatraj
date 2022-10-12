@@ -447,7 +447,11 @@ typedef double real;
 
 #ifdef USE_MPI
 // define something similar to "real" for use in MPI routines
+#ifdef HAVE_LIBMPI_CXX
 #define MPI_REAL_VALUE MPI::DOUBLE
+#else
+#define MPI_REAL_VALUE MPI_DOUBLE
+#endif
 #endif
 
 // use the double-precision version of these math functions
@@ -485,7 +489,11 @@ typedef float real;
 
 // define something similar to "real" for use in MPI routines
 #ifdef USE_MPI
+#ifdef HAVE_LIBMPI_CXX
 #define MPI_REAL_VALUE MPI::FLOAT
+#else
+#define MPI_REAL_VALUE MPI_FLOAT
+#endif
 #endif
 
 // use the single-precision version of these math functions
