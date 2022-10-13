@@ -1,10 +1,5 @@
 AC_PREREQ([2.69])
 AC_INIT([GigaTraj],[0.8],[Leslie.R.Lait@nasa.gov])
-AC_CONFIG_AUX_DIR([config])
-AC_CONFIG_SRCDIR([lib/Parcel.cc])
-AC_CONFIG_HEADERS([config.h])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
-AM_PROG_AR([ar])
 
 AC_ARG_ENABLE([double],
 [  --enable-double	Use double-precision instead of regular floating-point numbers ],
@@ -17,19 +12,6 @@ AM_CONDITIONAL([DOUBLE], [test x$do_double = xtrue])
 AC_SUBST([DO_DOUBLE],[0])
 if test x$do_double = xtrue ; then
 AC_SUBST([DO_DOUBLE], [1])
-fi
-
-AC_ARG_ENABLE([mpi],
-[  --enable-mpi		Construct a version of the library that uses MPI for parallel processing ],
-[case "${enableval}" in
- yes) do_mpi=true ;;
- no)  do_mpi=false ;;
- *) AC_MSG_ERROR([bad value ${enableval} for --enable-mpi]) ;;
- esac], [do_mpi=false])
-AM_CONDITIONAL([MPI], [test x$do_mpi = xtrue])
-AC_SUBST([DO_MPI],[0])
-if test x$do_mpi = xtrue ; then
-AC_SUBST([DO_MPI], [1])
 fi
 
 AC_ARG_ENABLE([wrap0],
@@ -56,6 +38,35 @@ AM_CONDITIONAL([WRAP180], [test x$do_wrap180 = xtrue])
 AC_SUBST([DO_WRAP180],[0])
 if test x$do_wrap180 = xtrue ; then
 AC_SUBST([DO_WRAP180], [1])
+fi
+
+
+AC_ARG_ENABLE([doxygen],
+[  --enable-doxygen		Allows generation of documentation files ],
+[case "${enableval}" in
+ yes) do_doxygen=true ;;
+ no)  do_doxygen=false ;;
+ *) AC_MSG_ERROR([bad value ${enableval} for --enable-doxygen]) ;;
+ esac], [do_doxygen=false])
+AM_CONDITIONAL([DOXYGEN], [test x$do_doxygen = xtrue])
+
+
+AC_ARG_ENABLE([mpi],
+[  --enable-mpi		Construct a version of the library that uses MPI for parallel processing ],
+[case "${enableval}" in
+ yes) do_mpi=true ;;
+ no)  do_mpi=false ;;
+ *) AC_MSG_ERROR([bad value ${enableval} for --enable-mpi]) ;;
+ esac], [do_mpi=false])
+AM_CONDITIONAL([MPI], [test x$do_mpi = xtrue])
+AC_SUBST([DO_MPI],[0])
+if test x$do_mpi = xtrue ; then
+AC_SUBST([DO_MPI], [1])
+# openMPI wants us to use mpicc instead of cc or gcc, so we test for its presence
+AC_CHECK_PROG([use_mpicc], [mpicc], [yes], [no])
+# this is actually more of a check for whether the MPI C++ bindings 
+# are present in this site's openmpi installation
+AC_CHECK_PROG([use_mpicxx], [mpicxx], [yes], [no])
 fi
 
 AC_ARG_ENABLE([merra],
@@ -97,18 +108,41 @@ if test x$do_geosfp = xtrue ; then
 AC_SUBST([DO_GEOSFP], [1])
 fi
 
-AC_ARG_ENABLE([doxygen],
-[  --enable-doxygen		Allows generation of documentation files ],
-[case "${enableval}" in
- yes) do_doxygen=true ;;
- no)  do_doxygen=false ;;
- *) AC_MSG_ERROR([bad value ${enableval} for --enable-doxygen]) ;;
- esac], [do_doxygen=false])
-AM_CONDITIONAL([DOXYGEN], [test x$do_doxygen = xtrue])
+###### Enough with specificaitons. Let's start checking for stuff.
 
-# Checks for programs.
+# First, we check for the compilers we need.
+# This is complicated by the fact that openmpi wants us to use
+# "mpicc" and "mpicxx" for cc and c++, respectively.
+if test x$do_mpi = xtrue ; then
+# ok, we are going to try to use MPI
+if test x$use_mpicc = xyes ; then
+# we are going to try to use mpicc for our C compiler
+AC_PROG_CC( [ mpicc ] )
+else 
+# we are NOT going to use mpicc as our C compiler
+AC_PROG_CC
+fi
+if test x$use_mpicxx = xyes ; then
+# We are going to use mpicxx as our C++ compiler
+AC_PROG_CXX( [ mpicxx ] )
+else
+# We are NOT going to use mpicxx as our C++ compiler
+AC_PROG_CXX
+fi
+
+else
+# Not using MPI at all. Just find whatever compilers are handy
 AC_PROG_CXX
 AC_PROG_CC
+fi
+
+# These other checks have to come after the compiler checks;
+# otherwise CC gets defined as something other than mpicc.
+AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_SRCDIR([lib/Parcel.cc])
+AC_CONFIG_HEADERS([config.h])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
+AM_PROG_AR([ar])
 AC_PROG_RANLIB
 # Can we run MPI programs for parallel programming?
 if test x$do_mpi = xtrue ; then
@@ -160,6 +194,7 @@ AS_IF([test "x${do_mpi}" = xtrue],
 # same applies for MERRA2 and GEOSFP
 MDIRFLAG=""
 if test x$do_merra = xtrue || test x$do_merra2 = xtrue || test x$do_geosfp = xtrue ; then
+   # (Should we do something about mpicxx here?)
    case $CXX in
    *g++*) MDIRFLAG="-fno-var-tracking";;
    *);;
@@ -187,9 +222,17 @@ fi
 
 #    only check for MPI if we are using MPI
 if test x$do_mpi = xtrue ; then
+# we will need the header file
 AC_CHECK_HEADERS([mpi.h], [], [AC_MSG_ERROR(no MPI header file was  found)])
+if test x$use_mpicc = xno ; then
+# we will need the MPI C library 
 AC_SEARCH_LIBS([MPI_Init],[mpi], [], [AC_MSG_ERROR(no MPI library file was found)] )
+fi
+if test x$test_mpicxx = xyes ; then
+# MPI C++ bindings are present, so the headre file contains C++ definisiotns,
+# so we will need this library as well.
 AC_CHECK_LIB([mpi_cxx], [MPI_Init], [], [] )
+fi
 fi
 
 #    check for netcdf v4 if we are using MERRA, MERRAS2, or GEOSFP
