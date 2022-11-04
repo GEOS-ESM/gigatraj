@@ -16,9 +16,7 @@ namespace gigatraj {
 The IntegRK4a class provides a method for integrating trajectories
 using the fourth-order Runga-Kutte method. In this method,
 the wind components u and v are used to increment the
-longitude and latitude positions independently, with special
-adjustments applied poleward of 88 degrees latitude (see the
-discussion in the documentation fo rthe Integrator class).
+longitude and latitude positions independently.
 
 */
 
