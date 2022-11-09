@@ -103,7 +103,7 @@ class PGenFile : public ParcelGenerator {
       PGenFile( string fmt="" );
       
       /// the destructor
-      /*! This is the destorctor for the PGenFile class
+      /*! This is the destructor for the PGenFile class
       */
       ~PGenFile();
    

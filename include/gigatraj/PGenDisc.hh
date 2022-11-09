@@ -179,7 +179,7 @@ class PGenDisc : public ParcelGenerator {
       real rad;
       /// the disc thickness, in vertical coordinates
       real thk;
-      /// he preferred minimum seapration of parcels
+      /// the preferred minimum seapration of parcels
       real min_sep;
       /// the absolute minimum separation of parcels
       real abs_min_sep;

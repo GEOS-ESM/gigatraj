@@ -220,6 +220,7 @@ DO_LONGARGS = @DO_LONGARGS@
 DO_MERRA = @DO_MERRA@
 DO_MERRA2 = @DO_MERRA2@
 DO_MPI = @DO_MPI@
+DO_NETCDF = @DO_NETCDF@
 DO_WRAP0 = @DO_WRAP0@
 DO_WRAP180 = @DO_WRAP180@
 ECHO_C = @ECHO_C@
@@ -298,6 +299,8 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+use_mpicc = @use_mpicc@
+use_mpicxx = @use_mpicxx@
 pkginclude_HEADERS = gigatraj.hh RandomSrc.hh FilePath.hh FileLock.hh \
 	CalGregorian.hh PlanetNav.hh PlanetSphereNav.hh Earth.hh \
 	ProcessGrp.hh SerialGrp.hh MPIGrp.hh GridField.hh \

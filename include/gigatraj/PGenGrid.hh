@@ -25,7 +25,7 @@ are initialized at regularly-spaced gridpoints in three dimensions.
 Although Parcels are created in three dimensions, they are stored in
 one-dimensional arrays or containers. They are stored in row-major
 (i.e., Fortran) order: longitudes first, then latitudes, then vertical
-cooridnates.
+coordinates.
 
 */
 

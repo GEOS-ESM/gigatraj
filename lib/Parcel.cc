@@ -293,6 +293,8 @@ Integrator* Parcel :: integrator()
 void Parcel :: conformal( int mode )
 {
     integ->conformal( mode );
+    nav->conformal( mode );
+    
 }
 
 int Parcel :: conformal()

@@ -36,7 +36,7 @@ PGenDisc::PGenDisc( const real lon, const real lat, const real level, const real
 
    lon0 = lon;
    lat0 = lat;
-   z0 = 500.0;
+   z0 = level;
    rad = r;
    thk = thickness;
    min_sep = 5.0;
@@ -117,10 +117,10 @@ void PGenDisc::next_coords( real &lat, real &lon, real &z, int p_no, const int n
          p_c = -1; 
      }
 
-
+     
      p_c ++;
 
-     //std::cerr << " next_coords: parcel " << p_no << " of " << n << std::endl;     
+     //std::cerr << "****** next_coords: parcel " << p_no << " of " << n << ", p_c=" << p_c << std::endl; 
 
      // do we need to advance to the next circle?
      if ( p_c >= n_p ) {
@@ -141,6 +141,8 @@ void PGenDisc::next_coords( real &lat, real &lon, real &z, int p_no, const int n
               max_np = n_remain;
            }
            z = zoff + layer_no*dz;
+           //std::cerr << "   ++++ layer advanced to " << layer_no << " at z = " << z 
+           //<< " with " << max_np << " among " << n_circles << " circles " << std::endl;    
         }
         n_p = n_in_circ[circle_no];
         if ( n_p > max_np ) {
@@ -154,6 +156,7 @@ void PGenDisc::next_coords( real &lat, real &lon, real &z, int p_no, const int n
         } else {
            delang = 0.0;
         }
+        //std::cerr << "   ++ Advanced to next circle: " << circle_no << " of " << n_circles << std::endl;
             
         // the radius of the circle
         if ( n_circles > 1 ) {
@@ -162,9 +165,9 @@ void PGenDisc::next_coords( real &lat, real &lon, real &z, int p_no, const int n
            r = 0.0;
         }
      }
-     //std::cerr << "parcel " << p_no << " with " << n_remain << " remaining" << std::endl;
+     //std::cerr << "  --> parcel " << p_no << " with " << n_remain << " remaining" << std::endl;
      //std::cerr << "  position " << p_c << " of circle " << circle_no 
-     //          << " (max " << n_p << " pts) of layer " << layer_no 
+     //          << " (of " << n_p << " pts) of layer " << layer_no 
      //          << " (max " << n_circles << " circles) " << std::endl;
      //std::cerr << "     offang=" << offang << ", delang=" << delang << std::endl;
 
@@ -227,6 +230,9 @@ void PGenDisc :: init( Seq<Parcel>* seq
 
 void PGenDisc :: startup()
 {
+     // this gives us how many points
+     // should be arranged in one of
+     // the concentric circles in a single layer. 
      n_in_circ.clear();
      n_in_circ.reserve(30);
      n_in_circ.push_back(   1);
@@ -259,7 +265,10 @@ void PGenDisc :: startup()
      n_in_circ.push_back( 169);
      n_in_circ.push_back( 175);
      n_in_circ.push_back( 182);
-          
+     
+     // this is the cumulative total fo the above number,
+     // giving the total number of points in a layer with
+     // that many concentric circles     
      cumul_n_in_circ.clear();
      cumul_n_in_circ.reserve(30);
      cumul_n_in_circ.push_back(    1);
@@ -328,10 +337,10 @@ void PGenDisc :: calc_p( const int n )
         
         //std::cerr << "number of points = " <<   n  << std::endl;
         
-        // this is how many circles can possilby fit within the allowed radius
+        // this is how many circles can possibly fit within the allowed radius
         // (But we may actually use fewer)
         max_n_circles = TRUNC( rad/minsep + 1);
-        if ( n_circles > 30 ) {
+        if ( max_n_circles > 30 ) {
            // but no more than 30. Let's not get silly.
            max_n_circles = 30;
         }
@@ -363,7 +372,7 @@ void PGenDisc :: calc_p( const int n )
         
         // sanity check
         if ( n_pts_layer > max_pts_in_circle ) {
-           /* not workable as is. This number o flayers requires more
+           /* not workable as is. This number of layers requires more
               points to be in a layer than we can accommodate with the
               available number of circles in a single layer.
               
@@ -397,11 +406,20 @@ void PGenDisc :: calc_p( const int n )
         }
         //std::cerr << "final number layers = " <<   n_layers  << std::endl;
         //std::cerr << "final points per layer = " <<   n_pts_layer  << std::endl;
+        //for ( int i=0; i< cumul_n_in_circ.size(); i++ ) {
+        //    std::cerr << "  cumul_n_in_circ[" << i << "] = " 
+        //    << cumul_n_in_circ[i] << std::endl;
+        //}
         
-        // find how many circles we will need to accommodate these points
+        // find how many concentric circles we will need to accommodate the points
+        // in a single layer
+        n_circles = 0;
         for ( int i=0; i< cumul_n_in_circ.size(); i++ ) {
+            //std::cerr << "  i,cumul_n_in_circ,n_pts_layer=" << i << ", "
+            //<< cumul_n_in_circ[i] << ", " << n_pts_layer << ", " << n_circles  << std::endl;
             if ( n_pts_layer <= cumul_n_in_circ[i] ) {
                n_circles = i + 1;
+               //std::cerr << "     Adjusting n_circles to " << n_circles << std::endl;
                break;
             }
         }
@@ -417,7 +435,7 @@ void PGenDisc :: calc_p( const int n )
         for ( int k=0; k<n_layers; k++ ) {
         
             layer_circle_spec.push_back( n_circles );
-            //std::cerr << "Defining layer with " <<   n_circles  << " circles " << std::endl;
+            //std::cerr << "Defining layer " << k << " with " <<   n_circles  << " circles " << std::endl;
         
         }
 
