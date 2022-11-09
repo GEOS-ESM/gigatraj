@@ -1,5 +1,9 @@
 AC_PREREQ([2.69])
 AC_INIT([GigaTraj],[0.8],[Leslie.R.Lait@nasa.gov])
+AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_SRCDIR([lib/Parcel.cc])
+AC_CONFIG_HEADERS([config.h])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 
 AC_ARG_ENABLE([double],
 [  --enable-double	Use double-precision instead of regular floating-point numbers ],
@@ -50,7 +54,9 @@ AC_ARG_ENABLE([doxygen],
  esac], [do_doxygen=false])
 AM_CONDITIONAL([DOXYGEN], [test x$do_doxygen = xtrue])
 
-
+# the list of c andc++ compilers to look for--we will edit this if mpicc and mpicxx are available)
+CLIST_CC="gcc cl cc"
+CLIST_CXX="g++ c++"
 AC_ARG_ENABLE([mpi],
 [  --enable-mpi		Construct a version of the library that uses MPI for parallel processing ],
 [case "${enableval}" in
@@ -67,6 +73,25 @@ AC_CHECK_PROG([use_mpicc], [mpicc], [yes], [no])
 # this is actually more of a check for whether the MPI C++ bindings 
 # are present in this site's openmpi installation
 AC_CHECK_PROG([use_mpicxx], [mpicxx], [yes], [no])
+if test x$use_mpicc = xyes ; then
+   CLIST_CC="mpicc ${CLIST_CC}"
+fi
+if test x$use_mpicxx = xyes ; then
+   CLIST_CXX="mpicxx ${CLIST_CXX}"
+fi
+fi
+
+AC_ARG_ENABLE([netcdf],
+[  --enable-netcdf		Allows use of netcdf4 files ],
+[case "${enableval}" in
+ yes) do_netcdf=true ;;
+ no)  do_netcdf=false ;;
+ *) AC_MSG_ERROR([bad value ${enableval} for --enable-netcdf]) ;;
+ esac], [do_netcdf=false])
+AM_CONDITIONAL([NETCDF], [test x$do_netcdf = xtrue])
+AC_SUBST([DO_NETCDF],[0])
+if test x$do_netcdf = xtrue ; then
+AC_SUBST([DO_NETCDF], [1])
 fi
 
 AC_ARG_ENABLE([merra],
@@ -79,6 +104,7 @@ AC_ARG_ENABLE([merra],
 AM_CONDITIONAL([MERRA], [test x$do_merra = xtrue])
 AC_SUBST([DO_MERRA],[0])
 if test x$do_merra = xtrue ; then
+do_netcdf=true
 AC_SUBST([DO_MERRA], [1])
 fi
 
@@ -92,6 +118,7 @@ AC_ARG_ENABLE([merra2],
 AM_CONDITIONAL([MERRA2], [test x$do_merra2 = xtrue])
 AC_SUBST([DO_MERRA2],[0])
 if test x$do_merra2 = xtrue ; then
+do_netcdf=true
 AC_SUBST([DO_MERRA2], [1])
 fi
 
@@ -105,45 +132,18 @@ AC_ARG_ENABLE([geosfp],
 AM_CONDITIONAL([GEOSFP], [test x$do_geosfp = xtrue])
 AC_SUBST([DO_GEOSFP],[0])
 if test x$do_geosfp = xtrue ; then
+do_netcdf=true
 AC_SUBST([DO_GEOSFP], [1])
 fi
 
-###### Enough with specificaitons. Let's start checking for stuff.
 
-# First, we check for the compilers we need.
-# This is complicated by the fact that openmpi wants us to use
-# "mpicc" and "mpicxx" for cc and c++, respectively.
-if test x$do_mpi = xtrue ; then
-# ok, we are going to try to use MPI
-if test x$use_mpicc = xyes ; then
-# we are going to try to use mpicc for our C compiler
-AC_PROG_CC( [ mpicc ] )
-else 
-# we are NOT going to use mpicc as our C compiler
-AC_PROG_CC
-fi
-if test x$use_mpicxx = xyes ; then
-# We are going to use mpicxx as our C++ compiler
-AC_PROG_CXX( [ mpicxx ] )
-else
-# We are NOT going to use mpicxx as our C++ compiler
-AC_PROG_CXX
-fi
+###### Enough with specifications. Let's start checking for stuff.
 
-else
-# Not using MPI at all. Just find whatever compilers are handy
-AC_PROG_CXX
-AC_PROG_CC
-fi
+AC_PROG_CC( [ ${CLIST_CC} ] )
+AC_PROG_CXX( [ ${CLIST_CXX} ] )
 
-# These other checks have to come after the compiler checks;
-# otherwise CC gets defined as something other than mpicc.
-AC_CONFIG_AUX_DIR([config])
-AC_CONFIG_SRCDIR([lib/Parcel.cc])
-AC_CONFIG_HEADERS([config.h])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
-AM_PROG_AR([ar])
 AC_PROG_RANLIB
+AM_PROG_AR([ar])
 # Can we run MPI programs for parallel programming?
 if test x$do_mpi = xtrue ; then
    AC_ARG_VAR([MPIRUN], [The program used to run MPI programs (used to run the test suite)])
@@ -236,7 +236,9 @@ fi
 fi
 
 #    check for netcdf v4 if we are using MERRA, MERRAS2, or GEOSFP
-if test x$do_merra = xtrue || test x$do_merra2 = xtrue || test x$do_geosfp = xtrue ; then
+#if test x$do_merra = xtrue || test x$do_merra2 = xtrue || test x$do_geosfp = xtrue ; then
+if test x$do_netcdf = xtrue ; then
+AC_MSG_NOTICE([Doing netcdf!!!!])
 AC_CHECK_HEADERS([netcdf.h], [], [AC_MSG_ERROR(no NetCDF header file was  found)])
 AC_SEARCH_LIBS([nc_put_var1_uint], [netcdf], [], [AC_MSG_ERROR([You need to install netcdf v4 or greater (with dap enabled), or the libdap and libnc-dap libraries from http://opendap.org/download/index.html])])
 fi
