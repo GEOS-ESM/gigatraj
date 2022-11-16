@@ -139,8 +139,11 @@ fi
 
 ###### Enough with specifications. Let's start checking for stuff.
 
+
+ 
 AC_PROG_CC( [ ${CLIST_CC} ] )
 AC_PROG_CXX( [ ${CLIST_CXX} ] )
+ 
 
 AC_PROG_RANLIB
 AM_PROG_AR([ar])
