@@ -469,6 +469,7 @@ typedef double real;
 #define EXP exp
 #define ISOK(x) (isnan(x) != 1)
 #define TRUNC trunc
+#define ROUND round
 #define RNAN nan
 #define FINITE finite
 
@@ -511,6 +512,7 @@ typedef float real;
 #define EXP expf
 #define ISOK(x) (isnan(x) != 1 )
 #define TRUNC truncf
+#define ROUND roundf
 #define RNAN nanf
 #define FINITE finitef
 
