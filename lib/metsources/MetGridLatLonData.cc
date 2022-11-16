@@ -1493,7 +1493,7 @@ double MetGridLatLonData::get_default_timedelta( const std::string &quantity, co
      time = cal2Time( caltime );
       
      bracket( quantity, time, &dbeg, &dend );
-     if ( abs( dend - dbeg ) < 1e-8 ) {
+     if ( ABS( dend - dbeg ) < 1e-8 ) {
         // oop's the test time lies on the boundary between data time ticks
         // shift it by about 10 minutes
         time = time + 10.0/60.0/24.0;
