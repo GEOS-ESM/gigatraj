@@ -103,6 +103,9 @@ POST_UNINSTALL = :
 @GEOSFP_TRUE@	metsources/MetGEOSfpAssim.cc \
 @GEOSFP_TRUE@	../include/gigatraj/MetGEOSfp.hh \
 @GEOSFP_TRUE@	metsources/MetGEOSfp.cc
+@NETCDF_TRUE@am__append_5 = ../include/gigatraj/NetcdfIn.hh \
+@NETCDF_TRUE@	filters/NetcdfIn.cc \
+@NETCDF_TRUE@	../include/gigatraj/PGenNetcdf.hh PGenNetcdf.cc
 subdir = lib
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/config/depcomp
@@ -232,7 +235,9 @@ am__libgigatraj_a_SOURCES_DIST = ../include/gigatraj/RandomSrc.hh \
 	../include/gigatraj/StreamPrint.hh filters/StreamPrint.cc \
 	../include/gigatraj/StreamRead.hh filters/StreamRead.cc \
 	../include/gigatraj/ChangeVertical.hh \
-	filters/ChangeVertical.cc
+	filters/ChangeVertical.cc ../include/gigatraj/NetcdfIn.hh \
+	filters/NetcdfIn.cc ../include/gigatraj/PGenNetcdf.hh \
+	PGenNetcdf.cc
 am__dirstamp = $(am__leading_dot)dirstamp
 @MPI_TRUE@am__objects_1 = MPIGrp.$(OBJEXT)
 @MERRA_TRUE@am__objects_2 = metsources/MERRA_Directory.$(OBJEXT) \
@@ -246,6 +251,8 @@ am__dirstamp = $(am__leading_dot)dirstamp
 @GEOSFP_TRUE@	metsources/MetGEOSfpFcast.$(OBJEXT) \
 @GEOSFP_TRUE@	metsources/MetGEOSfpAssim.$(OBJEXT) \
 @GEOSFP_TRUE@	metsources/MetGEOSfp.$(OBJEXT)
+@NETCDF_TRUE@am__objects_5 = filters/NetcdfIn.$(OBJEXT) \
+@NETCDF_TRUE@	PGenNetcdf.$(OBJEXT)
 am_libgigatraj_a_OBJECTS = RandomSrc.$(OBJEXT) FilePath.$(OBJEXT) \
 	FileLock.$(OBJEXT) Configuration.$(OBJEXT) \
 	CalGregorian.$(OBJEXT) PlanetNav.$(OBJEXT) \
@@ -278,7 +285,8 @@ am_libgigatraj_a_OBJECTS = RandomSrc.$(OBJEXT) FilePath.$(OBJEXT) \
 	PGenFile.$(OBJEXT) PGenRnd.$(OBJEXT) PGenRndDisc.$(OBJEXT) \
 	PGenDisc.$(OBJEXT) filters/StreamDump.$(OBJEXT) \
 	filters/StreamLoad.$(OBJEXT) filters/StreamPrint.$(OBJEXT) \
-	filters/StreamRead.$(OBJEXT) filters/ChangeVertical.$(OBJEXT)
+	filters/StreamRead.$(OBJEXT) filters/ChangeVertical.$(OBJEXT) \
+	$(am__objects_5)
 libgigatraj_a_OBJECTS = $(am_libgigatraj_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -578,7 +586,7 @@ libgigatraj_a_SOURCES = ../include/gigatraj/RandomSrc.hh RandomSrc.cc \
 	../include/gigatraj/StreamPrint.hh filters/StreamPrint.cc \
 	../include/gigatraj/StreamRead.hh filters/StreamRead.cc \
 	../include/gigatraj/ChangeVertical.hh \
-	filters/ChangeVertical.cc
+	filters/ChangeVertical.cc $(am__append_5)
 @MERRA_TRUE@metsources_MERRA_Directory_cc_CFLAGS = $(MDIRFLAG)
 all: all-recursive
 
@@ -741,6 +749,8 @@ filters/StreamRead.$(OBJEXT): filters/$(am__dirstamp) \
 	filters/$(DEPDIR)/$(am__dirstamp)
 filters/ChangeVertical.$(OBJEXT): filters/$(am__dirstamp) \
 	filters/$(DEPDIR)/$(am__dirstamp)
+filters/NetcdfIn.$(OBJEXT): filters/$(am__dirstamp) \
+	filters/$(DEPDIR)/$(am__dirstamp)
 
 libgigatraj.a: $(libgigatraj_a_OBJECTS) $(libgigatraj_a_DEPENDENCIES) $(EXTRA_libgigatraj_a_DEPENDENCIES) 
 	$(AM_V_at)-rm -f libgigatraj.a
@@ -767,6 +777,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/PGenDisc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/PGenFile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/PGenGrid.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/PGenNetcdf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/PGenRep.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/PGenRnd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/PGenRndDisc.Po@am__quote@
@@ -780,6 +791,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Swarm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trace.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@filters/$(DEPDIR)/ChangeVertical.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@filters/$(DEPDIR)/NetcdfIn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@filters/$(DEPDIR)/StreamDump.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@filters/$(DEPDIR)/StreamLoad.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@filters/$(DEPDIR)/StreamPrint.Po@am__quote@

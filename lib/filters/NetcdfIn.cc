@@ -1,0 +1,861 @@
+
+#include "config.h"
+#include "gigatraj/NetcdfIn.hh"
+
+using namespace gigatraj;
+
+NetcdfIn :: NetcdfIn()
+{
+    fname = "";
+    vcoord = "";
+    is_open = false;
+    
+    time0 = "";
+    t0 = 0.0;
+    end = false;
+    
+    dbug = 0;
+    
+    np = 0;
+    ip = -1;
+    
+    vid_lon = -1;
+    vid_lat = -1;
+    vid_z = -1;
+    vid_status = -1;
+    vid_flags = -1;
+    vid_tag = -1;
+    vtyp_lon = NC_NAT;
+    vtyp_lat = NC_NAT;
+    vtyp_z = NC_NAT;
+    vtyp_status = NC_NAT;
+    vtyp_flags = NC_NAT;
+    vtyp_tag = NC_NAT;
+
+}
+
+NetcdfIn::~NetcdfIn() {
+
+    if ( is_open ) {
+       close();
+    }
+
+}
+
+
+void NetcdfIn::filename( const std::string file )
+{
+
+    if ( is_open ) {
+       close();
+    }
+    
+    fname = file;
+
+}
+
+std::string& NetcdfIn::filename()
+{
+    return fname;
+}
+
+void NetcdfIn::vertical( const std::string vert )
+{
+
+    vcoord = vert;
+
+}
+
+std::string& NetcdfIn::vertical()
+{
+    return vcoord;
+}
+
+
+std::string& NetcdfIn::cal()
+{
+    return time0;
+}
+
+double NetcdfIn::time()
+{
+    return t0;
+}
+
+void NetcdfIn::at_end( bool select )
+{
+    end = select;
+}
+
+bool NetcdfIn::at_end()
+{
+    return end;
+}
+
+size_t NetcdfIn::n_parcels()
+{
+     return np;
+}
+
+void NetcdfIn::debug( int mode )
+{
+     dbug = mode;
+}
+
+int NetcdfIn::debug()
+{
+     return dbug;
+}
+
+void NetcdfIn::open( std::string file )
+{
+     int err;
+     const char *attr_name;
+     const char *var_name;
+     char *val;
+     int len;
+     nc_type attr_type;
+     int attr_id;
+     int var_id;
+     std::string name;
+     size_t  attr_size;
+     nc_type var_type;
+     int var_ndims;
+     int var_dims[NC_MAX_VAR_DIMS];
+     int  var_natts;
+     int dim_id;
+     size_t ntimes;
+     int time_index;
+     size_t istart;
+     size_t icount;
+     int ndimens;
+     int unlimdim_idx;
+     char c_vname[NC_MAX_NAME + 1];
+     
+     
+     
+     if ( file != "" ) {
+        fname = file;
+     }
+     
+     err = nc_open( fname.c_str(), NC_NOWRITE, &ncid);     
+     if ( err != NC_NOERR ) {
+        std::cerr << "NetcdfIn::Popen: failed to open file: " << fname << std::endl;
+        throw(badNetcdfOpen(err));
+     }
+     
+     is_open = true;
+     if ( dbug > 2 ) {
+        std::cerr << "NetcdfIn::open: nc_open success!" << std::endl;
+     }
+     
+     // do the initial inquiries to get basic sizes and shapes
+     err = nc_inq(ncid, &ndimens, &nvars, &ngatts, &unlimdim_idx);
+     if ( err != NC_NOERR ) {
+        throw(badNetcdfError(err));
+     }
+     if ( dbug > 2 ) {
+        std::cerr << "NetcdfIn::open: initial inq: " << ndimens << ", " << nvars << ", " << ngatts << ", " << unlimdim_idx << std::endl;
+     }
+     
+     
+     // get the base time from the global attributes
+     time0 = "";
+
+     name = "Trajectory_start";
+     attr_name = name.c_str();
+     err = nc_inq_attid( ncid, NC_GLOBAL, attr_name, &attr_id );
+     if ( err == NC_NOERR ) {
+     
+        err = nc_inq_att(ncid, NC_GLOBAL, attr_name, &attr_type, &attr_size );
+        if ( err != NC_NOERR ) {
+           throw(badNetcdfError(err));
+        }
+     
+        if ( attr_type == NC_STRING && attr_size == 1 ) {
+           
+           err = nc_get_att_string( ncid, NC_GLOBAL, attr_name, &val );
+           if ( err != NC_NOERR ) {
+              throw(badNetcdfError(err));
+           }
+
+           time0.assign( val );
+           if ( dbug > 1 ) {
+              std::cerr << "NetcdfIn::open: base time: " << time0 << std::endl;
+           }
+           
+           delete val;
+
+        }
+        // todo: handle the case where the timestamp is a char array
+
+     }
+
+     // handle the dimensions
+
+     // get the dimensional IDs for time and id
+     err = nc_inq_dimid( ncid, "time", &did_time);
+     if ( err == NC_EBADDIM ) {
+        throw(badFileConventions());  
+     } else if ( err != NC_NOERR ) {
+        throw(badNetcdfError(err));
+     }     
+     err = nc_inq_dimid( ncid, "id", &did_id);
+     if ( err == NC_EBADDIM ) {
+        throw(badFileConventions());  
+     } else if ( err != NC_NOERR ) {
+        throw(badNetcdfError(err));
+     }
+     
+
+     // find the time variable, and the number of times
+     name = "time";
+     var_name = name.c_str();
+     
+     err = nc_inq_dimid( ncid, var_name, &dim_id );
+     if ( err == NC_EBADID || err == NC_EBADDIM ) {
+        throw(badFileConventions());
+     } else if ( err != NC_NOERR ) {
+        throw(badNetcdfError(err));
+     }
+
+     err = nc_inq_dimlen( ncid, dim_id, &ntimes );
+     if ( err != NC_NOERR ) {
+        throw(badNetcdfError(err));
+     }
+     if ( dbug > 10 ) {
+        std::cerr << "NetcdfIn::open: There are " << ntimes << " times" << std::endl;
+     }   
+     
+     err = nc_inq_varid( ncid, var_name, &var_id );
+     if ( err == NC_ENOTVAR ) {
+        throw(badFileConventions());
+     } else if ( err != NC_NOERR ) {
+        throw(badNetcdfError(err));
+     }
+     
+     err = nc_inq_var( ncid, var_id, NULL, &var_type, &var_ndims, var_dims, &var_natts);
+     if ( err != NC_NOERR ) {
+        throw(badNetcdfError(err));
+     }
+     if ( dbug > 10 ) {
+        std::cerr << "NetcdfIn::open: time varid: " << var_id
+                  << "; time type: " << var_type
+                  << "; time ndims: " << var_ndims
+                  << "; time dims[0]: " << var_dims[0] 
+                  << "; time natts: " << var_natts << std::endl;
+     }
+     if ( (var_type != NC_DOUBLE) || (var_ndims != 1) || (var_id != var_dims[0]) ) {
+        throw(badFileConventions());
+     }
+     
+     // todo: maybe get the timestamp from long_name if we did not get it from the global attribute?
+     // todo: maybe check the units as"day"
+     
+
+     time_index = 0;
+     if ( end ) {
+        time_index = ntimes - 1;
+     }
+     it = time_index;
+     icount = 1;
+     err = nc_get_vara_double( ncid, var_id, &it, &icount, &t0 );
+     if ( dbug > 1 ) {
+        std::cerr << "NetcdfIn::open: Parcel time is " << t0 << std::endl;
+     }   
+     
+     // now find out about parcels (mainly, how many there are)
+     name = "id";
+     var_name = name.c_str();
+     
+     err = nc_inq_dimid( ncid, var_name, &dim_id );
+     if ( err == NC_EBADDIM ) {
+        throw(badFileConventions());
+     } else if ( err != NC_NOERR ) {
+        throw(badNetcdfError(err));
+     }
+
+     err = nc_inq_dimlen( ncid, dim_id, &np );
+     if ( err != NC_NOERR ) {
+        throw(badNetcdfError(err));
+     }
+     if ( dbug > 10 ) {
+        std::cerr << "NetcdfIn::open: There are " << np << " parcels" << std::endl;
+     }
+     // start with the zeroeth prcel
+     ip = 0;   
+     
+     
+     // now find the var ids for: longitude, latitude (mandatory)
+     
+     vid_lon = get_var_id( "lon", true, "", &vtyp_lon );
+     if ( dbug > 1 ) {
+        std::cerr << "NetcdfIn::open: Got the id for the 'lon' coordiate." <<  std::endl;
+     }
+     vid_lat = get_var_id( "lat", true, "", &vtyp_lat );
+     if ( dbug > 1 ) {
+        std::cerr << "NetcdfIn::open: Got the id for the 'lat' coordiate." <<  std::endl;
+     }
+     vid_z   = get_var_id( vcoord, true, "vertical_coordinate", &vtyp_z );
+     if ( dbug > 1 ) {
+        std::cerr << "NetcdfIn::open: Got the id for the vertical coordiate: " << vcoord <<  std::endl;
+     }
+     if ( vcoord == "" ) {
+        err = nc_inq_varname( ncid, vid_z, c_vname );
+        if ( err != NC_NOERR ) {
+           throw(badNetcdfError(err));
+        }
+        vcoord.assign( c_vname);
+        if ( dbug > 1 ) {
+           std::cerr << "NetcdfIn::open: Found a vertical coordinate " << vcoord <<  std::endl;
+        }
+     }  
+     vid_status = get_var_id( "status", false, "", &vtyp_status );
+     if ( dbug > 1 && vid_status >= 0 ) {
+        std::cerr << "NetcdfIn::open: Got the id for the 'status' coordinate." <<  std::endl;
+     }
+     vid_flags  = get_var_id( "flags", false, "", &vtyp_flags );
+     if ( dbug > 1 && vid_flags >= 0 ) {
+        std::cerr << "NetcdfIn::open: Got the id for the 'flags' coordinate." <<  std::endl;
+     }
+     vid_tag    = get_var_id( "tag",  false, "tag", &vtyp_tag );
+     if ( dbug > 1 && vid_tag >= 0 ) {
+        std::cerr << "NetcdfIn::open: Got the id for the tag coordinate." <<  std::endl;
+     }
+
+     
+     
+}
+
+void NetcdfIn::close()
+{
+     int err;
+     
+     err = nc_close(ncid);
+     if ( err != NC_NOERR ) {
+        throw(badNetcdfError(err));
+     }
+     
+     is_open = false;
+
+     time0 = "";
+     t0 = 0.0;
+    
+     np = 0;
+     ip = -1;
+    
+     vid_lon = -1;
+     vid_lat = -1;
+     vid_z = -1;
+     vid_status = -1;
+     vid_flags = -1;
+     vid_tag = -1;
+
+     vtyp_lon = NC_NAT;
+     vtyp_lat = NC_NAT;
+     vtyp_z = NC_NAT;
+     vtyp_status = NC_NAT;
+     vtyp_flags = NC_NAT;
+     vtyp_tag = NC_NAT;
+
+}
+
+int NetcdfIn::get_var_id( const std::string &varname, bool required, const std::string &flag, int*vtype )
+{
+     int result;
+     int err;
+     const char* c_var_name;
+     int var_id;
+     int var_type;
+     int var_ndims;
+     int nvars;
+     int natts;
+     int att_id;
+     int att_type;
+     size_t att_len;
+     char c_aname[NC_MAX_NAME + 1];
+     std::string aname;
+     char *c_att_val;
+     std::string att_val;
+     int var_dims[NC_MAX_VAR_DIMS];
+     
+     result = -1;
+
+     if ( varname != "" ) {
+     
+         c_var_name = varname.c_str();
+         err = nc_inq_varid( ncid, c_var_name, &var_id );
+         if ( err == NC_NOERR ) {
+            result = var_id;
+         } else if ( err == NC_ENOTVAR ) {
+            if ( required ) {
+               throw(badFileConventions());
+            }
+         } else {
+            throw(badNetcdfError(err));
+         }
+     
+     }
+     
+     if ( (result == -1) && (flag != "") ) {
+        // no var ID yet
+        
+        // go through each variable in the file
+        err = nc_inq_nvars( ncid, &nvars );
+        if ( err != NC_NOERR ) {
+           throw(badNetcdfError(err));
+        }
+        
+        for ( var_id=0; var_id < nvars; var_id++ ) {
+             
+             // go through the atttributes
+             err = nc_inq_varnatts( ncid, var_id, &natts );
+             if ( err != NC_NOERR ) {
+                throw(badNetcdfError(err));
+             }
+             for ( att_id=0; att_id < natts; att_id++ ) {
+        
+                 err = nc_inq_attname( ncid, var_id, att_id, c_aname );
+                 if ( err != NC_NOERR ) {
+                    throw(badNetcdfError(err));
+                 }
+        
+                 err = nc_inq_att( ncid, var_id, c_aname, &att_type, &att_len );
+                 if ( err != NC_NOERR ) {
+                    throw(badNetcdfError(err));
+                 }
+                 
+                 aname.assign( c_aname );
+                 if ( aname == flag ) {
+                    // we fund the flag attribute in one of the variables
+                    
+                    // now check that it is set to "yes"
+                    if ( att_type == NC_STRING && att_len == 1 ) {
+                    
+                       err = nc_get_att_string( ncid, var_id, c_aname, &c_att_val );
+                       if ( err != NC_NOERR ) {
+                          throw(badNetcdfError(err));
+                       }
+                       att_val.assign( c_att_val );
+                       delete c_att_val;
+                       
+                       if ( att_val == "yes" ) {
+                          result = var_id;
+                          break;
+                       }
+                    
+                    }
+                    
+                 
+                 
+                 }
+                 
+        
+             }
+             
+             if ( result != -1 ) {
+                break;
+             }
+        }
+     }
+     
+     
+     // if we found the variable, then do a little anity checking
+     if ( result >= 0 ) {
+        err = nc_inq_var( ncid, result, NULL, &var_type, &var_ndims, var_dims, &natts);
+        if ( err != NC_NOERR ) {
+           throw(badNetcdfError(err));
+        }
+     
+        if ( var_ndims != 2 ) {
+           throw(badFileConventions());
+        }
+        if ( ( var_dims[0] != did_time ) || ( var_dims[1] != did_id ) ) {
+           throw(badFileConventions());        
+        }
+     
+        *vtype = var_type;
+     
+     }
+     
+     return result;
+
+}
+
+void NetcdfIn::rd_real( int var_id, int var_type, size_t n, real* destination )
+{
+    int err;
+    size_t starts[2];
+    size_t counts[2];
+    ptrdiff_t strides[2];
+    float  *fbuffr;
+    double *dbuffr;
+    short  *sbuffr;
+    int    *ibuffr;
+    long   *lbuffr;
+    
+    // trying to read too many Parcels
+    if ( ( n + ip ) > np ) {
+       throw(badFileConventions());        
+    } 
+    
+    starts[0]= it;
+    starts[1] = ip;
+    counts[0] = 1;
+    counts[1] = n;
+    strides[0] = 1;
+    strides[1] = 1;
+    
+    switch (var_type) {
+    case NC_FLOAT:
+    
+         fbuffr = new float[n];
+         err = nc_get_vars_float( ncid, var_id, starts, counts, strides, fbuffr );
+         if ( err != NC_NOERR ) {
+            throw(badNetcdfError(err));
+         }
+    
+         for ( int i=0; i < n; i++ ) {
+             destination[i] = fbuffr[i];
+         }
+    
+         delete fbuffr;
+         
+         break;
+    case NC_DOUBLE:
+    
+         dbuffr = new double[n];
+         err = nc_get_vars_double( ncid, var_id, starts, counts, strides, dbuffr );
+         if ( err != NC_NOERR ) {
+            throw(badNetcdfError(err));
+         }
+    
+         for ( int i=0; i < n; i++ ) {
+             destination[i] = dbuffr[i];
+         }
+    
+         delete dbuffr;
+         
+         break;
+    case NC_SHORT:
+    
+         sbuffr = new short[n];
+         err = nc_get_vars_short( ncid, var_id, starts, counts, strides, sbuffr );
+         if ( err != NC_NOERR ) {
+            throw(badNetcdfError(err));
+         }
+    
+         for ( int i=0; i < n; i++ ) {
+             destination[i] = sbuffr[i];
+         }
+    
+         delete sbuffr;
+        
+         break;
+    case NC_INT:
+    
+         ibuffr = new int[n];
+         err = nc_get_vars_int( ncid, var_id, starts, counts, strides, ibuffr );
+         if ( err != NC_NOERR ) {
+            throw(badNetcdfError(err));
+         }
+    
+         for ( int i=0; i < n; i++ ) {
+             destination[i] = ibuffr[i];
+         }
+    
+         delete ibuffr;
+      
+         break;
+    }
+
+}
+
+int NetcdfIn::next_parcel()
+{
+   if ( ip >= 0 && ip < np ) {
+       return ip;
+    } else {
+       return -1;
+    }
+}
+    
+void NetcdfIn::reset()
+{
+    ip = 0;
+}
+
+void NetcdfIn::rd_int( int var_id, int var_type, size_t n, int* destination )
+{
+    int err;
+    size_t starts[2];
+    size_t counts[2];
+    ptrdiff_t strides[2];
+    float  *fbuffr;
+    double *dbuffr;
+    short  *sbuffr;
+    int    *ibuffr;
+    long   *lbuffr;
+    
+    // trying to read too many Parcels
+    if ( ( n + ip ) > np ) {
+       throw(badFileConventions());        
+    } 
+    
+    starts[0]= it;
+    starts[1] = ip;
+    counts[0] = 1;
+    counts[1] = n;
+    strides[0] = 1;
+    strides[1] = 1;
+    
+    switch (var_type) {
+    case NC_FLOAT:
+    
+         fbuffr = new float[n];
+         err = nc_get_vars_float( ncid, var_id, starts, counts, strides, fbuffr );
+         if ( err != NC_NOERR ) {
+            throw(badNetcdfError(err));
+         }
+    
+         for ( int i=0; i < n; i++ ) {
+             destination[i] = roundf(fbuffr[i]);
+         }
+    
+         delete fbuffr;
+         
+         break;
+    case NC_DOUBLE:
+    
+         dbuffr = new double[n];
+         err = nc_get_vars_double( ncid, var_id, starts, counts, strides, dbuffr );
+         if ( err != NC_NOERR ) {
+            throw(badNetcdfError(err));
+         }
+    
+         for ( int i=0; i < n; i++ ) {
+             destination[i] = round(dbuffr[i]);
+         }
+    
+         delete dbuffr;
+         
+         break;
+    case NC_SHORT:
+    
+         sbuffr = new short[n];
+         err = nc_get_vars_short( ncid, var_id, starts, counts, strides, sbuffr );
+         if ( err != NC_NOERR ) {
+            throw(badNetcdfError(err));
+         }
+    
+         for ( int i=0; i < n; i++ ) {
+             destination[i] = sbuffr[i];
+         }
+    
+         delete sbuffr;
+        
+         break;
+    case NC_INT:
+    
+         ibuffr = new int[n];
+         err = nc_get_vars_int( ncid, var_id, starts, counts, strides, ibuffr );
+         if ( err != NC_NOERR ) {
+            throw(badNetcdfError(err));
+         }
+    
+         for ( int i=0; i < n; i++ ) {
+             destination[i] = ibuffr[i];
+         }
+    
+         delete ibuffr;
+      
+         break;
+    }
+
+}
+
+
+
+void NetcdfIn::apply( Parcel& p )
+{
+    real lon, lat, z, tag;
+    int status,flags;
+    
+    lon = 0.0;
+    rd_real( vid_lon, vtyp_lon, 1, &lon );
+
+    lat = 0.0;
+    rd_real( vid_lat, vtyp_lat, 1, &lat );
+
+    p.setPos( lon, lat );
+
+    z = 0.0;
+    rd_real( vid_z, vtyp_z, 1, &z );
+    p.setZ( z );
+    
+    if ( vid_tag >= 0 ) {
+       tag = 0.0;
+       rd_real( vid_tag, vtyp_tag, 1, &tag );
+    
+       p.tag( tag );
+    }
+
+    if ( vid_status >= 0 ) {
+       status = 0.0;
+       rd_int( vid_status, vtyp_status, 1, &status );
+    
+       p.setStatus( status );
+    }
+    
+    if ( vid_flags >= 0 ) {
+       flags = 0.0;
+       rd_int( vid_flags, vtyp_flags, 1, &flags );
+    
+       p.setFlags( flags );
+    }
+        
+    ip = ip + 1;
+    
+}
+
+void NetcdfIn::apply( Parcel * p, const int n ) 
+{
+    int i;
+    int nn;
+    
+    //if ( n < 0 ) {
+    //   throw (ParcelFilter::badparcelnum());
+    //};
+    
+    nn = n;
+    
+    if ( nn <= 0 ) {
+       nn = np - ip;
+    }
+    
+    for ( i=0; i<nn; i++ ) {
+       apply( p[i] );
+    }   
+
+}
+
+void NetcdfIn::apply( std::vector<Parcel>& p ) 
+{
+    std::vector<Parcel>::iterator iip;
+    size_t n;
+    
+    n = p.size();
+    if ( n == 0 ) {
+       n = np - ip;
+       p.resize(n);
+    }
+    
+    for ( iip=p.begin(); iip != p.end(); iip++ ) {
+        apply( *iip );
+    }   
+
+}
+
+void NetcdfIn::apply( std::list<Parcel>& p ) 
+{
+    std::list<Parcel>::iterator ip;
+    int n;
+    
+    n = p.size();
+    
+    if ( n <= 0 ) {
+       throw (ParcelFilter::badparcelnum());
+    };  
+    
+    for ( ip=p.begin(); ip != p.end(); ip++ ) {
+        apply( *ip );
+    }   
+
+}
+
+void NetcdfIn::apply( std::deque<Parcel>& p ) 
+{
+    std::deque<Parcel>::iterator ip;
+    int n;
+    
+    n = p.size();
+    
+    if ( n <= 0 ) {
+       throw (ParcelFilter::badparcelnum());
+    };  
+    
+     apply( *ip );
+
+}
+
+void NetcdfIn::apply( Flock& p ) 
+{
+    Flock::iterator ip;
+    int n;
+    Parcel px;
+    bool i_am_root;
+    
+    n = p.size();
+    
+    if ( n <= 0 ) {
+       throw (ParcelFilter::badparcelnum());
+    };  
+    
+    i_am_root = p.is_root();
+
+    for ( int i=0; i<p.size(); i++ ) {
+    
+       p.sync();
+       
+       if ( i_am_root ) {
+          // get the parcel
+          apply( px );
+       }   
+       // If we are the root processor, the parcel px
+       // is valid, and it is sent to the processor
+       // to which it belongs.
+       // If we are not the root processor, then
+       // then px has no valid value, but the
+       // processor will ignore it and receive its
+       // parcel value from the root processor.
+       p.set( i, px, 0 );
+
+    }   
+
+}
+
+void NetcdfIn::apply( Swarm& p )
+{
+    Swarm::iterator ip;
+    int n;
+    Parcel px;
+    bool i_am_root;
+    
+    n = p.size();
+    
+    if ( n <= 0 ) {
+       throw (ParcelFilter::badparcelnum());
+    };  
+    
+    i_am_root = p.is_root();
+
+    for ( int i=0; i<p.size(); i++ ) {
+
+       p.sync();
+       
+          if ( i_am_root ) {
+             // get the parcel
+             apply( px );
+          }   
+          // If we are the root processor, the parcel px
+          // is valid, and it is sent to the processor
+          // to which it belongs.
+          // If we are not the root processor, then
+          // then px has no valid value, but the
+          // processor will ignore it and receive its
+          // parcel value from the root processor.
+          p.set( i, px, 0 );
+
+    }   
+
+}

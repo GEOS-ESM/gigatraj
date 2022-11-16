@@ -98,11 +98,12 @@ TESTS = test_RandomSrc$(EXEEXT) test_Configuration.sh \
 	test_StreamDump_Load$(EXEEXT) test_StreamRead$(EXEEXT) \
 	test_StreamPrint$(EXEEXT) test_FlockSerial$(EXEEXT) \
 	test_SwarmSerial$(EXEEXT) test_ChangeVertical$(EXEEXT) \
-	$(am__append_17) test_PGenRep$(EXEEXT) test_PGenGrid$(EXEEXT) \
-	test_PGenRnd$(EXEEXT) test_PGenRndDisc$(EXEEXT) \
-	test_PGenDisc$(EXEEXT) test_PGenFile$(EXEEXT) \
-	test_traj000$(EXEEXT) test_traj001$(EXEEXT) \
-	test_traj010$(EXEEXT) test_gtmodel_s01.sh
+	$(am__EXEEXT_9) $(am__append_20) test_PGenRep$(EXEEXT) \
+	test_PGenGrid$(EXEEXT) test_PGenRnd$(EXEEXT) \
+	test_PGenRndDisc$(EXEEXT) test_PGenDisc$(EXEEXT) \
+	test_PGenFile$(EXEEXT) $(am__EXEEXT_11) test_traj000$(EXEEXT) \
+	test_traj001$(EXEEXT) test_traj010$(EXEEXT) \
+	test_gtmodel_s01.sh
 check_PROGRAMS = test_RandomSrc$(EXEEXT) test_Configuration$(EXEEXT) \
 	test_FilePath$(EXEEXT) test_FileLock$(EXEEXT) \
 	test_CalGregorian$(EXEEXT) test_Earth$(EXEEXT) \
@@ -126,11 +127,11 @@ check_PROGRAMS = test_RandomSrc$(EXEEXT) test_Configuration$(EXEEXT) \
 	test_StreamDump_Load$(EXEEXT) test_StreamRead$(EXEEXT) \
 	test_StreamPrint$(EXEEXT) test_FlockSerial$(EXEEXT) \
 	test_SwarmSerial$(EXEEXT) test_ChangeVertical$(EXEEXT) \
-	$(am__EXEEXT_9) test_PGenRep$(EXEEXT) test_PGenGrid$(EXEEXT) \
-	test_PGenRnd$(EXEEXT) test_PGenRndDisc$(EXEEXT) \
-	test_PGenDisc$(EXEEXT) test_PGenFile$(EXEEXT) \
-	test_traj000$(EXEEXT) test_traj001$(EXEEXT) \
-	test_traj010$(EXEEXT)
+	$(am__EXEEXT_9) $(am__EXEEXT_10) test_PGenRep$(EXEEXT) \
+	test_PGenGrid$(EXEEXT) test_PGenRnd$(EXEEXT) \
+	test_PGenRndDisc$(EXEEXT) test_PGenDisc$(EXEEXT) \
+	test_PGenFile$(EXEEXT) $(am__EXEEXT_11) test_traj000$(EXEEXT) \
+	test_traj001$(EXEEXT) test_traj010$(EXEEXT)
 @MPI_TRUE@am__append_1 = test_MPIGrp.sh  test_FileLock_MPI.sh
 @MPI_TRUE@am__append_2 = test_MPIGrp test_FileLock_MPI
 @MPI_TRUE@am__append_3 = test_GridLatLonFieldSfc_MPI.sh \
@@ -149,10 +150,15 @@ check_PROGRAMS = test_RandomSrc$(EXEEXT) test_Configuration$(EXEEXT) \
 @MERRA2_TRUE@am__append_14 = test_MetMERRA2
 @GEOSFP_TRUE@am__append_15 = test_MetGEOSfpFcast test_MetGEOSfpAssim test_MetGEOSfp
 @GEOSFP_TRUE@am__append_16 = test_MetGEOSfpFcast test_MetGEOSfpAssim test_MetGEOSfp
-@MPI_TRUE@am__append_17 = test_FlockMPI.sh test_SwarmMPI.sh \
+@NETCDF_TRUE@am__append_17 = test_NetcdfIn 
+@NETCDF_TRUE@am__append_18 = test_NetcdfIn 
+@NETCDF_TRUE@am__append_19 = test_netcdfIn_data_01.nc4
+@MPI_TRUE@am__append_20 = test_FlockMPI.sh test_SwarmMPI.sh \
 @MPI_TRUE@	test_StreamPrintMPI.sh test_StreamReadMPI.sh
-@MPI_TRUE@am__append_18 = test_FlockMPI test_SwarmMPI \
+@MPI_TRUE@am__append_21 = test_FlockMPI test_SwarmMPI \
 @MPI_TRUE@	test_StreamPrintMPI test_StreamReadMPI
+@NETCDF_TRUE@am__append_22 = test_PGenNetcdf
+@NETCDF_TRUE@am__append_23 = test_PGenNetcdf
 subdir = test
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/config/depcomp $(top_srcdir)/config/test-driver
@@ -176,9 +182,11 @@ CONFIG_CLEAN_VPATH_FILES =
 @GEOSFP_TRUE@am__EXEEXT_8 = test_MetGEOSfpFcast$(EXEEXT) \
 @GEOSFP_TRUE@	test_MetGEOSfpAssim$(EXEEXT) \
 @GEOSFP_TRUE@	test_MetGEOSfp$(EXEEXT)
-@MPI_TRUE@am__EXEEXT_9 = test_FlockMPI$(EXEEXT) test_SwarmMPI$(EXEEXT) \
-@MPI_TRUE@	test_StreamPrintMPI$(EXEEXT) \
+@NETCDF_TRUE@am__EXEEXT_9 = test_NetcdfIn$(EXEEXT)
+@MPI_TRUE@am__EXEEXT_10 = test_FlockMPI$(EXEEXT) \
+@MPI_TRUE@	test_SwarmMPI$(EXEEXT) test_StreamPrintMPI$(EXEEXT) \
 @MPI_TRUE@	test_StreamReadMPI$(EXEEXT)
+@NETCDF_TRUE@am__EXEEXT_11 = test_PGenNetcdf$(EXEEXT)
 am_test_BalanceThetaDot1OTF_OBJECTS =  \
 	test_BalanceThetaDot1OTF.$(OBJEXT) test_utils.$(OBJEXT)
 test_BalanceThetaDot1OTF_OBJECTS =  \
@@ -333,6 +341,10 @@ am_test_MetSelector_OBJECTS = test_MetSelector.$(OBJEXT) \
 	test_utils.$(OBJEXT)
 test_MetSelector_OBJECTS = $(am_test_MetSelector_OBJECTS)
 test_MetSelector_LDADD = $(LDADD)
+am_test_NetcdfIn_OBJECTS = test_NetcdfIn.$(OBJEXT) \
+	test_utils.$(OBJEXT)
+test_NetcdfIn_OBJECTS = $(am_test_NetcdfIn_OBJECTS)
+test_NetcdfIn_LDADD = $(LDADD)
 am_test_PAltDotOTF_OBJECTS = test_PAltDotOTF.$(OBJEXT) \
 	test_utils.$(OBJEXT)
 test_PAltDotOTF_OBJECTS = $(am_test_PAltDotOTF_OBJECTS)
@@ -352,6 +364,10 @@ am_test_PGenGrid_OBJECTS = test_PGenGrid.$(OBJEXT) \
 	test_utils.$(OBJEXT)
 test_PGenGrid_OBJECTS = $(am_test_PGenGrid_OBJECTS)
 test_PGenGrid_LDADD = $(LDADD)
+am_test_PGenNetcdf_OBJECTS = test_PGenNetcdf.$(OBJEXT) \
+	test_utils.$(OBJEXT)
+test_PGenNetcdf_OBJECTS = $(am_test_PGenNetcdf_OBJECTS)
+test_PGenNetcdf_LDADD = $(LDADD)
 am_test_PGenRep_OBJECTS = test_PGenRep.$(OBJEXT) test_utils.$(OBJEXT)
 test_PGenRep_OBJECTS = $(am_test_PGenRep_OBJECTS)
 test_PGenRep_LDADD = $(LDADD)
@@ -458,6 +474,18 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+AM_V_CC = $(am__v_CC_@AM_V@)
+am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
+am__v_CC_0 = @echo "  CC      " $@;
+am__v_CC_1 = 
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+AM_V_CCLD = $(am__v_CCLD_@AM_V@)
+am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
+am__v_CCLD_0 = @echo "  CCLD    " $@;
+am__v_CCLD_1 = 
 SOURCES = $(test_BalanceThetaDot1OTF_SOURCES) \
 	$(test_BilinearHinterp_SOURCES) \
 	$(test_BilinearHinterp_MPI_SOURCES) \
@@ -480,9 +508,10 @@ SOURCES = $(test_BalanceThetaDot1OTF_SOURCES) \
 	$(test_MetGridSBRot_serial_SOURCES) $(test_MetMERRA_SOURCES) \
 	$(test_MetMERRA2_SOURCES) $(test_MetSBRot_SOURCES) \
 	$(test_MetSBRot_MPI_SOURCES) $(test_MetSBRot_serial_SOURCES) \
-	$(test_MetSelector_SOURCES) $(test_PAltDotOTF_SOURCES) \
-	$(test_PAltOTF_SOURCES) $(test_PGenDisc_SOURCES) \
-	$(test_PGenFile_SOURCES) $(test_PGenGrid_SOURCES) \
+	$(test_MetSelector_SOURCES) $(test_NetcdfIn_SOURCES) \
+	$(test_PAltDotOTF_SOURCES) $(test_PAltOTF_SOURCES) \
+	$(test_PGenDisc_SOURCES) $(test_PGenFile_SOURCES) \
+	$(test_PGenGrid_SOURCES) $(test_PGenNetcdf_SOURCES) \
 	$(test_PGenRep_SOURCES) $(test_PGenRnd_SOURCES) \
 	$(test_PGenRndDisc_SOURCES) $(test_Parcel_SOURCES) \
 	$(test_PressOTF_SOURCES) $(test_RandomSrc_SOURCES) \
@@ -515,9 +544,10 @@ DIST_SOURCES = $(test_BalanceThetaDot1OTF_SOURCES) \
 	$(test_MetGridSBRot_serial_SOURCES) $(test_MetMERRA_SOURCES) \
 	$(test_MetMERRA2_SOURCES) $(test_MetSBRot_SOURCES) \
 	$(test_MetSBRot_MPI_SOURCES) $(test_MetSBRot_serial_SOURCES) \
-	$(test_MetSelector_SOURCES) $(test_PAltDotOTF_SOURCES) \
-	$(test_PAltOTF_SOURCES) $(test_PGenDisc_SOURCES) \
-	$(test_PGenFile_SOURCES) $(test_PGenGrid_SOURCES) \
+	$(test_MetSelector_SOURCES) $(test_NetcdfIn_SOURCES) \
+	$(test_PAltDotOTF_SOURCES) $(test_PAltOTF_SOURCES) \
+	$(test_PGenDisc_SOURCES) $(test_PGenFile_SOURCES) \
+	$(test_PGenGrid_SOURCES) $(test_PGenNetcdf_SOURCES) \
 	$(test_PGenRep_SOURCES) $(test_PGenRnd_SOURCES) \
 	$(test_PGenRndDisc_SOURCES) $(test_Parcel_SOURCES) \
 	$(test_PressOTF_SOURCES) $(test_RandomSrc_SOURCES) \
@@ -874,6 +904,15 @@ LDADD = -lgigatraj
 AM_LDFLAGS = -L ../lib/
 GIGATRAJ_INCLUDE = -I$(top_srcdir)/include/
 AM_CPPFLAGS = $(GIGATRAJ_INCLUDE)
+EXTRA_DIST = test_Configuration.sh test_MPI.sh test_MPIGrp.sh \
+	test_FileLock_MPI.sh test_GridLatLonField3D_MPI.sh \
+	test_GridLatLonFieldSfc_MPI.sh test_BilinearHinterp_MPI.sh \
+	test_MetSBRot_MPI.sh test_MetGridSBRot_MPI.sh \
+	parcels_test00.dat $(am__append_19) test_FlockMPI.sh \
+	test_SwarmMPI.sh test_StreamPrintMPI.sh test_StreamReadMPI.sh \
+	test_PGenFile.dat test_PGenFile_fmt.dat test_traj001.dat \
+	test_gtmodel_s01.sh gtmodel_s01_input.txt \
+	gtmodel_s01_original.txt
 @MPI_TRUE@test_FileLock_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
 @MPI_TRUE@test_GridLatLonFieldSfc_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
 @MPI_TRUE@test_GridLatLonField3D_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
@@ -887,29 +926,29 @@ AM_CPPFLAGS = $(GIGATRAJ_INCLUDE)
 @GEOSFP_TRUE@test_MetGEOSfp_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
 
 ###########  Sources
-test_RandomSrc_SOURCES = test_RandomSrc.cc test_utils.cc
+test_RandomSrc_SOURCES = test_RandomSrc.cc test_utils.cc test_utils.hh
 test_RandomSrc_DEPENDENCIES = ../lib/libgigatraj.a
-test_Configuration_SOURCES = test_Configuration.cc test_utils.cc
+test_Configuration_SOURCES = test_Configuration.cc test_utils.cc test_utils.hh
 test_Configuration_DEPENDENCIES = ../lib/libgigatraj.a
-test_FilePath_SOURCES = test_FilePath.cc test_utils.cc
+test_FilePath_SOURCES = test_FilePath.cc test_utils.cc test_utils.hh
 test_FilePath_DEPENDENCIES = ../lib/libgigatraj.a
-test_FileLock_SOURCES = test_FileLock.cc test_utils.cc
+test_FileLock_SOURCES = test_FileLock.cc test_utils.cc test_utils.hh
 test_FileLock_DEPENDENCIES = ../lib/libgigatraj.a
-test_FileLock_Serial_SOURCES = test_FileLock_PGrp.cc test_utils.cc
+test_FileLock_Serial_SOURCES = test_FileLock_PGrp.cc test_utils.cc test_utils.hh
 test_FileLock_Serial_DEPENDENCIES = ../lib/libgigatraj.a
-test_FileLock_MPI_SOURCES = test_FileLock_PGrp.cc test_utils.cc
+test_FileLock_MPI_SOURCES = test_FileLock_PGrp.cc test_utils.cc test_utils.hh
 test_FileLock_MPI_DEPENDENCIES = ../lib/libgigatraj.a
-test_CalGregorian_SOURCES = test_CalGregorian.cc test_utils.cc
+test_CalGregorian_SOURCES = test_CalGregorian.cc test_utils.cc test_utils.hh
 test_CalGregorian_DEPENDENCIES = ../lib/libgigatraj.a
-test_Earth_SOURCES = test_Earth.cc test_utils.cc
+test_Earth_SOURCES = test_Earth.cc test_utils.cc test_utils.hh
 test_Earth_DEPENDENCIES = ../lib/libgigatraj.a
-test_SerialGrp_SOURCES = test_SerialGrp.cc test_utils.cc
+test_SerialGrp_SOURCES = test_SerialGrp.cc test_utils.cc test_utils.hh
 test_SerialGrp_DEPENDENCIES = ../lib/libgigatraj.a
-test_MPIGrp_SOURCES = test_MPIGrp.cc test_utils.cc
+test_MPIGrp_SOURCES = test_MPIGrp.cc test_utils.cc test_utils.hh
 test_MPIGrp_DEPENDENCIES = ../lib/libgigatraj.a
-test_GridLatLonFieldSfc_SOURCES = test_GridLatLonFieldSfc.cc test_utils.cc
+test_GridLatLonFieldSfc_SOURCES = test_GridLatLonFieldSfc.cc test_utils.cc test_utils.hh
 test_GridLatLonFieldSfc_DEPENDENCIES = ../lib/libgigatraj.a
-test_GridLatLonField3D_SOURCES = test_GridLatLonField3D.cc test_utils.cc
+test_GridLatLonField3D_SOURCES = test_GridLatLonField3D.cc test_utils.cc test_utils.hh
 test_GridLatLonField3D_DEPENDENCIES = ../lib/libgigatraj.a
 test_GridLatLonFieldSfc_serial_SOURCES = test_GridLatLonFieldSfc_PGrp.cc test_utils.cc
 test_GridLatLonFieldSfc_serial_DEPENDENCIES = ../lib/libgigatraj.a
@@ -919,95 +958,99 @@ test_GridLatLonField3D_serial_SOURCES = test_GridLatLonField3D_PGrp.cc test_util
 test_GridLatLonField3D_serial_DEPENDENCIES = ../lib/libgigatraj.a
 test_GridLatLonField3D_MPI_SOURCES = test_GridLatLonField3D_PGrp.cc test_utils.cc
 test_GridLatLonField3D_MPI_DEPENDENCIES = ../lib/libgigatraj.a
-test_LinearVinterp_SOURCES = test_LinearVinterp.cc test_utils.cc
+test_LinearVinterp_SOURCES = test_LinearVinterp.cc test_utils.cc test_utils.hh
 test_LinearVinterp_DEPENDENCIES = ../lib/libgigatraj.a
-test_LogLinearVinterp_SOURCES = test_LogLinearVinterp.cc test_utils.cc
+test_LogLinearVinterp_SOURCES = test_LogLinearVinterp.cc test_utils.cc test_utils.hh
 test_LogLinearVinterp_DEPENDENCIES = ../lib/libgigatraj.a
-test_BilinearHinterp_SOURCES = test_BilinearHinterp.cc test_utils.cc
+test_BilinearHinterp_SOURCES = test_BilinearHinterp.cc test_utils.cc test_utils.hh
 test_BilinearHinterp_DEPENDENCIES = ../lib/libgigatraj.a
-test_BilinearHinterp_serial_SOURCES = test_BilinearHinterp_PGrp.cc test_utils.cc
+test_BilinearHinterp_serial_SOURCES = test_BilinearHinterp_PGrp.cc test_utils.cc test_utils.hh
 test_BilinearHinterp_serial_DEPENDENCIES = ../lib/libgigatraj.a
-test_BilinearHinterp_MPI_SOURCES = test_BilinearHinterp_PGrp.cc test_utils.cc
+test_BilinearHinterp_MPI_SOURCES = test_BilinearHinterp_PGrp.cc test_utils.cc test_utils.hh
 test_BilinearHinterp_MPI_DEPENDENCIES = ../lib/libgigatraj.a
-test_ThetaOTF_SOURCES = test_ThetaOTF.cc test_utils.cc
+test_ThetaOTF_SOURCES = test_ThetaOTF.cc test_utils.cc test_utils.hh
 test_ThetaOTF_DEPENDENCIES = ../lib/libgigatraj.a
-test_TropOTF_SOURCES = test_TropOTF.cc test_utils.cc
+test_TropOTF_SOURCES = test_TropOTF.cc test_utils.cc test_utils.hh
 test_TropOTF_DEPENDENCIES = ../lib/libgigatraj.a
-test_PressOTF_SOURCES = test_PressOTF.cc test_utils.cc
+test_PressOTF_SOURCES = test_PressOTF.cc test_utils.cc test_utils.hh
 test_PressOTF_DEPENDENCIES = ../lib/libgigatraj.a
-test_PAltOTF_SOURCES = test_PAltOTF.cc test_utils.cc
+test_PAltOTF_SOURCES = test_PAltOTF.cc test_utils.cc test_utils.hh
 test_PAltOTF_DEPENDENCIES = ../lib/libgigatraj.a
-test_PAltDotOTF_SOURCES = test_PAltDotOTF.cc test_utils.cc
+test_PAltDotOTF_SOURCES = test_PAltDotOTF.cc test_utils.cc test_utils.hh
 test_PAltDotOTF_DEPENDENCIES = ../lib/libgigatraj.a
-test_DensOTF_SOURCES = test_DensOTF.cc test_utils.cc
+test_DensOTF_SOURCES = test_DensOTF.cc test_utils.cc test_utils.hh
 test_DensOTF_DEPENDENCIES = ../lib/libgigatraj.a
-test_ThetaDotOTF_SOURCES = test_ThetaDotOTF.cc test_utils.cc
+test_ThetaDotOTF_SOURCES = test_ThetaDotOTF.cc test_utils.cc test_utils.hh
 test_ThetaDotOTF_DEPENDENCIES = ../lib/libgigatraj.a
-test_BalanceThetaDot1OTF_SOURCES = test_BalanceThetaDot1OTF.cc test_utils.cc 
+test_BalanceThetaDot1OTF_SOURCES = test_BalanceThetaDot1OTF.cc test_utils.cc  test_utils.hh
 test_BalanceThetaDot1OTF_DEPENDENCIES = ../lib/libgigatraj.a
-test_MetSBRot_SOURCES = test_MetSBRot.cc test_utils.cc
+test_MetSBRot_SOURCES = test_MetSBRot.cc test_utils.cc test_utils.hh
 test_MetSBRot_DEPENDENCIES = ../lib/libgigatraj.a
-test_MetSBRot_serial_SOURCES = test_MetSBRot_PGrp.cc test_utils.cc
+test_MetSBRot_serial_SOURCES = test_MetSBRot_PGrp.cc test_utils.cc test_utils.hh
 test_MetSBRot_serial_DEPENDENCIES = ../lib/libgigatraj.a
-test_MetSBRot_MPI_SOURCES = test_MetSBRot_PGrp.cc test_utils.cc
+test_MetSBRot_MPI_SOURCES = test_MetSBRot_PGrp.cc test_utils.cc test_utils.hh
 test_MetSBRot_MPI_DEPENDENCIES = ../lib/libgigatraj.a
-test_MetGridSBRot_SOURCES = test_MetGridSBRot.cc test_utils.cc
+test_MetGridSBRot_SOURCES = test_MetGridSBRot.cc test_utils.cc test_utils.hh
 test_MetGridSBRot_DEPENDENCIES = ../lib/libgigatraj.a
-test_MetGridSBRot_serial_SOURCES = test_MetGridSBRot_PGrp.cc test_utils.cc
+test_MetGridSBRot_serial_SOURCES = test_MetGridSBRot_PGrp.cc test_utils.cc test_utils.hh
 test_MetGridSBRot_serial_DEPENDENCIES = ../lib/libgigatraj.a
-test_MetGridSBRot_MPI_SOURCES = test_MetGridSBRot_PGrp.cc test_utils.cc
+test_MetGridSBRot_MPI_SOURCES = test_MetGridSBRot_PGrp.cc test_utils.cc test_utils.hh
 test_MetGridSBRot_MPI_DEPENDENCIES = ../lib/libgigatraj.a
-test_MetMERRA_SOURCES = test_MetMERRA.cc test_utils.cc
+test_MetMERRA_SOURCES = test_MetMERRA.cc test_utils.cc test_utils.hh
 test_MetMERRA_DEPENDENCIES = ../lib/libgigatraj.a
-test_MetMERRA2_SOURCES = test_MetMERRA2.cc test_utils.cc
+test_MetMERRA2_SOURCES = test_MetMERRA2.cc test_utils.cc test_utils.hh
 test_MetMERRA2_DEPENDENCIES = ../lib/libgigatraj.a
-test_MetGEOSfpFcast_SOURCES = test_MetGEOSfpFcast.cc test_utils.cc
+test_MetGEOSfpFcast_SOURCES = test_MetGEOSfpFcast.cc test_utils.cc test_utils.hh
 test_MetGEOSfpFcast_DEPENDENCIES = ../lib/libgigatraj.a
-test_MetGEOSfpAssim_SOURCES = test_MetGEOSfpAssim.cc test_utils.cc
+test_MetGEOSfpAssim_SOURCES = test_MetGEOSfpAssim.cc test_utils.cc test_utils.hh
 test_MetGEOSfpAssim_DEPENDENCIES = ../lib/libgigatraj.a
-test_MetGEOSfp_SOURCES = test_MetGEOSfp.cc test_utils.cc
+test_MetGEOSfp_SOURCES = test_MetGEOSfp.cc test_utils.cc test_utils.hh
 test_MetGEOSfp_DEPENDENCIES = ../lib/libgigatraj.a
-test_MetSelector_SOURCES = test_MetSelector.cc test_utils.cc
+test_MetSelector_SOURCES = test_MetSelector.cc test_utils.cc test_utils.hh
 test_MetSelector_DEPENDENCIES = ../lib/libgigatraj.a
-test_Parcel_SOURCES = test_Parcel.cc test_utils.cc
+test_Parcel_SOURCES = test_Parcel.cc test_utils.cc test_utils.hh
 test_Parcel_DEPENDENCIES = ../lib/libgigatraj.a
-test_ChangeVertical_SOURCES = test_ChangeVertical.cc test_utils.cc
+test_ChangeVertical_SOURCES = test_ChangeVertical.cc test_utils.cc test_utils.hh
 test_ChangeVertical_DEPENDENCIES = ../lib/libgigatraj.a
-test_StreamDump_Load_SOURCES = test_StreamDump_Load.cc test_utils.cc
+test_StreamDump_Load_SOURCES = test_StreamDump_Load.cc test_utils.cc test_utils.hh
 test_StreamDump_Load_DEPENDENCIES = ../lib/libgigatraj.a
-test_StreamRead_SOURCES = test_StreamRead.cc test_utils.cc
+test_StreamRead_SOURCES = test_StreamRead.cc test_utils.cc test_utils.hh
 test_StreamRead_DEPENDENCIES = ../lib/libgigatraj.a
-test_StreamPrint_SOURCES = test_StreamPrint.cc test_utils.cc
+test_NetcdfIn_SOURCES = test_NetcdfIn.cc test_utils.cc test_utils.hh
+test_NetcdfIn_DEPENDENCIES = ../lib/libgigatraj.a
+test_PGenNetcdf_SOURCES = test_PGenNetcdf.cc test_utils.cc test_utils.hh
+test_PGenNetcdf_DEPENDENCIES = ../lib/libgigatraj.a
+test_StreamPrint_SOURCES = test_StreamPrint.cc test_utils.cc test_utils.hh
 test_StreamPrint_DEPENDENCIES = ../lib/libgigatraj.a
-test_FlockSerial_SOURCES = test_FlockSerial.cc test_utils.cc
+test_FlockSerial_SOURCES = test_FlockSerial.cc test_utils.cc test_utils.hh
 test_FlockSerial_DEPENDENCIES = ../lib/libgigatraj.a
-test_SwarmSerial_SOURCES = test_SwarmSerial.cc test_utils.cc
+test_SwarmSerial_SOURCES = test_SwarmSerial.cc test_utils.cc test_utils.hh
 test_SwarmSerial_DEPENDENCIES = ../lib/libgigatraj.a
-test_FlockMPI_SOURCES = test_FlockMPI.cc test_utils.cc
+test_FlockMPI_SOURCES = test_FlockMPI.cc test_utils.cc test_utils.hh
 test_FlockMPI_DEPENDENCIES = ../lib/libgigatraj.a
-test_SwarmMPI_SOURCES = test_SwarmMPI.cc test_utils.cc
+test_SwarmMPI_SOURCES = test_SwarmMPI.cc test_utils.cc test_utils.hh
 test_SwarmMPI_DEPENDENCIES = ../lib/libgigatraj.a
-test_StreamPrintMPI_SOURCES = test_StreamPrintMPI.cc test_utils.cc
+test_StreamPrintMPI_SOURCES = test_StreamPrintMPI.cc test_utils.cc test_utils.hh
 test_StreamPrintMPI_DEPENDENCIES = ../lib/libgigatraj.a
-test_StreamReadMPI_SOURCES = test_StreamReadMPI.cc test_utils.cc
+test_StreamReadMPI_SOURCES = test_StreamReadMPI.cc test_utils.cc test_utils.hh
 test_StreamReadMPI_DEPENDENCIES = ../lib/libgigatraj.a
-test_PGenRep_SOURCES = test_PGenRep.cc test_utils.cc
+test_PGenRep_SOURCES = test_PGenRep.cc test_utils.cc test_utils.hh
 test_PGenRep_DEPENDENCIES = ../lib/libgigatraj.a
-test_PGenGrid_SOURCES = test_PGenGrid.cc test_utils.cc
+test_PGenGrid_SOURCES = test_PGenGrid.cc test_utils.cc test_utils.hh
 test_PGenGrid_DEPENDENCIES = ../lib/libgigatraj.a
-test_PGenRnd_SOURCES = test_PGenRnd.cc test_utils.cc
+test_PGenRnd_SOURCES = test_PGenRnd.cc test_utils.cc test_utils.hh
 test_PGenRnd_DEPENDENCIES = ../lib/libgigatraj.a
-test_PGenRndDisc_SOURCES = test_PGenRndDisc.cc test_utils.cc
+test_PGenRndDisc_SOURCES = test_PGenRndDisc.cc test_utils.cc test_utils.hh
 test_PGenRndDisc_DEPENDENCIES = ../lib/libgigatraj.a
-test_PGenDisc_SOURCES = test_PGenDisc.cc test_utils.cc
+test_PGenDisc_SOURCES = test_PGenDisc.cc test_utils.cc test_utils.hh
 test_PGenDisc_DEPENDENCIES = ../lib/libgigatraj.a
-test_PGenFile_SOURCES = test_PGenFile.cc test_utils.cc
+test_PGenFile_SOURCES = test_PGenFile.cc test_utils.cc test_utils.hh
 test_PGenFile_DEPENDENCIES = ../lib/libgigatraj.a
-test_traj000_SOURCES = test_traj000.cc test_utils.cc
+test_traj000_SOURCES = test_traj000.cc test_utils.cc test_utils.hh
 test_traj000_DEPENDENCIES = ../lib/libgigatraj.a
-test_traj001_SOURCES = test_traj001.cc test_utils.cc
+test_traj001_SOURCES = test_traj001.cc test_utils.cc test_utils.hh
 test_traj001_DEPENDENCIES = ../lib/libgigatraj.a
-test_traj010_SOURCES = test_traj010.cc test_utils.cc
+test_traj010_SOURCES = test_traj010.cc test_utils.cc test_utils.hh
 test_traj010_DEPENDENCIES = ../lib/libgigatraj.a
 all: all-am
 
@@ -1191,6 +1234,10 @@ test_MetSelector$(EXEEXT): $(test_MetSelector_OBJECTS) $(test_MetSelector_DEPEND
 	@rm -f test_MetSelector$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_MetSelector_OBJECTS) $(test_MetSelector_LDADD) $(LIBS)
 
+test_NetcdfIn$(EXEEXT): $(test_NetcdfIn_OBJECTS) $(test_NetcdfIn_DEPENDENCIES) $(EXTRA_test_NetcdfIn_DEPENDENCIES) 
+	@rm -f test_NetcdfIn$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(test_NetcdfIn_OBJECTS) $(test_NetcdfIn_LDADD) $(LIBS)
+
 test_PAltDotOTF$(EXEEXT): $(test_PAltDotOTF_OBJECTS) $(test_PAltDotOTF_DEPENDENCIES) $(EXTRA_test_PAltDotOTF_DEPENDENCIES) 
 	@rm -f test_PAltDotOTF$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_PAltDotOTF_OBJECTS) $(test_PAltDotOTF_LDADD) $(LIBS)
@@ -1210,6 +1257,10 @@ test_PGenFile$(EXEEXT): $(test_PGenFile_OBJECTS) $(test_PGenFile_DEPENDENCIES) $
 test_PGenGrid$(EXEEXT): $(test_PGenGrid_OBJECTS) $(test_PGenGrid_DEPENDENCIES) $(EXTRA_test_PGenGrid_DEPENDENCIES) 
 	@rm -f test_PGenGrid$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_PGenGrid_OBJECTS) $(test_PGenGrid_LDADD) $(LIBS)
+
+test_PGenNetcdf$(EXEEXT): $(test_PGenNetcdf_OBJECTS) $(test_PGenNetcdf_DEPENDENCIES) $(EXTRA_test_PGenNetcdf_DEPENDENCIES) 
+	@rm -f test_PGenNetcdf$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(test_PGenNetcdf_OBJECTS) $(test_PGenNetcdf_LDADD) $(LIBS)
 
 test_PGenRep$(EXEEXT): $(test_PGenRep_OBJECTS) $(test_PGenRep_DEPENDENCIES) $(EXTRA_test_PGenRep_DEPENDENCIES) 
 	@rm -f test_PGenRep$(EXEEXT)
@@ -1339,11 +1390,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_MetSBRot_MPI-test_utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_MetSBRot_PGrp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_MetSelector.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_NetcdfIn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_PAltDotOTF.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_PAltOTF.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_PGenDisc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_PGenFile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_PGenGrid.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_PGenNetcdf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_PGenRep.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_PGenRnd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_PGenRndDisc.Po@am__quote@
@@ -2079,6 +2132,13 @@ test_ChangeVertical.log: test_ChangeVertical$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_NetcdfIn.log: test_NetcdfIn$(EXEEXT)
+	@p='test_NetcdfIn$(EXEEXT)'; \
+	b='test_NetcdfIn'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 test_FlockMPI.sh.log: test_FlockMPI.sh
 	@p='test_FlockMPI.sh'; \
 	b='test_FlockMPI.sh'; \
@@ -2145,6 +2205,13 @@ test_PGenDisc.log: test_PGenDisc$(EXEEXT)
 test_PGenFile.log: test_PGenFile$(EXEEXT)
 	@p='test_PGenFile$(EXEEXT)'; \
 	b='test_PGenFile'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_PGenNetcdf.log: test_PGenNetcdf$(EXEEXT)
+	@p='test_PGenNetcdf$(EXEEXT)'; \
+	b='test_PGenNetcdf'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -2345,6 +2412,7 @@ uninstall-am:
 	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
 	recheck tags tags-am uninstall uninstall-am
 
+@NETCDF_TRUE@   # EXTRA_DIST += test_netcdfIn_data_01.nc4
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

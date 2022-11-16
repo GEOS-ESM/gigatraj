@@ -105,4 +105,9 @@ libgigatraj_a_SOURCES += ../include/gigatraj/Parcel.hh           Parcel.cc \
                          ../include/gigatraj/StreamRead.hh       filters/StreamRead.cc \
                          ../include/gigatraj/ChangeVertical.hh   filters/ChangeVertical.cc
 
+if NETCDF
+   libgigatraj_a_SOURCES += ../include/gigatraj/NetcdfIn.hh     filters/NetcdfIn.cc 
+   libgigatraj_a_SOURCES += ../include/gigatraj/PGenNetcdf.hh   PGenNetcdf.cc 
+endif
+
 
