@@ -105,6 +105,7 @@ void PGenGrid :: initgrid( Seq<Parcel>* seq, const Parcel& p
           // longitudes will always be OK, if they wrap
           real lon0 = e.wrap(beglon);
           real lon1 = e.wrap(endlon);
+
           while ( (deltalon > 0.0 ) && ( lon0 > lon1 ) ) {
              lon1 += e.fullcircle;
           }   

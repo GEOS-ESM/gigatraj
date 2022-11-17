@@ -31,6 +31,7 @@ PGenRndDisc::PGenRndDisc( const real lon, const real lat, const real level, cons
    lat0 = lat;
    rad = r;
    thk = thickness;
+   z0 = level;
 
    rnd.seed();
 }

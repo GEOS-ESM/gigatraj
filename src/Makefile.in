@@ -78,8 +78,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = gt_fill_met_cache$(EXEEXT) gtmodel_s01$(EXEEXT) \
-	gtmodel_s02$(EXEEXT)
+bin_PROGRAMS = gt_fill_met_cache$(EXEEXT) gt_generate_parcels$(EXEEXT) \
+	gtmodel_s01$(EXEEXT) gtmodel_s02$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(dist_bin_SCRIPTS) $(top_srcdir)/config/depcomp
@@ -96,6 +96,9 @@ PROGRAMS = $(bin_PROGRAMS)
 am_gt_fill_met_cache_OBJECTS = gt_fill_met_cache.$(OBJEXT)
 gt_fill_met_cache_OBJECTS = $(am_gt_fill_met_cache_OBJECTS)
 gt_fill_met_cache_LDADD = $(LDADD)
+am_gt_generate_parcels_OBJECTS = gt_generate_parcels.$(OBJEXT)
+gt_generate_parcels_OBJECTS = $(am_gt_generate_parcels_OBJECTS)
+gt_generate_parcels_LDADD = $(LDADD)
 am_gtmodel_s01_OBJECTS = gtmodel_s01.$(OBJEXT)
 gtmodel_s01_OBJECTS = $(am_gtmodel_s01_OBJECTS)
 gtmodel_s01_LDADD = $(LDADD)
@@ -159,9 +162,10 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(gt_fill_met_cache_SOURCES) $(gtmodel_s01_SOURCES) \
-	$(gtmodel_s02_SOURCES)
-DIST_SOURCES = $(gt_fill_met_cache_SOURCES) $(gtmodel_s01_SOURCES) \
+SOURCES = $(gt_fill_met_cache_SOURCES) $(gt_generate_parcels_SOURCES) \
+	$(gtmodel_s01_SOURCES) $(gtmodel_s02_SOURCES)
+DIST_SOURCES = $(gt_fill_met_cache_SOURCES) \
+	$(gt_generate_parcels_SOURCES) $(gtmodel_s01_SOURCES) \
 	$(gtmodel_s02_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
@@ -221,6 +225,7 @@ DO_LONGARGS = @DO_LONGARGS@
 DO_MERRA = @DO_MERRA@
 DO_MERRA2 = @DO_MERRA2@
 DO_MPI = @DO_MPI@
+DO_NETCDF = @DO_NETCDF@
 DO_WRAP0 = @DO_WRAP0@
 DO_WRAP180 = @DO_WRAP180@
 ECHO_C = @ECHO_C@
@@ -299,6 +304,8 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+use_mpicc = @use_mpicc@
+use_mpicxx = @use_mpicxx@
 AM_CPPFLAGS = -I$(top_srcdir)/include/
 LDADD = -lgigatraj
 AM_LDFLAGS = -L ../lib/
@@ -312,6 +319,8 @@ EXTRA_DIST = tools.dox
 dist_bin_SCRIPTS = gtmodel_m01 gtmodel_m02
 gt_fill_met_cache_SOURCES = gt_fill_met_cache.cc
 gt_fill_met_cache_DEPENDENCIES = ../lib/libgigatraj.a
+gt_generate_parcels_SOURCES = gt_generate_parcels.cc
+gt_generate_parcels_DEPENDENCIES = ../lib/libgigatraj.a
 gtmodel_s01_SOURCES = gtmodel_s01.cc
 gtmodel_s01_DEPENDENCIES = ../lib/libgigatraj.a
 gtmodel_s02_SOURCES = gtmodel_s02.cc
@@ -397,6 +406,10 @@ gt_fill_met_cache$(EXEEXT): $(gt_fill_met_cache_OBJECTS) $(gt_fill_met_cache_DEP
 	@rm -f gt_fill_met_cache$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(gt_fill_met_cache_OBJECTS) $(gt_fill_met_cache_LDADD) $(LIBS)
 
+gt_generate_parcels$(EXEEXT): $(gt_generate_parcels_OBJECTS) $(gt_generate_parcels_DEPENDENCIES) $(EXTRA_gt_generate_parcels_DEPENDENCIES) 
+	@rm -f gt_generate_parcels$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(gt_generate_parcels_OBJECTS) $(gt_generate_parcels_LDADD) $(LIBS)
+
 gtmodel_s01$(EXEEXT): $(gtmodel_s01_OBJECTS) $(gtmodel_s01_DEPENDENCIES) $(EXTRA_gtmodel_s01_DEPENDENCIES) 
 	@rm -f gtmodel_s01$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(gtmodel_s01_OBJECTS) $(gtmodel_s01_LDADD) $(LIBS)
@@ -447,6 +460,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gt_fill_met_cache.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gt_generate_parcels.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gtmodel_s01.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gtmodel_s02.Po@am__quote@
 
@@ -671,7 +685,11 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_binSCRIPTS
 	uninstall-am uninstall-binPROGRAMS uninstall-dist_binSCRIPTS
 
 
-$(TRIGGER_DOCS_REMAKE): tools.dox gt_fill_met_cache.cc gtmodel_s01.cc gtmodel_s02.cc 
+$(TRIGGER_DOCS_REMAKE): tools.dox \
+                        gt_fill_met_cache.cc \
+                        gt_generate_parcels.cc \
+                        gtmodel_s01.cc \
+                        gtmodel_s02.cc 
 	touch $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

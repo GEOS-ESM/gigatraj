@@ -33,6 +33,7 @@ PlanetNav :: PlanetNav()
    wraplon = -180.0;
 #endif
 
+   confml = 0;
 
 }
 
@@ -70,12 +71,13 @@ void PlanetNav :: checkpos( real longitude, real latitude )
     
 }
 
-void PlanetNav :: deltapos( real *longitude, real *latitude, real deltalon, real deltalat )
+
+void PlanetNav :: deltapos( real *longitude, real *latitude, real deltalon, real deltalat, real factor )
 {
 
    try {
    
-      *latitude += deltalat;
+      *latitude += deltalat*factor;
       if ( *latitude > 90.0 ) {
          // adjust for displacement over the North pole
          *latitude = 90.0 - (*latitude - 90.0);
@@ -89,11 +91,51 @@ void PlanetNav :: deltapos( real *longitude, real *latitude, real deltalon, real
       }
       checkpos(*longitude, *latitude);
 
-      *longitude = PlanetNav::wrap( *longitude + deltalon );
+      *longitude = PlanetNav::wrap( *longitude + deltalon*factor );
 
    } catch ( badlocation badloc ) {
        throw badincrement();
    }
 }
 
+void PlanetNav :: deltapos( int n, real *longitude, real *latitude, const real *deltalon, const real *deltalat, real factor)
+{   
+   for ( int i=0; i<n; i++ ) { 
+
+       try {
+   
+          if ( FINITE(deltalat[i]) && FINITE(deltalon[i]) ) {
+             latitude[i] += deltalat[i]*factor;
+             if ( latitude[i] > 90.0 ) {
+                // adjust for displacement over the North pole
+                latitude[i] = 90.0 - (latitude[i] - 90.0);
+                longitude[i] += 180.0;   
+             } else {
+                if ( latitude[i] < -90.0 ) {
+                // adjust for displacement over the South pole
+                   latitude[i] = -90.0 - (latitude[i] + 90.0);
+                   longitude[i] += 180.0;   
+                }
+             }
+             checkpos(longitude[i], latitude[i]);
+
+             longitude[i] = PlanetNav::wrap( longitude[i] + deltalon[i]*factor );
+             }
+
+       } catch ( badlocation badloc ) {
+           throw badincrement();
+       }
+   }
+
+}
   
+void PlanetNav :: conformal( int mode )
+{
+    confml = mode;
+} 
+
+int PlanetNav :: conformal()
+{
+    return confml;
+}
+
