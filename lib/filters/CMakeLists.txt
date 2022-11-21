@@ -1,12 +1,13 @@
 # Note that directory and library name do not correspond!
-set (this filters)
+esma_set_this ()
 
 set (srcs
    ChangeVertical.cc  StreamDump.cc  StreamLoad.cc 
    StreamPrint.cc  StreamRead.cc
     )
+esma_add_library (${this}
+  SRCS ${srcs}
+  )
 
-include_directories (${this} ${GIGATRAJ_SOURCE_DIR}/include)
-add_library (${this} ${srcs})
-target_link_libraries(${this} gigatraj)
+include_directories (${GIGATRAJ_SOURCE_DIR}/include)
 
