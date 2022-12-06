@@ -107,6 +107,7 @@ libgigatraj_a_SOURCES += ../include/gigatraj/Parcel.hh           Parcel.cc \
 
 if NETCDF
    libgigatraj_a_SOURCES += ../include/gigatraj/NetcdfIn.hh     filters/NetcdfIn.cc 
+   libgigatraj_a_SOURCES += ../include/gigatraj/NetcdfOut.hh     filters/NetcdfOut.cc 
    libgigatraj_a_SOURCES += ../include/gigatraj/PGenNetcdf.hh   PGenNetcdf.cc 
 endif
 

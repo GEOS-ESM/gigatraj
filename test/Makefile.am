@@ -135,8 +135,8 @@ check_PROGRAMS += test_Parcel \
 EXTRA_DIST += parcels_test00.dat 
 
 if NETCDF
-   TESTS += test_NetcdfIn 
-   check_PROGRAMS += test_NetcdfIn 
+   TESTS += test_NetcdfIn test_NetcdfOut
+   check_PROGRAMS += test_NetcdfIn test_NetcdfOut 
    EXTRA_DIST += test_netcdfIn_data_01.nc4
 endif
 
@@ -315,6 +315,9 @@ test_StreamRead_DEPENDENCIES = ../lib/libgigatraj.a
 
 test_NetcdfIn_SOURCES = test_NetcdfIn.cc test_utils.cc test_utils.hh
 test_NetcdfIn_DEPENDENCIES = ../lib/libgigatraj.a
+
+test_NetcdfOut_SOURCES = test_NetcdfOut.cc test_utils.cc test_utils.hh
+test_NetcdfOut_DEPENDENCIES = ../lib/libgigatraj.a
 
 test_PGenNetcdf_SOURCES = test_PGenNetcdf.cc test_utils.cc test_utils.hh
 test_PGenNetcdf_DEPENDENCIES = ../lib/libgigatraj.a

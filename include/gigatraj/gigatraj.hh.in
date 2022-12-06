@@ -375,6 +375,12 @@ namespace gigatraj {
 #define USE_MPI
 #endif
 
+//    use the netcdf library 
+#define DO_NETCDF @DO_NETCDF@
+#if DO_NETCDF == 1
+#define USE_NETCDF
+#endif
+
 //     make longitudes run from 0 to 360
 #define DO_WRAP0 @DO_WRAP0@
 #if DO_WRAP0 == 1

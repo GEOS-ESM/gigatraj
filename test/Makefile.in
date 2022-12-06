@@ -150,8 +150,8 @@ check_PROGRAMS = test_RandomSrc$(EXEEXT) test_Configuration$(EXEEXT) \
 @MERRA2_TRUE@am__append_14 = test_MetMERRA2
 @GEOSFP_TRUE@am__append_15 = test_MetGEOSfpFcast test_MetGEOSfpAssim test_MetGEOSfp
 @GEOSFP_TRUE@am__append_16 = test_MetGEOSfpFcast test_MetGEOSfpAssim test_MetGEOSfp
-@NETCDF_TRUE@am__append_17 = test_NetcdfIn 
-@NETCDF_TRUE@am__append_18 = test_NetcdfIn 
+@NETCDF_TRUE@am__append_17 = test_NetcdfIn test_NetcdfOut
+@NETCDF_TRUE@am__append_18 = test_NetcdfIn test_NetcdfOut 
 @NETCDF_TRUE@am__append_19 = test_netcdfIn_data_01.nc4
 @MPI_TRUE@am__append_20 = test_FlockMPI.sh test_SwarmMPI.sh \
 @MPI_TRUE@	test_StreamPrintMPI.sh test_StreamReadMPI.sh
@@ -182,7 +182,8 @@ CONFIG_CLEAN_VPATH_FILES =
 @GEOSFP_TRUE@am__EXEEXT_8 = test_MetGEOSfpFcast$(EXEEXT) \
 @GEOSFP_TRUE@	test_MetGEOSfpAssim$(EXEEXT) \
 @GEOSFP_TRUE@	test_MetGEOSfp$(EXEEXT)
-@NETCDF_TRUE@am__EXEEXT_9 = test_NetcdfIn$(EXEEXT)
+@NETCDF_TRUE@am__EXEEXT_9 = test_NetcdfIn$(EXEEXT) \
+@NETCDF_TRUE@	test_NetcdfOut$(EXEEXT)
 @MPI_TRUE@am__EXEEXT_10 = test_FlockMPI$(EXEEXT) \
 @MPI_TRUE@	test_SwarmMPI$(EXEEXT) test_StreamPrintMPI$(EXEEXT) \
 @MPI_TRUE@	test_StreamReadMPI$(EXEEXT)
@@ -345,6 +346,10 @@ am_test_NetcdfIn_OBJECTS = test_NetcdfIn.$(OBJEXT) \
 	test_utils.$(OBJEXT)
 test_NetcdfIn_OBJECTS = $(am_test_NetcdfIn_OBJECTS)
 test_NetcdfIn_LDADD = $(LDADD)
+am_test_NetcdfOut_OBJECTS = test_NetcdfOut.$(OBJEXT) \
+	test_utils.$(OBJEXT)
+test_NetcdfOut_OBJECTS = $(am_test_NetcdfOut_OBJECTS)
+test_NetcdfOut_LDADD = $(LDADD)
 am_test_PAltDotOTF_OBJECTS = test_PAltDotOTF.$(OBJEXT) \
 	test_utils.$(OBJEXT)
 test_PAltDotOTF_OBJECTS = $(am_test_PAltDotOTF_OBJECTS)
@@ -509,19 +514,20 @@ SOURCES = $(test_BalanceThetaDot1OTF_SOURCES) \
 	$(test_MetMERRA2_SOURCES) $(test_MetSBRot_SOURCES) \
 	$(test_MetSBRot_MPI_SOURCES) $(test_MetSBRot_serial_SOURCES) \
 	$(test_MetSelector_SOURCES) $(test_NetcdfIn_SOURCES) \
-	$(test_PAltDotOTF_SOURCES) $(test_PAltOTF_SOURCES) \
-	$(test_PGenDisc_SOURCES) $(test_PGenFile_SOURCES) \
-	$(test_PGenGrid_SOURCES) $(test_PGenNetcdf_SOURCES) \
-	$(test_PGenRep_SOURCES) $(test_PGenRnd_SOURCES) \
-	$(test_PGenRndDisc_SOURCES) $(test_Parcel_SOURCES) \
-	$(test_PressOTF_SOURCES) $(test_RandomSrc_SOURCES) \
-	$(test_SerialGrp_SOURCES) $(test_StreamDump_Load_SOURCES) \
-	$(test_StreamPrint_SOURCES) $(test_StreamPrintMPI_SOURCES) \
-	$(test_StreamRead_SOURCES) $(test_StreamReadMPI_SOURCES) \
-	$(test_SwarmMPI_SOURCES) $(test_SwarmSerial_SOURCES) \
-	$(test_ThetaDotOTF_SOURCES) $(test_ThetaOTF_SOURCES) \
-	$(test_TropOTF_SOURCES) $(test_traj000_SOURCES) \
-	$(test_traj001_SOURCES) $(test_traj010_SOURCES)
+	$(test_NetcdfOut_SOURCES) $(test_PAltDotOTF_SOURCES) \
+	$(test_PAltOTF_SOURCES) $(test_PGenDisc_SOURCES) \
+	$(test_PGenFile_SOURCES) $(test_PGenGrid_SOURCES) \
+	$(test_PGenNetcdf_SOURCES) $(test_PGenRep_SOURCES) \
+	$(test_PGenRnd_SOURCES) $(test_PGenRndDisc_SOURCES) \
+	$(test_Parcel_SOURCES) $(test_PressOTF_SOURCES) \
+	$(test_RandomSrc_SOURCES) $(test_SerialGrp_SOURCES) \
+	$(test_StreamDump_Load_SOURCES) $(test_StreamPrint_SOURCES) \
+	$(test_StreamPrintMPI_SOURCES) $(test_StreamRead_SOURCES) \
+	$(test_StreamReadMPI_SOURCES) $(test_SwarmMPI_SOURCES) \
+	$(test_SwarmSerial_SOURCES) $(test_ThetaDotOTF_SOURCES) \
+	$(test_ThetaOTF_SOURCES) $(test_TropOTF_SOURCES) \
+	$(test_traj000_SOURCES) $(test_traj001_SOURCES) \
+	$(test_traj010_SOURCES)
 DIST_SOURCES = $(test_BalanceThetaDot1OTF_SOURCES) \
 	$(test_BilinearHinterp_SOURCES) \
 	$(test_BilinearHinterp_MPI_SOURCES) \
@@ -545,19 +551,20 @@ DIST_SOURCES = $(test_BalanceThetaDot1OTF_SOURCES) \
 	$(test_MetMERRA2_SOURCES) $(test_MetSBRot_SOURCES) \
 	$(test_MetSBRot_MPI_SOURCES) $(test_MetSBRot_serial_SOURCES) \
 	$(test_MetSelector_SOURCES) $(test_NetcdfIn_SOURCES) \
-	$(test_PAltDotOTF_SOURCES) $(test_PAltOTF_SOURCES) \
-	$(test_PGenDisc_SOURCES) $(test_PGenFile_SOURCES) \
-	$(test_PGenGrid_SOURCES) $(test_PGenNetcdf_SOURCES) \
-	$(test_PGenRep_SOURCES) $(test_PGenRnd_SOURCES) \
-	$(test_PGenRndDisc_SOURCES) $(test_Parcel_SOURCES) \
-	$(test_PressOTF_SOURCES) $(test_RandomSrc_SOURCES) \
-	$(test_SerialGrp_SOURCES) $(test_StreamDump_Load_SOURCES) \
-	$(test_StreamPrint_SOURCES) $(test_StreamPrintMPI_SOURCES) \
-	$(test_StreamRead_SOURCES) $(test_StreamReadMPI_SOURCES) \
-	$(test_SwarmMPI_SOURCES) $(test_SwarmSerial_SOURCES) \
-	$(test_ThetaDotOTF_SOURCES) $(test_ThetaOTF_SOURCES) \
-	$(test_TropOTF_SOURCES) $(test_traj000_SOURCES) \
-	$(test_traj001_SOURCES) $(test_traj010_SOURCES)
+	$(test_NetcdfOut_SOURCES) $(test_PAltDotOTF_SOURCES) \
+	$(test_PAltOTF_SOURCES) $(test_PGenDisc_SOURCES) \
+	$(test_PGenFile_SOURCES) $(test_PGenGrid_SOURCES) \
+	$(test_PGenNetcdf_SOURCES) $(test_PGenRep_SOURCES) \
+	$(test_PGenRnd_SOURCES) $(test_PGenRndDisc_SOURCES) \
+	$(test_Parcel_SOURCES) $(test_PressOTF_SOURCES) \
+	$(test_RandomSrc_SOURCES) $(test_SerialGrp_SOURCES) \
+	$(test_StreamDump_Load_SOURCES) $(test_StreamPrint_SOURCES) \
+	$(test_StreamPrintMPI_SOURCES) $(test_StreamRead_SOURCES) \
+	$(test_StreamReadMPI_SOURCES) $(test_SwarmMPI_SOURCES) \
+	$(test_SwarmSerial_SOURCES) $(test_ThetaDotOTF_SOURCES) \
+	$(test_ThetaOTF_SOURCES) $(test_TropOTF_SOURCES) \
+	$(test_traj000_SOURCES) $(test_traj001_SOURCES) \
+	$(test_traj010_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -1018,6 +1025,8 @@ test_StreamRead_SOURCES = test_StreamRead.cc test_utils.cc test_utils.hh
 test_StreamRead_DEPENDENCIES = ../lib/libgigatraj.a
 test_NetcdfIn_SOURCES = test_NetcdfIn.cc test_utils.cc test_utils.hh
 test_NetcdfIn_DEPENDENCIES = ../lib/libgigatraj.a
+test_NetcdfOut_SOURCES = test_NetcdfOut.cc test_utils.cc test_utils.hh
+test_NetcdfOut_DEPENDENCIES = ../lib/libgigatraj.a
 test_PGenNetcdf_SOURCES = test_PGenNetcdf.cc test_utils.cc test_utils.hh
 test_PGenNetcdf_DEPENDENCIES = ../lib/libgigatraj.a
 test_StreamPrint_SOURCES = test_StreamPrint.cc test_utils.cc test_utils.hh
@@ -1238,6 +1247,10 @@ test_NetcdfIn$(EXEEXT): $(test_NetcdfIn_OBJECTS) $(test_NetcdfIn_DEPENDENCIES) $
 	@rm -f test_NetcdfIn$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_NetcdfIn_OBJECTS) $(test_NetcdfIn_LDADD) $(LIBS)
 
+test_NetcdfOut$(EXEEXT): $(test_NetcdfOut_OBJECTS) $(test_NetcdfOut_DEPENDENCIES) $(EXTRA_test_NetcdfOut_DEPENDENCIES) 
+	@rm -f test_NetcdfOut$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(test_NetcdfOut_OBJECTS) $(test_NetcdfOut_LDADD) $(LIBS)
+
 test_PAltDotOTF$(EXEEXT): $(test_PAltDotOTF_OBJECTS) $(test_PAltDotOTF_DEPENDENCIES) $(EXTRA_test_PAltDotOTF_DEPENDENCIES) 
 	@rm -f test_PAltDotOTF$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_PAltDotOTF_OBJECTS) $(test_PAltDotOTF_LDADD) $(LIBS)
@@ -1391,6 +1404,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_MetSBRot_PGrp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_MetSelector.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_NetcdfIn.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_NetcdfOut.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_PAltDotOTF.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_PAltOTF.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_PGenDisc.Po@am__quote@
@@ -2135,6 +2149,13 @@ test_ChangeVertical.log: test_ChangeVertical$(EXEEXT)
 test_NetcdfIn.log: test_NetcdfIn$(EXEEXT)
 	@p='test_NetcdfIn$(EXEEXT)'; \
 	b='test_NetcdfIn'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_NetcdfOut.log: test_NetcdfOut$(EXEEXT)
+	@p='test_NetcdfOut$(EXEEXT)'; \
+	b='test_NetcdfOut'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

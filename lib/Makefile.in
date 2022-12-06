@@ -105,6 +105,8 @@ POST_UNINSTALL = :
 @GEOSFP_TRUE@	metsources/MetGEOSfp.cc
 @NETCDF_TRUE@am__append_5 = ../include/gigatraj/NetcdfIn.hh \
 @NETCDF_TRUE@	filters/NetcdfIn.cc \
+@NETCDF_TRUE@	../include/gigatraj/NetcdfOut.hh \
+@NETCDF_TRUE@	filters/NetcdfOut.cc \
 @NETCDF_TRUE@	../include/gigatraj/PGenNetcdf.hh PGenNetcdf.cc
 subdir = lib
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
@@ -236,7 +238,8 @@ am__libgigatraj_a_SOURCES_DIST = ../include/gigatraj/RandomSrc.hh \
 	../include/gigatraj/StreamRead.hh filters/StreamRead.cc \
 	../include/gigatraj/ChangeVertical.hh \
 	filters/ChangeVertical.cc ../include/gigatraj/NetcdfIn.hh \
-	filters/NetcdfIn.cc ../include/gigatraj/PGenNetcdf.hh \
+	filters/NetcdfIn.cc ../include/gigatraj/NetcdfOut.hh \
+	filters/NetcdfOut.cc ../include/gigatraj/PGenNetcdf.hh \
 	PGenNetcdf.cc
 am__dirstamp = $(am__leading_dot)dirstamp
 @MPI_TRUE@am__objects_1 = MPIGrp.$(OBJEXT)
@@ -252,7 +255,7 @@ am__dirstamp = $(am__leading_dot)dirstamp
 @GEOSFP_TRUE@	metsources/MetGEOSfpAssim.$(OBJEXT) \
 @GEOSFP_TRUE@	metsources/MetGEOSfp.$(OBJEXT)
 @NETCDF_TRUE@am__objects_5 = filters/NetcdfIn.$(OBJEXT) \
-@NETCDF_TRUE@	PGenNetcdf.$(OBJEXT)
+@NETCDF_TRUE@	filters/NetcdfOut.$(OBJEXT) PGenNetcdf.$(OBJEXT)
 am_libgigatraj_a_OBJECTS = RandomSrc.$(OBJEXT) FilePath.$(OBJEXT) \
 	FileLock.$(OBJEXT) Configuration.$(OBJEXT) \
 	CalGregorian.$(OBJEXT) PlanetNav.$(OBJEXT) \
@@ -751,6 +754,8 @@ filters/ChangeVertical.$(OBJEXT): filters/$(am__dirstamp) \
 	filters/$(DEPDIR)/$(am__dirstamp)
 filters/NetcdfIn.$(OBJEXT): filters/$(am__dirstamp) \
 	filters/$(DEPDIR)/$(am__dirstamp)
+filters/NetcdfOut.$(OBJEXT): filters/$(am__dirstamp) \
+	filters/$(DEPDIR)/$(am__dirstamp)
 
 libgigatraj.a: $(libgigatraj_a_OBJECTS) $(libgigatraj_a_DEPENDENCIES) $(EXTRA_libgigatraj_a_DEPENDENCIES) 
 	$(AM_V_at)-rm -f libgigatraj.a
@@ -792,6 +797,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trace.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@filters/$(DEPDIR)/ChangeVertical.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@filters/$(DEPDIR)/NetcdfIn.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@filters/$(DEPDIR)/NetcdfOut.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@filters/$(DEPDIR)/StreamDump.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@filters/$(DEPDIR)/StreamLoad.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@filters/$(DEPDIR)/StreamPrint.Po@am__quote@

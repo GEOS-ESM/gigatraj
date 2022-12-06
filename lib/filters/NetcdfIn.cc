@@ -14,10 +14,17 @@ NetcdfIn :: NetcdfIn()
     t0 = 0.0;
     end = false;
     
+    do_flags = -1;
+    do_status = -1;
+    do_tag = -1;
+    
     dbug = 0;
     
     np = 0;
     ip = -1;
+    
+    to = 0.0;
+    ts = 1.0;
     
     vid_lon = -1;
     vid_lat = -1;
@@ -87,6 +94,48 @@ void NetcdfIn::at_end( bool select )
     end = select;
 }
 
+void NetcdfIn::readFlags( int mode )
+{
+    if ( ! is_open ) {
+       do_flags = mode;
+    } else {
+        throw (badNetcdfTooLate());
+    }
+}
+
+int NetcdfIn::readFlags()
+{
+    return do_flags;
+}
+    
+void NetcdfIn::readStatus( int mode )
+{
+    if ( ! is_open ) {
+       do_status = mode;
+    } else {
+        throw (badNetcdfTooLate());
+    }
+}
+
+int NetcdfIn::readStatus()
+{
+    return do_status;
+}
+
+void NetcdfIn::readTag( int mode )
+{
+    if ( ! is_open ) {
+       do_tag = mode;
+    } else {
+        throw (badNetcdfTooLate());
+    }
+}
+
+int NetcdfIn::readTag()
+{
+    return do_tag;
+}
+
 bool NetcdfIn::at_end()
 {
     return end;
@@ -105,6 +154,248 @@ void NetcdfIn::debug( int mode )
 int NetcdfIn::debug()
 {
      return dbug;
+}
+
+void NetcdfIn::format( std::string fmt )
+{
+      int i;
+      int state;
+      std::string ch;
+      std::string metfield;
+      
+      // since we are specifying a format, clear any previously-set flags
+      // and turn everything off.
+      do_flags = 0;
+      do_status = 0;
+      do_tag = 0;
+      
+      i = 0;
+      state = 0;
+      while ( i < fmt.size() ) {
+         
+         // grab the next character
+         ch = fmt.substr(i,1);
+      
+         switch (state) {
+         case 0: // in literal text, not a "%" sequence
+             if ( ch == "%" ) {
+                
+                // and start a new format spec
+                metfield = "";
+
+                // start a % sequence
+                state = 1;
+             }
+             break;
+         case 1: // just begun a new "%" sequence
+      
+            if ( ch != "%" ) {
+               
+               // are we terminating the sequence already with 
+               // a recognized format character?
+               if ( ch == "t" || ch == "o" || ch == "a" || ch == "v" 
+                 || ch == "i" || ch == "c" || ch == "x" || ch == "T" ) {
+                  
+                  // these are all ignored
+ 
+                  // reset the state to 0  
+                  state = 0;             
+
+               } else if ( ch == "f" ) {
+               
+                  do_flags = 1;
+                  
+                  // reset the state to 0  
+                  state = 0;             
+
+               } else if ( ch == "s" ) {
+               
+                  do_status = 1;
+                  
+                  // reset the state to 0  
+                  state = 0;             
+
+               } else if ( ch == "g" ) {
+                  
+                  do_tag = 1;
+                  
+                  // reset the state to 0  
+                  state = 0;             
+
+               } else if ( ch == "{"  ) {
+               
+                  // this must be a met field
+                                   
+                  state = 10;               
+               
+               } else {
+                  // no, the user is specifying something more
+                  
+                  // expect digits or a sewuence terminator next
+                  state = 2;
+                  
+               }
+               
+            } else {
+               // this is just a "%%" sequence.
+               // ignore it.
+               state = 0;
+            }
+      
+            break;
+         case 2: // in a digit sequence
+            
+            if ( ch == "0" || ch == "1" || ch == "2"  || ch == "3" || ch == "4" 
+              || ch == "5" || ch == "6" || ch == "7" || ch == "8" || ch == "9" 
+              || ch == "." ) {
+
+              // ignore these numeric specifier characters              
+            
+            } else if ( ch == "t" || ch == "o" || ch == "a" || ch == "v" 
+                     || ch == "i" || ch == "c" || ch == "x" || ch == "T" ) {
+                  // termination of a % sequence
+                  
+                  // ignore these sequences
+                  
+                  // on to the next sequence
+                  state = 0;
+                  
+            } else if ( ch == "f" ) {
+            
+               do_flags = 1;
+               
+               // reset the state to 0  
+               state = 0;             
+
+            } else if ( ch == "s" ) {
+            
+               do_status = 1;
+               
+               // reset the state to 0  
+               state = 0;             
+
+            } else if ( ch == "g" ) {
+               
+               do_tag = 1;
+               
+               // reset the state to 0  
+               state = 0;             
+            } else if ( ch == "{"  ) {      
+                                            
+                  // not quite at termination of a %i,j{field}m sequence
+                                                              
+                  state = 10;                  
+                                            
+            } else {
+                std::cerr << "Bad format: " << fmt << std::endl;
+                throw (NetcdfIn::badNetcdfFormatSpec());   
+            }
+            break;
+         case 10: // in a met field sequence
+            
+            if ( ch != "}" ) {
+               metfield = metfield + ch;         
+            } else { 
+               state = 11;
+            }
+            break;
+
+         case 11: // ends a met field sequence
+
+            if ( ch == "m" ) {
+               
+              // ignore the met field spec
+                           
+            } else {          
+                std::cerr << "Bad format: " << fmt << std::endl;
+                throw (NetcdfIn::badNetcdfFormatSpec());   
+            }
+            
+            // read for the next sequence
+            state = 0;
+
+            break;
+         }
+            
+         i++;
+      
+      }
+      
+      fmtspec = fmt;
+      
+
+}
+
+std::string NetcdfIn::format()
+{
+    if ( fmtspec != "" ) {
+       return fmtspec;
+    } else {
+       return "%t %o %a %v";
+    }
+}
+
+void NetcdfIn::setTimeTransform( double scale, double offset )
+{
+    if ( ! is_open ) {
+       ts = scale;
+       to = offset;
+    } else {
+       throw new badNetcdfTooLate();
+    }
+}
+
+void NetcdfIn::getTimeTransform( double* scale, double* offset )
+{
+     *scale = ts;
+     *offset = to;
+}
+
+void NetcdfIn::parseTimeUnits( std::string tunits )
+{
+     // not yet implemented 
+     
+     double tmp_ts;
+     double tmp_to;
+     size_t pos;
+     
+     tmp_ts = 1.0;
+     tmp_to = 0.0;
+     
+     try {
+         if ( (tunits.size() > 11) && (tunits.substr(0,1) == "d" || tunits.substr(0,1) == "D" ) ) {
+            if ( tunits.substr(1,10) == "ays since " ) {
+               tmp_ts = 1.0;
+               pos = 11;      
+            }
+         } else if ( (tunits.size() > 12) && (tunits.substr(0,1) == "h" || tunits.substr(0,1) == "H" ) ) {
+            if ( tunits.substr(1,11) == "ours since " ) {
+               tmp_ts = 24.0;
+               pos = 12;      
+            }
+         } else if ( (tunits.size() > 14) && (tunits.substr(0,1) == "m" || tunits.substr(0,1) == "M" ) ) {
+            if ( tunits.substr(1,11) == "inutes since " ) {
+               tmp_ts = 24.0*60.0;
+               pos = 14;      
+            }
+         } else if ( (tunits.size() > 14) && (tunits.substr(0,1) == "s" || tunits.substr(0,1) == "S" ) ) {
+            if ( tunits.substr(1,11) == "sconds since " ) {
+               tmp_ts = 24.0*60.0*60.0;      
+               pos = 14;
+            }
+         }
+     
+         if ( tunits.substr(pos,11) == "1-1-1 00:00" ) {
+            tmp_to = 693596.00;
+         } else {
+            // tmp_to = met->cal2Time( tunits.substr(pos,11) );
+         }
+     
+         to = tmp_to;
+         ts = tmp_ts;
+     } catch(...) {
+         std::cerr << "NetcdfIn time units unkown: " << tunits << std::endl;
+     }
 }
 
 void NetcdfIn::open( std::string file )
@@ -131,8 +422,11 @@ void NetcdfIn::open( std::string file )
      int ndimens;
      int unlimdim_idx;
      char c_vname[NC_MAX_NAME + 1];
+     double tt0;
      
-     
+     if ( is_open ) {
+        close();
+     }
      
      if ( file != "" ) {
         fname = file;
@@ -259,10 +553,11 @@ void NetcdfIn::open( std::string file )
      }
      it = time_index;
      icount = 1;
-     err = nc_get_vara_double( ncid, var_id, &it, &icount, &t0 );
+     err = nc_get_vara_double( ncid, var_id, &it, &icount, &tt0 );
      if ( dbug > 1 ) {
         std::cerr << "NetcdfIn::open: Parcel time is " << t0 << std::endl;
-     }   
+     }
+     t0 = tconv( tt0 );
      
      // now find out about parcels (mainly, how many there are)
      name = "id";
@@ -292,10 +587,28 @@ void NetcdfIn::open( std::string file )
      if ( dbug > 1 ) {
         std::cerr << "NetcdfIn::open: Got the id for the 'lon' coordiate." <<  std::endl;
      }
+     // get thje bad-value flag for longitudes
+#ifdef USING_DOUBLE
+     err = nc_get_att_double( ncid, vid_lon, "missing_value", &badlon);
+#else
+     err = nc_get_att_float( ncid, vid_lon, "missing_value", &badlon);
+#endif 
+     if ( err != NC_NOERR ) {
+#ifdef USING_DOUBLE
+        err = nc_get_att_double( ncid, vid_lon, "_FillValue", &badlon);
+#else
+        err = nc_get_att_float( ncid, vid_lon, "_FillValue", &badlon);
+#endif      
+        if ( err != NC_NOERR ) {
+           badlon = ACOS(2.0); // i.e., NaN
+        }
+     }    
+     
      vid_lat = get_var_id( "lat", true, "", &vtyp_lat );
      if ( dbug > 1 ) {
         std::cerr << "NetcdfIn::open: Got the id for the 'lat' coordiate." <<  std::endl;
      }
+     
      vid_z   = get_var_id( vcoord, true, "vertical_coordinate", &vtyp_z );
      if ( dbug > 1 ) {
         std::cerr << "NetcdfIn::open: Got the id for the vertical coordiate: " << vcoord <<  std::endl;
@@ -309,18 +622,43 @@ void NetcdfIn::open( std::string file )
         if ( dbug > 1 ) {
            std::cerr << "NetcdfIn::open: Found a vertical coordinate " << vcoord <<  std::endl;
         }
-     }  
-     vid_status = get_var_id( "status", false, "", &vtyp_status );
-     if ( dbug > 1 && vid_status >= 0 ) {
-        std::cerr << "NetcdfIn::open: Got the id for the 'status' coordinate." <<  std::endl;
      }
-     vid_flags  = get_var_id( "flags", false, "", &vtyp_flags );
-     if ( dbug > 1 && vid_flags >= 0 ) {
-        std::cerr << "NetcdfIn::open: Got the id for the 'flags' coordinate." <<  std::endl;
+     
+     if ( do_status != 0 ) {   
+        vid_status = get_var_id( "status", false, "", &vtyp_status );
+        if ( (vid_status == -1) && (do_status == 1) ) {
+           throw (badFileConventions());
+        }
+        if ( (vid_status != -1) && (do_status == 0) ) {
+           vid_status = -1;
+        }
+        if ( dbug > 1 && vid_status >= 0 ) {
+           std::cerr << "NetcdfIn::open: Got the id for the 'status' coordinate." <<  std::endl;
+        }
      }
-     vid_tag    = get_var_id( "tag",  false, "tag", &vtyp_tag );
-     if ( dbug > 1 && vid_tag >= 0 ) {
-        std::cerr << "NetcdfIn::open: Got the id for the tag coordinate." <<  std::endl;
+     if ( do_flags != 0 ) {   
+        vid_flags  = get_var_id( "flags", false, "", &vtyp_flags );
+        if ( (vid_flags == -1) && (do_flags == 1) ) {
+           throw (badFileConventions());
+        }
+        if ( (vid_flags != -1) && (do_flags == 0) ) {
+           vid_flags = -1;
+        }
+        if ( dbug > 1 && vid_flags >= 0 ) {
+           std::cerr << "NetcdfIn::open: Got the id for the 'flags' coordinate." <<  std::endl;
+        }
+     }
+     if ( do_tag != 0 ) {   
+        vid_tag    = get_var_id( "tag",  false, "tag", &vtyp_tag );
+        if ( (vid_tag == -1) && (do_tag == 1) ) {
+           throw (badFileConventions());
+        }
+        if ( (vid_tag != -1) && (do_tag == 0) ) {
+           vid_tag = -1;
+        }
+        if ( dbug > 1 && vid_tag >= 0 ) {
+           std::cerr << "NetcdfIn::open: Got the id for the tag coordinate." <<  std::endl;
+        }
      }
 
      
@@ -330,13 +668,17 @@ void NetcdfIn::open( std::string file )
 void NetcdfIn::close()
 {
      int err;
+  
+     if ( is_open ) {
      
-     err = nc_close(ncid);
-     if ( err != NC_NOERR ) {
-        throw(badNetcdfError(err));
+        err = nc_close(ncid);
+        if ( err != NC_NOERR ) {
+           throw(badNetcdfError(err));
+        }
+     
+        is_open = false;
+     
      }
-     
-     is_open = false;
 
      time0 = "";
      t0 = 0.0;
@@ -679,6 +1021,7 @@ void NetcdfIn::rd_int( int var_id, int var_type, size_t n, int* destination )
 void NetcdfIn::apply( Parcel& p )
 {
     real lon, lat, z, tag;
+    double t;
     int status,flags;
     
     lon = 0.0;
@@ -687,11 +1030,10 @@ void NetcdfIn::apply( Parcel& p )
     lat = 0.0;
     rd_real( vid_lat, vtyp_lat, 1, &lat );
 
-    p.setPos( lon, lat );
-
     z = 0.0;
     rd_real( vid_z, vtyp_z, 1, &z );
-    p.setZ( z );
+
+    p.setTime( t0 );
     
     if ( vid_tag >= 0 ) {
        tag = 0.0;
@@ -712,6 +1054,15 @@ void NetcdfIn::apply( Parcel& p )
        rd_int( vid_flags, vtyp_flags, 1, &flags );
     
        p.setFlags( flags );
+    }
+    
+    // should only need to check longitude, since for dead Parcels
+    // all of lat, lon, z, and tag will be NaN.
+    if ( FINITE(lon) && ( lon != badlon ) ) {
+       p.setPos( lon, lat );
+       p.setZ( z );
+    } else {
+       p.setNoTrace();
     }
         
     ip = ip + 1;

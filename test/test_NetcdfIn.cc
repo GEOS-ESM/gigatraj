@@ -35,6 +35,7 @@ int main()
     string vert;
     string basetime;
     double t0;
+    double tt;
     size_t np;
     Parcel p;
     Parcel* ps;
@@ -101,6 +102,7 @@ int main()
     
         p.getPos( &lon, &lat );
         z = p.getZ();
+        tt = p.getTime();
         
         if ( i == 0 ) {
            if ( mismatch( lon, 117.0 ) 
@@ -113,7 +115,11 @@ int main()
       
               exit(1);
              
-           }   
+           } 
+           if ( mismatch( tt, t0 ) ) {
+              cerr << " mismatched time at i=" << i << ": "
+              << tt << " instead of " << t0 << endl;
+           }  
         }
         if ( i == 1 ) {
            if ( mismatch( lon, 109.981 ) 
@@ -127,6 +133,10 @@ int main()
               exit(1);
              
            }   
+           if ( mismatch( tt, t0 ) ) {
+              cerr << " mismatched time at i=" << i << ": "
+              << tt << " instead of " << t0 << endl;
+           }  
         }
         if ( i == 9 ) {
            if ( mismatch( lon, 117.0 ) 
@@ -140,6 +150,10 @@ int main()
               exit(1);
              
            }   
+           if ( mismatch( tt, t0 ) ) {
+              cerr << " mismatched time at i=" << i << ": "
+              << tt << " instead of " << t0 << endl;
+           }  
         }
     
     }

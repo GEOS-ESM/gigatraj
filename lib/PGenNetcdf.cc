@@ -263,3 +263,60 @@ int PGenNetcdf::debug()
     return dbug;
 }
 
+void PGenNetcdf::readFlags( int mode )
+{
+    ncIn.readFlags( mode );
+}
+
+int PGenNetcdf::readFlags()
+{
+    return ncIn.readFlags();
+}
+
+
+void PGenNetcdf::readStatus( int mode )
+{
+    ncIn.readStatus( mode );
+}
+
+
+int PGenNetcdf::readStatus()
+{
+    return ncIn.readStatus();
+}
+
+
+void PGenNetcdf::readTag( int mode )
+{
+    ncIn.readTag( mode );
+}
+
+
+int PGenNetcdf::readTag()
+{
+    return ncIn.readTag();
+}
+
+
+void PGenNetcdf::format( std::string fmt )
+{
+    ncIn.format( fmt );
+}
+
+  
+std::string PGenNetcdf::format()
+{
+    return ncIn.format();
+}
+
+      
+void PGenNetcdf::setTimeTransform( double scale, double offset )
+{
+     ncIn.setTimeTransform( scale, offset );
+}
+
+void PGenNetcdf::getTimeTransform( double* scale, double* offset )
+{
+     ncIn.getTimeTransform( scale, offset );
+}
+    

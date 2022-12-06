@@ -9,7 +9,6 @@
 #include <vector>
 #include <map>
 #include <set>
-#include <sstream>
 
 
 #include "gigatraj/gigatraj.hh"
@@ -17,15 +16,6 @@
 #include "gigatraj/Parcel.hh"
 #include "gigatraj/Flock.hh"
 #include "gigatraj/Swarm.hh"
-#include "gigatraj/MetGridLatLonData.hh"
-#include "gigatraj/CalGregorian.hh"
-#include "gigatraj/GEOSfpFcast_Directory.hh"
-#include "gigatraj/GEOSfpAssim_Directory.hh"
-#include "gigatraj/PressOTF.hh"
-#include "gigatraj/ThetaOTF.hh"
-#include "gigatraj/ThetaDotOTF.hh"
-#include "gigatraj/PAltOTF.hh"
-#include "gigatraj/PAltDotOTF.hh"
 
 
 namespace gigatraj {
@@ -82,6 +72,12 @@ class NetcdfIn : public ParcelInitializer {
       /// An exception for when the input does not match the format
       class badFileConventions: public ParcelInitializer::badinit {};
 
+      /// an exception for trying to re-specify the file after it has been opened
+      class badNetcdfTooLate {};
+
+      /// an exception for a badly-formatted format specification string
+      class badNetcdfFormatSpec {};
+      
    /// default constructor
    /*! this is the default constrictor for the NetcdfIn class
    
@@ -124,7 +120,7 @@ class NetcdfIn : public ParcelInitializer {
    
    /// returns the name of the vertical coordinate to be used
    /*! This method returns the name of variable in the netcdf file that is to be used
-       as the vaetical coordinate.
+       as the vertical coordinate.
    
        \return a reference to a string object that contains the name of the vertical coordinate
    */
@@ -173,6 +169,178 @@ class NetcdfIn : public ParcelInitializer {
     */    
     bool at_end();
      
+    /// sets whether parcel flags are to be read from the file
+    /*! This method sets whether Parcel flags are to be read from the file.
+        The default is to read them if they are available.
+        This may be called only before the file is opened.
+        
+        \param mode 1 if the flags are to be read, 0 if they are to be ignored, and -1 if the flags 
+                    may be read if available
+    */
+    void readFlags( int mode );
+    
+    /// returns whether the parcel flags are to be read
+    /*! This method returns a flag that indicates whether Parcel flags are to be read from the file. 
+    
+        \return mode 1 if the flags are to be read, 0 if they are to be ignored, and -1 if the flags 
+                    may be read if available
+    */
+    int readFlags();
+    
+    /// sets whether parcel status is to be read from the file
+    /*! This method sets whether Parcel statuses are to be read from the file.
+        The default is to read them if they are available.
+        This may be called only before the file is opened.
+        
+        \param mode 1 if the statuses are to be read, 0 if they are to be ignored, and -1 if the statuses 
+                    may be read if available
+    */
+    void readStatus( int mode );
+    
+    /// returns whether the parcel status is to be read
+    /*! This method returns a flag that indicates whether Parcel statuses are to be read from the file. 
+    
+        \return mode 1 if the statuses are to be read, 0 if they are to be ignored, and -1 if the statuses 
+                    may be read if available
+    */
+    int readStatus();
+    
+    /// sets whether parcel tags are to be read from the file
+    /*! This method sets whether Parcel tags are to be read from the file.
+        The default is to read them if they are available.
+        This may be called only before the file is opened.
+        
+        \param mode 1 if the tags are to be read, 0 if they are to be ignored, and -1 if the tags 
+                    may be read if available
+    */
+    void readTag( int mode );
+    
+    /// returns whether the parcel tags are to be read
+    /*! This method returns a flag that indicates whether Parcel tags are to be read from the file. 
+    
+        \return mode 1 if the tags are to be read, 0 if they are to be ignored, and -1 if the tags 
+                    may be read if available
+    */
+    int readTag();
+    
+  
+      /// specifies a format string for the input
+      /*! This method specifies a format string that controls what variables get read from the output
+          netcdf file. The idea is to be able to use the same format strings that one would use
+          with the StreamRead class here, as a convenience. The same end can be accomplished by
+          calling the readTag(), readStatus(), and readFlags() methods.
+          
+          The format string is the same as used by StreamRead, but it does behave differently.
+          %-codes merely turn on and off the reading of variables, with string literals and numeric 
+          precision specifiers ignored. The model time, longitude, latitude, and vertical coordinate 
+          are all mandatory for gigatraj netcdf files, so they will be written out regardless of whether
+          they are specified in the format string. 
+          
+          See the documentation for the StreamRead class's format() method for the oriignal format string
+          specification. 
+          
+          Here, the codes are:
+          
+          * Any text up to a "%" character is ignored
+          
+          * "%%" is ignored.
+          
+          * "%T" is tignored
+          
+          * "%t" is the parcel's model time, This is effectively ignored, as the time is read regardless of
+            whether this is present or not.
+          
+          * "%o" is the parcel's longitude. This is effectively ignored, as the longitude is read
+             regardless of whether this is present or not.
+             
+          * "%a" is the parcel's latitude. This is effectively ignored, as the latitude is read
+             regardless of whether this is present or not.
+             
+          * "%v" is the parcel's vertical coordinate. This is effectively ignored, as the the vertical coordinate is read
+             regardless of whether this is present or not.
+          
+          * "%g" causes the parcel's  tag value to be read from the file in the variable "tag".
+          
+          * "%f" causes the parcel's flags to be read from the variable "flags".
+          
+          * "%s" causes the parcel's status to be read from the variable "status".
+          
+          * "%i" is ignored.
+          
+          * "%{fieldname}m" is ignored
+
+          * "%c" is ignored.
+          
+          * "%x" is ignored.
+          
+          
+          \param fmt the format string, as described above.
+          
+      */
+      void format( std::string fmt );
+      
+      /// returns the current format string. 
+      /*! This method returns the format string that controls which variables are read from the 
+          netcdf file.
+          
+          If the format() method has been called to set this string, then that string is returned here.
+          If not, then a format string is returned that reflects the current settings of the
+          NetcdfIn object.
+          
+          \returns the format string
+      */    
+      std::string format();
+      
+      /// sets a linear tranformation between model time and netcdf time
+      /*! This method sets a scalig factor and offset for transforming between internal
+          gigatraj model time and the time used in the "time" variable of the netcdf file.
+          
+          Model time is in fractional days elapsed since some reference time.
+          But it is sometimes desired to have the time in the netcdf file be
+          in some other units, such as hour elapsed since a different reference time.
+          
+          If Tn is the netcdf variable time, Tg is the internal model time, s is the scale factor,
+          and o is the offset, then
+          
+          \code
+                Tn = Tg * s + o
+                
+                Tg = ( Tn - o )/s
+          \endcode
+          
+          This method sets the variables "s" and "o" in these transformations.
+          It not be called after the file has been opened.
+      
+          \param scale the time scaling factor. the default is 1.0.
+          \param offset the time offset. the default is 0.0.
+          
+      */
+      void setTimeTransform( double scale, double offset=0.0 );
+      
+      /// returns the linear transformation between model time and netcdf time
+      /*! This method returns the scale factor and offset used to transform
+          between the gigatraj internal model time 
+          and the time in the netcdf file.
+          
+          Model time is in fractional days elapsed since some reference time.
+          But it is sometimes desired to have the time in the netcdf file be
+          in some other units, such as hour elapsed since a different reference time.
+          
+          If Tn is the netcdf variable time, Tg is the internal model time, s is the scale factor,
+          and o is the offset, then
+          
+          \code
+                Tn = Tg * s + o
+                
+                Tg = ( Tn - o )/s
+          \endcode
+      
+          \param scale a pointer to a double precision scalimg factor
+          \param offset a pointer to a double precision offset
+      */
+      void getTimeTransform( double* scale, double* offset );     
+    
+    
     /// returns the number of parcels
     /*! This method returns the number of parcels in the netcdf file
     
@@ -303,16 +471,37 @@ class NetcdfIn : public ParcelInitializer {
       /// index of the time to be read
       size_t it;
 
+      /// time offset
+      double to;
+      /// time scale factor
+      double ts;
+      
+
       // debug setting
       int dbug;
    
-   
+      // bad-value for longitudes
+      // (if the longitude is bad, then all of the Parcel info except
+      // for status and flags is also bad.)
+      real badlon;
+      
+      // flags to turn off reading flags, status, tags
+      // -1 = read if available
+      //  0 = do not read
+      //  1 = must read
+      int do_tag;
+      int do_flags;
+      int do_status;
+      
+      // format spec string
+      std::string fmtspec;
+      
       // //// NETCDF-related variables:
       /// the netcdf handle
       int ncid;
       /// the number of variable in the netcdf file
       int nvars;
-      /// the number of lgobal attributes in the netcdf file
+      /// the number of global attributes in the netcdf file
       int ngatts;
       
       /// dimensional ID of the time
@@ -320,17 +509,17 @@ class NetcdfIn : public ParcelInitializer {
       /// dimensional ID of the parcel ID
       int did_id;
 
-      /// the var type of the parcel longitudes
+      /// the var id of the parcel longitudes
       int vid_lon;
-      /// the var type of the parcel latitudes
+      /// the var id of the parcel latitudes
       int vid_lat;
-      /// the var type of the parcel vertical coordinates
+      /// the var id of the parcel vertical coordinates
       int vid_z;
-      /// the var type of the parcel statuses
+      /// the var id of the parcel statuses
       int vid_status;
-      /// the var type of the parcel flags
+      /// the var id of the parcel flags
       int vid_flags;
-      /// the var type of the parcel tag
+      /// the var id of the parcel tag
       int vid_tag; 
 
       /// the var type of the parcel longitudes
@@ -388,6 +577,28 @@ class NetcdfIn : public ParcelInitializer {
 
       */
       void rd_int( int var_id, int var_type, size_t n, int* destination ); 
+
+     /// convert netcdf time to model time
+     /*! This method converts netcdf time to model time
+     
+         \param t the netcdf time
+         \return the model time
+     */
+     inline double tconv( double t )
+     { 
+          return ( t - to )/ts;
+     }
+     
+     /// sets the time transforma scale and offset fomr the units of the netcdf file's time variable 
+     /*! This method interprets a units string to try to extract the
+         time offset and scaling factor that will allow converting netcdf time to gigatraj model time.
+         
+         NOTE: this method is not yet fully implemented!
+         
+         \param tunits a string containing the units description
+     */       
+     void parseTimeUnits( std::string tunits );
+     
 };
 }
 
