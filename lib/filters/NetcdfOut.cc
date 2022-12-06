@@ -2319,11 +2319,12 @@ void NetcdfOut::apply( Flock& p )
    
    if ( n > 0 )  { 
    
-      // first, allocate the space for this chunk
+      notrace = new bool[pnum];
+      
+      // allocate the space for this chunk
       lons = new real[maxchunk];
       lats = new real[maxchunk];
       zs   = new real[maxchunk];
-      notrace = new bool[maxchunk];
       flags = NULL;
       if ( do_flags ) {
           flags = new int[maxchunk];
@@ -2475,7 +2476,7 @@ void NetcdfOut::apply( Flock& p )
                for ( int k=0; k < chunksize; k++ ) {
                    j = ii + k;
                    if ( notrace[j] ) {
-                      (stuff[i])[j] = NaN;
+                      (stuff[i])[k] = NaN;
                    }
                }
             }
@@ -2490,7 +2491,7 @@ void NetcdfOut::apply( Flock& p )
       // now free the space for this chunk
       if ( nstuff > 0 ) {
          for ( int i=0; i < nstuff; i++ ) {
-             delete stuff[i];
+             delete (stuff[i]);
          }
          delete stuff;
       }
