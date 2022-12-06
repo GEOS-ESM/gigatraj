@@ -170,6 +170,7 @@ void Configuration::set(const std::string &name, const std::string &value)
      
      // depending on the parameter type and the cMustBeValid flag, check the value syntax here
      if ( ! this->check( &p ) ) {
+        std::cerr << "Error if configuration parameter " << name << std::endl;
         throw(Configuration::badcfgformat());
      }
      
@@ -196,6 +197,7 @@ void Configuration::set(const std::string &name, const int &value)
      
         p.status = p.status | ParamWasSet;  
      } else {
+        std::cerr << "Configuration error on " << name << " is not integer" << std::endl;
         throw(Configuration::badcfgformat());     
      }
      
@@ -222,6 +224,7 @@ void Configuration::set(const std::string &name, const float &value)
      
         p.status = p.status | ParamWasSet;  
      } else {
+        std::cerr << "Configuration error on " << name << " is not float" << std::endl;
         throw(Configuration::badcfgformat());     
      }
      
@@ -247,6 +250,7 @@ void Configuration::set(const std::string &name, const double &value)
      
         p.status = p.status | ParamWasSet;  
      } else {
+        std::cerr << "Configuration error on " << name << " is not double" << std::endl;
         throw(Configuration::badcfgformat());     
      }
      
@@ -273,6 +277,7 @@ void Configuration::set(const std::string &name, const bool &value)
      
         p.status = p.status | ParamWasSet;  
      } else {
+        std::cerr << "Configuration error on " << name << " is not bool" << std::endl;
         throw(Configuration::badcfgformat());     
      }
      
@@ -728,6 +733,7 @@ void Configuration::loadfile( const std::string &filename, const std::string cfg
                     
                     // depending on the parameter type and the cMustBeValid flag, check the value syntax here
                     if ( ! this->check( &p ) ) {
+                       std::cerr << "Configuration error on " << keyword << " is has value" << value << std::endl;
                        throw(Configuration::badcfgformat());
                     }
 
@@ -971,6 +977,7 @@ int Configuration::str2int(const std::string &value)
     try {
        *numstr >> result;
     } catch (...) {
+       std::cerr << "Configuration error on integer value " << value << std::endl;
        throw (Configuration::badcfgformat());
     }
     delete numstr;
@@ -987,6 +994,7 @@ float Configuration::str2float(const std::string &value)
     try {
        *numstr >> result;
     } catch (...) {
+       std::cerr << "Configuration error on float value " << value << std::endl;
        throw (Configuration::badcfgformat());
     }
     delete numstr;
@@ -1003,6 +1011,7 @@ double Configuration::str2dbl(const std::string &value)
     try {
        *numstr >> result;
     } catch (...) {
+       std::cerr << "Configuration error on double value " << value << std::endl;
        throw (Configuration::badcfgformat());
     }
     delete numstr;
@@ -1025,6 +1034,7 @@ bool Configuration::str2bool(const std::string &value)
        if ( cc == "N" || cc == "n" || cc == "F" || cc == "f" ) {
           result = false;
        } else {
+       std::cerr << "Configuration error on bool value " << value << std::endl;
           throw(Configuration::badcfgformat());               
        }
     }
