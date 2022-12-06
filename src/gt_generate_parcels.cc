@@ -36,6 +36,7 @@ gt_generatge_parcels [ [--clon center_longitude ] [--clat center_latitude ] [--r
                      [-n|--number n_parcels ] \
                      [ --random | --grid ] \
                      [ --format output_format ] \
+                     [ --netcdf_out filename ] \
                      [ --verbose ] \\
                      [ -h|--help ]  
 \endcode
@@ -46,7 +47,7 @@ The command-line options are:
   \li \c verbose : prints out messages to let the user know what progress is being made
   \li \c number: the number of parcels to be generated and output
   \li \c random: specified that the parcels are to be distributed randomly across the specified region
-  \li \c grid: specifies that the parcles are to be distributed in a regular grid-like pattern across the specified region
+  \li \c grid: specifies that the parcels are to be distributed in a regular grid-like pattern across the specified region
   \li \c zlow: the lower vertical lmit of the specified region
   \li \c zhigh: the upper verticla limit of the specified region
   \li \c clon: for a cyclindrical region, the center longitude
@@ -57,6 +58,7 @@ The command-line options are:
   \li \c URlon: for a rectangular region, the longitude of the upper-right corner
   \li \c URlat: for a rectangular region, the latitude of the upper-right corner 
   \li \c format: the output format of the parcel information. 
+  \li \c netcdf_out: write the output to the specified netcdf file 
      
  It is an error to specify options for a rectangular region with 
  options for a cylindrical region.
@@ -81,6 +83,9 @@ The command-line options are:
 #include "gigatraj/PGenRndDisc.hh"
  
 #include "gigatraj/StreamPrint.hh"
+#ifdef USE_NETCDF
+#include "gigatraj/NetcdfOut.hh"
+#endif
   
 using namespace gigatraj;
 using std::cerr;
@@ -175,6 +180,10 @@ int getconfig(int argc, char * const argv[], Configuration& conf )
     usage +=  " [--format fmt]";
     conf.add("format", cString,"%o %a %v"                 , "", 0, "StreamPrint/StreamRead parcel format string" );
 
+#ifdef USE_NETCDF
+    usage +=  " [--netcdf_out outputfile]";
+    conf.add("netcdf_out"    , cString,""              , "", 0, "The output is to be sent to the netcdf file specified" );
+#endif
 
     // Load the config setting values from the command line
     // The defaults are loaded first
@@ -268,6 +277,14 @@ int main( int argc, char * argv[] )
     real nz;
     // loop counter
     int i;
+#ifdef USE_NETCDF
+    // flag indicating whether to use netcdf for output
+    bool outNetcdf;
+    // the name of the output netcdf file
+    std::string outNetcdfFile;
+    // of rwriting to a netcdf file
+    NetcdfOut* out_netcdf;
+#endif
 
     // we assume all will go well (until it doesn't)    
     status = 0;
@@ -320,6 +337,10 @@ int main( int argc, char * argv[] )
 
        verbose = ( config.get("verbose") == "Y" );
        
+#ifdef USE_NETCDF
+       outNetcdfFile = config.get("netcdf_out");
+       outNetcdf = ( outNetcdfFile != "" );
+#endif
        
        if ( shape < 0 ) {
           shape = 0;
@@ -340,6 +361,10 @@ int main( int argc, char * argv[] )
           cerr << "number = " << n << endl;
           cerr << "distrib = " << distrib << endl;
           cerr << "format = '" << outform << "'" << endl;
+#ifdef USE_NETCDF
+          cerr << "outNetcdf = " << outNetcdf << endl;
+          cerr << "outNetcdfFile = " << outNetcdfFile << endl;
+#endif
        }
        switch (shape) {
        case 0: 
@@ -430,10 +455,27 @@ int main( int argc, char * argv[] )
        }                
       
       
-       Out.format(outform + "\n");
+#ifdef USE_NETCDF
+       if ( ! outNetcdf ) {
+#endif
+          Out.format(outform + "\n");
         
-       // do printout here
-       Out.apply( *result );
+          // do printout here
+          Out.apply( *result );
+#ifdef USE_NETCDF
+       } else {
+          out_netcdf = new NetcdfOut();
+          out_netcdf->filename( outNetcdfFile );
+          out_netcdf->contents("gigatraj trajectories");
+          out_netcdf->format( outform );
+          out_netcdf->init( &p, result->size() );
+          out_netcdf->open();
+          out_netcdf->apply( *result );
+          out_netcdf->close();
+          delete out_netcdf;
+       
+       }
+#endif
       
   
     }
