@@ -57,8 +57,12 @@ void NetcdfIn::filename( const std::string file )
        close();
     }
     
-    fname = file;
-
+    if ( file.substr(0,1) != "-" ) {
+       fname = file;
+    } else {
+       fname = file.substr(1);
+       at_end(true);
+    }
 }
 
 std::string& NetcdfIn::filename()
@@ -429,7 +433,7 @@ void NetcdfIn::open( std::string file )
      }
      
      if ( file != "" ) {
-        fname = file;
+        filename( file );
      }
      
      err = nc_open( fname.c_str(), NC_NOWRITE, &ncid);     
@@ -490,12 +494,14 @@ void NetcdfIn::open( std::string file )
      // get the dimensional IDs for time and id
      err = nc_inq_dimid( ncid, "time", &did_time);
      if ( err == NC_EBADDIM ) {
+        std::cerr << " No 'time' dimension in file" << std::endl;
         throw(badFileConventions());  
      } else if ( err != NC_NOERR ) {
         throw(badNetcdfError(err));
      }     
      err = nc_inq_dimid( ncid, "id", &did_id);
      if ( err == NC_EBADDIM ) {
+        std::cerr << " No 'id' dimension in file" << std::endl;
         throw(badFileConventions());  
      } else if ( err != NC_NOERR ) {
         throw(badNetcdfError(err));
@@ -508,6 +514,7 @@ void NetcdfIn::open( std::string file )
      
      err = nc_inq_dimid( ncid, var_name, &dim_id );
      if ( err == NC_EBADID || err == NC_EBADDIM ) {
+        std::cerr << " No 'time' variable in file" << std::endl;
         throw(badFileConventions());
      } else if ( err != NC_NOERR ) {
         throw(badNetcdfError(err));
@@ -521,8 +528,11 @@ void NetcdfIn::open( std::string file )
         std::cerr << "NetcdfIn::open: There are " << ntimes << " times" << std::endl;
      }   
      
+     name = "time";
+     var_name = name.c_str();
      err = nc_inq_varid( ncid, var_name, &var_id );
      if ( err == NC_ENOTVAR ) {
+        std::cerr << " No 'time' variable in file" << std::endl;
         throw(badFileConventions());
      } else if ( err != NC_NOERR ) {
         throw(badNetcdfError(err));
@@ -539,7 +549,8 @@ void NetcdfIn::open( std::string file )
                   << "; time dims[0]: " << var_dims[0] 
                   << "; time natts: " << var_natts << std::endl;
      }
-     if ( (var_type != NC_DOUBLE) || (var_ndims != 1) || (var_id != var_dims[0]) ) {
+     if ( (var_type != NC_DOUBLE) || (var_ndims != 1) || (did_time != var_dims[0]) ) {
+        std::cerr << " 'time' variable has wrong type or wrong dimensions" << std::endl;
         throw(badFileConventions());
      }
      
@@ -554,6 +565,9 @@ void NetcdfIn::open( std::string file )
      it = time_index;
      icount = 1;
      err = nc_get_vara_double( ncid, var_id, &it, &icount, &tt0 );
+     if ( err != NC_NOERR ) {
+        throw(badNetcdfError(err));
+     }
      if ( dbug > 1 ) {
         std::cerr << "NetcdfIn::open: Parcel time is " << t0 << std::endl;
      }
@@ -565,6 +579,7 @@ void NetcdfIn::open( std::string file )
      
      err = nc_inq_dimid( ncid, var_name, &dim_id );
      if ( err == NC_EBADDIM ) {
+        std::cerr << name << " variable does not exist" << std::endl;
         throw(badFileConventions());
      } else if ( err != NC_NOERR ) {
         throw(badNetcdfError(err));
@@ -627,6 +642,7 @@ void NetcdfIn::open( std::string file )
      if ( do_status != 0 ) {   
         vid_status = get_var_id( "status", false, "", &vtyp_status );
         if ( (vid_status == -1) && (do_status == 1) ) {
+           std::cerr <<  "status variable does not exist but is required" << std::endl;
            throw (badFileConventions());
         }
         if ( (vid_status != -1) && (do_status == 0) ) {
@@ -639,6 +655,7 @@ void NetcdfIn::open( std::string file )
      if ( do_flags != 0 ) {   
         vid_flags  = get_var_id( "flags", false, "", &vtyp_flags );
         if ( (vid_flags == -1) && (do_flags == 1) ) {
+           std::cerr <<  "flags variable does not exist but is required" << std::endl;
            throw (badFileConventions());
         }
         if ( (vid_flags != -1) && (do_flags == 0) ) {
@@ -651,6 +668,7 @@ void NetcdfIn::open( std::string file )
      if ( do_tag != 0 ) {   
         vid_tag    = get_var_id( "tag",  false, "tag", &vtyp_tag );
         if ( (vid_tag == -1) && (do_tag == 1) ) {
+           std::cerr <<  "tag variable does not exist but is required" << std::endl;
            throw (badFileConventions());
         }
         if ( (vid_tag != -1) && (do_tag == 0) ) {
@@ -663,6 +681,11 @@ void NetcdfIn::open( std::string file )
 
      
      
+}
+
+bool NetcdfIn::isOpen()
+{
+    return is_open;
 }
 
 void NetcdfIn::close()
@@ -731,6 +754,7 @@ int NetcdfIn::get_var_id( const std::string &varname, bool required, const std::
             result = var_id;
          } else if ( err == NC_ENOTVAR ) {
             if ( required ) {
+               std::cerr << varname << " is required by not present in this file " << std::endl;
                throw(badFileConventions());
             }
          } else {
@@ -810,9 +834,12 @@ int NetcdfIn::get_var_id( const std::string &varname, bool required, const std::
         }
      
         if ( var_ndims != 2 ) {
+           std::cerr << "variable " << varname << " has " << var_ndims << " dimensions instead of 2 " << std::endl;
            throw(badFileConventions());
         }
         if ( ( var_dims[0] != did_time ) || ( var_dims[1] != did_id ) ) {
+           std::cerr << " variable " << varname 
+           << " has dimensions that do not match time and/or did_id" << std::endl;
            throw(badFileConventions());        
         }
      
@@ -838,6 +865,7 @@ void NetcdfIn::rd_real( int var_id, int var_type, size_t n, real* destination )
     
     // trying to read too many Parcels
     if ( ( n + ip ) > np ) {
+       std::cerr << " trying to read too many parcels: " << n + ip << " of " << np << std::endl;
        throw(badFileConventions());        
     } 
     
@@ -941,6 +969,7 @@ void NetcdfIn::rd_int( int var_id, int var_type, size_t n, int* destination )
     
     // trying to read too many Parcels
     if ( ( n + ip ) > np ) {
+       std::cerr << " trying to read too many parcels: " << n + ip << " of " << np << std::endl;
        throw(badFileConventions());        
     } 
     

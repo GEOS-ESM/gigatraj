@@ -32,6 +32,36 @@ PGenNetcdf::~PGenNetcdf()
 
 }
 
+void PGenNetcdf::open( const std::string &file)
+{
+     if ( ncIn.isOpen() ) {
+        ncIn.close();
+     }
+     
+     if ( file != "" ) {
+        fname = file;
+     }
+     
+     if ( fname != "" ) {
+        if (vcoord != "" ) {
+           ncIn.vertical( vcoord );
+        }
+        ncIn.at_end( atend );
+        ncIn.debug( dbug );
+     
+        ncIn.open( fname );
+     
+        n = ncIn.n_parcels();
+        vcoord = ncIn.vertical();
+        caltime = ncIn.cal();
+        time0 = ncIn.time();
+     }   
+}
+
+bool PGenNetcdf::isOpen()
+{
+     return ncIn.isOpen();
+}
 
 Parcel * PGenNetcdf::create_array(const Parcel& p, size_t *np
                      , const std::string &file
@@ -39,19 +69,10 @@ Parcel * PGenNetcdf::create_array(const Parcel& p, size_t *np
 {
      Parcel *result;
      
-     fname = file;
-     if (vcoord != "" ) {
-        ncIn.vertical( vcoord );
+     if ( ! ncIn.isOpen() ) {
+        open( file );
      }
-     ncIn.at_end( atend );
-     ncIn.debug( dbug );
      
-     ncIn.open( fname );
-     
-     n = ncIn.n_parcels();
-     vcoord = ncIn.vertical();
-     caltime = ncIn.cal();
-     time0 = ncIn.time();
      
      result = pgen.create_array( p, n );
      
@@ -70,18 +91,9 @@ std::vector<Parcel>* PGenNetcdf::create_vector(const Parcel& p
 {
     std::vector<Parcel>* result;
     
-     fname = file;
-     if (vcoord != "" ) {
-        ncIn.vertical( vcoord );
+     if ( ! ncIn.isOpen() ) {
+        open( file );
      }
-     ncIn.at_end( atend );
-     ncIn.debug( dbug );
-
-     ncIn.open( file );
-     n = ncIn.n_parcels();
-     vcoord = ncIn.vertical();
-     caltime = ncIn.cal();
-     time0 = ncIn.time();
      
      result = pgen.create_vector( p, n );
      
@@ -101,18 +113,9 @@ std::list<Parcel>* PGenNetcdf::create_list(const Parcel& p
 {
     std::list<Parcel>* result;
     
-     fname = file;
-     if (vcoord != "" ) {
-        ncIn.vertical( vcoord );
+     if ( ! ncIn.isOpen() ) {
+        open( file );
      }
-     ncIn.at_end( atend );
-     ncIn.debug( dbug );
-     
-     ncIn.open( file );
-     n = ncIn.n_parcels();
-     vcoord = ncIn.vertical();
-     caltime = ncIn.cal();
-     time0 = ncIn.time();
      
      result = pgen.create_list( p, n );
      
@@ -133,11 +136,9 @@ std::deque<Parcel>* PGenNetcdf::create_deque(const Parcel& p
 {
     std::deque<Parcel>* result;
     
-     ncIn.open( file );
-     n = ncIn.n_parcels();
-     vcoord = ncIn.vertical();
-     caltime = ncIn.cal();
-     time0 = ncIn.time();
+     if ( ! ncIn.isOpen() ) {
+        open( file );
+     }
      
      result = pgen.create_deque( p, n );
      
@@ -157,18 +158,9 @@ Flock* PGenNetcdf::create_Flock(const Parcel& p
 {
     Flock* result;
     
-     fname = file;
-     if (vcoord != "" ) {
-        ncIn.vertical( vcoord );
+     if ( ! ncIn.isOpen() ) {
+        open( file );
      }
-     ncIn.at_end( atend );
-     ncIn.debug( dbug );
-     
-     ncIn.open( file );
-     n = ncIn.n_parcels();
-     vcoord = ncIn.vertical();
-     caltime = ncIn.cal();
-     time0 = ncIn.time();
      
      result = pgen.create_Flock( p, n, pgrp, r );
      
@@ -188,11 +180,9 @@ Swarm* PGenNetcdf::create_Swarm(const Parcel& p
 {
     Swarm* result;
     
-     ncIn.open( file );
-     n = ncIn.n_parcels();
-     vcoord = ncIn.vertical();
-     caltime = ncIn.cal();
-     time0 = ncIn.time();
+     if ( ! ncIn.isOpen() ) {
+        open( file );
+     }
      
      result = pgen.create_Swarm( p, n, pgrp, r );
      

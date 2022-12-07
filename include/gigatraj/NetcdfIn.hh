@@ -131,9 +131,21 @@ class NetcdfIn : public ParcelInitializer {
    /// open a netcdf file for input
    /*! This method opens a netcdf file for input
    
-       \param file the name of the file to open.
+       \param file the name of the file to open. If the name begins with "-", then
+              the file is set to the rest of the string, and at_end( true ) is called
+              to ensure that the parcels are read form the end of the file instead 
+              of the beginning.
    */
    void open( std::string file="" );    
+
+
+   /// returns whether the file has been opened
+   /*! This method returns whether the file has been opened
+       (and is thus available for setting file characteristcis)
+
+       \return true if the file has beenopened, false otherwise
+   */
+   bool isOpen();    
 
    /// closes the netcdf file
    /*! this method clsoes the netcdf file

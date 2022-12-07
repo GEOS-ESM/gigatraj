@@ -64,6 +64,25 @@ class PGenNetcdf: public ParcelGenerator {
       */
       ~PGenNetcdf();
       
+      
+      /// opens the file without reading the parcel data
+      /*! This method opens the netcdf file and obtains such information
+          as the number of parcels and the identity of the vertical coordinate.
+          
+          The apply() methods will close the file once the parcle information has been read.  
+          
+          \param file the name of the file to open
+          
+      */
+      void open( const std::string &file="" );
+      
+      /// returns whether the file is open
+      /*! This method returns whether the file has been opened
+      
+          \return true if the file has been opened, false otherwise
+      */
+      bool isOpen();
+      
       /// read locations from a file into an array of Parcels
       /*! This method creates an array of Parcels and initializes their locations from a file.
       
