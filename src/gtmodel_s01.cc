@@ -562,7 +562,7 @@ int main( int argc, char * argv[] )
     real junk;
     // the quantity currently being read
     string quant;
-    // the units of hte vertical cooridnte of the meteorological data source
+    // the units of the vertical cooridnte of the meteorological data source
     string vertunits;
     // flag to be set if we are still searching for commas in the
     // quantities string, as we break it apart by commas
@@ -609,6 +609,10 @@ int main( int argc, char * argv[] )
     int confml;
     // indicates whether cooridnate conversions are needed
     bool conv_parcel_coords;
+    // was the vertical coord set by the user?
+    bool spec_vertical;
+    // was the parcel vertical coordinate set by the user?
+    bool spec_parcelvertical;
 
 
     // we assume all will go well (until it doesn't)    
@@ -623,7 +627,9 @@ int main( int argc, char * argv[] )
        // get the configuration settings
        config.fetchParam("verbose", verbose);
        vertical = config.get("vertical");
+       spec_vertical = ( vertical != "" );
        parcelVertical = config.get("parcelvertical");
+       spec_parcelvertical = ( parcelVertical != "" );
        metsrc_name = config.get("source");
        parcelsource = config.get("parcels");
        begdate = config.get("begdate");
@@ -746,12 +752,55 @@ int main( int argc, char * argv[] )
        
     }
 
-    conv_parcel_coords = false;
+#ifdef USE_NETCDF
     if ( status == 0 ) {
-       conv_parcel_coords = ( parcelVertical != "" && parcelVertical != vertical );
+       if ( inNetcdf ) {
+          in_netcdf = new PGenNetcdf();
+          if ( ifmt != "" ) {
+             in_netcdf->format( ifmt );
+          }
+          if ( spec_parcelvertical ) {
+             in_netcdf->vertical( parcelVertical );
+          } else if ( spec_vertical ) {
+             in_netcdf->vertical( vertical );
+          }
+          
+          in_netcdf->open();
+
+          if ( ! spec_parcelvertical ) {
+             parcelVertical = in_netcdf->vertical();
+          } else {
+          
+              
+          
+             if ( parcelVertical == in_netcdf->vertical() ) {
+                // even if this is not specified in the cmd line,
+                // it is specified in the file
+                spec_parcelvertical = true;
+                
+             } else {
+                // should never get here
+                std::cerr << "Parcel vertical coord " << in_netcdf->vertical() 
+                          << " from file does not match that specified " << parcelVertical << std::endl;
+                status = 100;
+             }
+          }
+
+       }
     }
+#endif
+
+    conv_parcel_coords = false;
 
     if ( status == 0 ) {
+
+       if ( spec_parcelvertical && ( ! spec_vertical ) ) {
+          vertical = parcelVertical;
+       }
+
+       conv_parcel_coords = ( spec_parcelvertical 
+                            && spec_vertical 
+                            && (parcelVertical != vertical) );
 
        // create a met source of the desired type
        metsource = dynamic_cast<MetGridLatLonData*>(metPick.source( metsrc_name ));
@@ -895,10 +944,6 @@ int main( int argc, char * argv[] )
           } else {  
              // read the parcels in from a netcdf file
              
-             in_netcdf = new PGenNetcdf();
-             if ( ifmt != "" ) {
-                in_netcdf->format( ifmt );
-             }
              flock = in_netcdf->create_Flock( pcl, parcelsource, pgrp, mcsr ); 
              delete in_netcdf;
              // The Parcels read in form the file have the time from the file.
