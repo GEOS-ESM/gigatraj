@@ -34,7 +34,7 @@ PGenNetcdf::~PGenNetcdf()
 
 void PGenNetcdf::open( const std::string &file)
 {
-     if ( ncIn.isOpen() ) {
+     if ( ( file != fname ) && ncIn.isOpen() ) {
         ncIn.close();
      }
      

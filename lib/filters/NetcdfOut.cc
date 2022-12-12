@@ -56,6 +56,9 @@ NetcdfOut::NetcdfOut()
     
     NaN = RNAN(nanstr);
     dNaN = nan(nanstr);
+    badval = NaN;
+    dbadval = dNaN;
+    
     
     tyme = dNaN;
 
@@ -115,6 +118,10 @@ void NetcdfOut::vertical( const std::string vert )
 
     if ( ! is_open ) {
        vcoord = vert;
+       
+       // if this is in the other quantities list, then remove it from there
+       delQuantity( vcoord );
+       
     } else {
        throw new badNetcdfTooLate();
     }
@@ -188,6 +195,12 @@ void NetcdfOut::addQuantity(  const std::string& quantity, const std::string& un
 
     if ( ! is_open ) {
     
+       if ( quantity == vcoord ) {
+          // we will not add this quantity if it's already going to be written
+          // out as the vertical coordinate.
+          return;
+       }
+       
        for ( std::vector<std::string>::iterator idx = other.begin(); idx != other.end(); idx++ ) {
            if ( *idx == quantity ) {
               // already here. do nothing.
@@ -326,6 +339,28 @@ int NetcdfOut::direction()
 {
     return dir;
 }
+
+
+void NetcdfOut::bad( real value )
+{
+    if ( ! is_open ) {
+       badval = value;
+       if ( FINITE(value) ) {
+          dbadval = value;
+       } else {
+          dbadval = dNaN;
+       }
+    } else {
+       throw new badNetcdfTooLate();
+    }
+
+}
+
+real NetcdfOut::bad()
+{
+   return badval;
+}
+
 
 bool NetcdfOut::is_root()
 {
@@ -973,7 +1008,7 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
      }
      // define missing_value attribute
      if ( i_am_root ) {
-        err = nc_def_var_fill( ncid, vid_lon, NC_FILL, &NaN );
+        err = nc_def_var_fill( ncid, vid_lon, NC_FILL, &badval );
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
         }
@@ -981,9 +1016,9 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
      aname = "missing_value";
      if ( i_am_root ) {
 #ifdef USE_DOUBLE    
-        err = nc_put_att_double( ncid, vid_lon, aname.c_str(), NC_DOUBLE, 1, &NaN );
+        err = nc_put_att_double( ncid, vid_lon, aname.c_str(), NC_DOUBLE, 1, &badval );
 #else
-        err = nc_put_att_float( ncid, vid_lon, aname.c_str(), NC_FLOAT, 1, &NaN );
+        err = nc_put_att_float( ncid, vid_lon, aname.c_str(), NC_FLOAT, 1, &badval );
 #endif
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
@@ -993,9 +1028,9 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
      aname = "_FillValue";
      if ( i_am_root ) {
 #ifdef USE_DOUBLE    
-        err = nc_put_att_double( ncid, vid_lon, aname.c_str(), NC_DOUBLE, 1, &NaN );
+        err = nc_put_att_double( ncid, vid_lon, aname.c_str(), NC_DOUBLE, 1, &badval );
 #else
-        err = nc_put_att_float( ncid, vid_lon, aname.c_str(), NC_FLOAT, 1, &NaN );
+        err = nc_put_att_float( ncid, vid_lon, aname.c_str(), NC_FLOAT, 1, &badval );
 #endif
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
@@ -1032,7 +1067,7 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
      }
      // define missing_value attribute
      if ( i_am_root ) {
-        err = nc_def_var_fill( ncid, vid_lat, NC_FILL, &NaN );
+        err = nc_def_var_fill( ncid, vid_lat, NC_FILL, &badval );
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
         }
@@ -1040,9 +1075,9 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
      aname = "missing_value";
      if ( i_am_root ) {
 #ifdef USE_DOUBLE    
-        err = nc_put_att_double( ncid, vid_lat, aname.c_str(), NC_DOUBLE, 1, &NaN );
+        err = nc_put_att_double( ncid, vid_lat, aname.c_str(), NC_DOUBLE, 1, &badval );
 #else
-        err = nc_put_att_float( ncid, vid_lat, aname.c_str(), NC_FLOAT, 1, &NaN );
+        err = nc_put_att_float( ncid, vid_lat, aname.c_str(), NC_FLOAT, 1, &badval );
 #endif
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
@@ -1052,9 +1087,9 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
      aname = "_FillValue";
      if ( i_am_root ) {
 #ifdef USE_DOUBLE    
-        err = nc_put_att_double( ncid, vid_lat, aname.c_str(), NC_DOUBLE, 1, &NaN );
+        err = nc_put_att_double( ncid, vid_lat, aname.c_str(), NC_DOUBLE, 1, &badval );
 #else
-        err = nc_put_att_float( ncid, vid_lat, aname.c_str(), NC_FLOAT, 1, &NaN );
+        err = nc_put_att_float( ncid, vid_lat, aname.c_str(), NC_FLOAT, 1, &badval );
 #endif
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
@@ -1091,7 +1126,7 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
      }
      // define missing_value attribute
      if ( i_am_root ) {
-        err = nc_def_var_fill( ncid, vid_z, NC_FILL, &NaN );
+        err = nc_def_var_fill( ncid, vid_z, NC_FILL, &badval );
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
         }
@@ -1099,9 +1134,9 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
      aname = "missing_value";
      if ( i_am_root ) {
 #ifdef USE_DOUBLE    
-        err = nc_put_att_double( ncid, vid_z, aname.c_str(), NC_DOUBLE, 1, &NaN );
+        err = nc_put_att_double( ncid, vid_z, aname.c_str(), NC_DOUBLE, 1, &badval );
 #else
-        err = nc_put_att_float( ncid, vid_z, aname.c_str(), NC_FLOAT, 1, &NaN );
+        err = nc_put_att_float( ncid, vid_z, aname.c_str(), NC_FLOAT, 1, &badval );
 #endif
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
@@ -1111,9 +1146,9 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
      aname = "_FillValue";
      if ( i_am_root ) {
 #ifdef USE_DOUBLE    
-        err = nc_put_att_double( ncid, vid_z, aname.c_str(), NC_DOUBLE, 1, &NaN );
+        err = nc_put_att_double( ncid, vid_z, aname.c_str(), NC_DOUBLE, 1, &badval );
 #else
-        err = nc_put_att_float( ncid, vid_z, aname.c_str(), NC_FLOAT, 1, &NaN );
+        err = nc_put_att_float( ncid, vid_z, aname.c_str(), NC_FLOAT, 1, &badval );
 #endif
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
@@ -1241,14 +1276,14 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
         }
         // define missing_value attribute       
         if ( i_am_root ) {
-           err = nc_def_var_fill( ncid, vid_tag, NC_FILL, &dNaN );
+           err = nc_def_var_fill( ncid, vid_tag, NC_FILL, &dbadval );
            if ( err != NC_NOERR ) {
               throw(badNetcdfError(err));
            }
         }
         aname = "missing_value";
         if ( i_am_root ) {
-           err = nc_put_att_double( ncid, vid_tag, aname.c_str(), NC_DOUBLE, 1, &dNaN );
+           err = nc_put_att_double( ncid, vid_tag, aname.c_str(), NC_DOUBLE, 1, &dbadval );
            if ( err != NC_NOERR ) {
               throw(badNetcdfError(err));
            }
@@ -1256,7 +1291,7 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
         // define _FillValue attribute
         aname = "_FillValue";
         if ( i_am_root ) {
-           err = nc_put_att_double( ncid, vid_tag, aname.c_str(), NC_DOUBLE, 1, &dNaN );
+           err = nc_put_att_double( ncid, vid_tag, aname.c_str(), NC_DOUBLE, 1, &dbadval );
            if ( err != NC_NOERR ) {
               throw(badNetcdfError(err));
            }
@@ -1305,7 +1340,7 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
          
          // define missing_value attribute
          if ( i_am_root ) {
-            err = nc_def_var_fill( ncid, vid, NC_FILL, &NaN );
+            err = nc_def_var_fill( ncid, vid, NC_FILL, &badval );
             if ( err != NC_NOERR ) {
                throw(badNetcdfError(err));
             }
@@ -1313,9 +1348,9 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
          aname = "missing_value";
          if ( i_am_root ) {
 #ifdef USE_DOUBLE    
-            err = nc_put_att_double( ncid, vid, aname.c_str(), NC_DOUBLE, 1, &NaN );
+            err = nc_put_att_double( ncid, vid, aname.c_str(), NC_DOUBLE, 1, &badval );
 #else
-            err = nc_put_att_float( ncid, vid, aname.c_str(), NC_FLOAT, 1, &NaN );
+            err = nc_put_att_float( ncid, vid, aname.c_str(), NC_FLOAT, 1, &badval );
 #endif
             if ( err != NC_NOERR ) {
                throw(badNetcdfError(err));
@@ -1325,9 +1360,9 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
          aname = "_FillValue";
          if ( i_am_root ) {
 #ifdef USE_DOUBLE    
-            err = nc_put_att_double( ncid, vid, aname.c_str(), NC_DOUBLE, 1, &NaN );
+            err = nc_put_att_double( ncid, vid, aname.c_str(), NC_DOUBLE, 1, &badval );
 #else
-            err = nc_put_att_float( ncid, vid, aname.c_str(), NC_FLOAT, 1, &NaN );
+            err = nc_put_att_float( ncid, vid, aname.c_str(), NC_FLOAT, 1, &badval );
 #endif
             if ( err != NC_NOERR ) {
                throw(badNetcdfError(err));
@@ -1631,9 +1666,9 @@ void NetcdfOut::apply( Parcel& p )
    
    t = p.getTime();
  
-   lon = NaN;
-   lat = NaN;
-   z = NaN;
+   lon = badval;
+   lat = badval;
+   z = badval;
    tag = NULL;
    flags = NULL;
    statuses = NULL;
@@ -1665,7 +1700,7 @@ void NetcdfOut::apply( Parcel& p )
           if ( ! notrace ) {
              val = met->getData( other[i], t, lon, lat, z );
           } else {
-             val = NaN;
+             val = badval;
           }
           *(stuff[i]) = val;
       }
@@ -1760,11 +1795,11 @@ void NetcdfOut::apply( Parcel * const p, const int n )
                 }
              }
              
-             lons[i] = NaN;
-             lats[i] = NaN;
-             zs[i]   = NaN;
+             lons[i] = badval;
+             lats[i] = badval;
+             zs[i]   = badval;
              if ( do_tag ) {
-                tags[i] = dNaN;
+                tags[i] = dbadval;
              }   
              if ( ! notrace ) {
                 p[j].getPos( &(lons[i]), &(lats[i]) );
@@ -1790,7 +1825,7 @@ void NetcdfOut::apply( Parcel * const p, const int n )
                    j = ii + k;
                    notrace = p[j].queryNoTrace();
                    if ( notrace ) {
-                      (stuff[i])[j] = NaN;
+                      (stuff[i])[j] = badval;
                    }
                }
             }
@@ -1913,11 +1948,11 @@ void NetcdfOut::apply( std::vector<Parcel>& p )
                 }
              }
              
-             lons[i] = NaN;
-             lats[i] = NaN;
-             zs[i]   = NaN;
+             lons[i] = badval;
+             lats[i] = badval;
+             zs[i]   = badval;
              if ( do_tag ) {
-                tags[i] = dNaN;
+                tags[i] = dbadval;
              }   
              if ( ! notrace ) {
                 vi->getPos( &(lons[i]), &(lats[i]) );
@@ -1944,7 +1979,7 @@ void NetcdfOut::apply( std::vector<Parcel>& p )
                    j = ii + k;
                    notrace = vi->queryNoTrace();
                    if ( notrace ) {
-                      (stuff[i])[j] = NaN;
+                      (stuff[i])[j] = badval;
                    }
                }
             }
@@ -2065,11 +2100,11 @@ void NetcdfOut::apply( std::list<Parcel>& p )
                 }
              }
              
-             lons[i] = NaN;
-             lats[i] = NaN;
-             zs[i]   = NaN;
+             lons[i] = badval;
+             lats[i] = badval;
+             zs[i]   = badval;
              if ( do_tag ) {
-                tags[i] = dNaN;
+                tags[i] = dbadval;
              }   
              if ( ! notrace ) {
                 vi->getPos( &(lons[i]), &(lats[i]) );
@@ -2096,7 +2131,7 @@ void NetcdfOut::apply( std::list<Parcel>& p )
                    j = ii + k;
                    notrace = vi->queryNoTrace();
                    if ( notrace ) {
-                      (stuff[i])[j] = NaN;
+                      (stuff[i])[j] = badval;
                    }
                }
             }
@@ -2217,11 +2252,11 @@ void NetcdfOut::apply( std::deque<Parcel>& p )
                 }
              }
              
-             lons[i] = NaN;
-             lats[i] = NaN;
-             zs[i]   = NaN;
+             lons[i] = badval;
+             lats[i] = badval;
+             zs[i]   = badval;
              if ( do_tag ) {
-                tags[i] = dNaN;
+                tags[i] = dbadval;
              }   
              if ( ! notrace ) {
                 vi->getPos( &(lons[i]), &(lats[i]) );
@@ -2248,7 +2283,7 @@ void NetcdfOut::apply( std::deque<Parcel>& p )
                    j = ii + k;
                    notrace = vi->queryNoTrace();
                    if ( notrace ) {
-                      (stuff[i])[j] = NaN;
+                      (stuff[i])[j] = badval;
                    }
                }
             }
@@ -2446,11 +2481,11 @@ void NetcdfOut::apply( Flock& p )
                    }
                 }
              
-                lons[i] = NaN;
-                lats[i] = NaN;
-                zs[i]   = NaN;
+                lons[i] = badval;
+                lats[i] = badval;
+                zs[i]   = badval;
                 if ( do_tag ) {
-                   tags[i] = dNaN;
+                   tags[i] = dbadval;
                 }   
                 if ( ! notrace[j] ) {
                    px->getPos( &(lons[i]), &(lats[i]) );
@@ -2476,7 +2511,7 @@ void NetcdfOut::apply( Flock& p )
                for ( int k=0; k < chunksize; k++ ) {
                    j = ii + k;
                    if ( notrace[j] ) {
-                      (stuff[i])[k] = NaN;
+                      (stuff[i])[k] = badval;
                    }
                }
             }
@@ -2639,11 +2674,11 @@ void NetcdfOut::apply( Swarm& p )
                    }
                 }
              
-                lons[i] = NaN;
-                lats[i] = NaN;
-                zs[i]   = NaN;
+                lons[i] = badval;
+                lats[i] = badval;
+                zs[i]   = badval;
                 if ( do_tag ) {
-                   tags[i] = dNaN;
+                   tags[i] = dbadval;
                 }   
                 if ( ! notrace ) {
                    px->getPos( &(lons[i]), &(lats[i]) );
@@ -2670,7 +2705,7 @@ void NetcdfOut::apply( Swarm& p )
                    j = ii + k;
                    notrace = vi->queryNoTrace();
                    if ( notrace ) {
-                      (stuff[i])[j] = NaN;
+                      (stuff[i])[j] = badval;
                    }
                }
             }

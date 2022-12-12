@@ -459,6 +459,7 @@ int main()
     np = 16;
     out->init( &p, np );
     out->setTimeTransform( 24.0, -1000.0 );
+    out->bad( -9999.99 );
     out->open();
     pw = new Swarm(p, np);
     for ( it=0; it < 7; it++ ) {
@@ -476,11 +477,15 @@ int main()
     }
     dr = out->direction();
     if ( dr != -1 ) {
-       cerr << "Trajection should be backward but is " << dr << endl;
+       cerr << "Trajectory direction should be backward but is " << dr << endl;
        exit(1);
     }                
     out->close();
     delete pw;
+    if ( mismatch( out->bad(), -9999.99 ) ) {
+       cerr << "bad-value should be -9999.99 but it " << out->bad() << endl;
+       exit(1);   
+    }
       
     // try reading it again
     in = new NetcdfIn();

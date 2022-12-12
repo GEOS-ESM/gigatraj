@@ -244,6 +244,31 @@ class NetcdfOut : public ParcelReporter {
       */    
       std::string& cal();
 
+
+      /// set the bador-missing-data value used in the netcdf file
+      /*! This method sets the value sthat is to be used for bad or missing data values.
+      
+          For a given time vaclue, if a parcel has been marked as not to be traced, 
+          then its data for that time is record with the bad or missing data value.
+          By default, this is the NaN (not a number) value. This applies to the longitude, latitude,
+          vertical coordinate, tag, and any meteorological fields that have been requested.
+          The parcel status and flags, however, will (if requested to be output) continue to be 
+          output as-is.
+          
+          Once the file has bene opened, this value can no longe rbe changed.
+          
+          \param value the new bad-or-missing-data value
+      */      
+       void bad( real value );
+       
+       /// returns the value currently used for bad o rmissing data values
+       /*! This method returns the current value used in place of bad or missing parcel data.
+
+           \return the bad-or-missing-data value
+       */
+       real bad();
+           
+
       /// returns the number of parcels being written to the file
       /*! This method returns the number of parcels being written to ahe netcdf file.
           Because the netcdffile istwo-dimensional (time x id), the number of
@@ -621,7 +646,7 @@ class NetcdfOut : public ParcelReporter {
       
       /// should we be writing timestamps?
       bool do_tstamp;
-      
+           
       /// the name of the tag quantity
       std::string tagquant;
       /// units of the tag quantity
@@ -629,13 +654,17 @@ class NetcdfOut : public ParcelReporter {
       /// descriptive string for the tagged quantity
       std::string tagdesc;
       
-      /// the fomrat string
+      /// the format string
       std::string fmtspec;
       
       /// holds a NaN value for dead Parcels's info
       real NaN;
       /// also need a double value for this
       double dNaN;
+      /// the bad-or-missing-data value
+      real badval;
+      /// double version of the bad-or-missing data value
+      double dbadval;
       
       /// debugging flag
       int dbug;
