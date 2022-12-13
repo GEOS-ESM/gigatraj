@@ -1,0 +1,15 @@
+esma_set_this(OVERRIDE geos_giga)
+
+set (BASEDIR $ENV{BASEDIR})
+
+set (srcs
+)
+
+esma_add_library (${this} 
+   SRCS ${srcs}
+   )
+include_directories (${this} ${GIGATRAJ_SOURCE_DIR}/include ${BASEDIR}/Linux/include/netcdf)
+#install (TARGETS ${this} EXPORT ${this}-targets
+#         ARCHIVE DESTINATION lib
+#         LIBRARY DESTINATION lib)
+#INSTALL(EXPORT ${this}-targets DESTINATION lib)

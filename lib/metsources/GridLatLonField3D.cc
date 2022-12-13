@@ -563,9 +563,10 @@ void GridLatLonField3D::load( const realvec& inlons, const realvec& inlats
    int indx = 0;
    int i;
    
-   checkLons(inlons);
-   checkLats(inlats);
-   checkLevs(inlevels);
+   // WY note: comment out the check. Latitude may exceed the range because of halo
+   //checkLons(inlons);
+   //checkLats(inlats);
+   //checkLevs(inlevels);
    
    nlons = inlons.size();
    nlats = inlats.size();

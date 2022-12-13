@@ -14,7 +14,8 @@ GridLatLonField3D.cc      MetGridData.cc        ThetaDotOTF.cc
 GridLatLonFieldSfc.cc     MetGridLatLonData.cc  ThetaOTF.cc
 Hinterp.cc                MetGridSBRot.cc       TropOTF.cc
 LinearVinterp.cc          MetMERRA2.cc          Vinterp.cc
-GEOS_Giga.cc)
+MetGEOSDistributedData.cc
+) 
 
 set (BASEDIR $ENV{BASEDIR})
 esma_add_library (${this}
@@ -27,4 +28,4 @@ include_directories(${BASEDIR}/Linux/include/netcdf ${GIGATRAJ_SOURCE_DIR}/inclu
 #  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
 #  $<BUILD_INTERFACE:${GIGATRAJ_SOURCE_DIR}/include>
 #  $<BUILD_INTERFACE:${BASEDIR}/Linux/include/netcdf>)
-#target_link_libraries(${this} gigatraj)
+target_link_libraries(${this}  MPI::MPI_CXX)
