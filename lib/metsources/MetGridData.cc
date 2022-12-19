@@ -294,6 +294,15 @@ void MetGridData::set_verticalBase( const std::string quantity, const std::strin
 
 }
 
+void MetGridData::set_verticalBase( GridField3D *grid )
+{
+    real new_vscale;
+    real new_voffset;
+    std:string new_vuu = grid->vunits( &new_vscale, &new_voffset );
+    std::string vname = grid->vertical();
+    set_verticalBase( vname, new_vuu, NULLPTR, new_vscale, new_voffset );
+
+}    
 
 void MetGridData::remove( GridField3D* field )
 {
@@ -492,7 +501,7 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
                 std::cerr << "MetGridData::new_mgmtGrid3D:  requesting to read " << quantity << std::endl;    
              }
 
-             // read in the data form the actual source
+             // read in the data from the actual source
              grid = new_directGrid3D( quantity, time );
              if ( grid != NULLPTR ) {
              
@@ -545,7 +554,7 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
                    } else {
                       // The raw data we just read uses some other quantity as its vertical coordinate.
                       
-                      // if the preferred vcoordinate is an anlytical function of the current one,
+                      // if the preferred vcoordinate is an analytical function of the current one,
                       // then we convert it now
                       if ( ! vConvert( grid, vquant, vuu ) ) {
                          // ok, not an analytical function.
@@ -553,9 +562,56 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
                       
                          // Ask for that quantity on our preferred vertical coordinate.
                       
-                         // We do it this way, so that "vgrid" can be cached and will
-                         // not have to be read the next time we need it.
-                         vgrid = new_mgmtGrid3D( grid->vertical(), time );
+                         try {
+                            // We call ourselves, so that "vgrid" can be cached and will
+                            // not have to be read the next time we need it.
+                            vgrid = new_mgmtGrid3D( grid->vertical(), time );
+                         } catch (...) {
+                            // we don't have the native-coord on desired-coord
+                            if ( debug >= 1 ) {
+                               std::cerr << "MetGridData::new_mgmtGrid3D:              cannot find " << grid->vertical() 
+                               << " on " << vquant << " for " << grid->quantity() << std::endl;
+                            }
+                            vgrid = NULLPTR;
+                         }
+                         if ( vgrid == NULLPTR ) {
+                            // we could not get the actual vcoord on the desired surface,
+                            // so try to get the desired vcoord on the actual vcoord surfaces,
+                            // then invert that grid.
+           //                 try {
+
+                               std::vector<real>* target_vs = vcoords( NULLPTR );
+
+                               MetGridData* newsrc = MetGridCopy();
+                               // change over to the read-data's actual vcoord                               
+                               newsrc->set_verticalBase( grid );
+
+                               // Read the desired vcoord on the read-data actual coord surfaces
+                               newgrid = newsrc->new_mgmtGrid3D( vquant, time );
+                               if ( newgrid != NULLPTR ) {
+                                  // fiddle with the units of the?
+                                  if ( newgrid->units() != vuu ) {
+                                     newgrid->transform( vuu, vMKSscale, vMKSoffset );
+                                  }
+                                  // now invert the coords
+                                  
+                               }
+                               
+                               // invert the grid we just read in
+                               vgrid = vin->invert( *target_vs, *newgrid );
+                               
+                               //delete newgrid;
+                               delete newsrc;
+                               
+             //               } catch (...) {
+             //                  // we don't have the native-coord on desired-coord
+             //                  if ( debug >= 1 ) {
+             //                     std::cerr << "MetGridData::new_mgmtGrid3D:              cannot find " << grid->vertical() 
+             //                     << " on " << vquant << " for " << grid->quantity() << std::endl;
+             //                  }
+             //                  vgrid = NULLPTR;
+             //               }
+                         }
                          if ( vgrid == NULLPTR ) {
                             throw (baddataload());
                          }
