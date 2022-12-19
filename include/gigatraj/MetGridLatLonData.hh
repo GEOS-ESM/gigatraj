@@ -310,6 +310,8 @@ class MetGridLatLonData : public MetGridData {
        
        /// the name of native grid levels (not necessarily the chosen vertical grid's levels)
        std::string native_vquant;
+       /// the units if the native vquant
+       std::string native_vuu;
        /// the number of native grid levels 
        int native_nzs;
        /// the vector of native grid levels

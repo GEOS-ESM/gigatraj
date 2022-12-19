@@ -26,6 +26,56 @@
 
 namespace gigatraj {
 
+
+/*! \brief type Strictitude holds flag values to indicate how strict or flexible we should be in requesting data
+ 
+  A Strictitude type variable holds bitwise flags that signify whether we
+  can accept multiple types of grid characteristics.
+ 
+*/  
+typedef int Strictitude;
+
+/*! @name StrictitudeVals
+    \defgroup strictitudevals Data request strictness/flexibility values
+    
+    A MetGEOSPortal data source can have look strictly or flexibly for data.
+    If some aspect of the data gridding is to be strict, then only the specified grid
+    characteristic is acceptable. If not strict (flexible), then any value of
+    that grid characteristic can be accepted, with the understanding that the data read
+    will need to be converted or regridded in some way.
+    
+*/
+/*! \brief  Strictitude value:  StrictAboutHgrid = the request should be strict about the horizontsl grid specification
+  \ingroup strictitudevals
+*/
+const Strictitude StrictAboutHgrid = 0x01;
+      
+/*! \brief  Strictitude value:  StrictAboutVgrid = the request should be strict about the vertical grid specification
+  \ingroup strictitudevals
+*/
+const Strictitude StrictAboutVgrid = 0x02;
+ 
+      
+/*! \brief  Strictitude value:  StrictAboutTgrid = the request should be strict about the time spacing specification
+  \ingroup strictitudevals
+*/
+const Strictitude StrictAboutTgrid = 0x04;
+      
+/*! \brief  Strictitude value:  StrictAboutTavg = the request should be strict about the time averaging specification
+  \ingroup strictitudevals
+*/
+const Strictitude StrictAboutTavg = 0x08;
+
+/*! \brief  Strictitude value:  StrictAboutNothing = the request should be lax about everything
+*/
+const Strictitude StrictAboutNothing = 0x00;
+
+/*! \brief  Strictitude value:  StrictAboutGridding = the request should be strict about horizontal, vertical, and time gridding
+*/
+const Strictitude StrictAboutGridding = 0x07;
+
+
+
 /*!
 \ingroup MetSrc
 
@@ -225,6 +275,27 @@ class MetGEOSPortal : public MetGridLatLonData {
       virtual void set_vertical( const std::string quantity, const std::string units, const std::vector<real>* levels=NULLPTR ) = 0;
 
 
+      /// sets the name of the vertical coordinate used in the data source
+      /*! This method forces the meteorological data source object to use a specific vertical coordinate.
+          
+          This function gets called by the various subclasses's set_vertical() functions.
+          
+          \param quantity the desired quantity to be used for the vertical coordinate
+          \param units the units of the desired vertical coordinate
+          \param levels a pointer to a vector of values of the new vertical coordinate
+          \param scale a scale factor to be applied to this quantity that would convert it to MKS units
+          \param offset an offset to be applied ot this quantity (after the scale factor) that would convert it to MKS units
+      */
+      virtual void set_verticalBase( const std::string quantity, const std::string units, const std::vector<real>* levels=NULLPTR, real scale=1.0, real offset=0.0 );
+
+      /// sets the vertical coordinates from a GridField3D object
+      /*! This method forces the meteorological data source object to use vertical coordinates taken form a GridField3D object.
+      
+          \param the grid whose vertical cooridnates are to be used.
+      */
+      virtual void set_verticalBase( GridField3D *grid );    
+
+
       /// set the base time
       /*! This method sets the base time: the ISO8601 tdate string that corresponds to internal model time zero.
           \param date the date (in ISO8601 format) from which all model times
@@ -309,7 +380,7 @@ class MetGEOSPortal : public MetGridLatLonData {
        void reset();
 
       /// returns a default set of vertical coordinate values
-      /*! This method returns a vector of vertical coordinate values, depedning onthe coordinate system desired.
+      /*! This method returns a vector of vertical coordinate values, depending on the coordinate system desired.
       
           \param coordSys a pointer ot a string giving the name of the vertical coordinate. If NULLPTR, the 
                         meteorological source's current vertical coordinate is used.
@@ -422,18 +493,50 @@ class MetGEOSPortal : public MetGridLatLonData {
       */    
        virtual std::string quantityName_geos2cf(const std::string &quantity ) const = 0;
 
+       /// queries a horizontal GEOS Portal grid 
+       /*! GEOS Portal data products are available on several horizontal grid resolutions.
+           This method returns characteristics of the horizontal grid queried for:  the set of 
+           longitudes and latitudes used by that grid.
+
+           \param qhgrid chooses one of these supported grids: 
+                  - -1 = whatever current grid is being used
+                  - 0 = native GEOS Portal resolution ((denoted by "N" in GEOS file naming conventions)
+                  - 1 = GEOS Portal reduced resolution (denoted by "C" in GEOS file naming conventions)
+                  - 2 = GEOS Portal reduced FV resolution (denoted by "F" in GEOS file naming conventions)
+           \param lons the vector of longitudes returned
+           \param lats the vector of latitudes returned       
+       */
+       void query_hgrid( int qhgrid, std::vector<real>& lons, std::vector<real>& lats ); 
+
        /// sets the horizontal GEOS Portal grid to be used
        /*! GEOS Portal data products are available on several horizontal grid resolutions.
            This method sets the horizontal grid to be used, and retrieves the set of 
            longitudes and latitudes used by that grid.
 
-           \param hgrid chooses one of three supported grids: 
+           \param hgrid0 chooses one of three supported grids: 
                   - 0 = native GEOS Portal resolution (0.3125 longitude by 0.25 latitude)
                   - 1 = GEOS Portal reduced resolution (2/3 longitude by 1/2 latitude)
-           \param lons the vector of longitudes returned
-           \param lats the vector of latitudes returned       
+                  - 2 = GEOS Portal reduced FV resolution (denoted by "F" in GEOS file naming conventions)
        */
-       void set_hgrid( const int hgrid, std::vector<real>& lons, std::vector<real>& lats ); 
+       void set_hgrid( const int hgrid0 ); 
+
+       /// queries a vertical GEOS Portal grid
+       /*! GEOS Portal data products are available on several vertical grids (mainly, pressure
+           levels and model sigma levels). This method queries the characterictics
+           of a given vertical grid.
+           retrieving the set of vertical levels used by that grid, along with the
+           physical quantity of the vertical coordinate and its units.
+
+           \param vgrid chooses one of these supported grids: 
+                  - -1 = use the current vertical grid
+                  - 1 = native model levels ("v" in the GEOS file naming scheme)
+                  - 2 = pressure levels ("p" in the GEOS file naming scheme)
+                  - 3 = native model layer edges ("e" in the GEOS file naming scheme)
+           \param zs the vector of coordinate values returned
+           \param vquant the name of the vertical coordinate
+           \param vunits the units of the vertical coordinate       
+       */
+       void query_vgrid( const int qvgrid, std::vector<real>& zs, std::string& vquant, std::string& vunits ); 
 
        /// sets the vertical GEOS Portal grid to be used
        /*! GEOS Portal data products are available on several vertical grids (namely, pressure
@@ -441,15 +544,12 @@ class MetGEOSPortal : public MetGridLatLonData {
            retrieves the set of vertical levels used by that grid, along wiht the
            physical quantity of the vertical coordinate and its units.
 
-           \param vgrid chooses one of three supported grids: 
+           \param vgrid0 chooses one of three supported grids: 
                   - 1 = native model levels; 
                   - 2 = pressure levels
                   - 3 = native model layer edges
-           \param zs the coordinate values returned
-           \param vquant the name of the vertical coordinate
-           \param vunits the units of the vertical coordinate       
        */
-       void set_vgrid( const int vgrid, std::vector<real>& zs, std::string& vquant, std::string& vunits ); 
+       void set_vgrid( const int vgrid0 ); 
 
       /// sets how strictly requested data should conform to the specified grid
       /*! GEOS Portal data are available on several horizontal and vertical grids, but not
@@ -797,17 +897,17 @@ class MetGEOSPortal : public MetGridLatLonData {
        
        //--- grid preference specifiers   
        /// How strictly to stick to our gridding preferences
-       int strict;
-       /// horizontal grid       
-       int hgrid;    
-       /// vertical grid (e.g., pressure)   
-       int pgrid;       
-       /// time-average period
-       int tave;
+       Strictitude strict;
+       /// horizontal grid  (-1 = unknown/flexible, 0="N", 1="C", 2="F" )     
+       int desired_hgrid_id;    
+       /// vertical grid ( -1=unknown/felxible, 0="x", 1="v", 2="p", 3="e" )  
+       int desired_vgrid_id;       
+       /// time-average period (-1=unknown/flexible, 0=no averaging, >0 is hrs averaged)
+       int desired_tave;
        /// base time
-       int tbase;   
-       /// time snapshot spacing    
-       int tspace;       
+       int desired_tbase;   
+       /// time snapshot spacing (-1-unknown/flexible, >0 is hours of spacing)   
+       int desired_tspace;
        
        
        
@@ -854,7 +954,7 @@ class MetGEOSPortal : public MetGridLatLonData {
        int test_hgrid;
        /// test-probe vertical grid
        int test_vgrid;
-       /// test-probe tme spacing
+       /// test-probe time spacing
        int test_tspace;
        /// test-probe time-averaging
        int test_tave;
@@ -1119,6 +1219,7 @@ class MetGEOSPortal : public MetGridLatLonData {
            of this object,
        */    
        void update_hgrid();
+       
        /// updates the vertical grid
        /*! This method updates the met source's vertical grid information,
            based on characteristics in cur_vgrid, which comes from the current open file.

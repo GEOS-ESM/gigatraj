@@ -171,7 +171,7 @@ void MetMERRA::setup_gridSpecs()
    
    vspec.code = 'n';
    vspec.id   = 1;
-   vspec.quant = "Model Levels";
+   vspec.quant = "Model-Levels";
    vspec.units = "";
    vspec.nLevs = 71;
    vspec.levs.clear();
@@ -261,10 +261,7 @@ void MetMERRA::reset()
    MetGEOSPortal::reset();
       
 
-   hgrid = 0;
-   set_hgrid(hgrid, lons, lats);
-   nlons = lons.size();
-   nlats = lats.size();
+   set_hgrid( 0 );
 
    // Native GEOSfp variable names
    //  zonal wind
@@ -274,11 +271,8 @@ void MetMERRA::reset()
    // vertical "wind" will depend on the vertical coordinate system
    // and is set by set_vertical()
 
-   pgrid = 2;
-   vunits = "";
-   set_vgrid(pgrid, native_zs, native_vquant, vunits); 
-   native_nzs = native_zs.size();
-   set_vertical(native_vquant, vunits, &native_zs );   
+   set_vgrid(2); 
+   set_vertical(native_vquant, native_vuu, &native_zs );   
 
 }
 
@@ -313,6 +307,16 @@ MetMERRA& MetMERRA::operator=(const MetMERRA& src)
     assign(src);
 
     return *this;
+}
+
+MetGridData* MetMERRA::MetGridCopy()
+{
+     MetMERRA* newthing;
+     
+     newthing = new MetMERRA();
+     newthing->assign( *this );
+     
+     return dynamic_cast<MetGridData*> (newthing);
 }
 
 
@@ -352,6 +356,7 @@ bool MetMERRA::legalQuantity( const std::string quantity )
         if ( quantity == altitude_name 
           || quantity == pressure_name 
           || quantity == palt_name  
+          || quantity == "Model-Levels"
         ) {                   
            result = true;     
         }                     
@@ -664,23 +669,23 @@ int MetMERRA::setup(  const std::string quantity, const std::string &time )
        test_date = caltime;
        
        // find the variable we are looking for
-       status = dir.LookUp( test_quant, test_date, hgrid, pgrid, tspace, tave
+       status = dir.LookUp( test_quant, test_date, desired_vgrid_id, desired_hgrid_id, desired_tspace, desired_tave
             , NULL, NULL, &test_ndims
             , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl );
-       if ( status && (strict != 0x07) ) {
+       if ( status && (strict != StrictAboutGridding) ) {
           if ( horizStrictness() ) {
-             use_hgrid = hgrid;
+             use_hgrid = desired_hgrid_id;
           }   
           if ( vertStrictness() ) {
-             use_vgrid = pgrid;
+             use_vgrid = desired_vgrid_id;
           }   
           if ( tspaceStrictness() ) {
-             use_tspace = tspace;
+             use_tspace = desired_tspace;
           }   
           if ( tavgStrictness() ) {
-             use_tavg = tave;
+             use_tavg = desired_tave;
           }   
-          status = dir.LookUp( test_quant, test_date, use_hgrid, use_vgrid, use_tspace, use_tavg
+          status = dir.LookUp( test_quant, test_date, use_vgrid, use_hgrid, use_tspace, use_tavg
             , NULL, NULL, &test_ndims
             , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl );
        }
@@ -740,7 +745,7 @@ bool MetMERRA::bracket( const std::string &quantity, const std::string &time, st
     double xtime, ytime, ptime;
     double mtime;
     double tbase=0;
-    double tspace=24;
+    double tspace = 24;
     std::vector<std::string> *testquants;
     bool sametime;
     
@@ -758,7 +763,7 @@ bool MetMERRA::bracket( const std::string &quantity, const std::string &time, st
     mtime = cal2Time( time );
 
     // find the variable we are looking for
-    status = dir.LookUp( (*testquants)[0], time.substr(0,10), hgrid, pgrid, tspace, tave
+    status = dir.LookUp( (*testquants)[0], time.substr(0,10), desired_vgrid_id, desired_hgrid_id, tspace, desired_tave
          , NULL, NULL, NULL 
          , &true_vgrid, &true_hgrid, &true_tspace, &true_tave, &true_tbase, NULL );
     if ( status && ! strict ) {
@@ -1015,6 +1020,7 @@ GridLatLonField3D* MetMERRA::new_directGrid3D( const std::string quantity, const
        } else if ( test_vgrid == 1 ) {
           // data are on model levels--read the layer thicknesses
           // and calculate pressure from them
+          // (Note that PL is not available for MERRA, so we must use DELP.)
           component_1 = defaultThis->Get3D("DELP", time);
           // the "1.0" is the pressure (in Pa) imposed at the top GMAO model level
           tmp1 = dynamic_cast<GridLatLonField3D*>(getpress.calc( *component_1, 1.0 ));
@@ -1022,7 +1028,7 @@ GridLatLonField3D* MetMERRA::new_directGrid3D( const std::string quantity, const
           delete tmp1;
           defaultThis->remove( component_1 );
           // Note: pressure data are in Pa; convert to hPa (mb)
-          grid3d->transform("hPa", 0.01);
+          grid3d->transform("hPa", 100.0, 0.0);
        } else {
           throw (badDataNotFound());
        }   

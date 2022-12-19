@@ -87,7 +87,7 @@ void MetGEOSPortal::TGridSpec::clear()
 {
    tave = -1;
    tbase = 0;
-   tspace = 1;
+   tspace = -1;
    start = 0.0;
    end = 0.0;
    delta = 1.0;
@@ -137,10 +137,11 @@ MetGEOSPortal::~MetGEOSPortal()
 // copy constructor
 MetGEOSPortal::MetGEOSPortal( const MetGEOSPortal&  src) : MetGridLatLonData(src)
 {
-     hgrid = src.hgrid;
-     pgrid = src.pgrid;
-     tspace = src.tspace;
-     tave = src.tave;
+     desired_hgrid_id = src.desired_hgrid_id;
+     desired_vgrid_id = src.desired_vgrid_id;
+     desired_tspace = src.desired_tspace;
+     desired_tave = src.desired_tave;
+     desired_tbase = src.desired_tbase;
      strict = src.strict;
      skip = src.skip;
      skoff = src.skoff;
@@ -307,10 +308,11 @@ void MetGEOSPortal::assign(const MetGEOSPortal& src)
 {
     MetGridLatLonData::assign(src);
 
-     hgrid = src.hgrid;
-     pgrid = src.pgrid;
-     tspace = src.tspace;
-     tave = src.tave;
+     desired_hgrid_id = src.desired_hgrid_id;
+     desired_vgrid_id = src.desired_vgrid_id;
+     desired_tspace = src.desired_tspace;
+     desired_tave = src.desired_tave;
+     desired_tbase = src.desired_tbase;
      strict = src.strict;
      skip = src.skip;
      ntries = src.ntries;
@@ -323,8 +325,8 @@ void MetGEOSPortal::assign(const MetGEOSPortal& src)
 void MetGEOSPortal::reset()
 {
    
-   tave = 0;
-   strict = 0;
+   desired_tave = -1;
+   strict = StrictAboutNothing;
    skip = 0;
    skoff = 0;
    basetime = 0.0;
@@ -333,6 +335,14 @@ void MetGEOSPortal::reset()
    openwait = 1;
    isOpen = 0;
    cur_url = "";
+   
+   test_vgrid = -1;
+   test_ndims = -1;
+   test_hgrid = -1;
+   test_vgrid = -1;
+   test_tspace = -1;
+   test_tave = -1;
+   test_tbase = -1;
    
    override_tbase = -1;
    override_tspace = -1;
@@ -575,24 +585,28 @@ std::vector<real>* MetGEOSPortal::vcoords( const std::string *coordSys ) const
 }
 
 
-void MetGEOSPortal::set_hgrid( const int hgrid, std::vector<real>& lons, std::vector<real>& lats ) 
+void MetGEOSPortal::query_hgrid( int qhgrid, std::vector<real>& lons, std::vector<real>& lats ) 
 {
    int nlons, nlats;
    real delta;
    real begval;
    
-   nlons = hspecs[hgrid].nLons;
-   begval =  hspecs[hgrid].startLon;
-   delta = hspecs[hgrid].deltaLon;
+   if ( qhgrid < 0 ) {
+      qhgrid = desired_hgrid_id;
+   }
+   
+   nlons = hspecs[qhgrid].nLons;
+   begval =  hspecs[qhgrid].startLon;
+   delta = hspecs[qhgrid].deltaLon;
    lons.clear();
    lons.reserve(nlons);
    for (int i=0; i<nlons; i++ ) {
        lons.push_back( i*delta +  begval );
    }
 
-   nlats = hspecs[hgrid].nLats;
-   begval =  hspecs[hgrid].startLat;
-   delta = hspecs[hgrid].deltaLat;
+   nlats = hspecs[qhgrid].nLats;
+   begval =  hspecs[qhgrid].startLat;
+   delta = hspecs[qhgrid].deltaLat;
    lats.clear();
    lats.reserve(nlats);
    for (int i=0; i<nlats; i++ ) {
@@ -600,18 +614,38 @@ void MetGEOSPortal::set_hgrid( const int hgrid, std::vector<real>& lons, std::ve
    }
    
 }
+void MetGEOSPortal::set_hgrid( const int hgrid0 ) 
+{
+   int nlons, nlats;
+   real delta;
+   real begval;
+   
+   if ( hgrid0 >= 0 && hgrid0 <= 2 ) {
+      desired_hgrid_id = hgrid0;
+   
+      query_hgrid( desired_hgrid_id, lons, lats ); 
+      nlons = lons.size();
+      nlats = lats.size();
+   
+   }      
+   
+}
 
 
-void MetGEOSPortal::set_vgrid( const int vgrid, std::vector<real>& zs, std::string& vquant, std::string& vunits ) 
+void MetGEOSPortal::query_vgrid( int qvgrid, std::vector<real>& zs, std::string& vquant, std::string& vunits ) 
 {
    int nzs;
    
+   if ( qvgrid < 0 ) {
+      qvgrid = desired_vgrid_id;
+   }   
+   
+   
    for ( int i=0; i < vspecs.size(); i++ ) {
-      if ( vspecs[i].id == vgrid ) {
+      if ( vspecs[i].id == qvgrid ) {
           vquant = vspecs[i].quant;
           vunits = vspecs[i].units;
           zs = vspecs[i].levs;
-          nzs = zs.size();
           return;
       }      
    }
@@ -620,49 +654,64 @@ void MetGEOSPortal::set_vgrid( const int vgrid, std::vector<real>& zs, std::stri
 }
 
 
+void MetGEOSPortal::set_vgrid( const int vgrid0 ) 
+{
+   int nzs;
+   
+   if ( vgrid0 >= 0 && vgrid0 <= 2 ) {
+      
+      desired_vgrid_id = vgrid0;
+      query_vgrid( desired_vgrid_id, native_zs, native_vquant, native_vuu );
+      native_nzs = native_zs.size();
+      
+   } else {  
+      throw(badVerticalCoord());
+   }
+}
+
 void MetGEOSPortal::setStrictness( const bool horiz, const bool vert, const bool tspace, const bool tavg )
 {
     if ( horiz ) { 
-       strict = strict | 0x01 ;
+       strict = strict | StrictAboutHgrid ;
     } else {
-       strict = strict & ( ~ 0x01) ;  
+       strict = strict & ( ~ StrictAboutHgrid) ;  
     }
     if ( vert ) { 
-       strict = strict | 0x02 ;
+       strict = strict | StrictAboutVgrid ;
     } else {
-       strict = strict & ( ~ 0x02) ;  
+       strict = strict & ( ~ StrictAboutVgrid) ;  
     }
     if ( tspace ) { 
-       strict = strict | 0x04 ;
+       strict = strict | StrictAboutTgrid ;
     } else {
-       strict = strict & ( ~ 0x04) ;  
+       strict = strict & ( ~ StrictAboutTgrid) ;  
     }
     if ( tavg ) { 
-       strict = strict | 0x08 ;
+       strict = strict | StrictAboutTavg ;
     } else {
-       strict = strict & ( ~ 0x08) ;  
+       strict = strict & ( ~ StrictAboutTavg) ;  
     }
     
 }
 
 bool MetGEOSPortal::horizStrictness()     
 {
-    return (( strict & 0x01) != 0 );
+    return (( strict & StrictAboutHgrid) != 0 );
 }
 
 bool MetGEOSPortal::vertStrictness()      
 {
-    return (( strict & 0x02) != 0 );
+    return (( strict & StrictAboutVgrid) != 0 );
 }
 
 bool MetGEOSPortal::tspaceStrictness()
 {
-    return (( strict & 0x04) != 0 );
+    return (( strict & StrictAboutTgrid) != 0 );
 }
 
 bool MetGEOSPortal::tavgStrictness()     
 {
-    return (( strict & 0x08) != 0 );
+    return (( strict & StrictAboutTavg) != 0 );
 }
 
 void  MetGEOSPortal::setNTries( const int n)
@@ -775,7 +824,7 @@ void MetGEOSPortal::Portal_open(const std::string& url )
      // but first, sleep some time between opens, to avoid being obnoxious to the server
      if ( openwait > 0 ) {
         if ( debug > 2 ) {
-           std::cerr << "************* About to wait " << waittime << " seconds on proc " 
+           std::cerr << "************* About to wait " << openwait << " seconds on proc " 
                      << my_pgroup->id() << " group " << my_pgroup->group_id() << std::endl;
         }
         (void) sleep( openwait ); // sleep this time between opens, to avoid being obnoxious to the server
@@ -2099,6 +2148,7 @@ void MetGEOSPortal::update_vgrid()
     native_nzs = cur_vgrid.nLevs;
 
 }
+
 void MetGEOSPortal::update_tgrid()
 {
 
@@ -2544,6 +2594,38 @@ void MetGEOSPortal::Portal_read_data_floats( std::vector<real>&vals, int var_id,
 }
 
 
+void MetGEOSPortal::set_verticalBase( const std::string quantity, const std::string units, const std::vector<real>* levels, real scale, real offset )
+{
+    std::string vunitz;
+
+    MetGridData::set_verticalBase( quantity, units, levels, scale, offset );
+    
+    if ( quantity == pressure_name || quantity == "air_pressure" ) {
+       strict = strict | StrictAboutVgrid;
+       set_vgrid(2); 
+    } else if ( quantity == "Model-Levels" ) {
+       strict = strict | StrictAboutVgrid;
+       set_vgrid(1); 
+    }
+}
+
+void MetGEOSPortal::set_verticalBase( GridField3D *grid )
+{
+    std::string vunitz;
+
+    MetGridData::set_verticalBase( grid );
+    
+    if ( vquant == pressure_name || vquant == "air_pressure" ) {
+       strict = strict | StrictAboutVgrid;
+       set_vgrid(2); 
+    } else if ( vquant == "Model-Levels" ) {
+       strict = strict | StrictAboutVgrid;
+       set_vgrid(1); 
+    }
+
+}    
+
+
 /// 3D
 void MetGEOSPortal::Portal_getvar(const std::string quantity, const double time, GridLatLonField3D* grid3d )
 {
@@ -2637,12 +2719,12 @@ void MetGEOSPortal::Portal_getvar(const std::string quantity, const double time,
         // set up the grid dimensions for the data object
         xlons = new std::vector<real>;
         xlats = new std::vector<real>;
-        set_hgrid( test_hgrid, *xlons, *xlats );
+        query_hgrid( test_hgrid, *xlons, *xlats );
         xnlons = xlons->size();
         xnlats = xlats->size();
         
         xzs = new std::vector<real>;
-        set_vgrid( test_vgrid, *xzs, vq, vu );
+        query_vgrid( test_vgrid, *xzs, vq, vu );
         xnzs = xzs->size();
         grid3d->set_vertical(vq);
         if ( vu == "mb" || vu == "hPa" ) {
@@ -2829,7 +2911,7 @@ void MetGEOSPortal::Portal_getvar(const std::string quantity, const double time,
         // set up the grid dimensions for the data object
         xlons = new std::vector<real>;
         xlats = new std::vector<real>;
-        set_hgrid( test_hgrid, *xlons, *xlats );
+        query_hgrid( test_hgrid, *xlons, *xlats );
         xnlons = xlons->size();
         xnlats = xlats->size();
         
@@ -3172,7 +3254,9 @@ bool MetGEOSPortal::vConvert( GridField3D *input, std::string quant, std::string
     
     input->dims( &nlons, &nlats, &nzs );
     
+    // get the current vertical quantity
     currvq = input->vertical();
+
     if ( currvq == pressure_name && quant == palt_name ) {
        vcoord = input->levels();
        if ( debug > 1 ) {

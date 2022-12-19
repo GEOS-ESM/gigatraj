@@ -109,6 +109,21 @@ class MetGridSBRot : public MetGridLatLonData {
       /// assignment operator for next level up
       MetGridLatLonData& operator=(const MetGridLatLonData& src); 
 
+      /// returns a copy of the object, cast to the MetGridData class
+      /*!
+           Sometimes a routine that deals with objects of a MetGridData subclass
+           needs to make a copy of the object, but needs to do so in a way
+           that allows the copy to be made with no information about
+           the exact subclass being used.
+           
+           This method, implemented by hte various subclasses, will create
+           a copy of the object, cast the new object to the MetData class,
+           and then return the result.
+           
+           \return a pointer to a new MetData object. The calling routine is repsonsible for delteing the
+                   object when it is no longer needed 
+      */
+      virtual MetGridData* MetGridCopy();
       
       /// create a copy of a MetData subclass object, as a MetData superclass object
       /*! This method creates a new copy of a specific MetData object, which 

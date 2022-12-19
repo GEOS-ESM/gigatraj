@@ -108,7 +108,7 @@ bool MetGEOSfpFcast::bracket( const std::string &quantity, double time, double *
     int status;
     double xtime, ytime, ptime;
     double tbase=0.0;
-    double tspace=24;
+    double tspace = 24;
     std::vector<std::string> *testquants;
     double mtime;
     bool sametime;
@@ -128,7 +128,7 @@ bool MetGEOSfpFcast::bracket( const std::string &quantity, double time, double *
     testquants = new_testQuantity( quantity );
     
     // find the variable we are looking for
-    status = fdir.LookUp( (*testquants)[0], hgrid, pgrid, tspace, tave
+    status = fdir.LookUp( (*testquants)[0], desired_hgrid_id, desired_vgrid_id, tspace, desired_tave
          , NULL, NULL, NULL 
          , &true_vgrid, &true_hgrid, &true_tspace, &true_tave, &true_tbase, NULL, modelRun );
     if ( status && ! strict ) {
@@ -294,21 +294,21 @@ int MetGEOSfpFcast::setup(  const std::string quantity, const std::string &time 
        test_date = caltime;
        
        // find the variable we are looking for
-       status = fdir.LookUp( test_quant, hgrid, pgrid, tspace, tave
+       status = fdir.LookUp( test_quant, desired_hgrid_id, desired_vgrid_id, desired_tspace, desired_tave
             , NULL, NULL, &test_ndims
             , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, modelRun );
        if ( status && (strict != 0x07) ) {
           if ( horizStrictness() ) {
-             use_hgrid = hgrid;
+             use_hgrid = desired_hgrid_id;
           }   
           if ( vertStrictness() ) {
-             use_vgrid = pgrid;
+             use_vgrid = desired_vgrid_id;
           }   
           if ( tspaceStrictness() ) {
-             use_tspace = tspace;
+             use_tspace = desired_tspace;
           }   
           if ( tavgStrictness() ) {
-             use_tavg = tave;
+             use_tavg = desired_tave;
           }   
           status = fdir.LookUp( test_quant, use_hgrid, use_vgrid, use_tspace, use_tavg
             , NULL, NULL, &test_ndims

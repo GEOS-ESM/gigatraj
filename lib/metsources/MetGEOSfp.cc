@@ -178,7 +178,7 @@ void MetGEOSfp::setup_gridSpecs()
    
    vspec.code = 'n';
    vspec.id   = 1;
-   vspec.quant = "Model Levels";
+   vspec.quant = "Model-Levels";
    vspec.units = "";
    vspec.nLevs = 72;
    vspec.levs.clear();
@@ -272,10 +272,7 @@ void MetGEOSfp::reset()
    whichSrc = 0;
    forceSrc = 0;
 
-   hgrid = 0;
-   set_hgrid(hgrid, lons, lats);
-   nlons = lons.size();
-   nlats = lats.size();
+   set_hgrid( 0 );
 
    // Native GEOSfp variable names
    //  zonal wind
@@ -285,10 +282,8 @@ void MetGEOSfp::reset()
    // vertical "wind" will depend on the vertical coordinate system
    // and is set by set_vertical()
 
-   pgrid = 2;
-   set_vgrid(pgrid, native_zs, native_vquant, vunits); 
-   native_nzs = native_zs.size();
-   set_vertical(native_vquant, vunits, &native_zs );   
+   set_vgrid(2); 
+   set_vertical(native_vquant, native_vuu, &native_zs );   
 
 }
 
@@ -319,6 +314,16 @@ MetData *MetGEOSfp::genericCopy()
     result->assign(*this);
     
     return dynamic_cast<MetData*>( result );
+}
+
+MetGridData* MetGEOSfp::MetGridCopy()
+{
+     MetGEOSfp* newthing;
+     
+     newthing = new MetGEOSfp();
+     newthing->assign( *this );
+     
+     return dynamic_cast<MetGridData*> (newthing);
 }
 
 /// assignment operator
@@ -399,23 +404,23 @@ int MetGEOSfp::queryQuantity( const std::string quantity
 
     // now be as strict as required    
     if ( horizStrictness() ) {
-       use_hgrid = hgrid;
+       use_hgrid = desired_hgrid_id;
     }   
     if ( vertStrictness() ) {
-       use_vgrid = pgrid;
+       use_vgrid = desired_vgrid_id;
     }   
     if ( tspaceStrictness() ) {
-       use_tspace = tspace;
+       use_tspace = desired_tspace;
     }   
     if ( tavgStrictness() ) {
-       use_tavg = tave;
+       use_tavg = desired_tave;
     }   
     
 
     if ( forceSrc <= 0 ) {
        // try assimilation first
        try {
-           status = adir.LookUp( quantity, use_hgrid, use_vgrid, use_tspace, use_tavg
+           status = adir.LookUp( quantity, use_vgrid, use_hgrid, use_tspace, use_tavg
                 , longName, units
                 , ndims, actualVertGrid, actualHorizGrid, actualTimeSpace, actualTimeAvg, actualBaseTime
                 , url );
@@ -431,7 +436,7 @@ int MetGEOSfp::queryQuantity( const std::string quantity
     if ( status == 1 && forceSrc >= 0 ) {
        // try the forecast  
        try {
-           status = fdir.LookUp( quantity, use_hgrid, use_vgrid, use_tspace, use_tavg
+           status = fdir.LookUp( quantity, use_vgrid, use_hgrid, use_tspace, use_tavg
                 , longName, units
                 , ndims, actualVertGrid, actualHorizGrid, actualTimeSpace, actualTimeAvg, actualBaseTime
                 , url, modelRun );    
@@ -471,6 +476,7 @@ bool MetGEOSfp::legalQuantity( const std::string quantity )
         if ( quantity == altitude_name 
           || quantity == pressure_name
           || quantity == palt_name  
+          || quantity == "Model-Levels"
         ) {                   
            result = true;     
         }                     
@@ -1038,7 +1044,7 @@ bool MetGEOSfp::bracket( const std::string &quantity, double time, double *t1, d
     int status;
     double xtime, ytime, ptime, ztime;
     double tbase=0.0;
-    double tspace=24;
+    double tspace = 24;
     std::vector<std::string> *testquants;
     bool sametime;
     
@@ -1223,23 +1229,23 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
           // try assimilation
           
           // find the variable we are looking for
-          status = adir.LookUp( test_quant, hgrid, pgrid, tspace, tave
+          status = adir.LookUp( test_quant, desired_vgrid_id, desired_hgrid_id, desired_tspace, desired_tave
                , NULL, NULL, &test_ndims
                , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl );
-          if ( status && (strict != 0x07) ) {
+          if ( status && (strict != StrictAboutGridding) ) {
              if ( horizStrictness() ) {
-                use_hgrid = hgrid;
+                use_hgrid = desired_hgrid_id;
              }   
              if ( vertStrictness() ) {
-                use_vgrid = pgrid;
+                use_vgrid = desired_vgrid_id;
              }   
              if ( tspaceStrictness() ) {
-                use_tspace = tspace;
+                use_tspace = desired_tspace;
              }   
              if ( tavgStrictness() ) {
-                use_tavg = tave;
+                use_tavg = desired_tave;
              }   
-             status = adir.LookUp( test_quant, use_hgrid, use_vgrid, use_tspace, use_tavg
+             status = adir.LookUp( test_quant, use_vgrid, use_hgrid, use_tspace, use_tavg
                , NULL, NULL, &test_ndims
                , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl );
           }
@@ -1289,23 +1295,23 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
                 if ( debug >= 3 ) {
                    std::cerr << "MetGEOSfp::prep: Trying to get URL for '.latest' forecast " << std::endl;
                 }
-                status = fdir.LookUp( test_quant, hgrid, pgrid, tspace, tave
+                status = fdir.LookUp( test_quant, desired_vgrid_id, desired_hgrid_id, desired_tspace, desired_tave
                      , NULL, NULL, &test_ndims
                      , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, modelRun );
-                if ( status && (strict != 0x07) ) {
+                if ( status && (strict != StrictAboutGridding) ) {
                    if ( horizStrictness() ) {
-                      use_hgrid = hgrid;
+                      use_hgrid = desired_hgrid_id;
                    }   
                    if ( vertStrictness() ) {
-                      use_vgrid = pgrid;
+                      use_vgrid = desired_vgrid_id;
                    }   
                    if ( tspaceStrictness() ) {
-                      use_tspace = tspace;
+                      use_tspace = desired_tspace;
                    }   
                    if ( tavgStrictness() ) {
-                      use_tavg = tave;
+                      use_tavg = desired_tave;
                    }   
-                   status = fdir.LookUp( test_quant, use_hgrid, use_vgrid, use_tspace, use_tavg
+                   status = fdir.LookUp( test_quant, use_vgrid, use_hgrid, use_tspace, use_tavg
                      , NULL, NULL, &test_ndims
                      , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, modelRun );
                 }
@@ -1360,23 +1366,23 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
                  }
                  
                  // construct the URL for the forecast file
-                 status = fdir.LookUp( test_quant, hgrid, pgrid, tspace, tave
+                 status = fdir.LookUp( test_quant, desired_vgrid_id, desired_hgrid_id, desired_tspace, desired_tave
                       , NULL, NULL, &test_ndims
                       , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, tmp_modelrun );
-                 if ( status && (strict != 0x07) ) {
+                 if ( status && (strict != StrictAboutGridding) ) {
                     if ( horizStrictness() ) {
-                       use_hgrid = hgrid;
+                       use_hgrid = desired_hgrid_id;
                     }   
                     if ( vertStrictness() ) {
-                       use_vgrid = pgrid;
+                       use_vgrid = desired_vgrid_id;
                     }   
                     if ( tspaceStrictness() ) {
-                       use_tspace = tspace;
+                       use_tspace = desired_tspace;
                     }   
                     if ( tavgStrictness() ) {
-                       use_tavg = tave;
+                       use_tavg = desired_tave;
                     }   
-                    status = fdir.LookUp( test_quant, use_hgrid, use_vgrid, use_tspace, use_tavg
+                    status = fdir.LookUp( test_quant, use_vgrid, use_hgrid, use_tspace, use_tavg
                       , NULL, NULL, &test_ndims
                       , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, tmp_modelrun );
                  }
@@ -1417,23 +1423,23 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
           } else {
              // a model run was specified, so use that             
 
-            status = fdir.LookUp( test_quant, hgrid, pgrid, tspace, tave
+            status = fdir.LookUp( test_quant, desired_vgrid_id, desired_hgrid_id, desired_tspace, desired_tave
                  , NULL, NULL, &test_ndims
                  , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, modelRun );
-            if ( status && (strict != 0x07) ) {
+            if ( status && (strict != StrictAboutGridding) ) {
                if ( horizStrictness() ) {
-                  use_hgrid = hgrid;
+                  use_hgrid = desired_hgrid_id;
                }   
                if ( vertStrictness() ) {
-                  use_vgrid = pgrid;
+                  use_vgrid = desired_vgrid_id;
                }   
                if ( tspaceStrictness() ) {
-                  use_tspace = tspace;
+                  use_tspace = desired_tspace;
                }   
                if ( tavgStrictness() ) {
-                  use_tavg = tave;
+                  use_tavg = desired_tave;
                }   
-               status = fdir.LookUp( test_quant, use_hgrid, use_vgrid, use_tspace, use_tavg
+               status = fdir.LookUp( test_quant, use_vgrid, use_hgrid, use_tspace, use_tavg
                  , NULL, NULL, &test_ndims
                  , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, modelRun );
             }
@@ -1641,14 +1647,19 @@ GridLatLonField3D* MetGEOSfp::new_directGrid3D( const std::string quantity, cons
        } else if ( test_vgrid == 1 ) {
           // data are on model levels--read the layer thicknesses
           // and calculate pressure from them
+          /*
           component_1 = defaultThis->Get3D("delp", time);
           // the "1.0" is the pressure (in Pa) imposed at the top GMAO model level
           tmp1 = dynamic_cast<GridLatLonField3D*>(getpress.calc( *component_1, 1.0 ));
           *grid3d = *tmp1;
           delete tmp1;
           defaultThis->remove( component_1 );
+          */
+          component_1 = defaultThis->Get3D("PL", time);
+          *grid3d = *component_1;
+          defaultThis->remove( component_1 );
           // Note: pressure data are in Pa; convert to hPa (mb)
-          grid3d->transform("hPa", 0.01);
+          grid3d->transform("hPa", 100.0, 0.0);
        } else {
           throw (badDataNotFound());
        }   

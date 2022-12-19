@@ -114,6 +114,16 @@ void MetGridSBRot::assign(const MetGridSBRot& src)
     tropgen = src.tropgen;
 }    
 
+MetGridData* MetGridSBRot::MetGridCopy()
+{
+     MetGridSBRot* newthing;
+     
+     newthing = new MetGridSBRot();
+     newthing->assign( *this );
+     
+     return newthing;
+}
+
 void MetGridSBRot::setup_vars()
 {
     vWindStuff vw;

@@ -146,6 +146,22 @@ class MetGridData : public MetData {
       virtual MetGridData& operator=(const MetGridData& src) = 0;
 
 
+      /// returns a copy of the object, cast to the MetGridData class
+      /*!
+           Sometimes a routine that deals with objects of a MetGridData subclass
+           needs to make a copy of the object, but needs to do so in a way
+           that allows the copy to be made with no information about
+           the exact subclass being used.
+           
+           This method, implemented by hte various subclasses, will create
+           a copy of the object, cast the new object to the MetData class,
+           and then return the result.
+           
+           \return a pointer to a new MetData object. The calling routine is repsonsible for delteing the
+                   object when it is no longer needed 
+      */
+      virtual MetGridData* MetGridCopy() = 0;
+
       /// sets the name of the vertical coordinate used in the data source
       /*! This method forces the meteorological data source object to use a specific vertical coordinate.
           If the original data for this source use a different vertical coordinate,
@@ -570,9 +586,16 @@ class MetGridData : public MetData {
           \param units the units of the desired vertical coordinate
           \param levels a pointer to a vector of values of the new vertical coordinate
           \param scale a scale factor to be applied to this quantity that would convert it to MKS units
-          \param offset an offset to be applied ot this quanity (after the scale factor) that would convert it to MKS units
+          \param offset an offset to be applied ot this quantity (after the scale factor) that would convert it to MKS units
       */
-      void set_verticalBase( const std::string quantity, const std::string units, const std::vector<real>* levels=NULLPTR, real scale=1.0, real offset=0.0 );
+      virtual void set_verticalBase( const std::string quantity, const std::string units, const std::vector<real>* levels=NULLPTR, real scale=1.0, real offset=0.0 );
+
+      /// sets the vertical coordinates from a GridField3D object
+      /*! This method forces the meteorological data source object to use vertical coordinates taken form a GridField3D object.
+      
+          \param the grid whose vertical cooridnates are to be used.
+      */
+      virtual void set_verticalBase( GridField3D *grid );    
 
       /// determines scaling factors for vertical coordinate
       /*! Given units for a vertical coordinate, this method determines the
@@ -589,7 +612,7 @@ class MetGridData : public MetData {
       /// returns a default set of vertical coordinate values
       /*! This method returns a vector of vertical coordinate values, depedning onthe coordinate system desired.
       
-          \param coordSys a pointer ot a string giving the name of the vertical coordinate. If NULLPTR, the 
+          \param coordSys a pointer to a string giving the name of the vertical coordinate. If NULLPTR, the 
                         meteorological source's current vertical coordinate is used.
            \return a pointer to a vector of coordinate values corresponding to the usual or default values
                         for this data souirce on the desired coordinates.              

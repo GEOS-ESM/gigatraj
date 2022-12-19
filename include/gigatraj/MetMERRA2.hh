@@ -100,6 +100,21 @@ class MetMERRA2 : public MetGEOSPortal {
      */
      MetData *genericCopy();
 
+      /// returns a copy of the object, cast to the MetGridData class
+      /*!
+           Sometimes a routine that deals with objects of a MetGridData subclass
+           needs to make a copy of the object, but needs to do so in a way
+           that allows the copy to be made with no information about
+           the exact subclass being used.
+           
+           This method, implemented by hte various subclasses, will create
+           a copy of the object, cast the new object to the MetData class,
+           and then return the result.
+           
+           \return a pointer to a new MetData object. The calling routine is repsonsible for delteing the
+                   object when it is no longer needed 
+      */
+      virtual MetGridData* MetGridCopy();
 
       /*! Check that a quantity name is recognized by this data source
           Returns true if recognized, false otherwise
@@ -112,7 +127,7 @@ class MetMERRA2 : public MetGEOSPortal {
       /// return the type of MetData object this is
       /*! This method retuns a string that identifies the specific class of MetData this object is,.
       
-          \return the namne of the class 
+          \return the name of the class 
       */
       std::string id() const { return iam; };
 
@@ -148,7 +163,7 @@ class MetMERRA2 : public MetGEOSPortal {
                       
                       Allowed names are:
                       * HorizontalGridThinning - the thining factor
-                      * HorizontalGrifOffset - the longititude offset specified w/ thinning
+                      * HorizontalGridOffset - the longititude offset specified w/ thinning
                       * ForecastOnly - if 1, then read only forecast data
                       * AnalysisOnly - if 1, then read only analysis data
                       * AnalysisAndForecast - if 1 then read either analysis or forecast data
@@ -225,7 +240,7 @@ class MetMERRA2 : public MetGEOSPortal {
                       
                       Allowed names are:
                       * HorizontalGridThinning - the thining factor
-                      * HorizontalGrifOffset - the longititude offset specified w/ thinning
+                      * HorizontalGridOffset - the longititude offset specified w/ thinning
                       * ForecastOnly - 1 if reading only forecast data; 0 otherwise
                       * AnalysisOnly - 1 if reading  only analysis data; 0 otherwise
                       * AnalysisAndForecast - 1 if reading  either analysis or forecast data; 0 otherwise
@@ -391,6 +406,10 @@ class MetMERRA2 : public MetGEOSPortal {
            with the same key characteristics and settings 
            as the old. However, the new object has no open files
            or met data held in memory cache.
+           
+           This is useful for calculating quantities on th efly
+           from consitituent quantities that have to be read in 
+           separately.
            
            \return a pointer to the new object
        */
