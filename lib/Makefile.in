@@ -78,25 +78,28 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 @MPI_TRUE@am__append_1 = ../include/gigatraj/MPIGrp.hh           MPIGrp.cc 
-@MERRA_TRUE@am__append_2 = ../include/gigatraj/MERRA_Directory.hh \
+@MERRA_TRUE@am__append_2 = ../include/gigatraj/MetGEOSPortal.hh \
+@MERRA_TRUE@	metsources/MetGEOSPortal.cc \
+@MERRA_TRUE@	../include/gigatraj/MERRA_Directory.hh \
 @MERRA_TRUE@	metsources/MERRA_Directory_Data.hh \
 @MERRA_TRUE@	metsources/MERRA_Directory.cc \
 @MERRA_TRUE@	../include/gigatraj/MetMERRA.hh \
 @MERRA_TRUE@	metsources/MetMERRA.cc
-@MERRA2_TRUE@am__append_3 = ../include/gigatraj/MERRA2_Directory.hh \
+@MERRA2_TRUE@am__append_3 = ../include/gigatraj/MetGEOSPortal.hh \
+@MERRA2_TRUE@	metsources/MetGEOSPortal.cc \
+@MERRA2_TRUE@	../include/gigatraj/MERRA2_Directory.hh \
 @MERRA2_TRUE@	metsources/MERRA2_Directory_Data.hh \
 @MERRA2_TRUE@	metsources/MERRA2_Directory.cc \
 @MERRA2_TRUE@	../include/gigatraj/MetMERRA2.hh \
 @MERRA2_TRUE@	metsources/MetMERRA2.cc
-@GEOSFP_TRUE@am__append_4 =  \
+@GEOSFP_TRUE@am__append_4 = ../include/gigatraj/MetGEOSPortal.hh \
+@GEOSFP_TRUE@	metsources/MetGEOSPortal.cc \
 @GEOSFP_TRUE@	../include/gigatraj/GEOSfpFcast_Directory.hh \
 @GEOSFP_TRUE@	metsources/GEOSfpFcast_Directory_Data.hh \
 @GEOSFP_TRUE@	metsources/GEOSfpFcast_Directory.cc \
 @GEOSFP_TRUE@	../include/gigatraj/GEOSfpAssim_Directory.hh \
 @GEOSFP_TRUE@	metsources/GEOSfpAssim_Directory_Data.hh \
 @GEOSFP_TRUE@	metsources/GEOSfpAssim_Directory.cc \
-@GEOSFP_TRUE@	../include/gigatraj/MetGEOSPortal.hh \
-@GEOSFP_TRUE@	metsources/MetGEOSPortal.cc \
 @GEOSFP_TRUE@	../include/gigatraj/MetGEOSfpFcast.hh \
 @GEOSFP_TRUE@	metsources/MetGEOSfpFcast.cc \
 @GEOSFP_TRUE@	../include/gigatraj/MetGEOSfpAssim.hh \
@@ -196,6 +199,8 @@ am__libgigatraj_a_SOURCES_DIST = ../include/gigatraj/RandomSrc.hh \
 	../include/gigatraj/MetSBRot.hh metsources/MetSBRot.cc \
 	../include/gigatraj/MetGridSBRot.hh metsources/MetGridSBRot.cc \
 	../include/gigatraj/MPIGrp.hh MPIGrp.cc \
+	../include/gigatraj/MetGEOSPortal.hh \
+	metsources/MetGEOSPortal.cc \
 	../include/gigatraj/MERRA_Directory.hh \
 	metsources/MERRA_Directory_Data.hh \
 	metsources/MERRA_Directory.cc ../include/gigatraj/MetMERRA.hh \
@@ -209,8 +214,6 @@ am__libgigatraj_a_SOURCES_DIST = ../include/gigatraj/RandomSrc.hh \
 	../include/gigatraj/GEOSfpAssim_Directory.hh \
 	metsources/GEOSfpAssim_Directory_Data.hh \
 	metsources/GEOSfpAssim_Directory.cc \
-	../include/gigatraj/MetGEOSPortal.hh \
-	metsources/MetGEOSPortal.cc \
 	../include/gigatraj/MetGEOSfpFcast.hh \
 	metsources/MetGEOSfpFcast.cc \
 	../include/gigatraj/MetGEOSfpAssim.hh \
@@ -243,14 +246,15 @@ am__libgigatraj_a_SOURCES_DIST = ../include/gigatraj/RandomSrc.hh \
 	PGenNetcdf.cc
 am__dirstamp = $(am__leading_dot)dirstamp
 @MPI_TRUE@am__objects_1 = MPIGrp.$(OBJEXT)
-@MERRA_TRUE@am__objects_2 = metsources/MERRA_Directory.$(OBJEXT) \
+@MERRA_TRUE@am__objects_2 = metsources/MetGEOSPortal.$(OBJEXT) \
+@MERRA_TRUE@	metsources/MERRA_Directory.$(OBJEXT) \
 @MERRA_TRUE@	metsources/MetMERRA.$(OBJEXT)
-@MERRA2_TRUE@am__objects_3 = metsources/MERRA2_Directory.$(OBJEXT) \
+@MERRA2_TRUE@am__objects_3 = metsources/MetGEOSPortal.$(OBJEXT) \
+@MERRA2_TRUE@	metsources/MERRA2_Directory.$(OBJEXT) \
 @MERRA2_TRUE@	metsources/MetMERRA2.$(OBJEXT)
-@GEOSFP_TRUE@am__objects_4 =  \
+@GEOSFP_TRUE@am__objects_4 = metsources/MetGEOSPortal.$(OBJEXT) \
 @GEOSFP_TRUE@	metsources/GEOSfpFcast_Directory.$(OBJEXT) \
 @GEOSFP_TRUE@	metsources/GEOSfpAssim_Directory.$(OBJEXT) \
-@GEOSFP_TRUE@	metsources/MetGEOSPortal.$(OBJEXT) \
 @GEOSFP_TRUE@	metsources/MetGEOSfpFcast.$(OBJEXT) \
 @GEOSFP_TRUE@	metsources/MetGEOSfpAssim.$(OBJEXT) \
 @GEOSFP_TRUE@	metsources/MetGEOSfp.$(OBJEXT)
@@ -516,7 +520,7 @@ top_srcdir = @top_srcdir@
 use_mpicc = @use_mpicc@
 use_mpicxx = @use_mpicxx@
 lib_LIBRARIES = libgigatraj.a
-GIGATRAJ_INCLUDE = -I$(top_srcdir)/include/
+GIGATRAJ_INCLUDE = -I$(top_srcdir)/include/ -I${top_builddir}/include
 
 # We create this file when the library is made.
 # Another makefile in the doc subdirectory uses
@@ -712,6 +716,8 @@ metsources/MetSBRot.$(OBJEXT): metsources/$(am__dirstamp) \
 	metsources/$(DEPDIR)/$(am__dirstamp)
 metsources/MetGridSBRot.$(OBJEXT): metsources/$(am__dirstamp) \
 	metsources/$(DEPDIR)/$(am__dirstamp)
+metsources/MetGEOSPortal.$(OBJEXT): metsources/$(am__dirstamp) \
+	metsources/$(DEPDIR)/$(am__dirstamp)
 metsources/MERRA_Directory.$(OBJEXT): metsources/$(am__dirstamp) \
 	metsources/$(DEPDIR)/$(am__dirstamp)
 metsources/MetMERRA.$(OBJEXT): metsources/$(am__dirstamp) \
@@ -725,8 +731,6 @@ metsources/GEOSfpFcast_Directory.$(OBJEXT):  \
 	metsources/$(DEPDIR)/$(am__dirstamp)
 metsources/GEOSfpAssim_Directory.$(OBJEXT):  \
 	metsources/$(am__dirstamp) \
-	metsources/$(DEPDIR)/$(am__dirstamp)
-metsources/MetGEOSPortal.$(OBJEXT): metsources/$(am__dirstamp) \
 	metsources/$(DEPDIR)/$(am__dirstamp)
 metsources/MetGEOSfpFcast.$(OBJEXT): metsources/$(am__dirstamp) \
 	metsources/$(DEPDIR)/$(am__dirstamp)

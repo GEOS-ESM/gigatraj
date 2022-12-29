@@ -43,12 +43,14 @@ int main()
     real lat,lon,z;
     int nxt;
     int i;
+    std::string fname;
     
     
     
     
     //pgen.debug( 100 );
 
+    fname = datadir("srcdir") + "test_NetcdfIn_data_01.nc4";
     
     vert = pgen.vertical();
     if ( vert != "" ) {
@@ -64,7 +66,7 @@ int main()
 
 
     // Now try arrays
-    ps = pgen.create_array( p, &np, "test_NetcdfIn_data_01.nc4" );
+    ps = pgen.create_array( p, &np, fname );
     i = 1;
     ps[i].getPos( &lon, &lat );
     z = ps[i].getZ();
@@ -82,7 +84,7 @@ int main()
     delete[] ps;
 
     fyle = pgen.filename();    
-    if ( fyle != "test_NetcdfIn_data_01.nc4" ) {
+    if ( fyle != fname ) {
        cerr << "failed to set file name failed: " << fyle << endl;
        exit(1);      
     }
@@ -112,7 +114,7 @@ int main()
     
 
     // Now try a vector
-    vps = pgen.create_vector( p, "test_NetcdfIn_data_01.nc4" );
+    vps = pgen.create_vector( p, fname );
     i = 1;
     (*vps)[i].getPos( &lon, &lat );
     z = (*vps)[i].getZ();
@@ -130,7 +132,7 @@ int main()
     
     delete vps;
     
-    fps = pgen.create_Flock(  p, "test_NetcdfIn_data_01.nc4" );   
+    fps = pgen.create_Flock(  p, fname );   
     i = 1;
     p = fps->get(i);
     p.getPos( &lon, &lat );

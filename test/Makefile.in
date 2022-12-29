@@ -909,7 +909,7 @@ use_mpicc = @use_mpicc@
 use_mpicxx = @use_mpicxx@
 LDADD = -lgigatraj
 AM_LDFLAGS = -L ../lib/
-GIGATRAJ_INCLUDE = -I$(top_srcdir)/include/
+GIGATRAJ_INCLUDE = -I$(top_srcdir)/include/ -I${top_builddir}/include
 AM_CPPFLAGS = $(GIGATRAJ_INCLUDE)
 EXTRA_DIST = test_Configuration.sh test_MPI.sh test_MPIGrp.sh \
 	test_FileLock_MPI.sh test_GridLatLonField3D_MPI.sh \

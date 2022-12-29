@@ -9,7 +9,8 @@ METSRC="GridSBRot"
 
 GVERT="Theta"
 
-GCACHE=" /misc/lrl02/lait/metcache/"
+#GCACHE="/misc/lrl02/lait/metcache/"
+GCACHE="${TMPDIR}gigatraj_metcache/"
 
 case "${METSRC}" in
 "MERRA")
@@ -37,6 +38,11 @@ FMT="%t, %i, %10.2o, %10.2a, %v"
 OFILE="gtmodel_s01_output.txt"
 
 CFILE="gtmodel_s01_original.txt"
+
+if [ "x${srcdir}" != "x" ] ; then
+   IFILE="${srcdir}/${IFILE}"
+   CFILE="${srcdir}/${CFILE}"
+fi
 
 BDAY=`echo "${BEGDATE}" | cut -c1-10`T00:00
 EDAY=`echo "${ENDDATE}" | cut -c1-10`T21:00

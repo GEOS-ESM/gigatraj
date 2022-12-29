@@ -10,7 +10,7 @@
 
 // Unfinished
 
-
+#include <stdlib.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -44,23 +44,27 @@ int main()
     real lat,lon,z;
     int nxt;
     int i;
+    std::string datdir;
+    std::string fname;
     
     
     
     
     //input.debug( 100 );
     
-    input.filename("test_NetcdfIn_data_01.nc4");
+    datdir = datadir("srcdir"); 
+    fname = datdir + "test_NetcdfIn_data_01.nc4";
+    input.filename(fname);
     fyle = input.filename();
     
-    if ( fyle != "test_NetcdfIn_data_01.nc4" ) {
+    if ( fyle != fname ) {
        cerr << "failed to set file name failed " << endl;
        exit(1);      
     }
     
     vert = input.vertical();
     if ( vert != "" ) {
-       cerr << "the default verticak coordinate is not the null string:" << vert << endl;
+       cerr << "the default vertical coordinate is not the null string:" << vert << endl;
        exit(1);      
     }
     

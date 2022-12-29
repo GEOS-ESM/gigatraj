@@ -50,8 +50,8 @@ int main()
     string file1;
     string file2;
     
-    file1 = "test_PGenFile.dat";
-    file2 = "test_PGenFile_fmt.dat";
+    file1 = datadir("srcdir") + "test_PGenFile.dat";
+    file2 = datadir("srcdir") + "test_PGenFile_fmt.dat";
     
     p.setPos(lon0,lat0);
     p.setZ(z0);

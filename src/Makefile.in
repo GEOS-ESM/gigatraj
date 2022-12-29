@@ -306,7 +306,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 use_mpicc = @use_mpicc@
 use_mpicxx = @use_mpicxx@
-AM_CPPFLAGS = -I$(top_srcdir)/include/
+AM_CPPFLAGS = -I$(top_srcdir)/include/ -I${top_builddir}/include
 LDADD = -lgigatraj
 AM_LDFLAGS = -L ../lib/
 

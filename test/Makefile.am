@@ -5,7 +5,7 @@
 LDADD = -lgigatraj
 AM_LDFLAGS = -L ../lib/
 
-GIGATRAJ_INCLUDE = -I$(top_srcdir)/include/
+GIGATRAJ_INCLUDE = -I$(top_srcdir)/include/ -I${top_builddir}/include
 
 ## Everything needs the gigatraj library includes
 AM_CPPFLAGS  = $(GIGATRAJ_INCLUDE)

@@ -2,7 +2,7 @@
 
 lib_LIBRARIES = libgigatraj.a
 
-GIGATRAJ_INCLUDE = -I$(top_srcdir)/include/
+GIGATRAJ_INCLUDE = -I$(top_srcdir)/include/ -I${top_builddir}/include
 
 # We create this file when the library is made.
 # Another makefile in the doc subdirectory uses
