@@ -104,6 +104,7 @@ test/test_StreamDump_Load
 test/test_StreamPrint
 test/test_StreamRead
 test/test_NetcdfIn
+test/test_NetcdfOut
 test/test_ThetaOTF
 test/test_TropOTF
 test/test_traj000
