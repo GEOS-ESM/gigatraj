@@ -10,8 +10,6 @@
 
 #include "config.h"
 
-#include <assert.h>
-
 #include "gigatraj/MetGridData.hh"
 #include "gigatraj/BilinearHinterp.hh"
 #include "gigatraj/LinearVinterp.hh"
