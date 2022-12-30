@@ -207,13 +207,13 @@ fi
 # Checks for header files.
 AC_CHECK_HEADER([math.h])
 AC_CHECK_HEADERS([stdio.h])
-# Do this for malloc/calloc
 AC_CHECK_HEADERS([stdlib.h])
 AC_CHECK_HEADERS([time.h])
 AC_CHECK_HEADERS([fcntl.h])
 AC_CHECK_HEADERS([unistd.h])
 AC_CHECK_HEADERS([sys/types.h])
 AC_CHECK_HEADERS([sys/stat.h])
+AC_CHECK_HEADERS([string.h])
 
 # check for long arguments
 AC_CHECK_HEADERS([getopt.h],[do_longargs=true], [do_longargs=false] )
