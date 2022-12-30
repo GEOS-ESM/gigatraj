@@ -593,7 +593,7 @@ class MetGridData : public MetData {
       /// sets the vertical coordinates from a GridField3D object
       /*! This method forces the meteorological data source object to use vertical coordinates taken form a GridField3D object.
       
-          \param the grid whose vertical cooridnates are to be used.
+          \param grid the grid whose vertical coordinates are to be used.
       */
       virtual void set_verticalBase( GridField3D *grid );    
 

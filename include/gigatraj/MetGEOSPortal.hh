@@ -291,7 +291,7 @@ class MetGEOSPortal : public MetGridLatLonData {
       /// sets the vertical coordinates from a GridField3D object
       /*! This method forces the meteorological data source object to use vertical coordinates taken form a GridField3D object.
       
-          \param the grid whose vertical cooridnates are to be used.
+          \param grid the grid whose vertical coordinates are to be used.
       */
       virtual void set_verticalBase( GridField3D *grid );    
 
@@ -527,7 +527,7 @@ class MetGEOSPortal : public MetGridLatLonData {
            retrieving the set of vertical levels used by that grid, along with the
            physical quantity of the vertical coordinate and its units.
 
-           \param vgrid chooses one of these supported grids: 
+           \param qvgrid chooses one of these supported grids: 
                   - -1 = use the current vertical grid
                   - 1 = native model levels ("v" in the GEOS file naming scheme)
                   - 2 = pressure levels ("p" in the GEOS file naming scheme)
