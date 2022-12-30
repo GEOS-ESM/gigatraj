@@ -5375,7 +5375,6 @@ fi
 
 done
 
-# Do this for malloc/calloc
 for ac_header in stdlib.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "stdlib.h" "ac_cv_header_stdlib_h" "$ac_includes_default"
@@ -5442,6 +5441,18 @@ do :
 if test "x$ac_cv_header_sys_stat_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_STAT_H 1
+_ACEOF
+
+fi
+
+done
+
+for ac_header in string.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "string.h" "ac_cv_header_string_h" "$ac_includes_default"
+if test "x$ac_cv_header_string_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_STRING_H 1
 _ACEOF
 
 fi
