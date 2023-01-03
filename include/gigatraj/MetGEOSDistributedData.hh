@@ -23,12 +23,14 @@ class MetGEOSDistributedData {
       , int* ItoRank
       , int Iglobal
       , int Jglobal
-      , GridLatLonField3D *ufield0
-      , GridLatLonField3D *vfield0
-      , GridLatLonField3D *wfield0
-      , GridLatLonField3D *ufield1
-      , GridLatLonField3D *vfield1
-      , GridLatLonField3D *wfield1
+      , int lev
+      , int nlon
+      , int nlat
+      , int nzs
+      , float* lons
+      , float* lats
+      , float* eta
+      , char* ctime 
       );  
 
       ~MetGEOSDistributedData();
@@ -42,26 +44,35 @@ class MetGEOSDistributedData {
 
       std::string time2Cal( const double time, int format=-999 );
       int debug = 100;
-   protected:
+   //protected:
 
       int comm;
       int my_rank;
       int npes;
       int nlons_global;
       int nlats_global;
+      int nlevs_global;
+      int nlons_local;
+      int nlats_local;
+
       std::vector<std::vector<int>> CellToRank;
-      GridLatLonField3D *ufield0;
-      GridLatLonField3D *vfield0;
-      GridLatLonField3D *wfield0;
-      GridLatLonField3D *ufield1;
-      GridLatLonField3D *vfield1;
-      GridLatLonField3D *wfield1;
+      GridLatLonField3D *u0;
+      GridLatLonField3D *v0;
+      GridLatLonField3D *w0;
+      GridLatLonField3D *u1;
+      GridLatLonField3D *v1;
+      GridLatLonField3D *w1;
        /// Object for dealing with Dates
       static const gigatraj::CalGregorian cal;
 
       Vinterp *vin;
       HLatLonInterp *hin;
-
+      float wfctr = 0.01; //  omega get scaled from Pa/s to hPa/s
+      std::vector<float> npz;
+      std::vector<float> xlats;
+      std::vector<float> xlons;
+      std::vector<float> xlevs;
+      
    private:
 
 };

@@ -9,7 +9,7 @@
 ********************************************************************************/
 
 #include "config.h"
-
+#include <iomanip>
 #include "math.h"
 #include "mpi.h"
 #include "gigatraj/BilinearHinterp.hh"
@@ -32,12 +32,14 @@ MetGEOSDistributedData::MetGEOSDistributedData(
       , int* IJtoRank
       , int Iglobal
       , int Jglobal
-      , GridLatLonField3D *ufield0_
-      , GridLatLonField3D *vfield0_
-      , GridLatLonField3D *wfield0_
-      , GridLatLonField3D *ufield1_
-      , GridLatLonField3D *vfield1_
-      , GridLatLonField3D *wfield1_
+      , int lv
+      , int nlon
+      , int nlat
+      , int nzs
+      , float* lons
+      , float* lats
+      , float* eta
+      , char* ctime
       )  
 {
 
@@ -46,6 +48,11 @@ MetGEOSDistributedData::MetGEOSDistributedData(
   MPI_Comm_rank(comm, &my_rank);
   nlons_global = Iglobal;
   nlats_global = Jglobal;
+  nlevs_global = lv;
+
+  for (int i=0; i<lv; i++) {
+     xlevs.push_back(float(i));
+  }
 
   CellToRank.resize(Jglobal,std::vector<int>(Iglobal));
   int k = 0;
@@ -56,16 +63,68 @@ MetGEOSDistributedData::MetGEOSDistributedData(
     }
   }
 
- ufield0 = ufield0_;
- vfield0 = vfield0_;
- wfield0 = wfield0_;
- ufield1 = ufield1_;
- vfield1 = vfield1_;
- wfield1 = wfield1_;
+  vin = new LinearVinterp();
+  hin = new BilinearHinterp();
 
- vin = new LinearVinterp();
- hin = new BilinearHinterp();
+  nlons_local = nlon;
+  nlats_local = nlat;
+ 
+  std::vector<real>  xdata;
 
+  double time = cal.day1900(ctime);
+
+  
+  u0= new GridLatLonField3D();
+  v0= new GridLatLonField3D();
+  w0= new GridLatLonField3D();
+  u1= new GridLatLonField3D();
+  v1= new GridLatLonField3D();
+  w1= new GridLatLonField3D();
+
+  u0->set_quantity("U");
+  u0->set_units("m/s");
+  u0->set_vertical("air_pressure");
+  u0->set_time(time,ctime);
+  u1->set_quantity("U");
+  u1->set_units("m/s");
+  u1->set_vertical("air_pressure");
+  u1->set_time(time,ctime);
+  v0->set_quantity("V");
+  v0->set_units("m/s");
+  v0->set_vertical("air_pressure");
+  v0->set_time(time,ctime);
+  v1->set_quantity("V");
+  v1->set_units("m/s");
+  v1->set_vertical("air_pressure");
+  v1->set_time(time,ctime);
+  w0->set_quantity("OMEGA");
+  w0->set_units("hPa/s");
+  w0->set_vertical("air_pressure");
+  w0->set_time(time,ctime);
+  w1->set_quantity("OMEGA");
+  w1->set_units("hPa/s");
+  w1->set_vertical("air_pressure");
+  w1->set_time(time,ctime);
+
+  for (int i=0; i<nlons_local; i++) {
+     xlons.push_back(*(lons+i));
+  }
+  for (int i=0; i<nlats_local; i++) {
+     xlats.push_back(*(lats+i));
+  }
+  for (int i=0; i<nzs; i++) {
+     npz.push_back(*(eta+i));
+  }
+  for (int i=0; i<nlons_local*nlats_local*nzs; i++) {
+     xdata.push_back(0.0);
+  }
+
+   u0->load(xlons, xlats, npz, xdata);
+   u1->load(xlons, xlats, npz, xdata);
+   v0->load(xlons, xlats, npz, xdata);
+   v1->load(xlons, xlats, npz, xdata);
+   w0->load(xlons, xlats, npz, xdata);
+   w1->load(xlons, xlats, npz, xdata);
 }
 
 // destructor
@@ -96,6 +155,10 @@ void MetGEOSDistributedData::get_uvw( double time, real lon, real lat, real z, r
 
 void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* lats, float* zs, float *u, float *v, float *w){
   //double pi = 3.1415926535;
+  MPI_Barrier(comm);
+  std::cout << "start to get values of time: "<<std::setprecision (15) << time<< "  num "<< n<<std::endl;
+  std::cout << "inew lat lon zs: "<<lons[0] << " "<<lats[0] << " "<< zs[0]<< n<<std::endl;
+  MPI_Barrier(comm);
   float dlon = 360.0 /nlons_global;
   float dlat = 180.0 /nlats_global;
   int II[n]{};
@@ -121,6 +184,9 @@ void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* la
   }
 
   MPI_Alltoall(counts_send, 1, MPI_INT, counts_recv, 1, MPI_INT, comm);
+
+  std::cout << "after first all to all "<<std::endl;
+  MPI_Barrier(comm);
 
   int new_num = 0;
   for (int rank =0; rank<npes; rank++){
@@ -159,14 +225,16 @@ void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* la
   float new_lats[new_num];
   float new_levs[new_num];
 
+  std::cout << "before all to all new_num"<< new_num<<std::endl;
+  MPI_Barrier(comm);
   MPI_Alltoallv(lons_send, counts_send, disp_send, MPI_FLOAT, new_lons, counts_recv, disp_recv, MPI_FLOAT, comm);
   MPI_Alltoallv(lats_send, counts_send, disp_send, MPI_FLOAT, new_lats, counts_recv, disp_recv, MPI_FLOAT, comm);
   MPI_Alltoallv(levs_send, counts_send, disp_send, MPI_FLOAT, new_levs, counts_recv, disp_recv, MPI_FLOAT, comm);
 
   // At this point, the particals are distributed 
-  double t1 = ufield0->time();
-  double t2 = ufield1->time();
-  
+  double t1 = u0->time();
+  double t2 = u1->time();
+
   real lonvals [new_num] = {0.0};
   real latvals [new_num] = {0.0};
   real  wvals  [new_num] = {0.0};
@@ -177,17 +245,21 @@ void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* la
   real latvals2[new_num] = {0.0};
   real wvals2  [new_num] = {0.0};
 
-  hin->vinterpVector( new_num, new_lons, new_lats, new_levs, lonvals1, latvals1, *ufield0, *vfield0, *vin );
-  hin->vinterp      ( new_num, new_lons, new_lats, new_levs, wvals1, *wfield0, *vin );
+  hin->vinterpVector( new_num, new_lons, new_lats, new_levs, lonvals1, latvals1, *u0, *v0, *vin );
+  hin->vinterp      ( new_num, new_lons, new_lats, new_levs, wvals1, *w0, *vin );
   if (t1 < time) {
-     hin->vinterpVector( new_num, new_lons, new_lats, new_levs, lonvals2, latvals2, *ufield1, *vfield1, *vin );
-     hin->vinterp      ( new_num, new_lons, new_lats, new_levs, wvals2, *wfield1, *vin );
+     hin->vinterpVector( new_num, new_lons, new_lats, new_levs, lonvals2, latvals2, *u1, *v1, *vin );
+     hin->vinterp      ( new_num, new_lons, new_lats, new_levs, wvals2, *w1, *vin );
   } 
        
   for (int i = 0; i< new_num; i++){
      lonvals[i] = lonvals1[i]*(t2-time)/(t2-t1) + lonvals2[i]*(time-t1)/(t2-t1);
      latvals[i] = latvals1[i]*(t2-time)/(t2-t1) + latvals2[i]*(time-t1)/(t2-t1);
      wvals[i]   = wvals1[i]*(t2-time)/(t2-t1)   + wvals2[i]*(time-t1)/(t2-t1);
+     std::cout << "lonvals["<<i<<"]"<<lonvals[i] <<" rank: "<< my_rank<<std::endl;
+     std::cout << "new_lons["<<i<<"]"<<new_lons[i] <<" rank: "<< my_rank<<std::endl;
+     std::cout << "new_lats["<<i<<"]"<<new_lats[i] <<" rank: "<< my_rank<<std::endl;
+     std::cout << "new_levs["<<i<<"]"<<new_levs[i] <<" rank: "<< my_rank<<std::endl;
   }
 
  real U_recv[n];
@@ -205,5 +277,6 @@ void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* la
     v[i] = V_recv[pos[i]];
     w[i] = W_recv[pos[i]];
  }
-
+ MPI_Barrier(comm);
+ std::cout << "Done time-t1: "<<std::setprecision (15) << time-t1<<std::endl;
 }

@@ -272,9 +272,11 @@ void IntegRK4a_GEOS :: go( int n, real *lons, real *lats, real *zs, int *flags, 
     // get the winds at those parcels' locations
     metsrc->get_uvw(t, nuse, plons, plats, pzs, kus, kvs, kws);
     if ( debug >= 100 ) {
+       std :: cout << "number of parcels: " << nuse << std::endl;
        dyt = metsrc->time2Cal(t, 3);
        std::cerr << "     IntegRK4a_GEOS-vector @ (" << t << "/" << dyt << ", " << plons[0] << "," << plats[0] 
        << ", " << pzs[0] << ", " << t << "): u1=" << kus[0] << ", v1=" << kvs[0] << std::endl;
+     
     }
 
     // now calculate the the stage-1 displacement for each parcel
@@ -333,12 +335,13 @@ void IntegRK4a_GEOS :: go( int n, real *lons, real *lats, real *zs, int *flags, 
     }
     nav->deltapos( nuse, tmplons, tmplats, dlons, dlats, 1.0/2.0 );
     if ( debug >= 100 ) {
-       std::cerr << "     IntegRK4a_GEOS-vector: dlons1, dlats1 = " << dlons[0] << ", " << dlats[0] << std::endl;
+       std::cout << "     IntegRK4a_GEOS-vector: dlons1, dlats1 = " << dlons[0] << ", " << dlats[0] << std::endl;
        //std::cerr << "IntegRK4-vector: time1=" << t + dt0/2.0 << std::endl;
     }
 
     // now get the winds at the first-stage intermediate points (tmplons,tmplats)
     metsrc->get_uvw(t + dt0/2.0, nuse, tmplons, tmplats, tmpzs, kus, kvs, kws );
+    std::cout << "     afte dt0/2 " << std::endl;
     if ( debug >= 100 ) {
        dyt = metsrc->time2Cal(t + dt0/2.0, 3);
        std::cerr << "     IntegRK4a_GEOS-vector @ (" << t << "/" << dyt << ", "  << tmplons[0] << "," << tmplats[0] 
