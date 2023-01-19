@@ -126,14 +126,10 @@ void updateFields(MetGEOSDistributedData * s, char* ctime, float* u, float* v, f
    raw_p->load(s->xlons, s->xlats, s->xlevs, pdata);
 
    GridLatLonField3D* vertical = dynamic_cast<GridLatLonField3D*>( s->vin->invert(s->npz, *raw_p));
+   s->u1 = dynamic_cast<GridLatLonField3D*> (s->vin->reProfile(*raw_u, *vertical));
+   s->v1 = dynamic_cast<GridLatLonField3D*> (s->vin->reProfile(*raw_v, *vertical));
+   s->w1 = dynamic_cast<GridLatLonField3D*> (s->vin->reProfile(*raw_w, *vertical));
 
-   GridLatLonField3D* new_u = dynamic_cast<GridLatLonField3D*> (s->vin->reProfile(*raw_u, *vertical));
-   GridLatLonField3D* new_v = dynamic_cast<GridLatLonField3D*> (s->vin->reProfile(*raw_v, *vertical));
-   GridLatLonField3D* new_w = dynamic_cast<GridLatLonField3D*> (s->vin->reProfile(*raw_w, *vertical));
-
-   s->u1 = new_u;
-   s->v1 = new_v;
-   s->w1 = new_w;
    for (auto &p : {raw_u, raw_v, raw_w, raw_p, vertical}) { delete p; }
 }
 

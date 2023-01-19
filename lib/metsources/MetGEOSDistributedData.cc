@@ -155,10 +155,6 @@ void MetGEOSDistributedData::get_uvw( double time, real lon, real lat, real z, r
 
 void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* lats, float* zs, float *u, float *v, float *w){
   //double pi = 3.1415926535;
-  MPI_Barrier(comm);
-  std::cout << "start to get values of time: "<<std::setprecision (15) << time<< "  num "<< n<<std::endl;
-  std::cout << "inew lat lon zs: "<<lons[0] << " "<<lats[0] << " "<< zs[0]<< n<<std::endl;
-  MPI_Barrier(comm);
   float dlon = 360.0 /nlons_global;
   float dlat = 180.0 /nlats_global;
   int II[n]{};
@@ -184,9 +180,6 @@ void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* la
   }
 
   MPI_Alltoall(counts_send, 1, MPI_INT, counts_recv, 1, MPI_INT, comm);
-
-  std::cout << "after first all to all "<<std::endl;
-  MPI_Barrier(comm);
 
   int new_num = 0;
   for (int rank =0; rank<npes; rank++){
@@ -225,13 +218,11 @@ void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* la
   float new_lats[new_num];
   float new_levs[new_num];
 
-  std::cout << "before all to all new_num"<< new_num<<std::endl;
-  MPI_Barrier(comm);
   MPI_Alltoallv(lons_send, counts_send, disp_send, MPI_FLOAT, new_lons, counts_recv, disp_recv, MPI_FLOAT, comm);
   MPI_Alltoallv(lats_send, counts_send, disp_send, MPI_FLOAT, new_lats, counts_recv, disp_recv, MPI_FLOAT, comm);
   MPI_Alltoallv(levs_send, counts_send, disp_send, MPI_FLOAT, new_levs, counts_recv, disp_recv, MPI_FLOAT, comm);
 
-  // At this point, the particals are distributed 
+  // At this point, the particles are distributed 
   double t1 = u0->time();
   double t2 = u1->time();
 
@@ -256,10 +247,6 @@ void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* la
      lonvals[i] = lonvals1[i]*(t2-time)/(t2-t1) + lonvals2[i]*(time-t1)/(t2-t1);
      latvals[i] = latvals1[i]*(t2-time)/(t2-t1) + latvals2[i]*(time-t1)/(t2-t1);
      wvals[i]   = wvals1[i]*(t2-time)/(t2-t1)   + wvals2[i]*(time-t1)/(t2-t1);
-     std::cout << "lonvals["<<i<<"]"<<lonvals[i] <<" rank: "<< my_rank<<std::endl;
-     std::cout << "new_lons["<<i<<"]"<<new_lons[i] <<" rank: "<< my_rank<<std::endl;
-     std::cout << "new_lats["<<i<<"]"<<new_lats[i] <<" rank: "<< my_rank<<std::endl;
-     std::cout << "new_levs["<<i<<"]"<<new_levs[i] <<" rank: "<< my_rank<<std::endl;
   }
 
  real U_recv[n];
@@ -271,12 +258,9 @@ void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* la
  MPI_Alltoallv(wvals,   counts_recv, disp_recv, MPI_FLOAT, W_recv, counts_send, disp_send, MPI_FLOAT, comm);
 
  // reorder
-
  for (int i = 0; i<n; i++){
     u[i] = U_recv[pos[i]];
     v[i] = V_recv[pos[i]];
     w[i] = W_recv[pos[i]];
  }
- MPI_Barrier(comm);
- std::cout << "Done time-t1: "<<std::setprecision (15) << time-t1<<std::endl;
 }
