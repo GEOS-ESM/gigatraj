@@ -41,6 +41,7 @@ class MetGEOSDistributedData {
 
       void get_uvw( double time, real lon, real lat, real z, real *u, real *v, real *w);
       void get_uvw( double time, int n, real* lons, real* lats, real* zs, real *u, real *v, real *w);
+      void getData( string quantity, double time, int n, real* lons, real* lats, real* zs, real* values, int flags=0 );
 
       std::string time2Cal( const double time, int format=-999 );
       int debug = 100;
@@ -62,6 +63,10 @@ class MetGEOSDistributedData {
       GridLatLonField3D *u1;
       GridLatLonField3D *v1;
       GridLatLonField3D *w1;
+      GridLatLonField3D *vertical;
+
+      GridLatLonField3D * other;
+
        /// Object for dealing with Dates
       static const gigatraj::CalGregorian cal;
 

@@ -80,6 +80,8 @@ MetGEOSDistributedData::MetGEOSDistributedData(
   u1= new GridLatLonField3D();
   v1= new GridLatLonField3D();
   w1= new GridLatLonField3D();
+  vertical = new GridLatLonField3D();
+  other    = new GridLatLonField3D();
 
   u0->set_quantity("U");
   u0->set_units("m/s");
@@ -263,4 +265,100 @@ void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* la
     v[i] = V_recv[pos[i]];
     w[i] = W_recv[pos[i]];
  }
+
 }
+
+void MetGEOSDistributedData::getData( string quantity, double time, int n, real* lons, real* lats, real* zs, real* values, int flags ){
+  //double pi = 3.1415926535;
+
+  if( other->quantity() != quantity) {
+   //more info here
+  }
+  if ( abs(other->time() - time) >=10.e-9){
+   //more info here
+  }
+
+  float dlon = 360.0 /nlons_global;
+  float dlat = 180.0 /nlats_global;
+  int II[n]{};
+
+  for (int i=0; i<n; i++){
+    II[i] = floor(lons[i]/dlon);
+  }  
+  int JJ[n]{};
+  for (int i=0; i<n; i++){
+    JJ[i] = floor((lats[i]+90.0)/dlat);
+  }  
+
+  int Ranks[n] {};
+  for (int i=0; i<n; i++){
+    Ranks[i] = CellToRank[JJ[i]][II[i]];
+  }
+
+  int counts_send[npes] = {0};
+  int counts_recv[npes] = {0};
+
+  for (int i=0; i<n; i++){
+    counts_send[Ranks[i]]++;
+  }
+
+  MPI_Alltoall(counts_send, 1, MPI_INT, counts_recv, 1, MPI_INT, comm);
+
+  int new_num = 0;
+  for (int rank =0; rank<npes; rank++){
+    new_num+=counts_recv[rank];
+  }
+
+  int disp_send[npes] = {0};
+  int disp_recv[npes] = {0};
+
+  for (int rank = 1; rank<npes; rank++){
+    disp_send[rank] = disp_send[rank-1]+ counts_send[rank-1];
+    disp_recv[rank] = disp_recv[rank-1]+ counts_recv[rank-1]; 
+  }
+
+  float lons_send[n] = {0.0};
+  float lats_send[n] = {0.0};
+  float levs_send[n] = {0.0};
+
+  int tmp_position[npes];
+  for (int i =0; i<npes; i++){
+     tmp_position[i]= disp_send[i];
+  }
+
+  int pos[n] {};
+  int rank;
+  for (int i =0; i<n;i++){
+    rank = Ranks[i];
+    pos[i] = tmp_position[rank];
+    lons_send[pos[i]] = lons[i];
+    lats_send[pos[i]] = lats[i];
+    levs_send[pos[i]] = zs[i];
+    tmp_position[rank]++;
+  }
+
+  float new_lons[new_num];
+  float new_lats[new_num];
+  float new_levs[new_num];
+
+  MPI_Alltoallv(lons_send, counts_send, disp_send, MPI_FLOAT, new_lons, counts_recv, disp_recv, MPI_FLOAT, comm);
+  MPI_Alltoallv(lats_send, counts_send, disp_send, MPI_FLOAT, new_lats, counts_recv, disp_recv, MPI_FLOAT, comm);
+  MPI_Alltoallv(levs_send, counts_send, disp_send, MPI_FLOAT, new_levs, counts_recv, disp_recv, MPI_FLOAT, comm);
+
+  // At this point, the particles are distributed 
+
+  
+  real  wvals  [new_num] = {0.0};
+
+  hin->vinterp ( new_num, new_lons, new_lats, new_levs, wvals, *other, *vin );
+       
+  real W_recv[n];
+
+  MPI_Alltoallv(wvals,   counts_recv, disp_recv, MPI_FLOAT, W_recv, counts_send, disp_send, MPI_FLOAT, comm);
+
+ // reorder
+ for (int i = 0; i<n; i++){
+    values[i] = W_recv[pos[i]];
+  }
+}
+
