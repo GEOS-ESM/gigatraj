@@ -102,7 +102,7 @@ class NetcdfOut : public ParcelReporter {
                       will be marked in the file with the attribute "vertical_coordinate" set
                       to "yes".
       */
-      void vertical( std::string vert );
+      void vertical( const std::string& vert, const std::string& units="", int dir=0 );
    
       /// returns the name of the vertical coordinate to be used
       /*! This method returns the name of variable in the netcdf file that is to be used
@@ -305,7 +305,7 @@ class NetcdfOut : public ParcelReporter {
      */
      void setMet( MetData* metsrc );
      
-     /// sets the met dtaa source from a Parcel
+     /// sets the met data source from a Parcel
      /*! This method sets the meteorological data source to be used by the NetcdfOut object.
          The MetData object is taken fomr the given Parcel.
          
@@ -606,6 +606,8 @@ class NetcdfOut : public ParcelReporter {
       std::string vcoord;
       /// the vertical coordinate units
       std::string vunits;
+      /// >0 if direction if upward positive, -1 if upwards negative
+      int vdir;
       /// the vertical coordinate long name
       std::string vdesc;
       

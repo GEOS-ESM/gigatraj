@@ -113,7 +113,7 @@ std::string& NetcdfOut::filename()
     return fname;
 }
 
-void NetcdfOut::vertical( const std::string vert )
+void NetcdfOut::vertical( const std::string& vert, const std::string& units, int dir )
 {
 
     if ( ! is_open ) {
@@ -121,6 +121,15 @@ void NetcdfOut::vertical( const std::string vert )
        
        // if this is in the other quantities list, then remove it from there
        delQuantity( vcoord );
+       
+       vunits = units;
+       
+       vdir = dir;
+       // common case we may as well try to handle here
+       if ( vcoord == "P" || vunits == "mb" || vunits == "hPa" ) {
+          vdir = -1;
+       }
+       
        
     } else {
        throw new badNetcdfTooLate();
@@ -652,7 +661,9 @@ void NetcdfOut::init( MetData *metsrc, unsigned int n)
           vunits = met->vunits();
           vdesc = vcoord;
        } else {
-          vunits = met->units( vcoord );
+          if ( vunits == "" ) {
+             vunits = met->units( vcoord );
+          }
        }
      
        if ( do_tag ) {
@@ -1179,8 +1190,9 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
      // define the positive attribute
      aname = "positive";
      val = "up"; 
-     // note: this should be determiend by the MetData object 
-     if ( vcoord == "pressure" ) {
+     // note: this should be determined by the MetData object 
+     // but it can be set by the user
+     if ( vdir < 0 ) {
         val = "down";
      }
      aval = val.c_str();
