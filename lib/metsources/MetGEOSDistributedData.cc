@@ -82,6 +82,7 @@ MetGEOSDistributedData::MetGEOSDistributedData(
   w1= new GridLatLonField3D();
   vertical = new GridLatLonField3D();
   other    = new GridLatLonField3D();
+  gridSfc  = new GridLatLonFieldSfc();
 
   u0->set_quantity("U");
   u0->set_units("m/s");
@@ -127,6 +128,7 @@ MetGEOSDistributedData::MetGEOSDistributedData(
    v1->load(xlons, xlats, npz, xdata);
    w0->load(xlons, xlats, npz, xdata);
    w1->load(xlons, xlats, npz, xdata);
+   gridSfc->load(xlons, xlats);
 }
 
 // destructor
@@ -362,3 +364,99 @@ void MetGEOSDistributedData::getData( string quantity, double time, int n, real*
   }
 }
 
+void MetGEOSDistributedData::getData( string quantity, double time, int n, real* lons, real* lats, real* values, int flags ){
+  //double pi = 3.1415926535;
+
+  if( other->quantity() != quantity) {
+   //more info here
+  }
+  if ( abs(other->time() - time) >=10.e-9){
+   //more info here
+  }
+
+  float dlon = 360.0 /nlons_global;
+  float dlat = 180.0 /nlats_global;
+  int II[n]{};
+
+  for (int i=0; i<n; i++){
+    II[i] = floor(lons[i]/dlon);
+  }  
+  int JJ[n]{};
+  for (int i=0; i<n; i++){
+    JJ[i] = floor((lats[i]+90.0)/dlat);
+  }  
+
+  int Ranks[n] {};
+  for (int i=0; i<n; i++){
+    Ranks[i] = CellToRank[JJ[i]][II[i]];
+  }
+
+  int counts_send[npes] = {0};
+  int counts_recv[npes] = {0};
+
+  for (int i=0; i<n; i++){
+    counts_send[Ranks[i]]++;
+  }
+
+  MPI_Alltoall(counts_send, 1, MPI_INT, counts_recv, 1, MPI_INT, comm);
+
+  int new_num = 0;
+  for (int rank =0; rank<npes; rank++){
+    new_num+=counts_recv[rank];
+  }
+
+  int disp_send[npes] = {0};
+  int disp_recv[npes] = {0};
+
+  for (int rank = 1; rank<npes; rank++){
+    disp_send[rank] = disp_send[rank-1]+ counts_send[rank-1];
+    disp_recv[rank] = disp_recv[rank-1]+ counts_recv[rank-1]; 
+  }
+
+  float lons_send[n] = {0.0};
+  float lats_send[n] = {0.0};
+
+  int tmp_position[npes];
+  for (int i =0; i<npes; i++){
+     tmp_position[i]= disp_send[i];
+  }
+
+  int pos[n] {};
+  int rank;
+  for (int i =0; i<n;i++){
+    rank = Ranks[i];
+    pos[i] = tmp_position[rank];
+    lons_send[pos[i]] = lons[i];
+    lats_send[pos[i]] = lats[i];
+    tmp_position[rank]++;
+  }
+
+  float new_lons[new_num];
+  float new_lats[new_num];
+
+  MPI_Alltoallv(lons_send, counts_send, disp_send, MPI_FLOAT, new_lons, counts_recv, disp_recv, MPI_FLOAT, comm);
+  MPI_Alltoallv(lats_send, counts_send, disp_send, MPI_FLOAT, new_lats, counts_recv, disp_recv, MPI_FLOAT, comm);
+
+  // At this point, the particles are distributed 
+
+  
+  real  wvals  [new_num] = {0.0};
+  std::vector<real> lons_vec (new_lons, new_lons+new_num);
+  std::vector<real> lats_vec (new_lats, new_lats+new_num);
+
+  std::vector<real> *result = hin->calc(lons_vec, lats_vec, *gridSfc);
+       
+  for (int i = 0; i<new_num; i++){
+     wvals[i] = (*result)[i];
+  }
+  delete (result);
+
+  real W_recv[n];
+
+  MPI_Alltoallv(wvals,   counts_recv, disp_recv, MPI_FLOAT, W_recv, counts_send, disp_send, MPI_FLOAT, comm);
+
+ // reorder
+ for (int i = 0; i<n; i++){
+    values[i] = W_recv[pos[i]];
+  }
+}

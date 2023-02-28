@@ -29,6 +29,7 @@ extern "C" {
    void updateFields(MetGEOSDistributedData * metSrc, char* ctime, float* u, float* v, float* w, float* p);
    void setData     (MetGEOSDistributedData * metSrc, char* ctime, char* quantity, float* raw_data);
    void getData     (MetGEOSDistributedData * metSrc, char* ctime, char* quantity, int n, float* lons, float* lats, float* zs, float* values);
+   void getData2d     (MetGEOSDistributedData * metSrc, char* ctime, char* quantity, int n, float* lons, float* lats, float* values);
                              
    void rk4a_advance( MetGEOSDistributedData *metsrc, char* ctime, double dt, int n, float* lons, float* lats, float* levs);
    void test_Field3D(GridLatLonField3D*);
@@ -139,22 +140,50 @@ void updateFields(MetGEOSDistributedData * metSrc, char* ctime, float* u, float*
 
 void setData(MetGEOSDistributedData * metSrc, char* ctime, char* quantity, float* values){
 
-   GridLatLonField3D *raw_field = new GridLatLonField3D();
-   raw_field->set_quantity("T");
-   raw_field->set_vertical("air_pressure");
-   raw_field->set_units("K");
    double time = calendar.day1900(ctime);
-   raw_field->set_time(time,ctime);
+   std::string dim="_2D";
+   std::string qt = std::string(quantity);
+   int nlevs = 1;
+   if (qt.find(dim) == std::string::npos){
+     nlevs = metSrc->nlevs_global;
+   }
+   int Nsize = metSrc->nlats_local*metSrc->nlons_local*nlevs;
    std::vector<real> data;
-   int Nsize = metSrc->nlats_local*metSrc->nlons_local*metSrc->nlevs_global;
+   for (int i=0; i<Nsize; i++){
+     data.push_back(*(values+i));
+   }
+    
+   if (qt.find(dim) == std::string::npos){
+     GridLatLonField3D *raw_field = new GridLatLonField3D();
+     raw_field->set_quantity(quantity);
+     raw_field->set_vertical("air_pressure"); // not correct, not important for now
+     raw_field->set_units("K");               // not coorect, not important for now
+     raw_field->set_time(time,ctime);
+
+     raw_field->load(metSrc->xlons, metSrc->xlats, metSrc->xlevs, data);
+     delete(metSrc->other);
+     metSrc->other =  dynamic_cast<GridLatLonField3D*> (metSrc->vin->reProfile(*raw_field, *(metSrc->vertical)));
+     delete(raw_field);
+   }else {
+     metSrc->gridSfc->set_quantity(quantity);
+     metSrc->gridSfc->set_units("K");               // not coorect, not important for now
+     metSrc->gridSfc->set_time(time,ctime);
+     metSrc->gridSfc->load(data);
+   }
+}
+
+void setSfcData(MetGEOSDistributedData * metSrc, char* ctime, char* quantity, float* values){
+
+   metSrc->gridSfc->set_quantity(quantity);
+   double time = calendar.day1900(ctime);
+   metSrc->gridSfc->set_time(time,ctime);
+   std::vector<real> data;
+   int Nsize = metSrc->nlats_local*metSrc->nlons_local;
    for (int i=0; i<Nsize; i++){
       data.push_back(*(values+i));
     }
 
-   raw_field->load(metSrc->xlons, metSrc->xlats, metSrc->xlevs, data);
-   delete(metSrc->other);
-   metSrc->other =  dynamic_cast<GridLatLonField3D*> (metSrc->vin->reProfile(*raw_field, *(metSrc->vertical)));
-   delete(raw_field);
+   metSrc->gridSfc->load(data);
 }
 
 
@@ -186,4 +215,12 @@ void getData (MetGEOSDistributedData * metSrc, char* ctime, char* quantity, int 
   metSrc->getData( std::string(quantity), time, n, lons, lats, zs, values);
 
 }
+
+void getData2d (MetGEOSDistributedData * metSrc, char* ctime, char* quantity, int n, float* lons, float* lats, float* values){
+
+  double time = calendar.day1900(ctime);
+  metSrc->getData( std::string(quantity), time, n, lons, lats, values);
+
+}
+
 
