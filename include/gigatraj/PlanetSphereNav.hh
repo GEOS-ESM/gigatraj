@@ -81,6 +81,18 @@ class PlanetSphereNav: public PlanetNav {
          \param lat2 latitude of the second point
       */
       real distance( real lon1, real lat1, real lon2, real lat2);   
+       
+      /// calculates a great-circle bearing between two locations.
+      /*! This function calculates the great-circle bearing between two locations.
+      
+         \return the bearing between the two locations, in degrees clockwise from north
+       
+         \param lon1 longitude of the first point
+         \param lat1 longitude of the first point
+         \param lon2 longitude of the second point
+         \param lat2 longitude of the second point
+      */
+      real bearing( real lon1, real lat1, real lon2, real lat2);   
 
       /// calculates great-circle distances between two sets of locations.
       /*! This function calculates the great-circle distances between two sets of locations.
@@ -96,16 +108,16 @@ class PlanetSphereNav: public PlanetNav {
        
       /// calculates a position a given distance and bearing from a given position
       /*! This function calculates the longitude and latitude of a position
-          a given distance andbearing from a starting position.
+          a given distance and bearing from a starting position.
           
           \param clon the initial longitude
           \param clat the initial latitude
           \param d the distance away from the initial position
-          \param bearing the bearing (angles clockwise from north) to the new position
+          \param bearng the bearing (angles clockwise from north) to the new position
           \param lon (output) the new longitude
           \param lat (output) the new latitude
       */
-      void displace( const real clon, const real clat, const real d, const real bearing, real &lon, real &lat );    
+      void displace( const real clon, const real clat, const real d, const real bearng, real &lon, real &lat );    
        
       /// calculates positions a given distance and bearing from an array of given positions
       /*! This function calculates the longitude and latitude of an array of positions
@@ -115,11 +127,11 @@ class PlanetSphereNav: public PlanetNav {
           \param clon a pointer to an array of the initial longitudes
           \param clat a pointer to an array of the initial latitudes
           \param d a pointer to an array of the distances away from the initial positions
-          \param bearing a pointer to an array of the bearings (angles clockwise from north) to the new positions
+          \param bearng a pointer to an array of the bearings (angles clockwise from north) to the new positions
           \param lon a pointer to an array of output new longitudes
           \param lat a pointer to an array of output new latitudes
       */
-      void displace( int n, const real *clon, const real *clat, const real *d, const real *bearing, real *lon, real *lat );    
+      void displace( int n, const real *clon, const real *clat, const real *d, const real *bearng, real *lon, real *lat );    
      
       /// relocates a vector to a new location
       /*! Vectors on a sphere have different orientations in the spherical coordinate

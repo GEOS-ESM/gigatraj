@@ -229,7 +229,7 @@ void CalGregorian::parseDate( const std::string& date, int* year, int *month, in
 
 std::string CalGregorian::buildDate( int year, int month, int day, int hour, int minute, float second, int format ) const
 {
-     // the output datae string
+     // the output date string
      std::string date;
      // a string output stream for integer->string conversions
      std::ostringstream otmp;

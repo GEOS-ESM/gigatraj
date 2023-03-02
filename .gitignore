@@ -36,6 +36,7 @@ doc/.doc_stamp
 doc/.remake_trigger
 doc/gigatraj_docs.tgz
 doc/Makefile.in
+doc/gigatraj_intro.pdf
 eval/cfc11/
 eval/raikoke/
 eval/qbo/
@@ -67,6 +68,7 @@ test/comms_notes
 test/test_BilinearHinterp
 test/test_BilinearHinterp_MPI
 test/test_BilinearHinterp_serial
+test/test_Catalog
 test/test_Configuration
 test/test_Earth
 test/test_FilePath
@@ -103,8 +105,6 @@ test/test_SerialGrp
 test/test_StreamDump_Load
 test/test_StreamPrint
 test/test_StreamRead
-test/test_NetcdfIn
-test/test_NetcdfOut
 test/test_ThetaOTF
 test/test_TropOTF
 test/test_traj000
@@ -129,6 +129,8 @@ test/test_BalanceThetaDot1OTF
 test/test_StreamPrintMPI
 test/test_StreamReadMPI
 test/test_ChangeVertical
+test/test_NetcdfIn
+test/test_NetcdfOut
 test/valgrind*.log
 gigatraj*.tar.gz
 

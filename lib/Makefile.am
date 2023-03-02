@@ -18,6 +18,7 @@ $(TRIGGER_DOCS_REMAKE): libgigatraj.a
 ## Everything needs the gigatraj library includes
 AM_CPPFLAGS  = $(GIGATRAJ_INCLUDE)
 
+GTCONFIGDIR = @datadir@/@PACKAGE@/
 
 ## add stuff for MPI as well
 
@@ -35,6 +36,7 @@ libgigatraj_a_SOURCES = ../include/gigatraj/RandomSrc.hh        RandomSrc.cc \
                         ../include/gigatraj/Earth.hh            Earth.cc \
                         ../include/gigatraj/ProcessGrp.hh       ProcessGrp.cc \
                         ../include/gigatraj/SerialGrp.hh        SerialGrp.cc \
+                        ../include/gigatraj/Catalog.hh          metsources/Catalog.cc \
                         ../include/gigatraj/GridField.hh        metsources/GridField.cc \
                         ../include/gigatraj/GridFieldSfc.hh     metsources/GridFieldSfc.cc \
                         ../include/gigatraj/GridLatLonFieldSfc.hh   metsources/GridLatLonFieldSfc.cc \
@@ -98,6 +100,8 @@ libgigatraj_a_SOURCES += ../include/gigatraj/Parcel.hh           Parcel.cc \
                          ../include/gigatraj/PGenRnd.hh          PGenRnd.cc \
                          ../include/gigatraj/PGenRndDisc.hh      PGenRndDisc.cc \
                          ../include/gigatraj/PGenDisc.hh         PGenDisc.cc \
+                         ../include/gigatraj/PGenLine.hh         PGenLine.cc \
+                         ../include/gigatraj/PGenRndLine.hh      PGenRndLine.cc \
                          ../include/gigatraj/ParcelFilter.hh \
                          ../include/gigatraj/ParcelInitializer.hh \
                          ../include/gigatraj/ParcelReporter.hh \

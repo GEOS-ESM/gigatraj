@@ -279,7 +279,7 @@ class Parcel {
           
           \return a pointer to the PlanetNav object that is being used
       */
-      PlanetNav* getNav();
+      PlanetNav* getNav() const;
 
 
       /// \brief changes the meteorological data source used by Parcels

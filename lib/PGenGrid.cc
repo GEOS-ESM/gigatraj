@@ -88,6 +88,11 @@ void PGenGrid :: initgrid( Seq<Parcel>* seq, const Parcel& p
                    , real begz, real endz, real deltaz  
                    )
 {
+     real z, lon, lat;
+     int nz;
+     int nlat;
+     int nlon;
+     real dlon, dlat, dz;
      
      // sanity checking //
      if ( (  ( ( deltaz > 0.0 ) && ( begz <= endz ) ) 
@@ -112,13 +117,49 @@ void PGenGrid :: initgrid( Seq<Parcel>* seq, const Parcel& p
           while ( (deltalon < 0.0 ) && ( lon0 < lon1 ) ) {
              lon1 -= e.fullcircle;
           } 
+          
+          // now count the gridpoints
+          if ( deltaz != 0.0 ) {
+             nz = (int) ( (endz-begz)/deltaz ) + 1;
+             if ( nz < 2 ) {
+                nz = 2;
+             }
+             dz = (endz - begz)/(nz - 1.0);
+          } else {
+             nz = 1;
+             dz = 0.0;
+          }
+          if ( deltalat != 0.0 ) {
+             nlat = (int) ( (endlat-beglat)/deltalat ) + 1;
+             if ( nlat < 2 ) {
+                nlat = 2;
+             }
+             dlat = (endlat - beglat)/(nlat - 1.0);
+          } else {
+             nlat = 1;
+             dlat = 0.0;
+          }
+          if ( deltalon != 0.0 ) {
+             nlon = (int) ( (lon1-lon0)/deltalon ) + 1;
+             if ( nlon < 2 ) {
+                nlon = 2;
+             }
+             dlon = (endlon - beglon)/(nlon - 1.0);
+          } else {
+             nlon = 1;
+             dlon = 0.0;
+          }
             
           try {
                typename Seq<Parcel>::iterator it;
                it = seq->begin();
-               for ( real z = begz; z<=endz; z += deltaz ) {
-                  for ( real lat = beglat; lat <= endlat; lat += deltalat ) {
-                     for ( real lon = lon0; lon <= lon1; lon += deltalon ) {
+               for ( int iz=0; iz < nz; iz++ ) {
+                  z = begz + iz*dz;
+                  for ( int ilat=0; ilat < nlat; ilat++ ) {
+                     lat = beglat + ilat*dlat;
+                     for ( int ilon=0; ilon < nlon; ilon++ ) {
+                        lon = beglon + ilon*dlon;
+
                          *it = p;  // copy the input parcel's settings
                          it->setPos( lon, lat);  // set the horizontal position
                          it->setZ( z );  // set the vertical position
@@ -145,6 +186,11 @@ Parcel * PGenGrid :: create_array(const Parcel& p, int *np
                    )
 {                                                                              
     Parcel* pa;                                                                
+     real z, lon, lat;
+     int nz;
+     int nlat;
+     int nlon;
+     real dlon, dlat, dz;
                                                                                
     *np = -1;                                                                  
                                                                                
@@ -169,12 +215,47 @@ Parcel * PGenGrid :: create_array(const Parcel& p, int *np
        while ( (deltalon < 0.0 ) && ( lon0 < lon1 ) ) {                        
           lon1 -= e.fullcircle;                                                
        }                                                                       
+          
+       // now count the gridpoints
+       if ( deltaz != 0.0 ) {
+          nz = (int) ( (endz-begz)/deltaz ) + 1;
+          if ( nz < 2 ) {
+             nz = 2;
+          }
+          dz = (endz - begz)/(nz - 1.0);
+       } else {
+          nz = 1;
+          dz = 0.0;
+       }
+       if ( deltalat != 0.0 ) {
+          nlat = (int) ( (endlat-beglat)/deltalat ) + 1;
+          if ( nlat < 2 ) {
+             nlat = 2;
+          }
+          dlat = (endlat - beglat)/(nlat - 1.0);
+       } else {
+          nlat = 1;
+          dlat = 0.0;
+       }
+       if ( deltalon != 0.0 ) {
+          nlon = (int) ( (lon1-lon0)/deltalon ) + 1;
+          if ( nlon < 2 ) {
+             nlon = 2;
+          }
+          dlon = (endlon - beglon)/(nlon - 1.0);
+       } else {
+          nlon = 1;
+          dlon = 0.0;
+       }
                                                                                
        try {                                                                   
             int i = 0;                                                         
-            for ( real z = begz; z<=endz; z += deltaz ) {                      
-               for ( real lat = beglat; lat <= endlat; lat += deltalat ) {     
-                  for ( real lon = lon0; lon <= lon1; lon += deltalon ) {      
+            for ( int iz=0; iz < nz; iz++ ) {
+               z = begz + iz*dz;
+               for ( int ilat=0; ilat < nlat; ilat++ ) {
+                  lat = beglat + ilat*dlat;
+                  for ( int ilon=0; ilon < nlon; ilon++ ) {
+                      lon = beglon + ilon*dlon;
                       pa[i] = p;  // copy the input parcel's settings          
                       pa[i].setPos( lon, lat);  // set the horizontal position 
                       pa[i].setZ( z );  // set the vertical position           
@@ -317,6 +398,10 @@ Flock* PGenGrid :: create_Flock(const Parcel& p
      int status = 0;
      int n;
      Parcel *pcl;
+     int nz;
+     int nlat;
+     int nlon;
+     real dlon, dlat, dz;
 
      n = PGenGrid::count_gridpoints(beglon,endlon,deltalon
                                   ,beglat,endlat,deltalat
@@ -351,6 +436,37 @@ Flock* PGenGrid :: create_Flock(const Parcel& p
              while ( (deltalon < 0.0 ) && ( lon0 < lon1 ) ) {
                 lon1 -= e.fullcircle;
              } 
+             // now count the gridpoints
+             if ( deltaz != 0.0 ) {
+                nz = (int) ( (endz-begz)/deltaz ) + 1;
+                if ( nz < 2 ) {
+                   nz = 2;
+                }
+                dz = (endz - begz)/(nz - 1.0);
+             } else {
+                nz = 1;
+                dz = 0.0;
+             }
+             if ( deltalat != 0.0 ) {
+                nlat = (int) ( (endlat-beglat)/deltalat ) + 1;
+                if ( nlat < 2 ) {
+                   nlat = 2;
+                }
+                dlat = (endlat - beglat)/(nlat - 1.0);
+             } else {
+                nlat = 1;
+                dlat = 0.0;
+             }
+             if ( deltalon != 0.0 ) {
+                nlon = (int) ( (lon1-lon0)/deltalon ) + 1;
+                if ( nlon < 2 ) {
+                   nlon = 2;
+                }
+                dlon = (endlon - beglon)/(nlon - 1.0);
+             } else {
+                nlon = 1;
+                dlon = 0.0;
+             }
 
              // sync all the processors before we start loading
              if ( pgrp != NULLPTR ) {
@@ -361,9 +477,12 @@ Flock* PGenGrid :: create_Flock(const Parcel& p
                
              try {
                   int i=0;
-                  for ( real z = begz; z<=endz; z += deltaz ) {
-                     for ( real lat = beglat; lat <= endlat; lat += deltalat ) {
-                        for ( real lon = lon0; lon <= lon1; lon += deltalon ) {
+                  for ( int iz=0; iz < nz; iz++ ) {
+                     z = begz + iz*dz;
+                     for ( int ilat=0; ilat < nlat; ilat++ ) {
+                        lat = beglat + ilat*dlat;
+                        for ( int ilon=0; ilon < nlon; ilon++ ) {
+                            lon = beglon + ilon*dlon;
                             
                             flock->sync();
                             
@@ -417,6 +536,10 @@ Swarm* PGenGrid :: create_Swarm(const Parcel& p
      int status = 0;
      int n;
      Parcel *pcl;
+     int nz;
+     int nlat;
+     int nlon;
+     real dlon, dlat, dz;
 
      n = PGenGrid::count_gridpoints(beglon,endlon,deltalon
                                   ,beglat,endlat,deltalat
@@ -451,6 +574,37 @@ Swarm* PGenGrid :: create_Swarm(const Parcel& p
              while ( (deltalon < 0.0 ) && ( lon0 < lon1 ) ) {
                 lon1 -= e.fullcircle;
              } 
+             // now count the gridpoints
+             if ( deltaz != 0.0 ) {
+                nz = (int) ( (endz-begz)/deltaz ) + 1;
+                if ( nz < 2 ) {
+                   nz = 2;
+                }
+                dz = (endz - begz)/(nz - 1.0);
+             } else {
+                nz = 1;
+                dz = 0.0;
+             }
+             if ( deltalat != 0.0 ) {
+                nlat = (int) ( (endlat-beglat)/deltalat ) + 1;
+                if ( nlat < 2 ) {
+                   nlat = 2;
+                }
+                dlat = (endlat - beglat)/(nlat - 1.0);
+             } else {
+                nlat = 1;
+                dlat = 0.0;
+             }
+             if ( deltalon != 0.0 ) {
+                nlon = (int) ( (lon1-lon0)/deltalon ) + 1;
+                if ( nlon < 2 ) {
+                   nlon = 2;
+                }
+                dlon = (endlon - beglon)/(nlon - 1.0);
+             } else {
+                nlon = 1;
+                dlon = 0.0;
+             }
 
              // sync all the processors before we start loading
              if ( pgrp != NULLPTR ) {
@@ -461,9 +615,12 @@ Swarm* PGenGrid :: create_Swarm(const Parcel& p
                
              try {
                   int i=0;
-                  for ( real z = begz; z<=endz; z += deltaz ) {
-                     for ( real lat = beglat; lat <= endlat; lat += deltalat ) {
-                        for ( real lon = lon0; lon <= lon1; lon += deltalon ) {
+                  for ( int iz=0; iz < nz; iz++ ) {
+                     z = begz + iz*dz;
+                     for ( int ilat=0; ilat < nlat; ilat++ ) {
+                        lat = beglat + ilat*dlat;
+                        for ( int ilon=0; ilon < nlon; ilon++ ) {
+                            lon = beglon + ilon*dlon;
                             
                             swarm->sync();
                             

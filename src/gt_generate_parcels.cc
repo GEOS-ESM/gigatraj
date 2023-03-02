@@ -33,11 +33,13 @@ gt_generatge_parcels [ [--clon center_longitude ] [--clat center_latitude ] [--r
                      | [ [--LLlon lower_left_longitude] [--LLlat lower_left_latitude ] \
                          [--URlon upper_right_longitude] [--URlat upper_right_latitude ] ] \
                      [--zlow lower_vertical ] [--zhigh higer_vertical] \
+                     [ --vertical vcoord ] \\
                      [-n|--number n_parcels ] \
                      [ --random | --grid ] \
                      [ --format output_format ] \
                      [ --netcdf_out filename ] \
-                     [ --verbose ] \\
+                     [ --time time ] \
+                     [ --verbose ] \
                      [ -h|--help ]  
 \endcode
 
@@ -50,6 +52,7 @@ The command-line options are:
   \li \c grid: specifies that the parcels are to be distributed in a regular grid-like pattern across the specified region
   \li \c zlow: the lower vertical lmit of the specified region
   \li \c zhigh: the upper verticla limit of the specified region
+  \li \c vertical: the name of the vertical coordinate
   \li \c clon: for a cyclindrical region, the center longitude
   \li \c clat: for a cylindrical region, the center latitude
   \li \c radius: for a cylindrical region, the cylinder radius
@@ -59,6 +62,7 @@ The command-line options are:
   \li \c URlat: for a rectangular region, the latitude of the upper-right corner 
   \li \c format: the output format of the parcel information. 
   \li \c netcdf_out: write the output to the specified netcdf file 
+  \li \c time the timestamp
      
  It is an error to specify options for a rectangular region with 
  options for a cylindrical region.
@@ -76,9 +80,12 @@ The command-line options are:
 #include "gigatraj/Configuration.hh"
  
 #include "gigatraj/Parcel.hh"
+#include "gigatraj/MetSBRot.hh"
 
 #include "gigatraj/PGenGrid.hh"
 #include "gigatraj/PGenDisc.hh"
+#include "gigatraj/PGenLine.hh"
+#include "gigatraj/PGenRndLine.hh"
 #include "gigatraj/PGenRnd.hh"
 #include "gigatraj/PGenRndDisc.hh"
  
@@ -156,6 +163,9 @@ int getconfig(int argc, char * const argv[], Configuration& conf )
     usage +=  " [--zhigh vertical_high ]";
     conf.add("zhigh"     , cFloat  , "420.0"             , "", 0, "upper vertical limit" );
 
+    usage +=  " [--vertical quantiry]";
+    conf.add("vertical", cString,"P"                 , "", 0, "vertical coordinate quantity string" );
+
     usage +=  " [--clat center_lat ]";
     conf.add("clat"     , cFloat  , ""             , "", 0, "latitude of cylinder center" );
 
@@ -177,8 +187,17 @@ int getconfig(int argc, char * const argv[], Configuration& conf )
     usage +=  " [--URlon upper_right_lon ]";
     conf.add("URlon"     , cFloat  , ""             , "", 0, "longitude of upper-right corner of rectangle" );
 
+    usage += "  [--box ] ";
+    conf.add("box"      , cBoolean, "N"                , "", 0, "distribute the parcels in a box between (LLlon,LLlat) and (URlon,URlat)" );   
+
+    usage += "  [--line ] ";
+    conf.add("line"      , cBoolean, "N"                , "", 0, "distribute the parcels along a great-circle line between (LLlon,LLlat) and (URlon,URlat)" );   
+
     usage +=  " [--format fmt]";
     conf.add("format", cString,"%o %a %v"                 , "", 0, "StreamPrint/StreamRead parcel format string" );
+
+    usage +=  " [--time time]";
+    conf.add("time", cString,""                 , "", 0, "parcel initialization time string" );
 
 #ifdef USE_NETCDF
     usage +=  " [--netcdf_out outputfile]";
@@ -259,7 +278,9 @@ int main( int argc, char * argv[] )
     PGenRndDisc   *p_cyl_rnd;
     PGenGrid      *p_rct_grd;
     PGenRnd       *p_rct_rnd;
-    // Sampl eParcel
+    PGenLine      *p_line_grd;
+    PGenRndLine   *p_line_rnd;
+    // Sample Parcel
     Parcel p;
     // the output vector of Parcels
     std::vector<Parcel> *result;
@@ -277,6 +298,16 @@ int main( int argc, char * argv[] )
     real nz;
     // loop counter
     int i;
+    // vertical coordinate
+    std::string vert;
+    // vertical coordinate units
+    std::string vunits;
+    // a basic met source that gives us access to a Gregorian Calendar object
+    MetSBRot metsrc;
+    // should the parcel be in a box?
+    bool inBox;
+    // should the parcels be along a line?
+    bool inLine;
 #ifdef USE_NETCDF
     // flag indicating whether to use netcdf for output
     bool outNetcdf;
@@ -285,11 +316,16 @@ int main( int argc, char * argv[] )
     // of rwriting to a netcdf file
     NetcdfOut* out_netcdf;
 #endif
+    // the initial parcel time
+    std::string initTime;
+     PlanetNav* e; 
+     real arcDelta;
+     real totlen;
 
     // we assume all will go well (until it doesn't)    
     status = 0;
 
-    // configure the model
+    // configure the generator
     status = status | getconfig( argc, argv, config );
 
     // Proceed only if there have been no errors so far
@@ -323,8 +359,16 @@ int main( int argc, char * argv[] )
           config.fetchParam("URlat", URlat);
           shape = 1;
        }
+       config.fetchParam("box", inBox);
+       config.fetchParam("line", inLine);
+       if ( shape == 1 && inLine ) {
+          shape = 2;
+       }
+       
        config.fetchParam("zlow", zlow);
        config.fetchParam("zhigh", zhigh);
+       vert = config.get("vertical");
+       initTime = config.get("time");
        config.fetchParam("number", n);
 
        if ( config.get("grid") == "Y" ) {
@@ -358,14 +402,27 @@ int main( int argc, char * argv[] )
           cerr << "  URlat = " << URlat << endl;
           cerr << "zlow = " << zlow << endl;
           cerr << "zhigh = " << zhigh << endl;
+          cerr << "vertiical = " << vert << endl;
           cerr << "number = " << n << endl;
           cerr << "distrib = " << distrib << endl;
           cerr << "format = '" << outform << "'" << endl;
+          cerr << "time = '" << initTime << "'" << endl;
 #ifdef USE_NETCDF
           cerr << "outNetcdf = " << outNetcdf << endl;
           cerr << "outNetcdfFile = " << outNetcdfFile << endl;
 #endif
        }
+       
+       // fiddle with the met source
+       if ( initTime != "" ) {
+          // change to the Gregorian calendar
+          metsrc.set_cal( 1 );
+          metsrc.defineCal( initTime );
+       }
+       p.setMet( metsrc );
+       
+       
+       
        switch (shape) {
        case 0: 
               if ( verbose ) {
@@ -452,6 +509,63 @@ int main( int argc, char * argv[] )
                       break;
               }   
               break;
+       case 2: 
+              if ( verbose ) {
+                 cerr << "Line ";
+              }
+              switch (distrib) {
+              case 0: 
+                      if ( verbose ) {
+                         cerr << "Grid " << endl;
+                      }
+                      // first, guess at how many levels
+                      // by taking ( N^(1/3) )/ 4
+                      n3 = POW( n*1.0, 1./3. );
+                      nz = TRUNC(n3/4.0 + 0.5);
+                      if ( nz <= 0 ) {
+                          nz = 1;
+                      }
+                      // Now try to find a factor that divided into N evenly
+                      n3 = (n*1.0)/nz;
+                      if ( TRUNC(n3 + 0.5)*nz != n ) {
+                         for (i=(nz*3)/2; i > 1; i-- ) {
+                             n3 = (n*1.0)/i;
+                             if ( TRUNC(n3 + 0.5)*i != n ) {
+                                nz = i;
+                                break;
+                             }
+                         }
+                      }
+                      n3 = TRUNC( (n*1.0)/nz + 0.5);
+                      
+                      e = p.getNav();
+                      totlen = e->distance( LLlon,LLlat, URlon,URlat);
+                      arcDelta = totlen/(n3 - 1.0); 
+                      
+                      zDelta = (zhigh - zlow)/(nz - 1.0);
+                      p_line_grd = new PGenLine();
+                      result = new std::vector<Parcel>;
+                   
+                      result = p_line_grd->create_vector( p 
+                                                       , LLlon, LLlat
+                                                        , URlon, URlat, arcDelta
+                                                        , zlow, zhigh, zDelta );
+                      delete p_line_grd;
+                      break;
+              case 1:
+                      if ( verbose ) {
+                         cerr << "Random " << endl;
+                      }
+                      p_line_rnd = new PGenRndLine();
+                      result = p_line_rnd->create_vector( p, n 
+                                                       , LLlon, LLlat
+                                                        , URlon, URlat
+                                                        , zlow, zhigh );
+                      
+                      delete p_line_rnd;
+                      break;
+              }   
+              break;
        }                
       
       
@@ -467,6 +581,7 @@ int main( int argc, char * argv[] )
           out_netcdf = new NetcdfOut();
           out_netcdf->filename( outNetcdfFile );
           out_netcdf->contents("gigatraj trajectories");
+          out_netcdf->vertical( vert );
           out_netcdf->format( outform );
           out_netcdf->init( &p, result->size() );
           out_netcdf->open();

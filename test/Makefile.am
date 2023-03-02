@@ -15,14 +15,16 @@ AM_CPPFLAGS  = $(GIGATRAJ_INCLUDE)
 ##### Very Basic stuff
 
 TESTS = test_RandomSrc test_Configuration.sh \
+        test_Catalog.sh \
         test_FilePath test_FileLock \
         test_CalGregorian \
         test_Earth
 check_PROGRAMS = test_RandomSrc test_Configuration \
+        test_Catalog \
         test_FilePath test_FileLock \
         test_CalGregorian \
         test_Earth 
-EXTRA_DIST = test_Configuration.sh 
+EXTRA_DIST = test_Configuration.sh test_Catalog.sh test_Catalog.cat;
 
 
 ##### Process Group stuff
@@ -183,6 +185,9 @@ test_RandomSrc_DEPENDENCIES = ../lib/libgigatraj.a
 
 test_Configuration_SOURCES = test_Configuration.cc test_utils.cc test_utils.hh
 test_Configuration_DEPENDENCIES = ../lib/libgigatraj.a
+
+test_Catalog_SOURCES = test_Catalog.cc test_utils.cc test_utils.hh
+test_Catalog_DEPENDENCIES = ../lib/libgigatraj.a
 
 test_FilePath_SOURCES = test_FilePath.cc test_utils.cc test_utils.hh
 test_FilePath_DEPENDENCIES = ../lib/libgigatraj.a

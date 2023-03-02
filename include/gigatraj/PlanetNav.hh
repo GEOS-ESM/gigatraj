@@ -160,6 +160,18 @@ class PlanetNav {
       */
       virtual void distance( int n, const real *lon1, const real *lat1, const real *lon2, const real *lat2, real *d) = 0;   
        
+      /// calculates a great-circle bearing between two locations.
+      /*! This function calculates the great-circle bearing between two locations.
+      
+         \return the bearing between the two locations, in degrees clockwise from north
+       
+         \param lon1 longitude of the first point
+         \param lat1 longitude of the first point
+         \param lon2 longitude of the second point
+         \param lat2 longitude of the second point
+      */
+      virtual real bearing( real lon1, real lat1, real lon2, real lat2) = 0;   
+
       /// calculates a position a given distance and bearing from a given position
       /*! This function calculates the longitude and latitude of a position
           a given distance and bearing from a starting position.

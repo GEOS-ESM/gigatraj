@@ -1,0 +1,68 @@
+# This is a comment
+  # comment with leading space
+# comment with trailing space     
+  # comment with leading and trailing space    
+    
+# comment after a line of blanks
+
+# comment after a null line
+
+# define the attributes used in this (fake) dataset
+;attr1; attr2; attr3 ;attr4
+
+# string variable named "varA" with a value "stringA"
+litS01/S = "stringA"
+litS02/S = 'stringB'
+# eval should be 44511.224
+litD01/D = [2021-11-12T05:23:12.345]
+litB01/B = true
+litB02/B = false
+litI01/I = 123
+litI02/I = +2
+litI03/I = -56
+litF01/F = 123.456
+litF02/F = -123.456
+
+refI01/I = ${litI01}
+refI02/I = $5{litI01}
+refF03/F = $8.2{litF02}
+refS04/S = $4.2{litS01}
+refD05/D = $5.2{litD01}
+refI06/I = ${refI01}
+
+expI01/I = 50 + 3
+expI02/I = (50*2 + 3)/3 + 1
+expI03/I = ${litI01} * 2 + ${litI02} - 1
+expF04/F = 45.02 + 34.5*0.25
+expI05/I = 60-3
+expS06/S = "foo" + "bar"
+expD07/D = ${litD01} + 5
+
+varS01/S = true ? "hello"
+varS02/S = ${litI01} < 200 ? "right"
+varS02/S = "wrong"
+varS03/S = ${litI01} > 6200 ? "wrong"
+varS03/S = "right"
+
+# define a target t01
+t01 := 0.5;3;at1valt01; at2valt01; at3valt01; at4valt01; pattern_for_t01
+# define a target t02
+t02 := 0;1;at1valt02; at2valt02; at3valt02; at4valt02; pattern_for_t02
+
+# define a quantity stuff
+stuff1 : t01[glips/flips;0.5;15.0][this is desc01] | t02[glerps/flergs][this is desc02]
+stuff2 : t02 | t01[K]
+
+FREM = ${attr1} == "at1valt03" ? "THIRD"
+FREM = ${attr1} == "at1valt04" ? "FOURTH"
+FREM = "Nothing"
+
+PHASE = ${DATE} > [2021-01-01T00] ? "New"
+PHASE = "Old"
+
+t03 := 0;1;at1valt03; at2valt03; at3valt03; at4valt03; ${QUANTITY}_${YEAR}${MONTH}${DOM}${HOUR}_${PHASE}_${FREM}_${TAG}.data
+t04 := 0;6;at1valt04; at2valt04; at3valt04; at4valt04; ${QUANTITY}_${YEAR}${MONTH}${DOM}${HOUR}_${PHASE}_${FREM}.data
+
+stuff3 : t03 | t04
+
+

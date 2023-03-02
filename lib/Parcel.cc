@@ -132,7 +132,7 @@ void Parcel :: setNav( PlanetNav& newnav )
    nav = &newnav;
 };
 
-PlanetNav* Parcel :: getNav()
+PlanetNav* Parcel :: getNav() const
 {
    return nav;
 };

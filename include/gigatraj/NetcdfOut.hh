@@ -101,6 +101,8 @@ class NetcdfOut : public ParcelReporter {
           \param vert the name of the vertical quantity in the netcdf file. This variable 
                       will be marked in the file with the attribute "vertical_coordinate" set
                       to "yes".
+          \param units the units of the verticla coordinate quantity
+          \param dir +1 if the vertical quantity increases with altitude, -1 if it decreases with altitude
       */
       void vertical( const std::string& vert, const std::string& units="", int dir=0 );
    

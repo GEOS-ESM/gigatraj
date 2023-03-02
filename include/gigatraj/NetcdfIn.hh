@@ -390,6 +390,20 @@ class NetcdfIn : public ParcelInitializer {
     */
     int debug();
     
+    
+    /// finds the vertical coordinate in the input file
+    /*! This method finds the name of the variable in the input file
+        that is marked as the vertical coordinate. This is useful if
+        the input file was prepared for a different meteorological dataset that does
+        not use the same names for quantities.
+        
+        The vertical cooridnate is found by looking at each varibale's attributes.
+        The variable that has the "vertical_coordinate" attribute set to "yes" is
+        the vertical coordinate.
+        
+        \return a string with the name of vertical coordimate variablr
+     */
+     std::string findVertical();   
         
       /// Initialize a single Parcel
       /*! This method initializes a single Parcel object.

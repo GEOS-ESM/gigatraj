@@ -160,6 +160,63 @@ int NetcdfIn::debug()
      return dbug;
 }
 
+std::string NetcdfIn::findVertical()
+{
+    int var_id;
+    int err;
+    int nattrs;
+    std::string result;
+    int attr_id;
+    char c_aname[NC_MAX_NAME + 1];
+    char* c_avalue;
+    std::string aname;
+    std::string avalue;
+    nc_type atype;
+    char c_varname[NC_MAX_NAME + 1];
+    bool done;
+    
+    
+    result = "";
+    done = false;
+    
+    for ( var_id = 0; var_id < nvars; var_id++ ) {
+        err = nc_inq_varnatts( ncid, var_id, &nattrs );
+        if ( err == NC_NOERR ) {
+           for ( attr_id = 0; attr_id < nattrs; attr_id++ ) {
+               err = nc_inq_attname( ncid, var_id, attr_id, c_aname );
+               if ( err == NC_NOERR ) {
+                  aname = std::string(c_aname);
+                  if ( aname == "vertical_coordinate" ) {
+                     err = nc_inq_atttype( ncid, var_id, c_aname, &atype );
+                     if ( err == NC_NOERR && atype == NC_STRING ) {
+                        err = nc_get_att_string( ncid, var_id, c_aname, &c_avalue );
+                        if ( err == NC_NOERR ) {
+                           avalue = std::string(c_avalue);
+                           if ( avalue == "yes" ) {
+                              nc_free_string( 1, &c_avalue );
+                              err = nc_inq_varname( ncid, var_id, c_varname );
+                              if ( err == NC_NOERR ) {
+                                 result = std::string( c_varname );
+                                 done = true;
+                                 break;
+                              }
+                           }
+                        }
+                     }
+                  }
+               } 
+           } // end of inner for
+        }
+        
+        if ( done ) {
+           break;
+        }
+    }
+    
+    return result;
+}   
+
+
 void NetcdfIn::format( std::string fmt )
 {
       int i;
@@ -427,6 +484,7 @@ void NetcdfIn::open( std::string file )
      int unlimdim_idx;
      char c_vname[NC_MAX_NAME + 1];
      double tt0;
+     std::string alt_vertname;
      
      if ( is_open ) {
         close();
@@ -624,7 +682,12 @@ void NetcdfIn::open( std::string file )
         std::cerr << "NetcdfIn::open: Got the id for the 'lat' coordiate." <<  std::endl;
      }
      
-     vid_z   = get_var_id( vcoord, true, "vertical_coordinate", &vtyp_z );
+     try {
+        vid_z   = get_var_id( vcoord, true, "vertical_coordinate", &vtyp_z );
+     } catch (badFileConventions) {
+        alt_vertname = findVertical();
+        vid_z   = get_var_id( alt_vertname, true, "vertical_coordinate", &vtyp_z );
+     }  
      if ( dbug > 1 ) {
         std::cerr << "NetcdfIn::open: Got the id for the vertical coordiate: " << vcoord <<  std::endl;
      }
@@ -743,6 +806,7 @@ int NetcdfIn::get_var_id( const std::string &varname, bool required, const std::
      char *c_att_val;
      std::string att_val;
      int var_dims[NC_MAX_VAR_DIMS];
+     std::string alt_vertname;
      
      result = -1;
 
@@ -754,7 +818,7 @@ int NetcdfIn::get_var_id( const std::string &varname, bool required, const std::
             result = var_id;
          } else if ( err == NC_ENOTVAR ) {
             if ( required ) {
-               std::cerr << varname << " is required by not present in this file " << std::endl;
+               std::cerr << varname << " is required but not present in this file " << std::endl;
                throw(badFileConventions());
             }
          } else {

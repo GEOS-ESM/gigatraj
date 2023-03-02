@@ -372,6 +372,61 @@ void PlanetSphereNav :: distance( int n, const real *lon1, const real *lat1, con
 
 
 }   
+
+real PlanetSphereNav :: bearing( real lon1, real lat1, real lon2, real lat2)
+{
+    real angles;
+    real slat1,clat1, slat2,clat2, slons,clons;
+    real result;
+    
+    angles = lat1*RCONV;
+    slat1 = SIN(angles);
+    clat1 = COS(angles);
+    angles = lat2*RCONV;
+    slat2 = SIN(angles);
+    clat2 = COS(angles);
+    angles = (lon2 - lon1)*RCONV;
+    slons = SIN(angles);
+    clons = COS(angles);
+
+    result = 0.0;
+
+    // Is at least one point at one of the poles?
+    if ( ABS(clat2) > 1e-15 ) {
+       // not at a pole
+       
+       // is this a line between two antipoles?
+       if ( clons < -1.0 || lat1 != -lat2 ) {
+          // no antipoles
+       
+          // this is the most common case
+          result = ATAN2( slons, (clat1*slat2/clat2 - slat1*clons ) );
+       
+       } else {
+          // antipode case
+          
+          // Any bearing will take you to the antipod point
+          // along a great-circle path
+          // We'll choose this one.
+          result = PI/2.0;
+       }
+       
+    } else {
+       // at a pole
+       // which one?
+       if ( slat2 > 0 ) {
+          // north pole
+          result = PI;
+       } else {
+          // south pole
+          result = - PI;
+       }   
+       
+    }
+
+    return result/RCONV;
+
+}
   
 void PlanetSphereNav :: displace( const real clon, const real clat, const real d, const real bearing, real &lon, real &lat )
 {

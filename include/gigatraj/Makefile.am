@@ -27,6 +27,7 @@ pkginclude_HEADERS = gigatraj.hh \
                       BilinearHinterp.hh \
                    Integrator.hh \
                     IntegRK4a.hh \
+                   Catalog.hh \
                    MetData.hh \
                     MetSBRot.hh \
                     MetOnTheFly.hh \
@@ -84,6 +85,8 @@ pkginclude_HEADERS += \
                     PGenRndDisc.hh \
                     PGenDisc.hh \
                     PGenGrid.hh \
+                    PGenLine.hh \
+                    PGenRndLine.hh \
                     PGenFile.hh \
                    ParcelFilter.hh \
                     ParcelInitializer.hh \
