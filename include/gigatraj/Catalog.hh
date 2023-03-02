@@ -10,8 +10,17 @@
 
 namespace gigatraj {
 
-/*!
-   \brief implements a catalog of files of meteorological data to be opened
+/*!  \defgroup MetMisc Meteorological Miscellaneous
+     \ingroup MetDat
+
+\brief Miscellaneous classes for use with Meteorological Data Sources
+
+
+*/
+
+/*! 
+\ingroup MetMisc
+   \brief Catalog implements a catalog of files of meteorological data to be opened
    
    \details
    
@@ -57,11 +66,11 @@ Targets work by interpolating string values into the filename template, using va
 For example, if the Target named "targ01" has the template "${QUANTITY}_$YEAR}${MONTH}${DOM}${HOUR}_${TABLE}.dat",
 it will substitute values for QUANTITY, YEAR, MONTH, DOM (day-of-month), HOUr, and TABLE in the template,
 returning a value such as "T_2021071518_MET.dat". In addition, each Target contains information
-about the time spacing of the data a file contains, as well as a set of named attributes
+about the time spacing of the data a filCe contains, as well as a set of named attributes
 that can be used for descriptions of such things as the file's horizontal resolution, vertical coordinate,
 time averaging, and so on.
 
-Where do the values of these variable references come from? Some of them are defined
+Where do the values of these varDensOTF.cciable references come from? Some of them are defined
 automatically:
 
   * QUANTITY = the name of the quantity being requested
@@ -386,7 +395,7 @@ class Catalog {
    
       // (We use these classes in the Catalog, and in each other, but they should not be accessed by anything outside Catalog.)   
    
-      /// This class hold the value of a variable
+      /// This class holds the value of a variable
       /*! The VarVal class holds a value that can be assigned to a variable. All values associated with literals or 
           expressions are held in VarVal objects.
       
@@ -548,7 +557,7 @@ class Catalog {
                 return ( flags & IsLiteral );
            }    
 
-           /// determines whether the VarVal really hold a literal value
+           /// determines whether the VarVal really holds a literal value
            /*! This method examines a string to determine whether it holds a literal value 
                that is compatible with the VarVal's type.
                
@@ -626,27 +635,27 @@ class Catalog {
       /*!  The VarOp class implements operators that identify operations that are to be performed on VarVal operands.
       
            The VarOp merely identifies what is to be done; it performs no operations itself.
-           
+
            Possible operators are:
-           
-           | VarOperator |  operator | binary/unary | base priority |
-           |:-----------:|:---------:|:------------:|:-------------:|
-           |   TestOR    |  <code>||</code>     |     b        |     10        |
-           |   TestAND   |  <code>&&</code>     |     b        |     10        |
-           |   TestEQ    |  <code>==</code>     |     b        |     20        |
-           |   TestNE    |  <code>!=</code>     |     b        |     20        |
-           |   TestGT    |  <code>></code>      |     b        |     20        |
-           |   TestGE    |  <code>>=</code>     |     b        |     20        |
-           |   TestLT    |  <code><</code>      |     b        |     20        |
-           |   TestLE    |  <code><=</code>     |     b        |     20        |
-           |   TestNOT   |  <code>!</code>      |     u        |     30        |
-           |   Add       |  <code>+</code>      |     b        |     50        |
-           |   Subtract  |  <code>-</code>      |     b        |     50        |
-           |   Multiply  |  <code>|</code>      |     b        |     60        |
-           |   Divide    |  <code>/</code>      |     b        |     60        |
-           |   Remainder |  <code>%</code>      |     b        |     60        |
-           |   Negate    |  -<code></code>      |     u        |     80        |
-          
+            
+
+           VarOperator |             operator | binary/unary | base priority  | allowed operands
+           :------------: | :--------------------: | :------------: | :--------------: | :-----------:
+           TestOR    |  <code>\|\|</code>    |     b        |     10       |  boolean
+           TestAND   |  <code>&&</code>     |     b        |     10        | boolean
+           TestEQ    |  <code>==</code>     |     b        |     20        | boolean, int, float, date, string
+           TestNE    |  <code>!=</code>     |     b        |     20        | boolean, int, float, date, string
+           TestGT    |  <code>></code>      |     b        |     20        | int, float, date
+           TestGE    |  <code>>=</code>     |     b        |     20        | int, float, date
+           TestLT    |  <code><</code>      |     b        |     20        | int, float, date
+           TestLE    |  <code><=</code>     |     b        |     20        | int, float, date
+           TestNOT   |  <code>!</code>      |     u        |     30        | boolean
+           Add       |  <code>+</code>      |     b        |     50        | int, float, date, string
+           Subtract  |  <code>-</code>      |     b        |     50        | int, float, date
+           Multiply  |  <code>*</code>      |     b        |     60        | int, float
+           Divide    |  <code>/</code>      |     b        |     60        | int, float
+           Remainder |  <code>%</code>      |     b        |     60        | int, float
+           Negate    |  <code>-</code>      |     u        |     80        | int, float
       
       */
       class VarOp {
@@ -964,7 +973,7 @@ class Catalog {
       };
       
       
-      /// this class hold a collection of variables
+      /// this class holds a collection of variables
       /*! The VarSet class manages a collection of Variables. 
       
       */
@@ -1047,7 +1056,7 @@ class Catalog {
       };
 
 
-      /// Catalog Target
+      /// \brief entity for determining filenames and URLs
       /*! A Target describes an entity that can be opened for reading data. Instead of a string that contains
          an actual filename or URL, though, the Target contains a template from which such a filename or URL
          can be constructed, based on the data being requested.  A request for data will cause the Target to 
@@ -1064,6 +1073,7 @@ class Catalog {
          
       */
       class Target {
+
           public:
              
              /// the name of the target

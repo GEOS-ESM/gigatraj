@@ -9,6 +9,10 @@ when building your own software using the gigatraj library.
 
 \subpage gt_fill_met_cache
 
+\subpage gt_generate_parcels
+
 \subpage gtmodel_s01
+
+\subpage gtmodel_s02
 
 */
