@@ -376,7 +376,7 @@ namespace gigatraj {
 #endif
 
 //     make longitudes run from 0 to 360
-#define DO_WRAP0 0
+#define DO_WRAP0 1
 #if DO_WRAP0 == 1
 #define WRAP_0
 #endif

@@ -2,7 +2,8 @@ esma_set_this(OVERRIDE gigatraj)
 
 set (BASEDIR $ENV{BASEDIR})
 
-add_definitions (-DWRAP_0)
+#add_definitions (-DWRAP_0) # defined in gigatraj.hh
+
 set (srcs
 CalGregorian.cc   Integrator.cc       PGenFile.cc     PlanetSphereNav.cc
 Configuration.cc  IntegRK4a.cc        PGenGrid.cc     ProcessGrp.cc
