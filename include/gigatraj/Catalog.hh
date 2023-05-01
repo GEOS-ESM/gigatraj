@@ -138,8 +138,10 @@ the symantics of these attributes; Catalog merely
 handles the syntax.
 
 For each physical quantity that gigatraj should be able to read,  there must be a line
-of the form "quantity : target1 | target2 | target3 | ..."; this lines tells the Catalog which
-Targets can supply the desired quantity. Each Target in the "|"-separated list may be prceeded
+of the form "quantity : standard_name : target1 | target2 | target3 | ..."; this lines tells the Catalog which
+Targets can supply the desired quantity. (The standard_name is a standardized name for people who are unfamiliar with
+the data set's own naming convention; UCAR's "CF" naming convention is a good one to use here.)
+Each Target in the "|"-separated list may be prceeded
 by one or two clauses enclosed in pairs of brackets ("[" and "]"). The first (or onlyu) such
 clause specifies information about units. Ideally, this information is read from the file,
 but that is not always possible. The units information consists of a string giving the units
@@ -223,15 +225,17 @@ for a configuration line is given by:
        
        <otherChar> = "~" | "!" | "@" | "#" | "%" | "^" | "&" | "*" | "(" 
                     | ")" | "_" | "+" | "`" | "|" | "\" 
-                    | ":" | "<" | ">" | "?" | "," | "." | "/" ;
-       
+                    | "<" | ">" | "?" | "," | "." | "/" ;
+
        <whitespaceChar> = " " | "\t";
         
-       <symbolChar> =  <otherchar> | "$" | "{" | "}" | "[" | "]" | ";" ;
+       <symbolChar> =  <otherchar> | ":" | "$" | "{" | "}" | "[" | "]" | ";" ;
        
-       <noSemicolonChar> = <letter> | <digit> | <otherChar> | "$" | "{" | "}" | "[" | "]"  ;
+       <noSemicolonChar> = <letter> | <digit> | <otherChar> | ":" | "$" | "{" | "}" | "[" | "]"  ;
 
-       <noBracketsChar> = <letter> | <digit> | <otherChar> | "$" | "{" | "}"  ;
+       <noColonChar> = <letter> | <digit> | <otherChar> | ";" | "$" | "{" | "}" | "[" | "]"  ;
+
+       <noBracketsChar> = <letter> | <digit> | <otherChar> | ":" | "$" | "{" | "}"  ;
 
        <noquoteChar>  = <letter> | <digit> | <whitespaceChar> | <symbolChar>;
         
@@ -267,9 +271,15 @@ for a configuration line is given by:
        <identifier> = <letter> | ( <letter>, {<idChar>} );
 
        
-       <quantityDef> = <quantityID>, [ <whitespace> ], ":", [ <whitespace> ], <targetList>;
+       <quantityDef> = <quantityID>, [ <whitespace> ], ":", [ <whitespace> ], <stdname>, [<whitespace> ], [ <whitespace> ], <dims>, [<whitespace> ]  , ':', [ <whitespace> ], <targetList>;
        
        <quantityID> = <identifier>;
+       
+       <stdname> = <noColonChar>, { <noColonChar> };
+       
+       <dims> = <positiveInteger>
+       
+       <positiveInteger> = <digit>, {<digit>} 
               
        <targetList> = <targetElement>, { [ <whitespace> ], ";", [ <whitespace> ],  <targetElement> };
        
@@ -297,14 +307,17 @@ for a configuration line is given by:
 
 
        <targetDef> = <targetID>, [ <whitespace> ], ":=", [ <whitespace> ]
-                     , <basetime>, [ <whitespace> ], ";", [ <whitespace> ], <inctime>, [ <whitespace> ]
+                     , <basedate>, [ <whitespace> ], ";", [ <whitespace> ], <inctime>, [ <whitespace> ]
+                     , ";", [ <whitespace> ], <numtimes>, [ <whitespace> ]
                      , <attributeValueList>, [ <whitespace> ]
                      , ";", [ <whitespace> ], <template>, [ <whitespace> ];
         
        
-       <basetime> = <float>;
+       <basedate> = <datespec>;
        
        <inctime> = <float>;
+       
+       <numtimes> = <integer>;
        
        <attributeValueList> = <attributeValue>, { [ <whitespace> ], ";", <attributeValue>, [ <whitespace> ] };
         
@@ -334,31 +347,37 @@ for a configuration line is given by:
         <valueExpression> = <expression>;
 
         <expression> = <literal>, [ <whitespace> ]
+                      | <quasiLiteral>, [ <whitespace> ]
                       | <variableRef>, [ <whitespace> ]
                       | ( <unaryOperator>, [ <whitespace> ], <expression>, [ <whitespace> ] )
                       | ( <expression>, [ <whitespace> ], <binaryOperator>, [ <whitespace> ], <expression>, [ <whitespace> ] )
                       | ( "(", [ <whitespace> ], <expression>, [ <whitespace> ], ")", [ <whitespace> ] );
 
-        <literal> = <stringLiteral>
+        <literal> = <stringLiteral>                  
                   | <booleanLiteral>
                   | <integerLiteral>
                   | <floatLiteral>
                   | <dateLiteral>;
         
+        <quasiLiteral> = <stringWithRefs> | <dateWithRefs>;
+        
         <stringLiteral> = ( '"', { <noQuoteChar> ], '"" )
                         | ( "'", { <noQuoteChar> ], "'" );
         
-
         <booleanLiteral> = "true" | "false";
        
         <integerLiteral> = <integer>;
         
-        <integer> = [ <sign> ], <digit>, { <digit> };
+        <integer> = [ <sign> ], <positiveInteger>;
         
         <floatLiteral> = <float>;
   
+        <dateSpec> = <dateListeral> | <dateWithRefs>
+  
         <dateLiteral> = "[", <year>, "-", <month>, "-", <dayOfMonth>,
                           [ "T", <hour> [ ":", <minute>, [ ":", <second> ] ] ]
+        
+        <dateWithRefs> = "[", { ( <variableRef> | <digit> | "-" )},   "]"
         
         <year> = <digit>, <digit>, <digit>, <digit>;
         
@@ -373,6 +392,9 @@ for a configuration line is given by:
         <second> = <digit>, <digit> [ ".", { <digit> } ];
   
         <variableRef> = "$", [ <format1> [ ".", <format2> ] ], "{", variableID, "}" ;
+        
+        <stringWithRefs> = ( '"', { <noQuoteChar> | <variableRef> ], '"" )
+                         | ( "'", { <noQuoteChar> | <variableRef> ], "'" );
         
         <format1> = <integer>;
         
@@ -979,6 +1001,18 @@ class Catalog {
       */
       class VarSet {
           public:
+          
+             /// true if local variables have been added to this varset; false otherwise
+             bool has_locals;
+             /// quantity used to set up local variables
+             std::string quant;
+             /// valid-at time used to set up local variables
+             double time;
+             /// modle run used to set up local variables
+             std::string tag;
+           
+             /// constructor 
+             VarSet();
            
              /// \brief defines a new variable
              /*! This method adds a new Variable to the VarSet.
@@ -1091,11 +1125,19 @@ class Catalog {
              
              /// the base time (in hours). This is the hour of the day of the first time snapshot contained in the file.
              double basetime;
+             /*! the date of the first time in the snapshot in the file. 
+                (the VarVal nominal is set to the date string (format of a date literal, but may contain 
+                embedded variable refs)
+             */
+             VarVal dbase;
              
              /// the time increment (in hours). This is the time sepration between successfile time snapshots in the file
              double inctime;
              
-             /// retieve an attribute of this Target
+             /// the number of time snapshots in a single URL (value <=0 are valid and mean indeterminant)
+             int nt;
+             
+             /// retrieve an attribute of this Target
              /*! This method returns an attribute value of the Target.
              
                   \param attr the name of the attribute to be retirved
@@ -1242,6 +1284,13 @@ class Catalog {
              
              /// the name of the quantity
              std::string name;
+             
+             /// a standardized name fo rthe quantity
+             std::string stdname;
+             
+             /// the number of spatial dimensions a single time snapshot of the data has
+             int dims;
+             
              /// the set of TargetRefs that describe the locations of that quantity
              std::vector<TargetRef> tlist;
              
@@ -1249,8 +1298,9 @@ class Catalog {
              /*! This is the constructor for the Quantity class.
                   
                   \param nayme the name of the quantity
+                  \param stdnayme a standardized name for  the quantity (e.g., acccording to CF naming conventions)
              */
-             Quantity( const std::string& nayme );
+             Quantity( const std::string& nayme, const std::string& stdnayme="" );
              
              /// clears all TargetRef specifications
              /*! This method clears out the list of TargetRef objects.
@@ -1305,7 +1355,7 @@ class Catalog {
                  \return a pointer to the Quantity requested. This Quantity must not be deleted by the calling routine. 
              */
              Quantity* getQuantity( const std::string& name );
-
+             
              /// destroys all Quantities
              /*! this method deletes all of the Quantities from the QuantitySet
              */
@@ -1326,6 +1376,10 @@ class Catalog {
                         This allows the QuantitySet dump to be nested within of other objects' dumps.
              */
              void dump( int indent=0 ) const;
+             
+             
+             /// maps between data set quantity names and standard quantity names
+             std::map< std::string, std::string > stdnames;
 
           private:
              
@@ -1337,6 +1391,8 @@ class Catalog {
 
       // (These are accessible by various classes defined within the Catalog class:)
 
+      /// returns true is the input character is whitespace
+      static bool isWhitespace( char cc );
 
       /// returns true if the input character is a letter
       /*! This method tests whether a given character is a letter.
@@ -1684,6 +1740,10 @@ class Catalog {
           
               /// the name of the quantity
               std::string name;
+              /// the validAt time for which the data set was queried
+              std::string time;
+              /// the number of spatial dimensions of a single time snapshot of data
+              int dims;
               /// the name of the target that produced this destination
               std::string target;
               /// the units of the data
@@ -1694,15 +1754,45 @@ class Catalog {
               float offset;
               /// a brief description of the data
               std::string description;
+              /*! the type of thing that the pre and post members are:
+                 
+                   * -1: unknown
+                   * 0: filename (starts with "/" or "file://")
+                   * 1: URL (starts with "http://" or "https://")
+                   * 2: OTF: e.g., "OTF://quant1,quant2", to indicate quantities needed to do on-the-fly calculations
+              */
+              int type;
+              /// the time delta in the pre/post URL, in days
+              double tDelta;
+              /// the number of time snapshots in the pre/post URL
+              int tN;
+              /// the time just preceeding or at the valid-at time
+              std::string t0;
+              /// the first time snapshot in the pre URL
+              std::string preStart;
               /// a filename or URL for the source of the data just preceeding or at the valid-at time
               std::string pre;
-              /// a fulename or URL for the source of the data at or just following the valid-at time
+              /// the time just following the valid-at time
+              std::string t1;
+              /// the first time snapshot in the post URL
+              std::string postStart;
+              /// a filename or URL for the source of the data at or just following the valid-at time
               std::string post;
               
               /// the class constructor
-              /*! This is the contructor for the DataSource class.
+              /*! This is the constructor for the DataSource class.
               */
               DataSource();
+
+             /// diagnostic dump of the DataSource
+             /*! This method writes the contents of the DataSource to std::cerr
+                 in a human-readable text format. 
+                 
+                 \param indent the number of spaces to indent each line of output.
+                        This allows the DataSource dump to be nested within of other objects' dumps.
+                        
+             */
+             void dump( int indent ) const;
               
       };
 
@@ -1814,6 +1904,62 @@ class Catalog {
       */
       std::string confLocator();
    
+   
+      /// \brief sets a desired time increment and offset
+      /*! This method sets a desired time increment and offset for data snapshots.
+      
+          Each data sets has its own native succession of snapshots, with its own
+          starting time offset within a file and its own time increment between
+          successive snapshots in the file.  Generally, a user should use
+          the data set's native time characteristics. For some purposes, however, it may
+          be desirable to use a subset of those snapshots. for exampe, if data grids
+          are given at every hour, starting at 00Z, the user might want to use
+          data at every six hours.
+          
+          This method permits specifying such alternate incrments, as well as a time offset.
+          (Tho offset can be used, for example, to select data every 24 hours, starting at 12Z.)
+          
+          Note that the increment specified here must be an integral multiple of the native data 
+          set's time increment. Similarly, the time offset, if specified, must be set such that
+          the difference between it and the native offset must be an integral multiple of the native time increment.
+          
+          \param tinc the desried time incrment, in hours
+          \param toff (optional) the desired time offset, in hours
+          
+      */
+      void timeSpacing( double tinc, double toff=0.0 );
+      
+      /// \brief returns the special time spacing settings
+      /*! This method returns the desired time increment and offset.
+      
+           \param toff (optional) a pointer to a double in which the time offset, in hours, will be returned
+           \return the desired time increment between successive data snapshots, in hours
+      */
+      double timeSpacing( double* toff=NULLPTR );      
+   
+      /// \brief sets a desired attribute by which data sources are to be selected
+      /*! This method specifies a value that a Target attribute should match
+          as data soruces are evaluated.
+          
+          \param attr the name of the attribute to be specified
+          \param value the value for thet attribute
+          \param priority a priority assigned to this attribute. The higher the priority the greater the preference
+                          given to this value of this attribute, and a priority of 9999 makes the value mandatory. 
+                          Negative priorities make aq vlaue ldess desirable, and a priority of -9999 makes
+                          the value forbidden.
+      */
+      void desired( const std::string& attr, const std::string& value, int priority=1 );    
+   
+      /// \brief returns a specification for a desired attribute
+      /*! If a desired value has been set for a given Target attribute, then this 
+          method returns it
+      
+          \param attr the name of the attribute whose desired value is to be returned
+          \param strict a pointer to a boolean that indicates whether this attribute value will be strictly enforced
+          \return the value of the attribute
+      */ 
+      std::string desired( std::string& attr, int* strict=NULLPTR ) const;
+   
       /// finds the Catalog's configuration file, using the confLocator
       /*! This method uses the Catalog's confLocator setting to find the
           object's configuration file.
@@ -1850,7 +1996,7 @@ class Catalog {
          
          \param filename the name of the file that contains the Catalog's configuration information
       */
-      void load( const std::string& filename );
+      void load( const std::string& filename="" );
       
 
       /// \brief adds a configuration line
@@ -1861,10 +2007,16 @@ class Catalog {
       */
       void addRule( std::string& cfg );    
 
+      /// \brief resets the catalog to its empty, unconfigured state
+      /*! This method resets the Catalog, clearing out all Quantity definitions,
+          Target definitions, Variable definitions, and attribute names.
+      */
+      void clear();
+
 
 
       ///  \brief retrieve filenames, given a quantity and timestamp
-      /*! This method provides the queryingmechanism of the Catalog class.
+      /*! This method provides the querying mechanism of the Catalog class.
           Given the name of a physical quantity and a date+time at which the
           data are desired, fetchTarget() will consult its configuration and 
           return a set of DataSource objects, each describing a candidate
@@ -1879,8 +2031,21 @@ class Catalog {
           \param dests a vector of output DataSource objects, each of which describes a possible source of the data
           \param tag an arbitrary string, intended to signify a forecast model run, which optoinally may be used in creating the DataSources
           
+          \return true if the source, validAt, and tag resolved to a valid data source, false otherwise
       */
-      void query( const std::string& quantity, const std::string& validAt, std::vector<DataSource>& dests, const std::string& tag="" ); 
+      bool query( const std::string& quantity, const std::string& validAt, std::vector<DataSource>& dests, const std::string& tag="" ); 
+
+      /// finds a quantity name, given a standard name
+      /*! This method looks up the name of a quantity in a data set that
+          corresponds to a stamdard name. for example, if CF naming conventions
+          are the standard being used, then a query for "air_temperature"
+          might return a quantity name such as "T".
+          
+          \param stdname the standard name of the desired quantity, 
+          \return the data set's name for the standard-named quantity
+      */
+      std::string stdLookup( std::string& stdname );
+             
 
       /// returns a Target attribute name, given its index
       /*! This method returns the name of an attribute, given
@@ -1889,7 +2054,7 @@ class Catalog {
           \param index the number of the Target atttribute
           \return the name of the attribute
       */
-      std::string attrName( int index ) const;     
+      std::string attrName( int index );     
 
       /// returns the index of Target attribute name
       /*! This method returns the index of an attribute, given
@@ -1898,7 +2063,7 @@ class Catalog {
           \param name the name of the Target atttribute
           \return the index of the attribute, -1 if not found
       */
-      int attrIndex( const std::string& name ) const;
+      int attrIndex( const std::string& name );
       
       /// returns the value of a given attribute of a given Target
       /*! This method returns the value of an attribute of a given Target
@@ -1930,6 +2095,18 @@ class Catalog {
       */
       std::string getAttr( const DataSource& dest, const std::string& attr );
 
+      /// \brief obtains the time increment and base time (offsit) for a DataSource
+      /*! This method obtains the base time of a Datasource and the time increment
+          between successive time snapshots within the file.
+          
+          \param dest the Data source to be queried
+          \param tinc (output) a pointer to a float that will receive the time increment
+          \param toff (output) a reference to a string that will receive the base time
+          \param n (output) a pointer to an integer with the number of time snapshots in the file. <=0 if indeterminant.
+      */    
+      void get_timeSpacing( const DataSource& dest, double* tinc,std::string& toff, int* n ); 
+
+
       /// \brief looks up the named variable and returns its value
       /*!  Given the name of a variable, this method evaluates its value
            and returns that value converted to a string.
@@ -1949,6 +2126,22 @@ class Catalog {
       bool variableValue( const std::string& name, std::string& output );
 
 
+      /// converts a date string to a catalog numeric time
+      /*! This method concerts a date string to the numeric time (in days since 1899-12-31T00:00:00) used by Catalog.
+      
+           \param time the date string, in "yyyy-mm-ddThh:mm:ss" format
+           \return the nuneric time
+      */
+      double date2number( const std::string& time );
+
+      /// diagnostic dump of the Catalog
+      /*! This method writes the contents of the Catalog to std::cerr
+          in a human-readable text format.
+          
+          \param indent the number of spaces to indent each line of output.
+                 This allows the VarVal dump to be nested within of other objects' dumps.
+      */
+      void dump( int indent = 0) const;
 
 
           
@@ -1974,11 +2167,25 @@ class Catalog {
    
       /// the set of quantities
       QuantitySet quantityset;
+      
+      /// The number of rules that have been loaded
+      int nrules;
 
       // flags indicating whether a given variable is being referenced during some variable's evaluation
       // (used to detect circular variable definitions)
       std::map< std::string, bool > ref;
              
+   
+      /// The desired time increment, in hours, between successive snapshots to be used. Default is 0 (uses the native time inc)
+      double des_tinc;
+      /// the desired time offset, in hours, from 0 of the first time snapshot in a data source. default is 0.
+      double des_toff;
+      
+      /// a set of desired attributes, which if set will prioritize one matching ddata source over another
+      std::map<std::string, std::string> des_attrs;
+      /// a ste of strictness flags, indicating whether the desired attributes *must* match the Targets'
+      std::map<std::string, int> des_priorities;
+      
    
       /// \brief tests to see whether a file exists
       /*! This method tests whether a file exists.
@@ -1997,12 +2204,6 @@ class Catalog {
       */     
       std::string getEnv( const std::string& varname ) const;
 
-      /// \brief resets the catalog to its empty, unconfigured state
-      /*! This method resets the Catalog, clearing out all Quantity definitions,
-          Target definitions, Variable definitions, and attribute names.
-      */
-      void reset();
-
       /// \brief strips off leading and trailing whitespace from a string
       /*! This method removes leading and trailing whitespace from a string.
       
@@ -2013,7 +2214,7 @@ class Catalog {
       
       ///  \brief skip whitespace
       /*! This method advances through a character array
-          until it encoutners non-whitewhape or the end of the string.
+          until it encounters non-whitewhape or the end of the string.
           
           \param str the character array being scanned.
           \param idx the index into the character array. On return, this
@@ -2459,6 +2660,17 @@ class Catalog {
                      
       */
       bool eval( VarVal* val );
+      
+      /// interpolates variable references into a string
+      /*! This methoid take sa string which can incorporate variable references,
+          and it resolves those references and substitutes them into the string.
+          
+          \param refstr the input string, which may contain variables references that start witth "$" and end with "}".
+          \return a copy of the input string, with all variable references resolved.
+      
+      */
+      std::string interpVarRefs( const std::string refstr );
+
 
      /// \brief looks up a variable reference
      /*! This method looks up a variablke reference
@@ -2476,6 +2688,37 @@ class Catalog {
      */     
      bool reconcileVals( VarVal* v1, VarVal* v2 ); 
              
+     /// \brief finds two times that bracket a given time
+     /*! This method finds two dsta snapshot times that bracket a given time
+     
+         \param tyme the time at which data are desired, in days elapsed since 1899-12-31T00 UTC
+         \param pret_t a reference to the output time snapshot that preceeeds the desired time
+         \param post_t a reference to the output time snapshot that follows the desired time
+     */
+     void bracket( double tyme, double& pre_t, double& post_t );
+
+     /// \brief filters candidate data sources according how how well the desired attributes match the actual
+     /*! This method inspects a vector of Datasource object, re-ordering them or deleting them
+         according to how well their Target's attributes match a set of attributes specified
+         by the desired() method calls.
+         
+         \param ds the vector of DataSource objects. This may be modified as this method runs.
+          
+     */
+     void filter_DataSource( std::vector<Catalog::DataSource>& da );
+
+      /// \brief obtains the time increment, starting time, and number of times for a Target
+      /*! Given a Target, this method returns the time spacing info for the target
+          
+          Note that setup_vars() must already have been called, with a quantity and a valid-at time,
+          so that the necessary local variables have been defined. 
+          
+          \param targ the Target to be queried
+          \param tinc (output) a pointer to a float that will receive the time increment
+          \param toff (output) a reference to a string that will receive the starting time
+          \param n (output) a pointer to an integer with the number of time snapshots in the file. <=0 if indeterminant.
+      */    
+      void get_targetTimeInfo( Target& targ, double* tinc,std::string& toff, int* n ); 
 
 
 };

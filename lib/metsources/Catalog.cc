@@ -370,7 +370,7 @@ void Catalog::VarVal::n2e()
            if ( s2Date( nominal, evalD )) {
               flags = flags | ValidEval;           
            } else {
-               flags = flags & ( ~ValidEval );
+              flags = flags & ( ~ValidEval );
            }
            break;
      case 'S':
@@ -393,8 +393,13 @@ void Catalog::VarVal::n2e()
                  int fmt1;
                  int fmt2;
                  std::string xref;
-                 extractVarRef( nominal.c_str(), ix, xref, name, &fmt1, &fmt2 ); 
-                 if ( name != "" &&  nominal[nlen - 1] == '}' ) {
+                 extractVarRef( nominal.c_str(), ix, xref, name, &fmt1, &fmt2 );
+                 // if the nominal string is just a simple var ref ,
+                 // the then the nominal strin must consist of
+                 // just the variable name plus "$", "{", and "}".
+                 if ( name != "" &&  ( nominal.size() == (name.size() + 3) ) )  {
+                    // ok. simple var ref.
+                    // stick the name in the Eval field
                     evalS = name;
                     flags = flags | ValidEval;
                  }
@@ -843,6 +848,13 @@ void Catalog::Variable::dump( int indent) const
 
 //////////////////////////////////////////////////////////////////////////////////
 
+Catalog::VarSet::VarSet()
+{
+    has_locals = false;
+    quant = "";
+    time = 0.0;
+    tag = "";
+}
 
 void Catalog::VarSet::define( const std::string& name, const char type )
 {
@@ -915,6 +927,7 @@ void Catalog::VarSet::clear()
 {
 
      vars.clear();
+     has_locals = false;
 } 
 
 
@@ -972,7 +985,9 @@ void Catalog::Target::dump( int indent ) const
    }
 
    std::cerr << spaces << "++++++++ Target '" << name << "':" << std::endl;
-   std::cerr << spaces << "     " << "base time = " << basetime << ", delta time = " << inctime << std::endl;
+   std::cerr << spaces << "     " << "base date = " << dbase.nominal 
+             << ", base time = " << basetime 
+             << ", delta time = " << inctime << std::endl;
    std::cerr << spaces << "     " << attrs.size() << " attributes" << std::endl;
    for ( item = attrs.cbegin(); item != attrs.cend(); item++ ) {
        std::cerr << spaces << "        " << item->first << ": " << item->second << std::endl;
@@ -1093,9 +1108,11 @@ void Catalog::TargetRef::dump( int indent ) const
 //////////////////////////////////////////////////////////////////////////////////
 
 
-Catalog::Quantity::Quantity( const std::string& nayme )
+Catalog::Quantity::Quantity( const std::string& nayme, const std::string& stdnayme )
 {
      name = nayme;
+     stdname = stdnayme;
+     
 }
 
 void Catalog::Quantity::clear()
@@ -1206,6 +1223,19 @@ void Catalog::QuantitySet::dump( int indent ) const
 
 
 //////////////////////////////////////////////////////////////////////////////////
+
+bool Catalog::isWhitespace( char cc )
+{
+   bool result;
+   
+   result = (cc == ' ')
+         || (cc == '\t' )
+         || (cc == '\r' )
+         || (cc == '\n' )
+         ; 
+
+   return result;
+}
 
 
 bool Catalog::isLetter( char cc )
@@ -2146,8 +2176,6 @@ bool Catalog::s2Date( const std::string& str, double& result )
         day = dmax;
      }
      
-     status = ok;
-
      // calculate the days elapsed since 1900-01-01.
      result = static_cast<double>( yr*365+ (yr-1)/4+leapadj + daynums[month-1] + day );
      
@@ -2159,6 +2187,9 @@ bool Catalog::s2Date( const std::string& str, double& result )
                        )/24.0;
      
     }
+    
+    status = ok;
+
     
     return status;
 }
@@ -2177,9 +2208,40 @@ void Catalog::d2parts( double val, int& year, int& month, int& dayofmonth, int& 
     // the time of the day
     double time;
     int y,d,m;
+    int iday, nyr;
 
-    day = val;
+    day = floor(val);
      
+    // now do the time
+    time = (val - day) * 24.0 ;
+    hours = static_cast<int>( time );
+    minutes =  static_cast<int>(( time - static_cast<double>(hours) )*60.0 );
+    seconds = ( time - static_cast<double>(hours) )*3600.0 - minutes*60.0;
+    
+    // round up if we have to
+    if ( seconds >= 59.99999999 ) {
+       seconds = seconds - 60.0;
+       if ( seconds < 0 ) {
+          seconds = 0.0;
+       }
+       minutes = minutes + 1.0;
+    }
+    if ( minutes >= 59.5 ) {
+       minutes = minutes - 60.0;
+       if ( minutes < 0.0 ) {
+          minutes = 0.0;
+       }
+       hours = hours + 1.0;
+    }
+    if ( hours >= 23.5 ) {
+       hours = hours - 24.0;
+       if ( hours < 0 ) {
+          hours = 0;
+       }
+       day = day +  + 1;
+    }
+
+
     day2 = day + 693900.0;
     y = floor( (day2 + 1.478)/365.2425 );
     if ( day2 < (365*y+y/4-y/100+y/400) ) {
@@ -2193,18 +2255,18 @@ void Catalog::d2parts( double val, int& year, int& month, int& dayofmonth, int& 
     isLeap =(   ((year % 4) == 0) 
              && ( ((year % 100) != 0) || (( year % 400) == 0 ) )
             ); 
-     
+    
+    iday = static_cast<int>( day );
+    nyr = (iday*100)/36525;
+    
+    dayofyear = iday - nyr*365 - (nyr - 1)/4;
+/*      
     d0 = (y - 1900)*365 + (y - 1900 -1)/4;
     if ( isLeap ) {
        d0 = d0 + 1.0;
     }
     dayofyear = d - d0;
-       
-    // now do the time
-    time = (day - trunc(day)) * 24.0 ;
-    hours = static_cast<int>( time );
-    minutes =  static_cast<int>(( time - static_cast<double>(hours) )*60.0 );
-    seconds = ( time - static_cast<double>(hours) )*3600.0 - minutes*60.0;
+*/       
 
 }
 
@@ -2607,18 +2669,96 @@ std::string Catalog::getIdentifier(  const char* str, size_t& idx )
 }
 
 
+void Catalog::timeSpacing( double tinc, double toff )
+{
+     des_tinc = tinc;
+     des_toff = toff;
+}
 
+double Catalog::timeSpacing( double* toff )
+{
+     if ( toff != NULLPTR ) {
+        *toff = des_toff;
+     }
+     
+     return des_tinc;
+}      
+
+void Catalog::desired( const std::string& attr, const std::string& value, int priority )
+{
+     des_attrs[ attr ] = value;
+     des_priorities[ attr ] = priority;
+}   
+
+std::string Catalog::desired( std::string& attr, int* priority ) const
+{
+     std::string result;
+     std::map<std::string, std::string>::const_iterator item;
+     std::map<std::string, int>::const_iterator pitem;
+     int pri;
+     
+     result = "";
+     pri = 0;
+     
+     if ( des_attrs.count( attr ) > 0 ) {
+        item = des_attrs.find( attr );
+        result = item->second;
+        pitem = des_priorities.find( attr );
+        pri = pitem->second;
+     }
+     
+     if ( priority != NULLPTR ) {
+        *priority = pri;
+     }
+     
+     return result;
+}
 
 Catalog::DataSource::DataSource()
 {
     name = "";
+    time = "";
     target = "";
     units = "";
     scale = 1.0;
     offset = 0.0;
     description = "";
+    type = -1;
+    t0 = 0.0;
+    t1 = 0.0;
     pre = "";
     post = "";
+}
+
+void Catalog::DataSource::dump( int indent ) const
+{
+   std::string spaces;
+   std::string stuff;
+   
+   for ( int i=0; i < indent; i++ ) {
+       spaces.push_back(' ');
+   }
+   
+   std::cerr << spaces << "@@@@@@@@@@@@@@@ DataSourceg Dump:"  << std::endl;
+   std::cerr << spaces << " Quantity: " << name << " at time " << time << std::endl;
+   std::cerr << spaces << " units=" << units << ", scale=" << scale << ", offset=" << offset<< std::endl;
+   std::cerr << spaces << " description='" << description << "'" << std::endl;
+   std::cerr << spaces << "Target = " << target << std::endl;
+   switch (type ) {
+   case -1: stuff = "Unknown";
+            break;
+   case  0: stuff = "filename";
+            break;
+   case  1: stuff = "file";
+            break;
+   case  2: stuff = "URL";
+            break;
+   
+   }
+   std::cerr << spaces << " Type = " << type << " (" << stuff << ")" << std::endl;
+   std::cerr << spaces << " Pre : (" << t0 << ") '" << pre  << "'" << std::endl;
+   std::cerr << spaces << " Post: (" << t1 << ") '" << post << "'" << std::endl;
+   
 }
 
 
@@ -2627,6 +2767,9 @@ Catalog::Catalog( const std::string& tagg )
      my_confLocator = "";
      dbug = 0;
      currentTarget = NULLPTR;
+     des_tinc = 0.0;
+     des_toff = 0.0;
+     nrules = 0;
           
      if ( tagg != "" ) {
         confLocator( tagg );
@@ -2709,14 +2852,23 @@ void Catalog::load( const std::string& filename )
   char *cbeg;
   std::string line;
   bool more;
-
-  reset();
+  std::string fname;
+  std::string cfloc;
   
-  if ( filename != "" ) {
+  cfloc = confLocator();
+  clear();
+  confLocator( cfloc );
   
-     std::ifstream input(filename.c_str());
+  if ( filename == "" ) {
+     fname = findConfig();
+  } else {
+      fname = filename;
+  }
+  
+  if ( fname != "" ) {
+     std::ifstream input(fname.c_str());
      if ( ! input.good() ) {
-        std::cerr << "Could not open '" << filename << "'" << std::endl;
+        std::cerr << "Could not open '" << fname << "'" << std::endl;
         throw (badNoFile());
      }
      
@@ -2763,13 +2915,15 @@ void Catalog::addRule( std::string& cfg )
             std::cerr << "******* new config line <<" << cfg << ">>" << std::endl; 
          }
          parse( cfg );
+         
+         nrules++;
 
       }
    }
       
 }
 
-void Catalog::query( const std::string& quantity, const std::string& validAt,  std::vector<DataSource>& dests, const std::string& tag )
+bool Catalog::query( const std::string& quantity, const std::string& validAt,  std::vector<DataSource>& dests, const std::string& tag )
 {
      Quantity* quant;
      TargetRef qt;
@@ -2783,6 +2937,20 @@ void Catalog::query( const std::string& quantity, const std::string& validAt,  s
      VarVal* pattern;
      bool ok;
      DataSource dd;
+     bool result;
+     double preDelta;
+     double postDelta;
+     int preN;
+     int postN;
+     std::string preStart;
+     std::string postStart;
+     bool junk;
+     
+     result = false;
+     
+     if ( nrules <= 0 ) {
+        load();
+     }
      
      dests.clear();
      
@@ -2807,26 +2975,32 @@ void Catalog::query( const std::string& quantity, const std::string& validAt,  s
             if ( targetset.exists( tname ) ) {
             
                currentTarget = targetset.getTarget( tname );
-            
-               xt = ( tyme - floor( tyme ) )*24.0;
-               nt =  floor( (xt - currentTarget->basetime )/currentTarget->inctime );
+                            
+              // get the times that bracket this one
+              // (note: for this it is not necessary for the dbase to have the date right
+              // We just need the base time right)
+              
+               // set up local variables, so that bracket do evaluate var refs
+               setup_vars( quantity, tyme, tag );
                
+               bracket( tyme, preTime, postTime );
+               
+               // ok, now we neeed to set the temp variables to the Pre time
+               setup_vars( quantity, preTime, tag );
+                           
                ok = false;
             
-               preTime = floor( tyme) + (currentTarget->basetime + nt*currentTarget->inctime)/24.0;
-            
-               // set up local variables
-               setup_vars( quantity, preTime, tag );
-               
                // resolve the pattern
                pattern = new VarVal( currentTarget->templayt, 'S' );
                if ( eval( pattern ) ) {
                   s1 = pattern->evalS;
                   delete pattern;
                   
+                  // get the time characteristics of the target
+                  get_targetTimeInfo( *currentTarget, &preDelta, preStart, &preN );
+                  
                   if ( preTime < tyme ) {
                   
-                     postTime = floor( tyme) + (currentTarget->basetime + (nt + 1)*currentTarget->inctime)/24.0;
                      setup_vars( quantity, postTime, tag );
                      pattern = new VarVal( currentTarget->templayt, 'S' );
                      if ( dbug > 10 ) {
@@ -2838,22 +3012,55 @@ void Catalog::query( const std::string& quantity, const std::string& validAt,  s
                         if ( dbug > 10 ) {
                            std::cerr << "Catalog::query interpolated pattern='" << s2 << "'" << std::endl;
                         }
+
+                        // get the time characteristics of the target
+                        get_targetTimeInfo( *currentTarget, &postDelta, postStart, &postN );
+
                         ok = true;
                      }
 
                  }  else {
                     s2 = s1;
+                    postTime = preTime;
+                    postStart = preStart;
+                    postDelta = preDelta;
+                    postN = preN;
                     ok = true;
                  }
                }
                
                if ( ok ) {
                   dd.name = quantity;
+                  dd.time = validAt;
+                  dd.dims = quant->dims;
                   dd.target = tname;
                   dd.units = (quant->tlist[it]).units;
                   dd.scale  = (quant->tlist[it]).scale;
                   dd.offset = (quant->tlist[it]).offset;
                   dd.description = (quant->tlist[it]).description;
+                  
+                  //dd.t0 = preTime;
+                  junk = d2String( preTime, dd.t0 );
+                  dd.preStart = preStart;
+                  dd.tDelta = preDelta;
+                  dd.tN = preN;
+                  
+                  //dd.t1 = postTime;
+                  junk = d2String( postTime, dd.t1 );
+                  dd.postStart = postStart;
+                  
+                  if ( s1[0] == '/' 
+                    || s1.substr(0,2) == "./"
+                    || s1.substr(0,3) == "../" 
+                    || s1.substr(0,7) == "file://" ) {
+                     dd.type = 0;
+                  } else if ( s1.substr(0,8) == "https://" || s1.substr(0,7) == "http://" ) {
+                     dd.type = 1;
+                  } else if ( s1.substr(0,6) == "OTF://" ) {
+                      dd.type = 2;
+                  } else {
+                      dd.type = -1;
+                  }
                   dd.pre = s1;
                   dd.post = s2;
                   
@@ -2869,17 +3076,48 @@ void Catalog::query( const std::string& quantity, const std::string& validAt,  s
      
      } 
      
+     if ( dests.size() > 0 ) {
+     
+        filter_DataSource( dests );
+     
+        result = true;
+     }
+     
      if ( dbug > 10 ) {
         std::cerr << "Catalog::Leaving query " << std::endl;
      }
+     
+     return result;
+}
+
+std::string Catalog::stdLookup( std::string& stdname )
+{
+   std::map< std::string, std::string >::iterator item;
+   std::string result = "";
+
+     if ( nrules <= 0 ) {
+        load();
+     }
+     
+    if ( quantityset.stdnames.count( stdname ) ) {
+       item = quantityset.stdnames.find( stdname );
+       result = (*item).second;
+    }
+    
+    return result;
+
 }
 
 
-std::string Catalog::attrName( int index ) const
+std::string Catalog::attrName( int index ) 
 {
     std::string result;
     
     result = "";
+     
+    if ( nrules <= 0 ) {
+       load();
+    }
     
     if ( index >= 0 && index < attrNames.size() ) {
        result = attrNames[ index ];
@@ -2888,11 +3126,15 @@ std::string Catalog::attrName( int index ) const
     return result;
 }
 
-int Catalog::attrIndex( const std::string& name ) const
+int Catalog::attrIndex( const std::string& name ) 
 {
     int result;
     
     result = -1;
+    
+    if ( nrules <= 0 ) {
+       load();
+    }
     
     for ( int i = 0; i < attrNames.size(); i++ ) {
         if ( attrNames[i] == name ) {
@@ -2912,6 +3154,10 @@ std::string Catalog::getAttr( const std::string& target, int index )
      
      result = "";
      
+    if ( nrules <= 0 ) {
+       load();
+    }
+    
      if ( index >= 0 && index < attrNames.size() ) {
      
         t = targetset.getTarget( target );
@@ -2931,6 +3177,10 @@ std::string Catalog::getAttr( const std::string& target, const std::string& attr
      
      result = "";
      
+     if ( nrules <= 0 ) {
+        load();
+     }
+    
      t = targetset.getTarget( target );
      if ( t != NULLPTR ) {
          result = t->getAttr( attr );
@@ -2947,6 +3197,10 @@ std::string Catalog::getAttr( const DataSource& dest, const std::string& attr )
      
      result = "";
 
+     if ( nrules <= 0 ) {
+        load();
+     }
+    
      target = dest.target;     
      t = targetset.getTarget( target );
      if ( t != NULLPTR ) {
@@ -2956,6 +3210,59 @@ std::string Catalog::getAttr( const DataSource& dest, const std::string& attr )
      return result;
 }
 
+void Catalog::get_timeSpacing( const DataSource& dest, double* tinc, std::string& toff, int* n )
+{
+     std::string result;
+     Target* t;
+     std::string target;
+     double tx;
+     
+     result = "";
+
+     if ( nrules <= 0 ) {
+        load();
+     }
+    
+     target = dest.target;     
+/*
+     t = targetset.getTarget( target );
+     if ( t != NULLPTR ) {
+         *tinc = t->inctime;
+         *n = t->nt;
+         toff = dest.preStart;
+     }
+*/
+     *tinc = dest.tDelta;
+     *n = dest.tN;
+     toff = dest.preStart;
+     
+}
+
+void Catalog::get_targetTimeInfo( Target& targ, double* tinc, std::string& toff, int* n )
+{
+     std::string result;
+     std::string target;
+     double tx;
+     bool junk;
+     VarVal* tmpVal;
+     
+     result = "";
+
+     tmpVal = targ.dbase.copy();
+     eval( tmpVal );
+     if ( ! tmpVal->hasEval() ) {
+        std::cerr << "Bad Target base date: " << targ.dbase.nominal << std::endl;
+        throw (badDateString());
+     }
+     // get the starting time of the file
+    junk = d2String( tmpVal->evalD, toff );
+    *tinc = targ.inctime;
+    *n = targ.nt;
+    
+    delete tmpVal;
+     
+}
+
 bool Catalog::variableValue( const std::string& name, std::string& output )
 {
      bool result;
@@ -2963,6 +3270,10 @@ bool Catalog::variableValue( const std::string& name, std::string& output )
      
      result = false;
 
+     if ( nrules <= 0 ) {
+        load();
+     }
+    
      value = getValue( name );
      if ( value != NULLPTR ) {
         // and this is what we will return
@@ -3017,11 +3328,22 @@ std::string Catalog::getEnv( const std::string& varname ) const
 }
 
 
-void Catalog::reset()
+void Catalog::clear()
 {
 
      varset.clear();
      attrNames.clear();
+     targetset.clear();
+     quantityset.clear();
+     des_attrs.clear();
+     des_priorities.clear();
+
+     my_confLocator = "";
+     dbug = 0;
+     currentTarget = NULLPTR;
+     des_tinc = 0.0;
+     des_toff = 0.0;
+     nrules = 0;
 
 }
 
@@ -3070,7 +3392,7 @@ void Catalog::trim( std::string& line ) const
 
 void Catalog::skipwhite( const char* str, size_t& idx ) const
 {
-     while ( ( str[idx] == ' ' || str[idx] == '\t' ) && ( str[idx] != 0 ) ) {
+     while ( isWhitespace( str[idx] ) && ( str[idx] != 0 ) ) {
         idx++;
      }
 
@@ -3109,6 +3431,8 @@ void Catalog::parseAttrNames( const char* str, size_t& idx )
         }
         
         attrNames.push_back( name );
+        des_attrs[ name ] = "";
+        des_priorities[ name ] = 0;
         
         if ( dbug > 0 ) {
            std::cerr << "Adding attribute name " << name << std::endl;
@@ -3221,13 +3545,13 @@ Catalog::VarVal* Catalog::parseString(  const char* str, size_t& idx ) const
                std::cerr << "got a literal string: " << s << std::endl;
             }
             result = new VarVal( s, 'S' );
-            idx = k + i;
+            idx = k + i; // That's "eye", not "one"!
          } else {
             if ( dbug > 10 ) {
                std::cerr << "parseString: got a string w/ varref: " << std::endl;
             }
             result = new VarVal( s, 'S' );
-            idx = j;   
+            idx = j + 1;   
          }
       } else {
          std::cerr << "No closing quote in string literal: " << std::string( str ) << std::endl;
@@ -3279,7 +3603,16 @@ Catalog::VarVal* Catalog::parseDate(  const char* str, size_t& idx ) const
             result = new VarVal( s, 'D' );
             idx = j + 1;
          } else {
-            std::cerr << "malfomed date literal in: " << std::string(str) << std::endl;
+            if ( dbug > 10 ) {
+               std::cerr << "parseDate: got a date expression: " << s << std::endl;
+            }
+            // should probably test here that the non-date-lkike part of the string
+            // is a variable reference.
+            
+            // std::cerr << "malfomed date literal in: " << std::string(str) << std::endl;
+            result = new VarVal( s, 'D' );
+            result->flags = VarVal::ValidNominal;  // i.e., not a literal!
+            idx = j + 1;
          }
       } else {
          std::cerr << "Unclosed date literal in: " << std::string( str ) << std::endl;
@@ -3548,7 +3881,7 @@ Catalog::VarExpr* Catalog::parseVarExpr( const char* str, size_t& idx, int stop 
        
        got_token = false;
        
-       // we look for a value token only if the previoous oktne was not a value token
+       // we look for a value token only if the previous token was not a value token
        if ( ! prev_was_val ) {
           // check for '"' and string literal and '"'
           vval = parseString( str, i );
@@ -3691,15 +4024,18 @@ Catalog::Target* Catalog::parseTarget( const char* str, size_t& idx ) const
     std::string avalue;
     std::string templayt;
     std::string time;
+    std::string numbr;
+    int n;
     float t;
+    VarVal *vx;
     
     nattrs = attrNames.size();
     
     result = new Target();
     i = idx;
     
-    // get the time base and increment
-    result->basetime = 0.0;
+    // get the date base
+    result->dbase.flags = 0;
     skipwhite( str, i );
     j = findNext( ';', str, i );
     ii = static_cast<int>(i);    
@@ -3708,19 +4044,26 @@ Catalog::Target* Catalog::parseTarget( const char* str, size_t& idx ) const
        time.clear();
        time.insert(0, str, i, j - i);
        trim(time);
-       if ( ! s2Float( time, t ) ) {
-          std::cerr << "Bad base time from target definition: '" << str << "'" << std::endl;
+       size_t idx = 0;
+       vx = parseDate( time.c_str(), idx );
+       if ( vx != NULLPTR ) {
+          result->dbase = *vx;
+          delete vx;
+       } else {
+          std::cerr << "Bad base date from target definition: '" << str << "'" << std::endl;
           throw (badConfigSyntax());
        }
-       result->basetime = t;
-       
-       
        i = j + 1;
     
     } else {
-       std::cerr << "Missing base time from target definition: '" << str << "'" << std::endl;
+       std::cerr << "Missing base date from target definition: '" << str << "'" << std::endl;
        throw (badConfigSyntax());
     }
+    result->basetime = 0.0;
+    
+//-       if ( ! s2Float( time, t ) ) {
+//-       result->basetime = t;
+       
     
     result->inctime = 1.0;
     skipwhite( str, i );
@@ -3743,6 +4086,29 @@ Catalog::Target* Catalog::parseTarget( const char* str, size_t& idx ) const
        std::cerr << "Missing inc time from target definition: '" << str << "'" << std::endl;
        throw (badConfigSyntax());
     }
+
+    result->nt = 0;
+    skipwhite( str, i );
+    j = findNext( ';', str, i );
+    ii = static_cast<int>(i);    
+    if ( j >= ii ) {
+    
+       numbr.clear();
+       numbr.insert(0, str, i, j - i);
+       trim(numbr);
+       if ( ! s2Int( numbr, n ) ) {
+          std::cerr << "Bad number-of-times from target definition: '" << str << "'" << std::endl;
+          throw (badConfigSyntax());
+       }
+       result->nt = n;
+    
+       i = j + 1;
+    
+    } else {
+       std::cerr << "Missing number-of-times from target definition: '" << str << "'" << std::endl;
+       throw (badConfigSyntax());
+    }
+    
     
     // go through each attribute
     for ( int ia=0; ia < nattrs; ia++ ) {
@@ -3799,7 +4165,9 @@ void Catalog::parseQuantity(Catalog::Quantity* quant, const char* str, size_t& i
      std::string tname;
      size_t i;
      int ii;
+     int j;
      int idx_eol;
+     int idx_endstd;
      int idx_targetsep;
      int idx_begbracket;
      int idx_endbracket;
@@ -3815,6 +4183,9 @@ void Catalog::parseQuantity(Catalog::Quantity* quant, const char* str, size_t& i
      std::string dd;
      float scl;
      float off;
+     std::string stdname;
+     int dims;
+     std::string dimstring;
      
      done = false;
      
@@ -3825,13 +4196,64 @@ void Catalog::parseQuantity(Catalog::Quantity* quant, const char* str, size_t& i
      }
      
      
+     // read the standardized name
+     skipwhite( str, idx );
+     i = idx;
+     idx_endstd = findNext( ':', str, i );
+     ii = static_cast<int>(i);
+     if ( idx_endstd < ii ) {
+        std::cerr << "missing standard name from quantity line: '" << str << "'" << std::endl;
+        throw (badConfigSyntax());
+     }
+     // (omit any whitespace at the end of the std name)
+     ii = idx_endstd - 1;
+     while ( (ii > idx) && isWhitespace( str[ii] ) ) {
+        ii --;
+     }
+     // (copy the string)   
+     stdname = "";
+     for ( i=idx; i <= ii; i++ ) {
+         stdname.push_back( str[i] );
+     }
+     quant->stdname = stdname;
+     
+     idx = idx_endstd + 1;
+     
+     // read the dimensionality
+     skipwhite( str, idx );
+     j = findNext( ':', str, idx );
+     ii = static_cast<int>(idx);    
+     if ( j >= ii ) {
+    
+       dimstring.clear();
+       dimstring.insert(0, str, idx, j - idx);
+       trim(dimstring);
+       if ( ! s2Int( dimstring, dims ) ) {
+          std::cerr << "Bad dimensionality from quantity definition: '" << str << "'" << std::endl;
+          throw (badConfigSyntax());
+       }
+       quant->dims = dims;
+       
+       idx = j + 1;
+    
+    } else {
+       std::cerr << "Missing dimensionality from quantity definition: '" << str << "'" << std::endl;
+       throw (badConfigSyntax());
+    }
+     
+     
+     if ( dbug > 50 ) {
+        std::cerr << "parseQuantity: scanning for targets starting with idx " << idx 
+        << "in '" << str << "'" << std::endl;     
+     }
+
      while ( ! done ) {
      
          // we may need to backtrack, so work with
          // this temporary copy of idx fo rnow
          i = idx;
          
-         skipwhite( str, idx );
+         skipwhite( str, i );
      
          tname = getIdentifier( str, i );
          if ( tname != "" ) {
@@ -3998,7 +4420,6 @@ void Catalog::parseQuantity(Catalog::Quantity* quant, const char* str, size_t& i
             }
             
             
-            
             qt->units = uu;
             qt->scale = scl;
             qt->offset = off;
@@ -4082,6 +4503,10 @@ void Catalog::parse( const std::string& conf )
             
               quantityset.define( quant );
               
+              if ( quant->stdname != "" ) {
+                 quantityset.stdnames[ quant->name ] = quant->stdname;
+              }
+              
               delete quant;
             
            }
@@ -4149,143 +4574,162 @@ void Catalog::setup_vars( const std::string& quantity, double tyme, const std::s
     std::string date;
     int year, month, dom, hour, minute, second, doy;
     float seconds;
-  
-  
-    if ( d2String( tyme, date ) ) {
-  
-        d2parts( tyme, year, month, dom, doy, hour, minute, seconds );
-        second = roundf(seconds);
-  
-        test = new VarVal( true );
-   
-        takedown_vars();
-        
-        // QUANTITY
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( quantity, 'S' );
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "QUANTITY", 'S', vexpr, texpr );
-        delete value;        
-        // DATETIME
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( date, 'S' );
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "DATETIME", 'S', vexpr, texpr );
-        delete value;        
-        // DATE
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( date.substr(0,10), 'S' );
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "DATE", 'S', vexpr, texpr );
-        delete value;        
-        // TIME
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( date.substr(11,8), 'S' );
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "TIME", 'S', vexpr, texpr );
-        delete value;        
-        // YEAR
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( date.substr(0,4), 'I' );
-        value->fmt1 = 4;
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "YEAR", 'I', vexpr, texpr );
-        delete value;        
-        // CN
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( date.substr(0,2), 'I' );
-        value->fmt1 = 2;
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "CN", 'I', vexpr, texpr );
-        delete value;        
-        // YR
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( date.substr(2,2), 'I' );
-        value->fmt1 = 2;
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "YR", 'I', vexpr, texpr );
-        delete value;        
-        // MONTH
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( date.substr(5,2), 'I' );
-        value->fmt1 = 2;
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "MONTH", 'I', vexpr, texpr );
-        delete value;        
-        // DOM
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( date.substr(8,2), 'I' );
-        value->fmt1 = 2;
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "DOM", 'I', vexpr, texpr );
-        delete value;        
-        // DOY
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( doy );
-        value->fmt1 = 3;
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "DOY", 'I', vexpr, texpr );
-        delete value;        
-        // HOUR
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( date.substr(11,2), 'I' );
-        value->fmt1 = 2;
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "HOUR", 'I', vexpr, texpr );
-        delete value;        
-        // MINUTE
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( date.substr(14,2), 'I' );
-        value->fmt1 = 2;
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "MINUTE", 'I', vexpr, texpr );
-        delete value;        
-        // SECOND
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( date.substr(17,2), 'I' );
-        value->fmt1 = 2;
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "SECOND", 'I', vexpr, texpr );
-        delete value;        
-        // TAG
-        texpr = new VarExpr();
-        texpr->add( test );
-        value = new VarVal( tag, 'S' );
-        vexpr = new VarExpr();
-        vexpr->add( value );
-        varset.addValue( "TAG", 'S', vexpr, texpr );
-        delete value;        
-
-
-        delete test;
+    bool doit;
+    
+    doit = true;
+    
+    // are the local variables already defined?
+    if ( varset.has_locals ) {
+       // were the local variables set up with the same
+       // quantity and time and tag?
+       if ( (varset.quant == quantity) && ( varset.time == tyme ) && (varset.tag == tag ) ) {
+          doit = false;
+       }
+    
     }
+  
+    if ( doit ) {
+      if ( d2String( tyme, date ) ) {
+  
+          d2parts( tyme, year, month, dom, doy, hour, minute, seconds );
+          second = roundf(seconds);
+  
+          test = new VarVal( true );
    
+          takedown_vars();
+          
+          // QUANTITY
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( quantity, 'S' );
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "QUANTITY", 'S', vexpr, texpr );
+          delete value;        
+          // DATETIME
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( date, 'S' );
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "DATETIME", 'S', vexpr, texpr );
+          delete value;        
+          // DATE
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( date.substr(0,10), 'S' );
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "DATE", 'S', vexpr, texpr );
+          delete value;        
+          // TIME
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( date.substr(11,8), 'S' );
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "TIME", 'S', vexpr, texpr );
+          delete value;        
+          // YEAR
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( date.substr(0,4), 'I' );
+          value->fmt1 = 4;
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "YEAR", 'I', vexpr, texpr );
+          delete value;        
+          // CN
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( date.substr(0,2), 'I' );
+          value->fmt1 = 2;
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "CN", 'I', vexpr, texpr );
+          delete value;        
+          // YR
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( date.substr(2,2), 'I' );
+          value->fmt1 = 2;
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "YR", 'I', vexpr, texpr );
+          delete value;        
+          // MONTH
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( date.substr(5,2), 'I' );
+          value->fmt1 = 2;
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "MONTH", 'I', vexpr, texpr );
+          delete value;        
+          // DOM
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( date.substr(8,2), 'I' );
+          value->fmt1 = 2;
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "DOM", 'I', vexpr, texpr );
+          delete value;        
+          // DOY
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( doy );
+          value->fmt1 = 3;
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "DOY", 'I', vexpr, texpr );
+          delete value;        
+          // HOUR
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( date.substr(11,2), 'I' );
+          value->fmt1 = 2;
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "HOUR", 'I', vexpr, texpr );
+          delete value;        
+          // MINUTE
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( date.substr(14,2), 'I' );
+          value->fmt1 = 2;
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "MINUTE", 'I', vexpr, texpr );
+          delete value;        
+          // SECOND
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( date.substr(17,2), 'I' );
+          value->fmt1 = 2;
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "SECOND", 'I', vexpr, texpr );
+          delete value;        
+          // TAG
+          texpr = new VarExpr();
+          texpr->add( test );
+          value = new VarVal( tag, 'S' );
+          vexpr = new VarExpr();
+          vexpr->add( value );
+          varset.addValue( "TAG", 'S', vexpr, texpr );
+          delete value;        
+
+
+          delete test;
+      }
+      
+      varset.tag = tag;
+      varset.time = tyme;
+      varset.quant = quantity;
+      varset.has_locals = true;
+      
+    }
 } 
 void Catalog::takedown_vars()
 {
@@ -4331,6 +4775,9 @@ void Catalog::takedown_vars()
     if ( varset.exists( "TAG" ) ) {
        varset.undefine( "TAG" );
     }
+    
+    varset.has_locals = false;
+    
 }
 
 
@@ -5054,8 +5501,11 @@ Catalog::VarVal* Catalog::eval( Catalog::VarExpr* expr )
          if ( item->isVal ) {
             // value. push it on the stack
             // note: we copy values, since they may change.
-            // we do not opcy operators, since they will not change/
+            // we do not copy operators, since they will not change/
             v1 = (item->val)->copy();
+            if (  v1->hasNominal() && ! v1->hasEval() ) {
+               eval( v1 );
+            }
             if ( ( ! v1->hasLiteral() ) && v1->hasEval() ) {
                 vv = lookup( v1->evalS );
                 if ( vv != NULLPTR ) {
@@ -5193,12 +5643,6 @@ bool Catalog::eval( VarVal* val )
      size_t idx;
      VarVal* found;
      bool ok;
-     int len;
-     bool more;
-     bool eos;
-     bool foundref;
-     std::string newstring;
-     std::string refname;
      
      result = false;
      ok = false;
@@ -5208,14 +5652,14 @@ bool Catalog::eval( VarVal* val )
         val->dump();
      }
      
-     if ( val->type != 'S' ) {
-        // it's not a string:
+     if ( val->type != 'S' && val->type != 'D' ) {
+        // it's not a string or a date:
         if ( dbug > 50 ) {
-           std::cerr << "Catalog::eval(val): not a string" << std::endl;
+           std::cerr << "Catalog::eval(val): not a string or date" << std::endl;
         }
         
         if ( ! val->hasLiteral() ) {
-           // it's some kind of variable reverence
+           // it's some kind of variable reference
            if ( val->hasEval() ) {
               name = val->evalS;
            } else if ( val->hasNominal() ) {
@@ -5264,6 +5708,103 @@ bool Catalog::eval( VarVal* val )
            result = true;
         }
         
+     } else if ( val->type == 'D' ) {
+        // it's a date
+
+        if ( val->hasNominal() ) {
+           teststring = val->nominal;
+        } else if ( val->hasEval() ) {
+           teststring = val->evalS;
+        } else {
+            teststring = "";
+        }
+        
+        if ( ! val->hasLiteral() ) {
+           // it's some kind of variable reference
+           if ( val->hasEval() ) {
+              // If there is an eval value and it's a reference
+              // then the variable name has been stashed away here
+              name = val->evalS;
+           } else if ( val->hasNominal() ) {
+              // might still be a simple variable ref,
+              // if there is a nominal value that has not bene evaluated yet
+              // but it might also be a literal-like string with embedded var refs
+              val->n2e();
+              if ( val->hasEval() ) {
+                 // ok it was a simple var ref after all
+                 name = val->evalS;  
+              } else {
+                 // not a simple variable ref.
+                 // hopefully, it's a literal-like string with variable refs embedded in it
+                 teststring = interpVarRefs( val->nominal );
+                 if ( isDateLiteral( teststring.c_str(), teststring.size(), 0 ) != 0 ) {
+                    // this will be a flag for testing below
+                    name = "";
+                 } else {
+                    // hopeless
+                    std::cerr << "No valid value to interpolate: " << std::endl;
+                    val->dump();
+                    throw (badExpression());
+                 }
+              }
+           } else {
+                 std::cerr << "No value to interpolate: " << std::endl;
+                 val->dump();
+                 throw (badExpression());
+           }
+           if ( dbug > 50 ) {
+              std::cerr << "Catalog::eval(val): not a literal. Ref is '" << name << "'" << std::endl;
+           }
+           
+           if ( name != "" ) {
+              // we have the name
+              /// look up its reference value
+              found = lookup( name );
+
+              ok = ( found != NULLPTR );
+              if ( ok ) {
+                 if ( dbug > 50 ) {
+                    std::cerr << "Catalog::eval(val): found " << name << std::endl;
+                    found->dump();
+                 }
+                  // convert it  to our value's type       
+                  found->convertType( val->type );
+                  // copy its contents to our value, except keep the format
+                  int fmt1 = val->fmt1;
+                  int fmt2 = val->fmt2;
+                  *val = *found;
+                  val->fmt1 = fmt1;
+                  val->fmt2 = fmt2;
+                  // no more need for this
+                  delete found;
+              }
+           } else {
+              // no name means this was a literal-like string
+              // with embedded var refs in it
+              
+              found = new VarVal( teststring, 'D' );
+              if ( found != NULLPTR ) {
+                 if ( found->hasLiteral() ) {
+                    val->evalD = found->evalD;
+                    val->flags = val->flags | VarVal::ValidEval | VarVal::IsLiteral;
+                    result = true;
+                 } else {
+                    std::cerr << "Bad date pseudo-literal: " << teststring << std::endl;
+                    val->dump();
+                    throw (badExpression());
+                 }
+              } else {
+                 std::cerr << "invalid date pseudo-literal: " << teststring << std::endl;
+                 val->dump();
+                 throw (badExpression());              
+              }
+           }
+           
+        } else {
+           // it's already a literal
+           result = true;
+        }
+      
      } else { 
         // it's a string, which means we will need to  substitute var refs,
         // possibly in the middle of the string
@@ -5276,91 +5817,9 @@ bool Catalog::eval( VarVal* val )
         } else {
             teststring = "";
         }
-        str = teststring.c_str();
-        len = teststring.size();
-        
-        if ( dbug > 50 ) {
-           std::cerr << "Catalog::eval(val): IS a string: '" << teststring << "." << std::endl;
-        }
-        
-        more = true;
-        
-        while ( more ) {
-          
-           newstring = "";
-           idx = 0;
-           
-           // end-of-string
-           eos = false;
-           
-           foundref = false;
-           
-           while ( ! eos ) {
-           
-              // search for something that might be a var ref
-              while ( str[idx] != 0 && str[idx] != '$' ) {
-                  newstring.push_back( str[idx] );
-                  idx++;
-              }
-              if ( str[idx] == '$' ) {
-                 // ok, this might be a var ref
-                 extractVarRef( str, idx, name, refname, &fmt1, &fmt2 );
-                 if ( name != "" ) {
-                    // yes! it is a var ref
-                    if ( dbug > 50 ) {
-                       std::cerr << "Catalog::eval(val): found a var ref for " << name  << std::endl;
-                    }
-                 
-                    
-                    found = lookup ( refname );
-                    
-                    if ( found != NULLPTR ) {
-                        if ( dbug > 50 ) {
-                           std::cerr << "Catalog::eval(val): var ref " << name  
-                           << " resolved to '" << found->evalS << "'" << std::endl;
-                        }
-                    
-                        if ( found->print( teststring ) ) {
-                           if ( dbug > 50 ) {
-                              std::cerr << "Catalog::eval(val): var ref " << name  
-                              << " printed as '" << teststring << "'" << std::endl;
-                           }
-                           newstring = newstring + teststring;
-                        }  else {
-                           std::cerr << "Unable to obtain a print string from value ref " << name << std::endl;
-                           found->dump(5);
-                           throw (badExpression());
-                        }
-                        
-                        delete found;
-                    } else {
-                        // nothing with the desired name was found
-                        std::cerr << "Could not find anything with the referenced name '" << name << "'" << std::endl;                    
-                        throw (badExpression());
-                    }
-                    
-                 } else {
-                    // not a var ref after all.
-                    // continue
-                    newstring.push_back( str[idx] );               
-                    idx++;
-                 }   
-              } else {
-                 // no '$' found; must be the terminating null
-                  eos = true;
-              }
-           }
-          if ( dbug > 50 ) {
-             std::cerr << "Catalog::eval(val): newstring ='" << newstring << "'" << std::endl;  
-          }
-           
-           if ( teststring != newstring ) {
-              teststring = newstring;
-           } else {
-              more = false;
-           }  
-        }
-        
+
+        teststring = interpVarRefs( teststring );
+                
         result = true;
         val->evalS  = teststring;
         val->flags = VarVal::ValidNominal | VarVal::ValidEval | VarVal::IsLiteral;   
@@ -5374,6 +5833,118 @@ bool Catalog::eval( VarVal* val )
      return result;
 }
 
+std::string Catalog::interpVarRefs( const std::string refstr )
+{
+    std::string teststring;
+    size_t idx;
+    const char* str;
+    int len;
+    bool more;
+    bool eos;
+    bool foundref;
+    std::string newstring;
+    std::string refname;
+    std::string name;
+    int fmt1, fmt2;
+    VarVal* found;
+    std::string tmpstring;
+    
+    
+    teststring = refstr;
+    
+    str = teststring.c_str();
+    len = teststring.size();
+    
+    if ( dbug > 50 ) {
+       std::cerr << "Catalog::eval(val): IS a string: '" << teststring << "." << std::endl;
+    }
+    
+    more = true;
+    
+    while ( more ) {
+      
+       newstring = "";
+       idx = 0;
+       
+       // end-of-string
+       eos = false;
+       
+       foundref = false;
+       
+       while ( ! eos ) {
+       
+          // search for something that might be a var ref
+          while ( str[idx] != 0 && str[idx] != '$' ) {
+              newstring.push_back( str[idx] );
+              idx++;
+          }
+          if ( str[idx] == '$' ) {
+             // ok, this might be a var ref
+             extractVarRef( str, idx, name, refname, &fmt1, &fmt2 );
+             if ( name != "" ) {
+                // yes! it is a var ref
+                if ( dbug > 50 ) {
+                   std::cerr << "Catalog::eval(val): found a var ref for " << name  << std::endl;
+                }
+             
+                
+                found = lookup ( refname );
+                
+                if ( found != NULLPTR ) {
+                    if ( dbug > 50 ) {
+                       std::cerr << "Catalog::eval(val): var ref " << name  
+                       << " resolved to '" << found->evalS << "'" << std::endl;
+                    }
+                    if ( fmt1 >= 0 ) {
+                       found->fmt1 = fmt1;
+                       if ( fmt2 > 0 ) {
+                          found->fmt2 = fmt2;
+                       }
+                    }
+                    if ( found->print( tmpstring ) ) {
+                       if ( dbug > 50 ) {
+                          std::cerr << "Catalog::eval(val): var ref " << name  
+                          << " printed as '" << teststring << "'" << std::endl;
+                       }
+                       newstring = newstring + tmpstring;
+                    }  else {
+                       std::cerr << "Unable to obtain a print string from value ref " << name << std::endl;
+                       found->dump(5);
+                       throw (badExpression());
+                    }
+                    
+                    delete found;
+                } else {
+                    // nothing with the desired name was found
+                    std::cerr << "Could not find anything with the referenced name '" << name << "'" << std::endl;                    
+                    throw (badExpression());
+                }
+                
+             } else {
+                // not a var ref after all.
+                // continue
+                newstring.push_back( str[idx] );               
+                idx++;
+             }   
+          } else {
+             // no '$' found; must be the terminating null
+              eos = true;
+          }
+       }
+      if ( dbug > 50 ) {
+         std::cerr << "Catalog::eval(val): newstring ='" << newstring << "'" << std::endl;  
+      }
+       
+       if ( teststring != newstring ) {
+          teststring = newstring;
+       } else {
+          more = false;
+       }  
+    }
+
+    return teststring;
+
+}
 
 Catalog::VarVal* Catalog::lookup( const std::string& name )
 {
@@ -5496,4 +6067,194 @@ bool Catalog::reconcileVals( Catalog::VarVal* v1, Catalog::VarVal* v2 )
 
 }
 
+double Catalog::date2number( const std::string& time )
+{
+     double result;
+     bool ok;
+     
+     if ( ! s2Date( time, result ) ) {
+        result = -1.0;
+     }
+
+     return result;
+}
+
+void Catalog::dump( int indent ) const
+{
+   std::string spaces;
+   
+   for ( int i=0; i < indent; i++ ) {
+       spaces.push_back(' ');
+   }
+   
+   std::cerr << spaces << "************ Catalog Dump: ************" << std::endl;
+   
+   std::cerr << std::endl;
+   varset.dump(10);
+   std::cerr << std::endl;
+   targetset.dump(10);
+   std::cerr << std::endl;
+   quantityset.dump(10);
+   
+}
+
+void Catalog::bracket( double tyme, double& pre_t, double& post_t )
+{
+     int n;
+     int m;
+     double xt;
+     int nt;
+     double tinc;
+     double tbase;
+     double xtest;
+     double ytest;
+     double t0;
+     std::string xtime;
+     VarVal* tmpVal;
+
+     tmpVal = currentTarget->dbase.copy();
+     eval( tmpVal );
+     if ( ! tmpVal->hasEval() ) {
+        std::cerr << "Bad Target base date: " << currentTarget->dbase.nominal << std::endl;
+        throw (badDateString());
+     }
+     
+     // get the base time of the file
+     tbase = ( tmpVal->evalD - floor( tmpVal->evalD ) )*24.0;
+     
+     // 00Z of the day of the desired data
+     t0 = floor( tyme );
+     
+     // hours past 00Z on the date of the desired data
+     xt = ( tyme - t0 )*24.0;
+     
+     // get the native time increment and base time (offset)
+     tinc = currentTarget->inctime;
+
+     
+     // But does the user wish to override these?
+     if ( des_tinc > 0 ) {
+     
+        // check that the desired time inc and offset are compatible
+        // with the native inc and offset
+        
+        xtest = des_tinc/tinc;
+        if ( fabs( xtest - round(xtest) ) < 0.0001 ) {
+           // ok, the desired increment is an integral multuple of the native increment
+           
+           ytest = ( des_toff - tbase )/tinc;
+           if ( fabs( ytest - round(ytest) ) < 0.0001 ) {
+              // ok, the time offsets are also compatible
+           
+              tbase = des_toff;
+              tinc = des_tinc;
+
+           }
+     
+        }
+     }
+     
+     
+     // the number of time steps past the tbase time in the file
+     nt =  floor( (xt - tbase )/tinc );
+     
+     // the pre- and post- times
+     pre_t  = t0 + (tbase + nt*tinc)/24.0;
+     post_t = t0 + (tbase + (nt + 1)*tinc)/24.0;
+
+     delete tmpVal;
+}
+
+
+void Catalog::filter_DataSource( std::vector<Catalog::DataSource>& ds )
+{
+    size_t n;
+    std::vector<int> scores;
+    int indiv_score;
+    size_t na;
+    std::string aname;
+    std::string tname;
+    std::string tval;
+    std::string dval;
+    int priority;
+    std::vector<Catalog::DataSource> dtmp;
+    int max_score;
+    
+    na = attrNames.size();
+    
+    n = ds.size();
+    
+    if ( n > 0 && na > 0 ) {
+    
+       max_score = 0;
+       
+       for ( int is=0; is < n; is++ ) { 
+    
+           tname = ds[is].target;
+    
+           indiv_score = 0;
+           for ( int ia=0; ia < na; ia++ ) {
+           
+               aname = attrNames[ia];
+               
+               
+               dval = desired( aname, &priority );
+               
+               if ( dval != "" ) {
+                  
+                  tval = getAttr( tname, aname );
+               
+                  if ( dval == tval ) {
+                  
+                     if ( priority != -9999 ) {
+                        indiv_score = indiv_score + 1;
+                     } else {
+                         // was this match forbidden?
+                         indiv_score = -1;
+                         break;
+                     }               
+                  } else {
+                     // the attributes do not match
+                     
+                     // was a match required?
+                     if ( priority == 9999 ) {
+                         indiv_score = -1;
+                         break;
+                     }
+                  }
+           
+               }
+           }
+           
+           scores.push_back( indiv_score );
+           if ( indiv_score > max_score ) {
+              max_score = indiv_score;
+           }
+    
+       }
+       
+       if ( max_score > 0 ) {
+          
+          // make a copy
+          dtmp = ds;
+    
+          // and clear out the old to make way for the new
+          ds.clear();
+          
+          // put the high-scorers first, and omit any negative-scorers
+          for ( indiv_score = max_score; indiv_score >= 0; indiv_score-- ) {
+       
+              for ( int is=0; is < n; is++ ) {
+               
+                  if ( scores[is] == indiv_score ) {
+                     ds.push_back( dtmp[is] );
+                  }
+              
+              }    
+       
+          }   
+       }
+       
+    }
+}
 

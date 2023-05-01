@@ -29,6 +29,8 @@ refF03/F = $8.2{litF02}
 refS04/S = $4.2{litS01}
 refD05/D = $5.2{litD01}
 refI06/I = ${refI01}
+refD07/D = [2017-$2.2{litI02}-17T01:30]
+refS08/S = "${litI01}_bridge_${litF01}"
 
 expI01/I = 50 + 3
 expI02/I = (50*2 + 3)/3 + 1
@@ -45,13 +47,13 @@ varS03/S = ${litI01} > 6200 ? "wrong"
 varS03/S = "right"
 
 # define a target t01
-t01 := 0.5;3;at1valt01; at2valt01; at3valt01; at4valt01; pattern_for_t01
+t01 := [${YEAR}-${MONTH}-${DOM}T00:30] ;3; 8;at1valt01; at2valt01; at3valt01; at4valt01; pattern_for_t01
 # define a target t02
-t02 := 0;1;at1valt02; at2valt02; at3valt02; at4valt02; pattern_for_t02
+t02 := [${YEAR}-${MONTH}-${DOM}T00];1;24;at1valt02; at2valt02; at3valt02; at4valt02; pattern_for_t02
 
 # define a quantity stuff
-stuff1 : t01[glips/flips;0.5;15.0][this is desc01] | t02[glerps/flergs][this is desc02]
-stuff2 : t02 | t01[K]
+stuff1 : std_stuff1:3: t01[glips/flips;0.5;15.0][this is desc01] | t02[glerps/flergs][this is desc02]
+stuff2 : std_stuff2 : 3 : t02 | t01[K]
 
 FREM = ${attr1} == "at1valt03" ? "THIRD"
 FREM = ${attr1} == "at1valt04" ? "FOURTH"
@@ -60,9 +62,9 @@ FREM = "Nothing"
 PHASE = ${DATE} > [2021-01-01T00] ? "New"
 PHASE = "Old"
 
-t03 := 0;1;at1valt03; at2valt03; at3valt03; at4valt03; ${QUANTITY}_${YEAR}${MONTH}${DOM}${HOUR}_${PHASE}_${FREM}_${TAG}.data
-t04 := 0;6;at1valt04; at2valt04; at3valt04; at4valt04; ${QUANTITY}_${YEAR}${MONTH}${DOM}${HOUR}_${PHASE}_${FREM}.data
+t03 := [${YEAR}-${MONTH}-${DOM}T10];1;11;at1valt03; at2valt03; at3valt03; at4valt03; ${QUANTITY}_${YEAR}${MONTH}${DOM}${HOUR}_${PHASE}_${FREM}_${TAG}.data
+t04 := [${YEAR}-${MONTH}-${DOM}T00];6;4;at1valt04; at2valt04; at3valt04; at4valt04; ${QUANTITY}_${YEAR}${MONTH}${DOM}${HOUR}_${PHASE}_${FREM}.data
 
-stuff3 : t03 | t04
+stuff3:std_stuff3:2: t03 | t04
 
 

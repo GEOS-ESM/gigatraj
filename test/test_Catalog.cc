@@ -182,6 +182,24 @@ int main(int argc, char * const argv[])
       cerr << endl;
       exit(1);     
    }
+   ok = catlog->variableValue( "refD07", teststring );
+   if ( ! ok || ( teststring != "2017-02-17T01:30:00" ) ) {
+      cerr << "variableValue of refD07 failed ";
+      if ( ok ) {
+         cerr << ", returning '" << teststring << "'";
+      }
+      cerr << endl;
+      exit(1);     
+   }
+   ok = catlog->variableValue( "refS08", teststring );
+   if ( ! ok || ( teststring != "123_bridge_123.456" ) ) {
+      cerr << "variableValue of refS08 failed ";
+      if ( ok ) {
+         cerr << ", returning '" << teststring << "'";
+      }
+      cerr << endl;
+      exit(1);     
+   }
 
 
    // full-out expressions
@@ -280,8 +298,9 @@ int main(int argc, char * const argv[])
 
 
    /// try lookups
-   catlog->query( "stuff1", "2021-07-15T10:34", destlist, "20210714_00" );
-   if ( destlist.size() != 2 ) {
+//catlog->dump();
+   ok = catlog->query( "stuff1", "2021-07-15T10:34", destlist, "20210714_00" );
+   if ( ok  && destlist.size() != 2 ) {
       cerr << "lookup of stuff1 returned " << destlist.size() << " items" << std::endl;
       exit(1);     
    }
@@ -293,31 +312,53 @@ int main(int argc, char * const argv[])
       cerr << "lookup of stuff1 returned " << destlist[1].pre  << " as its second 'pre'" << std::endl;
       exit(1);        
    }
+   if ( destlist[0].description != "this is desc01" ) {
+      cerr << "lookup of stuff1 dest # 0 std name = " << destlist[0].description  << std::endl;
+      exit(1);                 
+   }
+   if ( destlist[0].dims != 3 ) {
+      cerr << "lookup of stuff1 dest # 0 dimensionality = " << destlist[0].dims  << std::endl;
+      exit(1);                 
+   }
    teststring = catlog->getAttr( destlist[0], "attr2" );
    if ( teststring != "at2valt01" ) {
       cerr << "lookup of stuff1 dest # 0 attribute 'attr2' = " << teststring  << std::endl;
       exit(1);           
    }
 
-   catlog->query( "stuff3", "2021-07-15T10:34", destlist, "20210714_00" );
-   if ( destlist.size() != 2 ) {
+   // change the order of preference
+   catlog->desired( "attr2", "at2valt04" );
+   
+   std::string qq01;
+   std::string dd01;
+   std::string mm01;
+   qq01 = "stuff3";
+   dd01 = "2021-07-15T10:34";
+   mm01 = "20210714_00";
+   ok = catlog->query( qq01, dd01, destlist, mm01 );
+   //ok = catlog->query( "stuff3", "2021-07-15T10:34", destlist, "20210714_00" );
+   if ( ok && destlist.size() != 2 ) {
       cerr << "lookup of stuff3 returned " << destlist.size() << " items" << std::endl;
       exit(1);     
    }
-   if ( destlist[0].pre != "stuff3_2021071510_New_THIRD_20210714_00.data" ) {
-      cerr << "lookup of stuff1 returned " << destlist[0].pre  << " as its first 'pre'" << std::endl;
+   if ( destlist[1].pre != "stuff3_2021071510_New_THIRD_20210714_00.data" ) {
+      cerr << "lookup of stuff3 returned " << destlist[1].pre  << " as its first 'pre'" << std::endl;
       exit(1);        
    }
-   if ( destlist[0].post != "stuff3_2021071511_New_THIRD_20210714_00.data" ) {
-      cerr << "lookup of stuff1 returned " << destlist[0].post  << " as its first 'post'" << std::endl;
+   if ( destlist[1].post != "stuff3_2021071511_New_THIRD_20210714_00.data" ) {
+      cerr << "lookup of stuff3 returned " << destlist[1].post  << " as its first 'post'" << std::endl;
       exit(1);        
    }
-   if ( destlist[1].pre != "stuff3_2021071506_New_FOURTH.data" ) {
-      cerr << "lookup of stuff3 returned " << destlist[1].pre  << " as its second 'pre'" << std::endl;
+   if ( destlist[1].dims != 2 ) {
+      cerr << "lookup of stuff3 dest # 0 dimensionality = " << destlist[1].dims  << std::endl;
+      exit(1);                 
+   }
+   if ( destlist[0].pre != "stuff3_2021071506_New_FOURTH.data" ) {
+      cerr << "lookup of stuff3 returned " << destlist[0].pre  << " as its second 'pre'" << std::endl;
       exit(1);        
    }
-   if ( destlist[1].post != "stuff3_2021071512_New_FOURTH.data" ) {
-      cerr << "lookup of stuff3 returned " << destlist[1].post  << " as its second 'post'" << std::endl;
+   if ( destlist[0].post != "stuff3_2021071512_New_FOURTH.data" ) {
+      cerr << "lookup of stuff3 returned " << destlist[0].post  << " as its second 'post'" << std::endl;
       exit(1);        
    }
 
