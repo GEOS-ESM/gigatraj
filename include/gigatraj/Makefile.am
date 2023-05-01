@@ -72,6 +72,9 @@ if GEOSFP
    pkginclude_HEADERS +=  MetGEOSfpFcast.hh
    pkginclude_HEADERS +=  MetGEOSfpAssim.hh
 endif
+if MYGEOS
+   pkginclude_HEADERS +=  MetMyGEOS.hh 
+endif
    pkginclude_HEADERS +=  MetSelector.hh 
 
 pkginclude_HEADERS += \

@@ -115,6 +115,12 @@ if GEOSFP
    test_MetGEOSfpAssim_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
    test_MetGEOSfp_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
 endif
+if MYGEOS
+   TESTS += test_MetMyGEOS.sh
+   check_PROGRAMS += test_MetMyGEOS
+#   test_MetMyGEOS_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
+   EXTRA_DIST += test_MetMyGEOS.sh test_MetMyGEOS.cat;
+endif
 TESTS += test_MetSelector
 check_PROGRAMS += test_MetSelector
 
@@ -302,6 +308,9 @@ test_MetGEOSfpAssim_DEPENDENCIES = ../lib/libgigatraj.a
 
 test_MetGEOSfp_SOURCES = test_MetGEOSfp.cc test_utils.cc test_utils.hh
 test_MetGEOSfp_DEPENDENCIES = ../lib/libgigatraj.a
+
+test_MetMyGEOS_SOURCES = test_MetMyGEOS.cc test_utils.cc test_utils.hh
+test_MetMyGEOS_DEPENDENCIES = ../lib/libgigatraj.a
 
 test_MetSelector_SOURCES = test_MetSelector.cc test_utils.cc test_utils.hh
 test_MetSelector_DEPENDENCIES = ../lib/libgigatraj.a

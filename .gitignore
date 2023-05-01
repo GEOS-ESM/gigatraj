@@ -122,6 +122,7 @@ test/test_MetMERRA2
 test/test_MetGEOSfpAssim
 test/test_MetGEOSfpFcast
 test/test_MetGEOSfp
+test/test_MetMyGEOS
 test/test_MetSelector
 test/test_PressOTF
 test/test_ThetaDotOTF

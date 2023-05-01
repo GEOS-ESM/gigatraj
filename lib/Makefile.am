@@ -85,6 +85,9 @@ if GEOSFP
    libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSfpAssim.hh     metsources/MetGEOSfpAssim.cc
    libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSfp.hh     metsources/MetGEOSfp.cc
 endif
+if MYGEOS
+   libgigatraj_a_SOURCES += ../include/gigatraj/MetMyGEOS.hh     metsources/MetMyGEOS.cc
+endif
 libgigatraj_a_SOURCES += ../include/gigatraj/MetSelector.hh     metsources/MetSelector.cc
 
 libgigatraj_a_SOURCES += ../include/gigatraj/Parcel.hh           Parcel.cc \

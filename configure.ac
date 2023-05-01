@@ -94,6 +94,17 @@ if test x$do_netcdf = xtrue ; then
 AC_SUBST([DO_NETCDF], [1])
 fi
 
+
+##### optional MetData subclasses 
+
+AC_ARG_ENABLE([allmet],
+[  --enable-allmet		Add all meteorological data classes ],
+[case "${enableval}" in
+ yes) do_allmet=true ;;
+ no)  do_allmet=false ;;
+ *) AC_MSG_ERROR([bad value ${enableval} for --enable-allmet]) ;;
+ esac], [do_allmet=false])
+
 AC_ARG_ENABLE([merra],
 [  --enable-merra		Add class for reading NASA's GMAO MERRA meteorological data ],
 [case "${enableval}" in
@@ -101,6 +112,9 @@ AC_ARG_ENABLE([merra],
  no)  do_merra=false ;;
  *) AC_MSG_ERROR([bad value ${enableval} for --enable-merra]) ;;
  esac], [do_merra=false])
+if test x$do_allmet = xtrue ; then
+   do_merra=true
+fi 
 AM_CONDITIONAL([MERRA], [test x$do_merra = xtrue])
 AC_SUBST([DO_MERRA],[0])
 if test x$do_merra = xtrue ; then
@@ -115,6 +129,9 @@ AC_ARG_ENABLE([merra2],
  no)  do_merra2=false ;;
  *) AC_MSG_ERROR([bad value ${enableval} for --enable-merra2]) ;;
  esac], [do_merra2=false])
+if test x$do_allmet = xtrue ; then
+   do_merra2=true
+fi 
 AM_CONDITIONAL([MERRA2], [test x$do_merra2 = xtrue])
 AC_SUBST([DO_MERRA2],[0])
 if test x$do_merra2 = xtrue ; then
@@ -129,12 +146,33 @@ AC_ARG_ENABLE([geosfp],
  no)  do_geosfp=false ;;
  *) AC_MSG_ERROR([bad value ${enableval} for --enable-geosfp]) ;;
  esac], [do_geosfp=false])
+if test x$do_allmet = xtrue ; then
+   do_geosfp=true
+fi 
 AM_CONDITIONAL([GEOSFP], [test x$do_geosfp = xtrue])
 AC_SUBST([DO_GEOSFP],[0])
 if test x$do_geosfp = xtrue ; then
 do_netcdf=true
 AC_SUBST([DO_GEOSFP], [1])
 fi
+
+AC_ARG_ENABLE([mygeos],
+[  --enable-mygeos		Add class for reading local output files from NASA's GMAO GEOS ],
+[case "${enableval}" in
+ yes) do_mygeos=true ;;
+ no)  do_mygeos=false ;;
+ *) AC_MSG_ERROR([bad value ${enableval} for --enable-mygeos]) ;;
+ esac], [do_mygeos=false])
+if test x$do_allmet = xtrue ; then
+   do_mygeos=true
+fi 
+AM_CONDITIONAL([MYGEOS], [test x$do_mygeos = xtrue])
+AC_SUBST([DO_MYGEOS],[0])
+if test x$do_mygeos = xtrue ; then
+do_netcdf=true
+AC_SUBST([DO_MYGEOS], [1])
+fi
+
 
 
 ###### Enough with specifications. Let's start checking for stuff.
