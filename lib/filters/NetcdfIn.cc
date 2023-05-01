@@ -435,12 +435,12 @@ void NetcdfIn::parseTimeUnits( std::string tunits )
                pos = 12;      
             }
          } else if ( (tunits.size() > 14) && (tunits.substr(0,1) == "m" || tunits.substr(0,1) == "M" ) ) {
-            if ( tunits.substr(1,11) == "inutes since " ) {
+            if ( tunits.substr(1,13) == "inutes since " ) {
                tmp_ts = 24.0*60.0;
                pos = 14;      
             }
          } else if ( (tunits.size() > 14) && (tunits.substr(0,1) == "s" || tunits.substr(0,1) == "S" ) ) {
-            if ( tunits.substr(1,11) == "sconds since " ) {
+            if ( tunits.substr(1,13) == "econds since " ) {
                tmp_ts = 24.0*60.0*60.0;      
                pos = 14;
             }

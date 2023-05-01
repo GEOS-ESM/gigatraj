@@ -248,7 +248,7 @@ void NetcdfOut::delQuantity( std::string quantity )
               uidx = other_units.erase( uidx );
               didx = other_desc.erase( didx );
               
-              // ther other elements have not yet been used, so we
+              // the other elements have not yet been used, so we
               // can just remove the one at the end--they are all the same
               vid_other.pop_back();
               vtyp_other.pop_back();

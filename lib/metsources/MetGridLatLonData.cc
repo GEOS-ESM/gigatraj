@@ -260,7 +260,7 @@ real MetGridLatLonData::getData( string quantity, double time, real lon, real la
      
      //std::cerr << "==== 1: in getdata for " << ndims << " dims " << std::endl;        
      
-     // change internalmodel time to met source calendar time string   
+     // change internal model time to met source calendar time string   
      cxtime = time2Cal( time, 4 ); 
      
      // send the numeric time to bracket, so we can use the full numeric precision

@@ -25,7 +25,7 @@ namespace gigatraj {
 \brief class for reading the NASA GMAO MERRA2 data product.
 
 This class implements access to the Modern-Era Retrospective analysis for Research and Applications II (MERRA2)
-data products created by Globl Modeling and Assimilation Office (GMAO) of
+data products created by Global Modeling and Assimilation Office (GMAO) of
 NASA's Goddard Space Flight Center. For more information about these products, see
 https://gmao.gsfc.nasa.gov/reanalysis/MERRA2/
 
@@ -39,7 +39,7 @@ NOTE: These data are provided by an OPeNDAP server hosted by NASA's "GES DISC" s
 which requires registration and authentication.  You are free to register and access
 the data, but without an account MERRA2 access will fail. For more information, see
 https://disc.gsfc.nasa.gov/data-access
-Once you have an account, create a netrc file somewhere with yoyr credentials
+Once you have an account, create a netrc file somewhere with your credentials
 in it (as described in the GES DISC documentation) and then create an empty file
 for cookies. Finally, create a $HOME/.dodsrc file that defines HTTP.NETRC
 and HTTP.COOKIEJAR, as described in the section "Grid Analysis and Display System (GrADS)".
@@ -407,7 +407,7 @@ class MetMERRA2 : public MetGEOSPortal {
            as the old. However, the new object has no open files
            or met data held in memory cache.
            
-           This is useful for calculating quantities on th efly
+           This is useful for calculating quantities on the fly
            from consitituent quantities that have to be read in 
            separately.
            

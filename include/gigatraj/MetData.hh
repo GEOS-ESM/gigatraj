@@ -107,11 +107,30 @@ class MetData {
       /// An exception involving some unspecified failure to get met data
       class badmetfailure {};
 
-      /// An exception indictating that some feature has not yet been implemented
+      /// An exception indicating that some feature has not yet been implemented
       class badnotimplemented {};
 
+      /// and exception from trying to do something (like assignment) with two incompatible MetData subclasses
+      class badIncompatibleMetDataClass {};
+
+      /*! \brief flags for the MetData class
+          
+          A MetData object might need flags to control certain aspects
+          of its operation.
+         
+          MetSrcFlag bitwise values are for those. there are held in the MetData flag member.
+          
+          MetSrcFlag bitwise values within the range 1 to 128 (0x0010) are reserved for 
+          use by the (abstract) MetData class and its main subclasses (e.g., MetGridData, MetGridLatLonData).
+          The rest of the flags (0x0100 through 0x1100) may be used by the non-abstract subclasses
+          for their own purposes,
+          (and those uses may conflict between those subclasses)
+          
+      */
+      typedef int MetSrcFlag;
+      
       /// flag value: Trace Iso-surface flow (e.g., isentropic for Theta coordinates)
-      static const int MET_ISO = 1; 
+      static const MetSrcFlag MET_ISO = 1; 
 
       /// interprocess communications tag: "This is a Request"
 //      static const int PGR_TAG_REQ = 1040;
@@ -792,7 +811,7 @@ class MetData {
       /// initial time string that maps to internal model time 0.0000
       std::string t0;
       
-      /// flags concernign this data source
+      /// flags concerning this data source (the tne MetSrcFlag values)
       int flags;
       
       /// copy a given object into this object
@@ -805,11 +824,11 @@ class MetData {
       
       /// the current time
       /*! The data obtained through this object may have an expiration
-         date. We need a time stamp agaist which to compare the expiration
+         date. We need a time stamp against which to compare the expiration
          date. Doing this dynamically, calling time() whenever we need
          to do the comparison, is likely to introduce issues in
          reproducability. So we take a single time reading when
-         the met source object is created, and we use that value througout
+         the met source object is created, and we use that value throughout
          a model run.
       */   
       time_t now;

@@ -382,7 +382,7 @@ class MetGEOSPortal : public MetGridLatLonData {
       /// returns a default set of vertical coordinate values
       /*! This method returns a vector of vertical coordinate values, depending on the coordinate system desired.
       
-          \param coordSys a pointer ot a string giving the name of the vertical coordinate. If NULLPTR, the 
+          \param coordSys a pointer to a string giving the name of the vertical coordinate. If NULLPTR, the 
                         meteorological source's current vertical coordinate is used.
            \return a pointer to a vector of coordinate values corresponding to the usual or default values
                         for this data souirce on the desired coordinates.              
@@ -685,6 +685,7 @@ class MetGEOSPortal : public MetGridLatLonData {
            \return  the number of dimensions of a data object (i.e, 2 or 3)
       */
       virtual int setup(  const std::string quantity, const std::string &time ) = 0;    
+
        /// calculates an expiration time for the data returned by this object.
        /*! This method calculates an expiration time from the model run,
            for use with GridField objects created by this class.
@@ -1330,7 +1331,7 @@ class MetGEOSPortal : public MetGridLatLonData {
        */
        void Portal_getvar(const std::string quantity, const double time, GridLatLonField3D* grid3d );
 
-       /// read just the desired 2D surface ariable from the OPeNDAP server
+       /// read just the desired 2D surface variable from the OPeNDAP server
        /*! This method reads just the desired 2D surface variable from the OPeNDAP server.
        
            \param quantity the name of the meteorological fields to be read

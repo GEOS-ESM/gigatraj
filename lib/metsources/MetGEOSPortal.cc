@@ -2185,6 +2185,12 @@ void MetGEOSPortal::Portal_read_all_dims()
        cur_tgrid.delta = Portal_deltime_nativeTo1900( span.doubleSpec.delta );
        cur_tgrid.n     = span.doubleSpec.size;
        break;
+    case NC_FLOAT:
+       cur_tgrid.start = Portal_time_nativeTo1900( static_cast<double>(span.floatSpec.first) );
+       cur_tgrid.end   = Portal_time_nativeTo1900( static_cast<double>(span.floatSpec.last)  );
+       cur_tgrid.delta = Portal_deltime_nativeTo1900( static_cast<double>(span.floatSpec.delta) );
+       cur_tgrid.n     = span.doubleSpec.size;
+       break;
     case NC_INT:
        cur_tgrid.start = Portal_time_nativeTo1900( static_cast<double>(span.intSpec.first) );
        cur_tgrid.end   = Portal_time_nativeTo1900( static_cast<double>(span.intSpec.last)  );
