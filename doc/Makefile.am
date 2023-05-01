@@ -363,6 +363,10 @@ TESTS = check_doxygen.sh
 doc: $(docarchive) $(manpages)
 	echo "Made the documentation"
 
+# Let's not make anything
+nodoc:
+	echo "Did not make thew documentation"
+
 
 # How do we install the doc tarball?
 # create the installation directory.
