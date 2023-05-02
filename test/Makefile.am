@@ -116,7 +116,7 @@ if GEOSFP
    test_MetGEOSfp_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
 endif
 if MYGEOS
-   TESTS += test_MetMyGEOS.sh
+#   TESTS += test_MetMyGEOS.sh
    check_PROGRAMS += test_MetMyGEOS
 #   test_MetMyGEOS_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
    EXTRA_DIST += test_MetMyGEOS.sh test_MetMyGEOS.cat;

@@ -82,6 +82,8 @@ int main()
     
     // the 2D quantity to test
     std::string quant2d = "PS";
+    // the units of that quantity
+    std::string units2d = "Pa";
     // the 2D data value at [0,0]
     real  eDat2dLL = 67862.34; 
     // the 2D data value at [eNlons-1, eNlats-1]
@@ -97,6 +99,12 @@ int main()
     
     // the 3D quantity to test
     std::string quant3d = "T";
+    // its units
+    std::string units3d = "K";
+    // the verticla coord
+    std::string vquant3d = "P";
+    // the vertical coord units
+    std::string vunits3d = "hPa";
     // the 3D data value at [0,0,0]
     real  eDat3dLLL = bad; 
     // the 3D data value at [eNlons-1, eNlats-1, eNvert-1]
@@ -157,7 +165,7 @@ int main()
 
     // create a MyGEOS data object
     metsrc0 = new MetMyGEOS();
-    metsrc0->debug = 100;
+    //metsrc0->debug( 100 );
 
     
     
@@ -191,6 +199,8 @@ int main()
 
     //*************  Catalog tests *******************************
 
+    //metsrc0->debug( 100 );
+    
     metsrc0->metTag( metCatalog );
     stry = metsrc0->metTag();
     if ( stry != metCatalog ) {
@@ -200,7 +210,6 @@ int main()
 
     //*************  Sfc-reading tests *******************************
 
-    //metsrc0->debug = 10;
 
     // test sample values for a 2D field
 
@@ -233,6 +242,17 @@ int main()
     }
 
 
+    // check quantities and units
+    stry = grid2d->quantity();
+    if ( stry != quant2d ) {
+       cerr << "Bad grid2d quantity: " << stry << " vs. " << quant2d << endl;
+       exit(1);  
+    }
+    stry = grid2d->units();
+    if ( stry != units2d ) {
+       cerr << "Bad grid2d units: " << stry << " vs. " << units2d << endl;
+       exit(1);  
+    }
 
 
     // check data values
@@ -289,7 +309,7 @@ int main()
        exit(1);  
     }
     
-    //metsrc0->debug = 0;
+    //metsrc0->debug( 0 );
 
     tyme = metsrc0->cal2Time( date0 );
     if ( eDat2dM1M1 != bad ) {
@@ -309,7 +329,7 @@ int main()
 
     //*************  3D-reading tests *******************************
 
-    //metsrc0->debug = 1;
+    //metsrc0->debug( 1 );
     
     grid3d = metsrc0->Get3D( quant3d, date0 );
     
@@ -346,6 +366,28 @@ int main()
     dd = grid3d->level(iVrt0);
     if ( mismatch(dd, eVert0) ) {
        cerr << "Bad grid3d level: " << dd << " vs. " << eVert0 << endl;
+       exit(1);  
+    }
+
+    // check quantities and units
+    stry = grid3d->quantity();
+    if ( stry != quant3d ) {
+       cerr << "Bad grid3d quantity: " << stry << " vs. " << quant3d << endl;
+       exit(1);  
+    }
+    stry = grid3d->units();
+    if ( stry != units3d ) {
+       cerr << "Bad grid3d units: " << stry << " vs. " << units3d << endl;
+       exit(1);  
+    }
+    stry = grid3d->vertical();
+    if ( stry != vquant3d ) {
+       cerr << "Bad grid3d vertical: " << stry << " vs. " << vquant3d << endl;
+       exit(1);  
+    }
+    stry = grid3d->vunits();
+    if ( stry != vunits3d ) {
+       cerr << "Bad grid3d vertical units: " << stry << " vs. " << vunits3d << endl;
        exit(1);  
     }
 
@@ -441,7 +483,7 @@ int main()
        exit(1);  
     }
 
-    //metsrc0->debug = 0;
+    //metsrc0->debug( 0 );
     
     // test a quantity that is calculated on the fly
     d0 = (*grid3d)(iLon1,iLat1,iVrt1);

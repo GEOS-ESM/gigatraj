@@ -1,7 +1,8 @@
 
 ;horizCoord; vertCoord
 
-ROOT/S = "/misc/lrl02/lait/weiyuan/"
+#ROOT/S = "/misc/lrl02/lait/weiyuan/"
+ROOT/S = "/discover/nobackup/wjiang/gigatraj_merra2/scratch/"
 
 datdir/S = ${ROOT} + "/"
 

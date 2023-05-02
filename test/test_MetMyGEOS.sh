@@ -1,6 +1,7 @@
 #!/bin/sh
 
-HERE=`/bin/pwd`
+THIS="$0"
+HERE=`dirname "${THIS}"`
 
 export GIGATRAJ_CATALOGS="${HERE}"
 
