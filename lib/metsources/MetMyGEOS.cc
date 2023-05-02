@@ -393,7 +393,7 @@ void MetMyGEOS::delay()
        
           w = ( my_pgroup->random()*wayt + 0.5);
           
-          if ( debug > 5 ) {
+          if ( dbug > 5 ) {
              std::cerr << "MetMyGEOS::delay: sleeping for " << w 
                        << " sec from a max of " << wayt 
                        << " w/ " << c1 <<  " processors"
@@ -405,6 +405,11 @@ void MetMyGEOS::delay()
 
 }
 
+void MetMyGEOS::debug( int level ) 
+{
+     MetData::debug( level );
+     catlog.debug( level );
+}
 
 MetGridData* MetMyGEOS::MetGridCopy()
 {
@@ -434,7 +439,7 @@ GridLatLonField3D* MetMyGEOS::new_directGrid3D( const std::string quantity, cons
     time_t zeep;
     std::string vcode;
 
-    if ( debug > 20 ) {
+    if ( dbug > 20 ) {
        std::cerr << "MetMyGEOS::new_directGrid3D: Entering quantity = " << quantity << " @ " << time << std::endl;
     }
 
@@ -576,7 +581,7 @@ GridLatLonField3D* MetMyGEOS::new_directGrid3D( const std::string quantity, cons
     zeep = expiration( time );
     grid3d->set_expires( zeep );
     
-    if ( debug > 20 ) {
+    if ( dbug > 20 ) {
        std::cerr << "MetMyGEOS::new_directGrid3D: leaving  quantity=" << quantity << " @ " << time << std::endl;
     }
     
@@ -1064,7 +1069,7 @@ bool MetMyGEOS::vConvert( GridField3D *input, std::string quant, std::string uni
 
     if ( currvq == pressure_name && quant == palt_name ) {
        vcoord = input->levels();
-       if ( debug > 1 ) {
+       if ( dbug > 1 ) {
            std::cerr << "**** converting " << currvq << " to " << quant 
                      << " for " << input->quantity() << " grid " << std::endl;
        }
@@ -1095,7 +1100,7 @@ bool MetMyGEOS::vConvert( GridField3D *input, std::string quant, std::string uni
        return true;
     } else if ( currvq == palt_name && quant == pressure_name ) {
        vcoord = input->levels();
-       if ( debug > 1 ) {
+       if ( dbug > 1 ) {
            std::cerr << "**** converting " << currvq << " to " << quant 
                      << " for " << input->quantity() << " grid " << std::endl;
        }
@@ -1137,7 +1142,7 @@ bool MetMyGEOS::bracket( const std::string &quantity, const std::string &time, s
     double tcal;
     double tcat;
     
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetMyGEOS::bracket: Bracketing time " << time << " against base " << basetime << std::endl;
     }
     
@@ -1171,7 +1176,7 @@ bool MetMyGEOS::bracket( const std::string &quantity, const std::string &time, s
 
     delete testquants;
     
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetMyGEOS::bracket:   Translated bracket times to  " << *t1 << " and " << *t2  << std::endl;
     }
  
@@ -1571,7 +1576,7 @@ MetMyGEOS* MetMyGEOS::myNew()
    
    dup = new MetMyGEOS();
    
-   dup->debug = debug;
+   dup->dbug = dbug;
    dup->setPgroup(my_pgroup, my_metproc);
    dup->defineCal( time2Cal(0), 0.0 );
    dup->maxsnaps = this->maxsnaps;
@@ -1959,7 +1964,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
 
      int waittime;
 
-     if ( debug > 2 ) {
+     if ( dbug > 2 ) {
         std::cerr << "MetMyGEOS::Source_open: starting" << std::endl;
      }
 
@@ -1986,14 +1991,14 @@ void MetMyGEOS::Source_open( bool pre, int index )
            Source_close();
         }
 
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetMyGEOS::Source_open: attempting initial nc_open of ds index " << index 
            << ": <<" << url  << ">>" << std::endl;
         }
              
         // but first, sleep some time between opens, to avoid being obnoxious to the server
         if ( openwait > 0 ) {
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "************* About to wait " << openwait << " seconds on proc " 
                         << my_pgroup->id() << " group " << my_pgroup->group_id() << std::endl;
            }
@@ -2005,7 +2010,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
            trial = 0;
            do {
 
-              if ( debug > 10 ) {
+              if ( dbug > 10 ) {
                  std::cerr << "MetMyGEOS::Source_open: attempting initial nc_open of: <<" << url  << ">>" << std::endl;
               }
                  
@@ -2025,7 +2030,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
            }
         
         } else {
-           if ( debug > 5 ) {
+           if ( dbug > 5 ) {
               std::cerr << "Cannot open " << url << " as a netcdf file" << std::endl;
            }        
         }
@@ -2042,7 +2047,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
                   url = ds[index].post;
                }
            
-               if ( debug > 5 ) {
+               if ( dbug > 5 ) {
                   std::cerr << "MetMyGEOS::Source_open: attempting nc_open of ds index " << index 
                   << ": <<" << url  << ">>" << std::endl;
                }
@@ -2052,7 +2057,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
                  trial = 0;
                  do {
 
-                    if ( debug > 5 ) {
+                    if ( dbug > 5 ) {
                        std::cerr << "MetMyGEOS::Source_open: attempting nc_open of: <<" << url  << ">>" << std::endl;
                     }
                     
@@ -2064,7 +2069,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
                  } while ( (err != NC_NOERR) && (ds[index].type == 1) && (try_again( err, trial ) ) );
                  if ( err == NC_NOERR ) {
                  
-                    if ( debug > 5 ) {
+                    if ( dbug > 5 ) {
                        std::cerr << "MetMyGEOS::Source_open: nc_open of ds index " << index 
                        << " succeeded" << std::endl;
                     }
@@ -2082,7 +2087,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
                     break;
                  }
               } else {
-                 if ( debug > 5 ) {
+                 if ( dbug > 5 ) {
                     std::cerr << "Cannot open " << url << " as a netcdf file" << std::endl;
                  }
               }
@@ -2105,7 +2110,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
               throw(badNetcdfError(err));
            }
         
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "MetMyGEOS::Source_open: initial inq: " << ndimens << ", " << nvars 
                         << ", " << ngatts << ", " << unlimdim_idx << std::endl;
            }
@@ -2131,7 +2136,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
                   throw(badNetcdfError(err));
                }
                
-               if ( debug > 4 ) {
+               if ( dbug > 4 ) {
                   std::cerr << "MetMyGEOS::Source_open: reading global attr " << i << ": " << name 
                   << "(" << attr_type << " x " << attr_size << ") ";
                }
@@ -2146,7 +2151,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
                    if ( name != "ArchivedMetadata.0" ) {
                    
                       Source_read_attr( attr_val_str, attr_name, NC_GLOBAL, attr_size );
-                      if ( debug > 4  ) {
+                      if ( dbug > 4  ) {
                          std::cerr << "= " << gattr_strings[name];
                       }
                       gattr_strings[name] = attr_val_str;
@@ -2157,7 +2162,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
                    //- std::cerr << " [NC_FLOAT] ";
                    // a float attribute may be an array of floats.
                    Source_read_attr( attr_val_f, attr_name, NC_GLOBAL, attr_size );
-                   if ( debug > 4  ) {
+                   if ( dbug > 4  ) {
                       std::cerr << "= " << gattr_reals[name];
                    }
                    // use only the first value; toss the rest
@@ -2169,7 +2174,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
                    //- std::cerr << " [NC_DOUBLE] ";
                    // a double attribute may be an array of doubles.
                    Source_read_attr( attr_val_d, attr_name, NC_GLOBAL, attr_size );
-                   if ( debug > 4  ) {
+                   if ( dbug > 4  ) {
                       std::cerr << "= " << gattr_reals[name];
                    }
                    gattr_reals[name] = attr_val_d[0];
@@ -2179,7 +2184,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
                    break;    
                }
                 
-               if ( debug > 4  ) {
+               if ( dbug > 4  ) {
                   std::cerr << std::endl;
                }
 
@@ -2216,7 +2221,7 @@ void MetMyGEOS::Source_close()
        opened_dsrc = -1;
        opened_url = "";
        // but of course we keep test_dsrc unchanged
-       if ( debug > 2 ) {
+       if ( dbug > 2 ) {
           std::cerr << "MetMyGEOS::Source_close: nc_close success!" << std::endl;        
        }
     }
@@ -2258,7 +2263,7 @@ void MetMyGEOS::Source_checkdims(const int nvdims, const int*dimids )
             
          name.assign(dim_name);
                      
-         if ( debug > 5 ) {
+         if ( dbug > 5 ) {
             std::cerr << "MetMyGEOS::Source_checkdims:     dim " << i << " is " << name << " of size " << dim_size << std::endl;
          }
                        
@@ -2310,13 +2315,13 @@ int MetMyGEOS::Source_findtime(const std::string& quantity, const double desired
     //  time values are evenly-spaced, so we can calculate
     //  which one is closest, and if it is close enough
 
-    if ( debug > 4 ) {
+    if ( dbug > 4 ) {
        std::cerr << "MetMyGEOS::Source_findtime: Looking for time " << desired_time  << std::endl;
     }
     
     queryTimeSpacing( quantity, desired_time, tincrement, btime ); 
 
-    if ( debug > 4 ) {
+    if ( dbug > 4 ) {
        std::cerr << "MetMyGEOS::Source_findtime:  time inc is " << tincrement << std::endl;
        std::cerr << "MetMyGEOS::Source_findtime:  base time is " << btime << std::endl;
     }
@@ -2325,7 +2330,7 @@ int MetMyGEOS::Source_findtime(const std::string& quantity, const double desired
     idx =  itime ;
     
     xtime = btime + idx*tincrement/24.0;
-    if ( debug > 4 ) {
+    if ( dbug > 4 ) {
        std::cerr << "MetMyGEOS::Source_findtime:  determined index " << idx << " for " << xtime << std::endl;
     }    
    
@@ -2334,7 +2339,7 @@ int MetMyGEOS::Source_findtime(const std::string& quantity, const double desired
        if ( ABS(xtime - desired_time) < (2.0/60.0/24.0) ) {
           result = idx;
        } else {
-         if ( debug > 5 ) {
+         if ( dbug > 5 ) {
             double xt2 = desired_time;
             double xt1 = xtime;
             std::string st1 =  cal.date1900( xt1 );
@@ -2349,7 +2354,7 @@ int MetMyGEOS::Source_findtime(const std::string& quantity, const double desired
        }   
     }
     
-    if ( debug > 4 ) {
+    if ( dbug > 4 ) {
        std::cerr << "MetMyGEOS::Source_findtime:  Returning result " << result << std::endl;
     }    
     return result;
@@ -2378,7 +2383,7 @@ void MetMyGEOS::Source_dim_attrs(const std::string &dname, const int var_id, con
     std::string outval;
     int trial;
     
-    if ( debug > 4 ) {
+    if ( dbug > 4 ) {
        std::cerr << "MetMyGEOS::Source_get_attrs: " << nattrs << " Attributes:" << std::endl;
     }
     
@@ -2386,7 +2391,7 @@ void MetMyGEOS::Source_dim_attrs(const std::string &dname, const int var_id, con
     // for each attribute of this variable...
     for ( int ia=0; ia<nattrs; ia++ ) {
     
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetMyGEOS::Source_get_attrs:      Attribute " << ia << " of " << nattrs << ":" << std::endl;
         } 
         
@@ -2408,7 +2413,7 @@ void MetMyGEOS::Source_dim_attrs(const std::string &dname, const int var_id, con
         }
         
         aname.assign(attrname);
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetMyGEOS::Source_get_attrs:          attribute name is  " << aname <<  std::endl;
         }   
         
@@ -2418,7 +2423,7 @@ void MetMyGEOS::Source_dim_attrs(const std::string &dname, const int var_id, con
         // how we read in the attribute value depends on the value type
         switch (attr_type) {
         case NC_CHAR:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_get_attrs:          Reading " << attr_size << " characters for attribute " << aname << std::endl;
              }   
 
@@ -2458,7 +2463,7 @@ void MetMyGEOS::Source_dim_attrs(const std::string &dname, const int var_id, con
              
            break;
         case NC_BYTE:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_get_attrs:          Reading " << attr_size << " bytes for attribute " << aname << std::endl;
              }   
 
@@ -2468,7 +2473,7 @@ void MetMyGEOS::Source_dim_attrs(const std::string &dname, const int var_id, con
 
            break;
         case NC_SHORT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_get_attrs:          Reading " << attr_size << " shorts for attribute " << aname << std::endl;
              }   
 
@@ -2478,7 +2483,7 @@ void MetMyGEOS::Source_dim_attrs(const std::string &dname, const int var_id, con
                 
            break;
         case NC_INT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_get_attrs:          Reading " << attr_size << " ints for attribute " << aname << std::endl;
              }   
 
@@ -2487,7 +2492,7 @@ void MetMyGEOS::Source_dim_attrs(const std::string &dname, const int var_id, con
              attr_val_i.clear();    
            break;
         case NC_FLOAT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_get_attrs:          Reading " << attr_size << " floats for attribute " << aname << std::endl;
              }   
 
@@ -2498,7 +2503,7 @@ void MetMyGEOS::Source_dim_attrs(const std::string &dname, const int var_id, con
 
            break;
         case NC_DOUBLE:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_get_attrs:          Reading " << attr_size << " doubles for attribute " << aname << std::endl;
              }   
 
@@ -2508,7 +2513,7 @@ void MetMyGEOS::Source_dim_attrs(const std::string &dname, const int var_id, con
              attr_val_d.clear();    
            break;
         default:
-           if (debug > 5 ) {
+           if (dbug > 5 ) {
               std::cerr << "MetMyGEOS::Source_get_attrs:   unknown attr data type " << attr_type << " for " << attrname << std::endl;
            }
            throw(badNetcdfError(NC_EBADTYPE));   
@@ -2550,14 +2555,14 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
     std::ostringstream sconv;
     int trial;
     
-    if ( debug > 4 ) {
+    if ( dbug > 4 ) {
        std::cerr << "MetMyGEOS::Source_getattrs: (3D) Attributes:" << std::endl;
     }
     
     // for each attribute of this variable...
     for ( int ia=0; ia<nattrs; ia++ ) {
     
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetMyGEOS::Source_getattrs: (3D)      Attribute " << ia << " of " << nattrs << ":" << std::endl;
         } 
         
@@ -2579,7 +2584,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
         }
         
         aname.assign(attrname);
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetMyGEOS::Source_getattrs:  (3D)        attribute name is  " << aname <<  std::endl;
         }   
         
@@ -2591,7 +2596,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
         // how we read in the attribute value depends on the value type
         switch (attr_type) {
         case NC_CHAR:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getattrs: (3D)         Reading " << attr_size << " characters for attribute " << aname << std::endl;
              }   
 
@@ -2609,7 +2614,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
              
            break;
         case NC_BYTE:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getattrs:  (3D)        Reading " << attr_size << " bytes for attribute " << aname << std::endl;
              }   
 
@@ -2626,7 +2631,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
 
            break;
         case NC_SHORT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getattrs: (3D)         Reading " << attr_size << " shorts for attribute " << aname << std::endl;
              }   
 
@@ -2643,7 +2648,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
                 
            break;
         case NC_INT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getattrs:  (3D)        Reading " << attr_size << " ints for attribute " << aname << std::endl;
              }   
 
@@ -2659,7 +2664,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
              attr_val_i.clear();    
            break;
         case NC_FLOAT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getattrs: (3D)         Reading " << attr_size << " floats for attribute " << aname << std::endl;
              }   
 
@@ -2686,7 +2691,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
 
            break;
         case NC_DOUBLE:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getattrs:  (3D)        Reading " << attr_size << " doubles for attribute " << aname << std::endl;
              }   
 
@@ -2702,7 +2707,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
              attr_val_d.clear();    
            break;
         default:
-           if (debug > 5 ) {
+           if (dbug > 5 ) {
               std::cerr << "MetMyGEOS::Source_getattrs: (3D)  unknown attr data type " << attr_type << " for " << attrname << std::endl;
            }
            throw(badNetcdfError(NC_EBADTYPE));   
@@ -2710,7 +2715,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
         
         
         // store the attribute
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetMyGEOS::Source_getattrs:  (3D)        Setting attribute " << aname << " to:<<" << sconv.str() << ">>" << std::endl;
         }   
         datagrid->set_attribute( aname, sconv.str() ); 
@@ -2720,22 +2725,22 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
     
     // set the bad-or-missing-data flag
     if ( badval_0 != 0.0 ) {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetMyGEOS::Source_getattrs: (3D)      Setting badval to 0: " << badval_0 << std::endl;
        }   
        datagrid->set_fillval( badval_0 );
     } else if ( badval_1 != 0.0 ) {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetMyGEOS::Source_getattrs: (3D)      Setting badval to 1: " << badval_1 << std::endl;
        }   
        datagrid->set_fillval( badval_1 );
     } else if ( badval_2 != 0.0 ) {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << " MetMyGEOS::Source_getattrs:  (3D)       Setting badval to 2: " << badval_2 << std::endl;
        }   
        datagrid->set_fillval( badval_1 );
     } else {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetMyGEOS::Source_getattrs:  (3D)     Setting badval to def: " << badval_def << std::endl;
        }   
        datagrid->set_fillval( badval_def );
@@ -2770,14 +2775,14 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
     std::ostringstream sconv;
     int trial;
     
-    if ( debug > 4) {
+    if ( dbug > 4) {
        std::cerr << "MetMyGEOS::Source_getattrs: (Sfc)  Attributes:" << std::endl;
     }
     
     // for each attribute of this variable...
     for ( int ia=0; ia<nattrs; ia++ ) {
     
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetMyGEOS::Source_getattrs: (Sfc)     Attribute " << ia << " of " << nattrs << ":" << std::endl;
         } 
         
@@ -2799,7 +2804,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
         }
         
         aname.assign(attrname);
-        if ( debug) {
+        if ( dbug) {
            std::cerr << "MetMyGEOS::Source_getattrs:  (Sfc)       attribute name is  " << aname <<  std::endl;
         }   
         
@@ -2811,7 +2816,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
         // how we read in the attribute value depends on the value type
         switch (attr_type) {
         case NC_CHAR:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getattrs: (Sfc)        Reading " << attr_size << " characters for attribute " << aname << std::endl;
              }   
 
@@ -2825,7 +2830,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
              
            break;
         case NC_BYTE:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getattrs: (Sfc)        Reading " << attr_size << " bytes for attribute " << aname << std::endl;
              }   
 
@@ -2842,7 +2847,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
 
            break;
         case NC_SHORT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getattrs:  (Sfc)       Reading " << attr_size << " shorts for attribute " << aname << std::endl;
              }   
 
@@ -2858,7 +2863,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
              attr_val_s.clear();
            break;
         case NC_INT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getattrs: (Sfc)        Reading " << attr_size << " ints for attribute " << aname << std::endl;
              }   
 
@@ -2874,7 +2879,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
              attr_val_i.clear();    
            break;
         case NC_FLOAT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getattrs:  (Sfc)       Reading " << attr_size << " floats for attribute " << aname << std::endl;
              }   
 
@@ -2901,7 +2906,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
 
            break;
         case NC_DOUBLE:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getattrs:  (Sfc)       Reading " << attr_size << " doubles for attribute " << aname << std::endl;
              }   
 
@@ -2917,7 +2922,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
              attr_val_d.clear();    
            break;
         default:
-           if (debug > 0 ) {
+           if (dbug > 0 ) {
               std::cerr << "MetMyGEOS::Source_getattrs:  (Sfc)unknown attr data type " << attr_type << " for " << attrname << std::endl;
            }
            throw(badNetcdfError(NC_EBADTYPE));   
@@ -2925,7 +2930,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
         
         
         // store the attribute
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetMyGEOS::Source_getattrs: (Sfc)        Setting attribute " << aname << " to:<<" << sconv.str() << ">>" << std::endl;
         }   
         datagrid->set_attribute( aname, sconv.str() ); 
@@ -2935,22 +2940,22 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
     
     // set the bad-or-missing-data flag
     if ( badval_0 != 0.0 ) {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetMyGEOS::Source_getattrs: (Sfc)     Setting badval to 0: " << badval_0 << std::endl;
        }   
        datagrid->set_fillval( badval_0 );
     } else if ( badval_1 != 0.0 ) {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetMyGEOS::Source_getattrs:  (Sfc)    Setting badval to 1: " << badval_1 << std::endl;
        }   
        datagrid->set_fillval( badval_1 );
     } else if ( badval_2 != 0.0 ) {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetMyGEOS::Source_getattrs:  (Sfc)       Setting badval to 2: " << badval_2 << std::endl;
        }   
        datagrid->set_fillval( badval_1 );
     } else {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetMyGEOS::Source_getattrs:  (Sfc)    Setting badval to def: " << badval_def << std::endl;
        }   
        datagrid->set_fillval( badval_def );
@@ -3213,7 +3218,7 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
 
      c_dim_name = dim_name.c_str();
      
-     if ( debug >= 3 ) {
+     if ( dbug >= 3 ) {
         std::cerr << "MetMyGEOS::Source_read_dim: attempting to read dimension " << dim_name << std::endl;
      } 
      
@@ -3249,7 +3254,7 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
         std::cerr << "MetMyGEOS::Source_read_dim: no netdcf varianble id for dimension " << dim_name << std::endl;
         throw(badNetcdfError(err));
      }
-     if ( debug >= 5 ) {
+     if ( dbug >= 5 ) {
         std::cerr << "MetMyGEOS::Source_read_dim: var id =  " << dvar_id << std::endl;
      } 
 
@@ -3265,7 +3270,7 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
      if ( dndim != 1 ) {
         std::cerr << "MetMyGEOS::Source_read_dim: Bad number-of-dimensions for " << dim_name << " : " << dndim << std::endl;        
      }
-     if ( debug >= 5 ) {
+     if ( dbug >= 5 ) {
         std::cerr << "MetMyGEOS::Source_read_dim: dndim =  " << dndim << std::endl;
      }
      
@@ -3287,7 +3292,7 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
         // for each attribute of this variable...
         for ( int ia=0; ia<dnatt; ia++ ) {
     
-           if ( debug > 5 ) {
+           if ( dbug > 5 ) {
               std::cerr << "MetMyGEOS::Source_read_dim: time Attribute " << ia << " of " << dnatt << ":" << std::endl;
            } 
         
@@ -3309,13 +3314,13 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
            }
         
            aname.assign(attrname);
-           if ( debug > 5 ) {
+           if ( dbug > 5 ) {
               std::cerr << "MetMyGEOS::Source_read_dim:  time attribute name is  " << aname <<  std::endl;
            }   
         
            if ( aname == "units" ) {
               if ( attr_type == NC_CHAR ) {
-                 if ( debug > 5 ) {
+                 if ( dbug > 5 ) {
                     std::cerr << "MetMyGEOS::Source_read_dim: time Reading " << attr_size << " characters for attribute " << aname << std::endl;
                  }   
 
@@ -3350,7 +3355,7 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
                  
               }
            } else if ( aname == "begin_date" ) {
-              if ( debug > 5 ) {
+              if ( dbug > 5 ) {
                  std::cerr << "MetMyGEOS::Source_read_dim: time Reading " << attr_size << " ints for attribute " << aname << std::endl;
               }   
 
@@ -3382,7 +3387,7 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
            
            } else if ( aname == "begin_time" ) {
 
-              if ( debug > 5 ) {
+              if ( dbug > 5 ) {
                  std::cerr << "MetMyGEOS::Source_read_dim: time Reading " << attr_size << " ints for attribute " << aname << std::endl;
               }   
 
@@ -3409,7 +3414,7 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
            
            } else if ( aname == "time_increment" ) {
 
-              if ( debug > 5 ) {
+              if ( dbug > 5 ) {
                  std::cerr << "MetMyGEOS::Source_read_dim: time Reading " << attr_size << " ints for attribute " << aname << std::endl;
               }   
 
@@ -3444,7 +3449,7 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
      // now read the dimension data values
      switch (dim_type) {
      case NC_FLOAT:
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
             std::cerr << "MetMyGEOS::Source_read_dim:    trying to read 2 of " << dim_size << " NC_FLOATs for dim " << dim_name << std::endl;
         }
         Source_read_dim_floats( f_first, f_last, f_delta, dvar_id, dim_size );
@@ -3462,7 +3467,7 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
         }
         break;
      case NC_DOUBLE:
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
             std::cerr << "MetMyGEOS::Source_read_dim:    trying to read 2 of " << dim_size << " NC_DOUBLEs for dim " << dim_name << std::endl;
         }
         Source_read_dim_doubles( d_first, d_last, d_delta, dvar_id, dim_size );
@@ -3480,7 +3485,7 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
         }
         break;
      case NC_INT:
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
             std::cerr << "MetMyGEOS::Source_read_dim:    trying to read 2 of " << dim_size << " NC_INTs for dim " << dim_name << std::endl;
         }
         Source_read_dim_ints( i_first, i_last, i_delta, dvar_id, dim_size );
@@ -3569,19 +3574,19 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, std::vector<real> &vals)
      
      switch (dim_type) {
      case NC_FLOAT:
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
             std::cerr << "MetMyGEOS::Source_read_dim:    trying to read " << dim_size << " NC_FLOATs for dim " << dim_name << std::endl;
         }
         Source_read_dim_floats( vals, dvar_id, dim_size );
         break;
      case NC_DOUBLE:
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
             std::cerr << "MetMyGEOS::Source_read_dim:    trying to read " << dim_size << " NC_DOUBLEs for dim " << dim_name << std::endl;
         }
         Source_read_dim_doubles( vals, dvar_id, dim_size );
         break;
      case NC_INT:
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
             std::cerr << "MetMyGEOS::Source_read_dim:    trying to read " << dim_size << " NC_INTs for dim " << dim_name << std::endl;
         }
         Source_read_dim_ints( vals, dvar_id, dim_size );
@@ -4229,7 +4234,7 @@ void MetMyGEOS::Source_read_data_floats( std::vector<real>&vals, int var_id, int
      } catch(...) {
         throw (badNoMem());
      }
-     if ( debug > 5 ) {
+     if ( dbug > 5 ) {
         std::cerr << "MetMyGEOS::Source_read_data: (" << ndims << "D):  about to read data! " <<  std::endl;
      }
 
@@ -4246,7 +4251,7 @@ void MetMyGEOS::Source_read_data_floats( std::vector<real>&vals, int var_id, int
          trial = 0;
          do {
 
-            if ( debug > 5 ) {
+            if ( dbug > 5 ) {
                std::cerr << "MetMyGEOS::Source_read_data: (" << ndims 
                          << "D):  about to read data chunk " << ichunk << " of " << nchunks
                          << " = " << toread << " floats (trial " << trial << ")" <<  std::endl;
@@ -4266,7 +4271,7 @@ void MetMyGEOS::Source_read_data_floats( std::vector<real>&vals, int var_id, int
                   // sometimes we get a "successful" read, but the
                   // values are all zeroes.
                   // Detect this and treat it as a failure.
-                  if ( debug > 0 ) {
+                  if ( dbug > 0 ) {
                      std::cerr << "MetMyGEOS::Source_read_data: (" << ndims << "D):  Read all zeroes! " <<  std::endl;
                   }
                   err = NC_ERANGE;
@@ -4350,7 +4355,7 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
         }
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << "MetMyGEOS::Source_getvar: (3D)  variable <<" << quantity << ">> is var_id " << var_id << std::endl;
         }
         // get basic info about this variable
@@ -4361,12 +4366,12 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
         }
-        if ( debug  > 4) {
+        if ( dbug  > 4) {
            std::cerr << "MetMyGEOS::Source_getvar: (3D)   variable id " <<  var_id << " has type=" << var_type << ", " << nvdims << " dims, " 
            << var_nattrs << " attrs" << std::endl;
         }
 
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << "MetMyGEOS::Source_getvar: (3D)   variable id " <<  var_id << std::endl;
         }
         
@@ -4416,7 +4421,7 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
         grid3d->set_vunits(vu, vscale, voffset);
         
         if ( nlons != xnlons || nlats != xnlats || nzs != xnzs ) {
-           if ( debug > 0 ) {
+           if ( dbug > 0 ) {
               std::cerr << "MetMyGEOS::Source_getvar: (3D)         Dims Mismatch:  " << nlons << "/" << xnlons 
               << ", " << nlats << "/" << xnlats 
               << ", " << nzs << "/" << xnzs  << std::endl;
@@ -4469,20 +4474,20 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
         // how we read in the attribute value depends on the value type
         switch (var_type) {
         case NC_FLOAT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getvar: (3D)         Reading " << nlons*nlats*nzs  << " floats for variable " << quantity << std::endl;
              }
           
              xdata = new std::vector<real>;
              Source_read_data_floats( *xdata, var_id, 3, vstarts, vcounts, vstride );
            
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getvar: (3D)   finished reading data! " <<  std::endl;
              }
 
            break;
         default:
-           if (debug > 0) {
+           if (dbug > 0) {
               std::cerr << "MetMyGEOS::Source_getvar: (3D)  unexpected var data type " << var_type << " for " << quantity << std::endl;
            }
            throw(badNetcdfError(NC_EBADTYPE));   
@@ -4543,7 +4548,7 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
         }
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << "MetMyGEOS::Source_getvar: (Sfc) variable <<" << quantity << ">> is var_id " << var_id << std::endl;
         }
         // get basic info about this variable
@@ -4554,12 +4559,12 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
         }
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << "MetMyGEOS::Source_getvar: (Sfc) variable id " <<  var_id << " has type=" << var_type << ", " << nvdims << " dims, " 
            << var_nattrs << " attrs" << std::endl;
         }
 
-        if ( debug  > 4) {
+        if ( dbug  > 4) {
            std::cerr << "MetMyGEOS::Source_getvar: (Sfc) variable id " <<  var_id << std::endl;
         }
         
@@ -4597,7 +4602,7 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
         xnlats = xlats->size();
         
         if ( nlons != xnlons || nlats != xnlats ) {
-           if ( debug > 0 ) {
+           if ( dbug > 0 ) {
               std::cerr << "MetMyGEOS::Source_getvar: (Sfc)       Dims Mismatch:  " << nlons << "/" << xnlons 
               << ", " << nlats << "/" << xnlats  << std::endl;
            }   
@@ -4643,20 +4648,20 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
         // how we read in the attribute value depends on the value type
         switch (var_type) {
         case NC_FLOAT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getvar: (Sfc)       Reading " << nlons*nlats*nzs  << " floats for variable " << quantity << std::endl;
              }   
              
              xdata = new std::vector<real>;
              Source_read_data_floats( *xdata, var_id, 2, vstarts, vcounts, vstride );
              
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getvar: (Sfc) finished reading data! " <<  std::endl;
              }
 
            break;
         default:
-           if (debug > 5) {
+           if (dbug > 5) {
               std::cerr << "MetMyGEOS::Source_getvar: (Sfc) unexpected var data type " << var_type << " for " << quantity << std::endl;
            }
            throw(badNetcdfError(NC_EBADTYPE));   
@@ -4716,7 +4721,7 @@ void MetMyGEOS::readSource( const std::string& quantity, const std::string time,
         // this may be overridden later by reading from the file
         grid3d->set_units( ds[test_dsrc].units );
      
-        if ( debug > 3 ) {     
+        if ( dbug > 3 ) {     
            std::cerr << "MetMyGEOS::readSource: (3D) quantity=" << quantity << std::endl;
            std::cerr << "MetMyGEOS::readSource: (3D) time=" << time << std::endl;
            std::cerr << "MetMyGEOS::readSource: (3D) test_dsrc =" << test_dsrc << std::endl;
@@ -4739,12 +4744,12 @@ void MetMyGEOS::readSource( const std::string& quantity, const std::string time,
        // the desired time is bracketed by two data set snapshot times
        // read in two data fields and interpolate. (Sigh)
 
-       if ( debug > 4 ) {
+       if ( dbug > 4 ) {
           std::cerr << "MetMyGEOS::readSource: (3D) bracketted time: getting " << preTime << " to " << postTime << ", or ";
        }
        preData = dynamic_cast<GridLatLonField3D*>(grid3d->duplicate());
        ctime1 =  time2Cal(preTime);
-       if ( debug > 4 ) {
+       if ( dbug > 4 ) {
           std::cerr << ctime1 << " to ";
        }
        preData->set_time( preTime, ctime1 );
@@ -4752,7 +4757,7 @@ void MetMyGEOS::readSource( const std::string& quantity, const std::string time,
        
        postData = dynamic_cast<GridLatLonField3D*>(grid3d->duplicate());
        ctime2 =  time2Cal(postTime);
-       if ( debug > 4 ) {
+       if ( dbug > 4 ) {
           std::cerr << ctime2 << std::endl;
        }      
        postData->set_time( postTime, ctime2 );
@@ -4834,7 +4839,7 @@ void MetMyGEOS::readSource( const std::string& quantity, const std::string time,
         // this may be overridden later by reading from the file
         grid2d->set_units( ds[test_dsrc].units );
      
-        if ( debug > 3 ) {
+        if ( dbug > 3 ) {
            std::cerr << "MetMyGEOS::readSource: (Sfc) quantity=" << quantity << std::endl;
            std::cerr << "MetMyGEOS::readSource: (Sfc) ctime=" << time << std::endl;
            std::cerr << "MetMyGEOS::readSource: (Sfc) mtime=" << mtime << std::endl;
@@ -4858,12 +4863,12 @@ void MetMyGEOS::readSource( const std::string& quantity, const std::string time,
         // the desired time is bracketed by two data set snapshot times
         // read in two data fields and interpolate. (Sigh)
 
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << "MetMyGEOS::readSource: (Sfc) bracketted time: getting " << preTime << " to " << postTime << ", or ";
         }
         preData = dynamic_cast<GridLatLonFieldSfc*>(grid2d->duplicate());
         ctime1 =  time2Cal(preTime);
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << ctime1 << " to ";
         }
         preData->set_time( preTime, ctime1 );
@@ -4872,7 +4877,7 @@ void MetMyGEOS::readSource( const std::string& quantity, const std::string time,
        
         postData = dynamic_cast<GridLatLonFieldSfc*>(grid2d->duplicate());
         ctime2 =  time2Cal(postTime);
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << ctime2 << std::endl;
         }
         postData->set_time( postTime, ctime2 );
