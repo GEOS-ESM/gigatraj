@@ -19,6 +19,9 @@
 #include "gigatraj/MetGEOSfpFcast.hh"
 #include "gigatraj/MetGEOSfpAssim.hh"
 #endif
+#ifdef USE_MYGEOS
+#include "gigatraj/MetMyGEOS.hh"
+#endif
 
 
 namespace gigatraj {

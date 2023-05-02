@@ -61,6 +61,12 @@ MetSelector::MetInfo::MetInfo() {
        item.caps = METCAP_GRID | METCAP_LATLON | METCAP_REMOTE | METCAP_FCST;
        mdesc.push_back(item);
 #endif
+#ifdef USE_MYGEOS
+       item.name = "MetMyGEOS";
+       item.desc = "NASA GMAO GEOS output data";
+       item.caps = METCAP_GRID | METCAP_LATLON | METCAP_REMOTE;
+       mdesc.push_back(item);
+#endif
    }
 
 }
@@ -149,6 +155,10 @@ MetData* MetSelector::source(const  std::string &source )
 
      } else if ( source == "MetGEOSfpFcast" ) {
         result = new MetGEOSfpFcast;
+#endif
+#ifdef USE_MYGEOS
+     } else if ( source == "MetMyGEOS" ) {
+        result = new MetMyGEOS;
 #endif
     } else {
        std::cerr << "MetSelector::source(): Unknown data source requested: " << source << std::endl;
