@@ -2739,7 +2739,7 @@ void Catalog::DataSource::dump( int indent ) const
        spaces.push_back(' ');
    }
    
-   std::cerr << spaces << "@@@@@@@@@@@@@@@ DataSourceg Dump:"  << std::endl;
+   std::cerr << spaces << "@@@@@@@@@@@@@@@ DataSource Dump:"  << std::endl;
    std::cerr << spaces << " Quantity: " << name << " at time " << time << std::endl;
    std::cerr << spaces << " units=" << units << ", scale=" << scale << ", offset=" << offset<< std::endl;
    std::cerr << spaces << " description='" << description << "'" << std::endl;
@@ -2992,9 +2992,17 @@ bool Catalog::query( const std::string& quantity, const std::string& validAt,  s
             
                // resolve the pattern
                pattern = new VarVal( currentTarget->templayt, 'S' );
+               if ( dbug > 60 ) {
+                  std::cerr << "*+*+*+*+ Catalog::query: pattern VarVal is:" << std::endl;
+                  pattern->dump(10);
+               }
+               
                if ( eval( pattern ) ) {
                   s1 = pattern->evalS;
                   delete pattern;
+                  if ( dbug > 60 ) {
+                     std::cerr << "*+*+*+*+ Catalog::query: finishd pattenr eval: " << s1 << std::endl;
+                  }
                   
                   // get the time characteristics of the target
                   get_targetTimeInfo( *currentTarget, &preDelta, preStart, &preN );
@@ -3339,7 +3347,6 @@ void Catalog::clear()
      des_priorities.clear();
 
      my_confLocator = "";
-     dbug = 0;
      currentTarget = NULLPTR;
      des_tinc = 0.0;
      des_toff = 0.0;
@@ -5648,8 +5655,8 @@ bool Catalog::eval( VarVal* val )
      ok = false;
      
      if ( dbug > 10 ) {
-        std::cerr << "Catalog::eval(val): starting" << std::endl;
-        val->dump();
+        std::cerr << "Catalog::eval(val): starting with VarVal:" << std::endl;
+        val->dump(3);
      }
      
      if ( val->type != 'S' && val->type != 'D' ) {
@@ -5679,6 +5686,7 @@ bool Catalog::eval( VarVal* val )
            }
            if ( dbug > 50 ) {
               std::cerr << "Catalog::eval(val): not a literal. Ref is '" << name << "'" << std::endl;
+              std::cerr << " now lookup " << name << std::endl;
            }
            
            // we have the name
@@ -5856,12 +5864,15 @@ std::string Catalog::interpVarRefs( const std::string refstr )
     len = teststring.size();
     
     if ( dbug > 50 ) {
-       std::cerr << "Catalog::eval(val): IS a string: '" << teststring << "." << std::endl;
+       std::cerr << "Catalog::eval(val):  entry with: '" << teststring << "." << std::endl;
     }
     
     more = true;
     
     while ( more ) {
+       if ( dbug > 100 ) {
+          std::cerr << "Catalog::eval(val): teststring ='" << teststring << "'" << std::endl;  
+       }
       
        newstring = "";
        idx = 0;
@@ -5872,28 +5883,38 @@ std::string Catalog::interpVarRefs( const std::string refstr )
        foundref = false;
        
        while ( ! eos ) {
+          if ( dbug > 100 ) {
+             std::cerr << "Catalog::eval(val):    idx =" << idx << std::endl;  
+          }
        
           // search for something that might be a var ref
           while ( str[idx] != 0 && str[idx] != '$' ) {
               newstring.push_back( str[idx] );
               idx++;
           }
+          if ( dbug > 100 ) {
+             std::cerr << "Catalog::eval(val):    idx is now " << idx 
+             << ", or char '" << str[idx] << "'" << std::endl;  
+          }
           if ( str[idx] == '$' ) {
+             if ( dbug > 100 ) {
+                std::cerr << "Catalog::eval(val):    found $. Extract var ref." << std::endl;  
+             }
              // ok, this might be a var ref
              extractVarRef( str, idx, name, refname, &fmt1, &fmt2 );
              if ( name != "" ) {
                 // yes! it is a var ref
-                if ( dbug > 50 ) {
+                if ( dbug > 100 ) {
                    std::cerr << "Catalog::eval(val): found a var ref for " << name  << std::endl;
+                   std::cerr << "Catalog::eval(val): looking up " << refname << std::endl;
                 }
-             
-                
                 found = lookup ( refname );
                 
                 if ( found != NULLPTR ) {
-                    if ( dbug > 50 ) {
+                    if ( dbug > 100 ) {
                        std::cerr << "Catalog::eval(val): var ref " << name  
-                       << " resolved to '" << found->evalS << "'" << std::endl;
+                       << " resolved to: '" << "'" << std::endl;
+                       found->dump(5);
                     }
                     if ( fmt1 >= 0 ) {
                        found->fmt1 = fmt1;
@@ -5902,9 +5923,9 @@ std::string Catalog::interpVarRefs( const std::string refstr )
                        }
                     }
                     if ( found->print( tmpstring ) ) {
-                       if ( dbug > 50 ) {
+                       if ( dbug > 100 ) {
                           std::cerr << "Catalog::eval(val): var ref " << name  
-                          << " printed as '" << teststring << "'" << std::endl;
+                          << " printed as '" << tmpstring << "'" << std::endl;
                        }
                        newstring = newstring + tmpstring;
                     }  else {
@@ -5925,18 +5946,26 @@ std::string Catalog::interpVarRefs( const std::string refstr )
                 // continue
                 newstring.push_back( str[idx] );               
                 idx++;
+                if ( dbug > 100 ) {
+                   std::cerr << "Catalog::eval(val): $ not part of a var ref " << std::endl;
+                }
              }   
           } else {
              // no '$' found; must be the terminating null
               eos = true;
+              if ( dbug > 100 ) {
+                 std::cerr << "Catalog::eval(val): at end of test string " << std::endl;
+              }
           }
        }
-      if ( dbug > 50 ) {
-         std::cerr << "Catalog::eval(val): newstring ='" << newstring << "'" << std::endl;  
-      }
+       if ( dbug > 50 ) {
+          std::cerr << "Catalog::eval(val): newstring ='" << newstring << "'" << std::endl;  
+       }
        
        if ( teststring != newstring ) {
           teststring = newstring;
+          str = teststring.c_str();
+          len = teststring.size();    
        } else {
           more = false;
        }  
@@ -5955,14 +5984,30 @@ Catalog::VarVal* Catalog::lookup( const std::string& name )
      
      result = NULLPTR;
      
+     if ( dbug > 60 ) {
+        std::cerr << "Catalog::lookup begins w/ name = " << name << std::endl;
+     }
+
      ok = false;
      if ( varset.exists( name ) ) {
          //  is the name a defined variable? get it from getValue.
          
          result = getValue( name );
          ok = ( result != NULLPTR );
+
+         if ( dbug > 60 ) {
+            std::cerr << "Catalog::lookup simple ref: " << std::endl;
+            if ( ok ) {
+               result->dump(8);
+            } else {
+               std::cerr << "  null pointer" << std::endl;
+            }
+         }
          
      } else {
+         if ( dbug > 60 ) {
+            std::cerr << "Catalog::lookup undefined var! ";
+         }
      
          // check the current target's attributes
          if ( currentTarget != NULLPTR ) {
@@ -5970,6 +6015,9 @@ Catalog::VarVal* Catalog::lookup( const std::string& name )
                 if ( attr->first == name ) {
                    valstr = attr->second;
                    ok = true;
+                   if ( dbug > 60 ) {
+                      std::cerr << "Catalog::lookup found target attribute! ";
+                   }
                    break;
                 }
             }
@@ -5980,6 +6028,9 @@ Catalog::VarVal* Catalog::lookup( const std::string& name )
             valstr = getEnv( name );
             if ( valstr != "" ) {
                ok = true;
+               if ( dbug > 60 ) {
+                  std::cerr << "Catalog::lookup found env variable! ";
+               }
             }
      
          }
@@ -5988,6 +6039,10 @@ Catalog::VarVal* Catalog::lookup( const std::string& name )
          if ( ok ) {
            
             result = new VarVal( valstr, 'S' );   
+            if ( dbug > 60 ) {
+               std::cerr << "Catalog::lookup found value: " << valstr;
+               result->dump(8);
+            }
      
          }
      }
@@ -6058,6 +6113,11 @@ bool Catalog::reconcileVals( Catalog::VarVal* v1, Catalog::VarVal* v2 )
           result = v2->hasEval();
        }   
     
+       if ( dbug > 60 ) {
+          std::cerr << "Catalog::lookup ends w/ result = " << std::endl;
+          v2->dump();
+          std::cerr << "  w/ result = " << result << std::endl;
+       }
     
     } else {
        result = true;
