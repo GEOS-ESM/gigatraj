@@ -788,10 +788,33 @@ class MetData {
       int useMet();
 
 
-      /// set this to print lots of debugging/trace messages
-      int debug;
+      /*! This controls printing of lots of debugging/trace messages.
+          It is public, so that it can be set and queried directly by external routines.
+          But it is recommended that the debug() methods be used for this instead,
+          in most circumstances
+      */
+      int dbug;
+      
+      /// sets the debuggin level
+      /*! This method sets the debugging level, which causes more
+          messages (hier number) or fewer messages (lower number) 
+          to be printed to stderr. A level of zero or less indicates that no
+          debugging messages are to be printed.
+          
+          \param level the desired debugging level.
 
-             
+      */
+      virtual void debug( int level );
+      
+      
+      /// returns the current debugging level
+      /*! This method retusn the debugging level.
+      */
+      inline int debug() const
+      {
+          return dbug;
+      };
+      
    protected:
    
       /// pointer to a ProcessGrp object to which this processor belongs

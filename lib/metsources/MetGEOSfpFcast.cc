@@ -113,7 +113,7 @@ bool MetGEOSfpFcast::bracket( const std::string &quantity, double time, double *
     double mtime;
     bool sametime;
     
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfpFcast::bracket: Bracketing time " << time << " against base " << basetime << std::endl;
     }
     
@@ -179,14 +179,14 @@ bool MetGEOSfpFcast::bracket( const std::string &quantity, double time, double *
        sametime = true;
     }
 
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfpFcast::bracket:   Found times " << prev << " and " << next << " using interval " << tspace << std::endl;
     }
    
     *t1 = prev-basetime;
     *t2 = next-basetime;
 
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfpFcast::bracket:   Translated bracket times to  " << *t1 << " and " << *t2  << std::endl;
     }
 
@@ -286,7 +286,7 @@ int MetGEOSfpFcast::setup(  const std::string quantity, const std::string &time 
     // do we need to find the basic attributes of this quantity?
     if ( quantity != test_quant || caltime != test_date ) {
 
-       if ( debug >= 3 ) {
+       if ( dbug >= 3 ) {
          std::cerr << "MetGEOSfpFcast::setup: testing for " << quantity << " @ " << caltime << std::endl;
          std::cerr << "MetGEOSfpFcast::setup: the model run is <<" << modelRun << ">>" << std::endl; 
        }
@@ -318,7 +318,7 @@ int MetGEOSfpFcast::setup(  const std::string quantity, const std::string &time 
        if ( status == 0 ) {
           
           test_url = *newUrl;
-          if ( debug >= 3 ) {
+          if ( dbug >= 3 ) {
              std::cerr << "MetGEOSfpFcast::setup:  testing was successful.  ndims is " << test_ndims << ", url=<<" << test_url << ">>" << std::endl;
           }
           
@@ -481,7 +481,7 @@ MetGEOSfpFcast* MetGEOSfpFcast::myNew()
    
    dup = new MetGEOSfpFcast;
    
-   dup->debug = debug;
+   dup->dbug = dbug;
    dup->setPgroup(my_pgroup, my_metproc);
    dup->defineCal( time2Cal(0), basetime );
    dup->maxsnaps = this->maxsnaps;

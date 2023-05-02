@@ -824,7 +824,7 @@ int MetGEOSfp::setup(  const std::string quantity, const std::string &time )
     // do we need to find the basic attributes of this quantity?
     if ( quantity != test_quant || caltime != test_date ) {
 
-       if ( debug >= 3 ) {
+       if ( dbug >= 3 ) {
          std::cerr << "MetGEOSfp::setup: testing for " << quantity << " @ " << caltime << std::endl;
          std::cerr << "MetGEOSfp::setup: the model run is <<" << modelRun << ">>" << std::endl; 
        }
@@ -838,7 +838,7 @@ int MetGEOSfp::setup(  const std::string quantity, const std::string &time )
        if ( status == 0 ) {
           
           test_url = "";
-          if ( debug >= 3 ) {
+          if ( dbug >= 3 ) {
              std::cerr << "MetGEOSfp::setup:  testing was successful.  ndims is " << test_ndims << std::endl;
           }
           
@@ -1007,7 +1007,7 @@ MetGEOSfp* MetGEOSfp::myNew()
    
    dup = new MetGEOSfp;
    
-   dup->debug = debug;
+   dup->dbug = dbug;
    dup->setPgroup(my_pgroup, my_metproc);
    dup->defineCal( time2Cal(0), 0.0 );
    dup->maxsnaps = this->maxsnaps;
@@ -1025,7 +1025,7 @@ bool MetGEOSfp::bracket( const std::string &quantity, const std::string &time, s
 
     wanted = cal2Time(time);
     
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfp::bracket*: Bracketing cal time " << time << std::endl;
     }
     result = bracket( quantity, wanted, &prev, &next );
@@ -1048,7 +1048,7 @@ bool MetGEOSfp::bracket( const std::string &quantity, double time, double *t1, d
     std::vector<std::string> *testquants;
     bool sametime;
     
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfp::bracket: Bracketing time " << time << " against base " << basetime 
        << ": " << time2Cal(time, 4) << std::endl;
     }
@@ -1084,7 +1084,7 @@ bool MetGEOSfp::bracket( const std::string &quantity, double time, double *t1, d
        // use the user-imposed time spacing
        tspace = override_tspace;
     }
-    if ( debug > 50 ) {
+    if ( dbug > 50 ) {
        std::cerr << "MetGEOSfp::bracket: tbase = " << tbase << " tspace = " << tspace << std::endl;
     }
     
@@ -1094,7 +1094,7 @@ bool MetGEOSfp::bracket( const std::string &quantity, double time, double *t1, d
     xtime = floor( ztime );
     // convert the time part to intervals/indices
     ytime = (( ztime - xtime )*24.0 - tbase)/tspace; 
-    if ( debug > 50 ) {
+    if ( dbug > 50 ) {
        std::cerr << "MetGEOSfp::bracket:  ztime = " << ztime << ", xtime= " << xtime << " , ytime=" << ytime  << std::endl;
     }
     
@@ -1117,14 +1117,14 @@ bool MetGEOSfp::bracket( const std::string &quantity, double time, double *t1, d
        next = prev;
     }
 
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfp::bracket:   Found times " << prev << " and " << next << " using interval " << tspace << std::endl;
     }
    
     *t1 = prev - basetime;
     *t2 = next - basetime;
 
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfp::bracket:   Translated bracket times to  " << *t1 << " (" << time2Cal(*t1)
        << ") and " << *t2  << " (" << time2Cal(*t2) << ")" << std::endl;
     }
@@ -1213,7 +1213,7 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
     // do we need to find the basic attributes of this quantity?
     if ( test_url == "" || quantity != test_quant || caltime != test_date ) {
 
-       if ( debug >= 3 ) {
+       if ( dbug >= 3 ) {
          std::cerr << "MetGEOSfp::prep: testing for " << quantity << " @ " << caltime << std::endl;
          std::cerr << "MetGEOSfp::prep: the model run is <<" << modelRun << ">>" << std::endl; 
        }
@@ -1252,7 +1252,7 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
           if ( status == 0 ) {
              // got assimilation specs.
              
-             if ( debug >= 3 ) {
+             if ( dbug >= 3 ) {
                 std::cerr << "MetGEOSfp::prep:  Examining Assim URL <<"  << *newUrl << ">>" << std::endl;
              }
              
@@ -1262,7 +1262,7 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
              final_assim_day = get_last_time1900( *newUrl );
              
              
-             if ( debug >= 3 ) {
+             if ( dbug >= 3 ) {
                 std::cerr << "MetGEOSfp::prep:  final time in that URL is "  << final_assim_day << std::endl;
              }
              
@@ -1292,7 +1292,7 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
                 
                 // Construct a URL for the ".latest" forecast file (since modelRun is "")
 
-                if ( debug >= 3 ) {
+                if ( dbug >= 3 ) {
                    std::cerr << "MetGEOSfp::prep: Trying to get URL for '.latest' forecast " << std::endl;
                 }
                 status = fdir.LookUp( test_quant, desired_vgrid_id, desired_hgrid_id, desired_tspace, desired_tave
@@ -1319,11 +1319,11 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
                 if ( status == 0 ) {
                    // Now use this ".latest" URL to open forecast file and get the
                    // first (initialization) time from that.
-                   if ( debug >= 3 ) {
+                   if ( dbug >= 3 ) {
                       std::cerr << "MetGEOSfp::prep:  Examining Forecast URL <<"  << *newUrl << ">>" << std::endl;
                    }
                    final_assim_day = get_first_time1900( *newUrl );      
-                   if ( debug >= 3 ) {
+                   if ( dbug >= 3 ) {
                       std::cerr << "MetGEOSfp::prep:  final time in that URL is "  << final_assim_day << std::endl;
                    }
                 }
@@ -1361,7 +1361,7 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
                  
                  // tmp_modelrun = tmp_modelrun + ".test.nonexistent";
                  
-                 if ( debug >= 3 ) {
+                 if ( dbug >= 3 ) {
                     std::cerr << "MetGEOSfp::prep:  Testing leadtime " << leadtime << " yielding model run " << tmp_modelrun << std::endl;
                  }
                  
@@ -1398,14 +1398,14 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
                     // But this forecast file might not be there, so we need to trap the error it might throw.
                     try {
                         
-                        if ( debug >= 3 ) {
+                        if ( dbug >= 3 ) {
                            std::cerr << "MetGEOSfp::prep:  Examining forecast URL <<"  << *newUrl << ">>" << std::endl;
                         }
                         junktime = get_first_time1900( *newUrl );
                         
                         if ( junktime > 0.0 ) {
                            // leave the dayOffset loop--we have our URL
-                           if ( debug >= 3 ) {
+                           if ( dbug >= 3 ) {
                               std::cerr << "MetGEOSfp::prep:  Success!" << std::endl;
                            }
                            dayOffset = -999;
@@ -1455,7 +1455,7 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
        if ( status == 0 ) {
           
           test_url = *newUrl;
-          if ( debug >= 3 ) {
+          if ( dbug >= 3 ) {
              std::cerr << "MetGEOSfp::prep:  testing was successful.  ndims is " << test_ndims << ", url=<<" << test_url << ">>" << std::endl;
           }
           
@@ -1836,7 +1836,7 @@ void MetGEOSfp::delay()
        
           w = ( my_pgroup->random()*wayt + 0.5);
           
-          if ( debug > 5 ) {
+          if ( dbug > 5 ) {
              std::cerr << "MetMERRA2::delay: sleeping for " << w 
                        << " sec from a max of " << wayt 
                        << " w/ " << c1 <<  " processors"

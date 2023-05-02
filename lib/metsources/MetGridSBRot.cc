@@ -548,7 +548,7 @@ GridLatLonField3D* MetGridSBRot::new_directGrid3D( const std::string quantity, c
        throw (MetGridData::baddataload());
     }   
     
-    if ( debug > 2 ) {
+    if ( dbug > 2 ) {
        std::cerr << "MetGridSBRot::new_directGrid3D: reading " << quantity << " @ " << time << std::endl;
     }
 
@@ -637,7 +637,7 @@ GridLatLonFieldSfc* MetGridSBRot::new_directGridSfc( const std::string quantity,
        sfcname = "sfc";   // note where we are evaluating the quantity, below
     }
 
-    if ( debug > 2 ) {
+    if ( dbug > 2 ) {
        std::cerr << "MetGridSBRot::new_directGridSfc: reading " << quantity << " (" << quantname << " on " << sfcname << ") @ " << time << std::endl;
     }
 

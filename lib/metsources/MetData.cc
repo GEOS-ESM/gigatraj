@@ -22,7 +22,7 @@ MetData::MetData()
      now = time(NULL);
      wfctr = 1.0;
      flags = 0;
-     debug = 0;
+     dbug = 0;
 };
 
 // copy constructor
@@ -34,7 +34,7 @@ MetData::MetData( const MetData& src )
    now = time(NULL);
    wfctr = src.wfctr;
    flags = 0;
-   debug = src.debug;
+   dbug = src.dbug;
 
 }
 
@@ -47,7 +47,7 @@ void MetData::assign( const MetData& src )
    now = src.now;
    wfctr = src.wfctr;
    flags = src.flags;
-   debug = src.debug;
+   dbug = src.dbug;
 
 }
 
@@ -131,7 +131,7 @@ void MetData::signalMetDone()
    if ( isMetClient() ) {
       // we are not a dedicated met processor.
       // send a "Done" message to the dedicated met processor
-      if ( debug >= 5 ) {
+      if ( dbug >= 5 ) {
          std::cerr << "MetData::signalMetDone: " << my_pgroup->id() << "/" << my_pgroup->group_id()
                    << " signaling DONE to met proc " << my_metproc << std::endl;
       }
@@ -171,6 +171,11 @@ int MetData::useMet()
         return 1;
     }   
 
+}
+
+void MetData::debug( int level )
+{
+    dbug = level;
 }
 
 void MetData::setIsoVertical()

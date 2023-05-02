@@ -58,7 +58,7 @@ int main()
     // *** GRIDED** SBRot source
     metsrc = new MetGridSBRot;
     
-    //metsrc->debug = 1;
+    //metsrc->dbug = 1;
     
     if ( metsrc->id() != string("MetGridSBRot") )
     {
@@ -237,7 +237,7 @@ int main()
 
     //---- now test disk caching
     //cerr << "====================================================" << endl;
-    //metsrc->debug = 1;
+    //metsrc->dbug = 1;
     metsrc->setCacheDir("test_diskcache");
     v0  = metsrc->get_u( 4.0*24.0*3600.0, 23.4, 45.1, thet );
     u  = metsrc->get_u( 5.0*24.0*3600.0, 23.4, 45.1, thet );

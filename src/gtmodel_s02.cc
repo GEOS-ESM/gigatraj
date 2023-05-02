@@ -766,7 +766,7 @@ std::cerr << "Doing a serial process group" << std::endl;
           if ( altmetsource->legalQuantity(parcelVertical) ) {
              try {
                 altmetsource->set_vertical(parcelVertical, "");  // we want the default vertical coord units, so specify ""
-                altmetsource->debug = debug;
+                altmetsource->dbug = debug;
              } catch (gigatraj::MetData::badquantity()) {
                 cerr << parcelVertical << " !! is unknown to this data source" << endl;
                 status = 1;
@@ -925,14 +925,14 @@ std::cerr << "Doing a serial process group" << std::endl;
     
        // set this to 1 if you want copious output for debugging
        // a new met source
-       //metsource->debug = 0; // no debug messages
-       //metsource->debug = 1; // only basic data access and regridding messages
-       //metsource->debug = 2; // disk or memory cache usage
-       //metsource->debug = 3; // ???
-       //metsource->debug = 4; // data read details
-       //metsource->debug = 5; // sample data values on read
-       //metsource->debug = 10;
-       metsource->debug = debug;
+       //metsource->dbug = 0; // no debug messages
+       //metsource->dbug = 1; // only basic data access and regridding messages
+       //metsource->dbug = 2; // disk or memory cache usage
+       //metsource->dbug = 3; // ???
+       //metsource->dbug = 4; // data read details
+       //metsource->dbug = 5; // sample data values on read
+       //metsource->dbug = 10;
+       metsource->dbug = debug;
        
        if ( verbose ) {
           swarm->dump();

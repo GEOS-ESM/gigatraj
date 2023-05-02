@@ -726,7 +726,7 @@ MetMERRA* MetMERRA::myNew()
    
    dup = new MetMERRA;
    
-   dup->debug = debug;
+   dup->dbug = dbug;
    dup->setPgroup(my_pgroup, my_metproc);
    dayt = time2Cal(0);
    dup->defineCal( dayt, 0.0 );
@@ -749,7 +749,7 @@ bool MetMERRA::bracket( const std::string &quantity, const std::string &time, st
     std::vector<std::string> *testquants;
     bool sametime;
     
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetMERRA::bracket: Bracketing time " << time << " against base " << basetime << std::endl;
     }
     
@@ -819,14 +819,14 @@ bool MetMERRA::bracket( const std::string &quantity, const std::string &time, st
     }
     //std::cerr << "MetMERRA::bracket:  next=" << next << std::endl;
 
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetMERRA::bracket:   Found times " << prev << " and " << next << " using interval " << true_tspace << std::endl;
     }
    
     *t1 = time2Cal((prev-basetime));
     *t2 = time2Cal((next-basetime));
 
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetMERRA::bracket:   Translated bracket times to  " << *t1 << " and " << *t2  << std::endl;
     }
  
@@ -1207,7 +1207,7 @@ void MetMERRA::delay()
        
           w = ( my_pgroup->random()*wayt + 0.5);
           
-          if ( debug > 5 ) {
+          if ( dbug > 5 ) {
              std::cerr << "MetMERRA2::delay: sleeping for " << w 
                        << " sec from a max of " << wayt 
                        << " w/ " << c1 <<  " processors"

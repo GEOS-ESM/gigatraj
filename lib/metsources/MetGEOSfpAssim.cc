@@ -179,7 +179,7 @@ int MetGEOSfpAssim::setup(  const std::string quantity, const std::string &time 
     // do we need to find the basic attributes of this quantity?
     if ( quantity != test_quant || caltime != test_date ) {
 
-       if ( debug >= 3 ) {
+       if ( dbug >= 3 ) {
          std::cerr << "MetGEOSfpAssim::setup: testing for " << quantity << " @ " << caltime << std::endl;
        }
        test_quant = quantity;
@@ -210,7 +210,7 @@ int MetGEOSfpAssim::setup(  const std::string quantity, const std::string &time 
        if ( status == 0 ) {
           
           test_url = *newUrl;
-          if ( debug >= 3 ) {
+          if ( dbug >= 3 ) {
              std::cerr << "MetGEOSfpAssim::setup:  testing was successful.  ndims is " << test_ndims << ", url=<<" << test_url << ">>" << std::endl;
           }
           
@@ -246,7 +246,7 @@ MetGEOSfpAssim* MetGEOSfpAssim::myNew()
    
    dup = new MetGEOSfpAssim;
    
-   dup->debug = debug;
+   dup->dbug = dbug;
    dup->setPgroup(my_pgroup, my_metproc);
    dup->defineCal( time2Cal(0), basetime );
    dup->maxsnaps = this->maxsnaps;
@@ -269,7 +269,7 @@ bool MetGEOSfpAssim::bracket( const std::string &quantity, double time, double *
     std::vector<std::string> *testquants;
     bool sametime;
     
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfpAssim::bracket: Bracketing time " << time << " against base " << basetime << std::endl;
     }
     
@@ -332,14 +332,14 @@ bool MetGEOSfpAssim::bracket( const std::string &quantity, double time, double *
        sametime = true;
     }
 
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfpAssim::bracket:   Found times " << prev << " and " << next << " using interval " << true_tspace << std::endl;
     }
    
     *t1 = prev-basetime;
     *t2 = next-basetime;
 
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfpAssim::bracket:   Translated bracket times to  " << *t1 << " and " << *t2  << std::endl;
     }
 

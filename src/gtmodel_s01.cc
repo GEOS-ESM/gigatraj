@@ -765,7 +765,7 @@ int main( int argc, char * argv[] )
              in_netcdf->vertical( vertical );
           }
           
-          in_netcdf->open();
+          in_netcdf->open(parcelsource);
 
           if ( ! spec_parcelvertical ) {
              parcelVertical = in_netcdf->vertical();
@@ -857,7 +857,7 @@ int main( int argc, char * argv[] )
           if ( altmetsource->legalQuantity(parcelVertical) ) {
              try {
                 altmetsource->set_vertical(parcelVertical, "");  // we want the default vertical coord units, so specify ""
-                altmetsource->debug = debug;
+                altmetsource->dbug = debug;
              } catch (gigatraj::MetData::badquantity()) {
                 cerr << parcelVertical << " !! is unknown to this data source" << endl;
                 status = 1;
@@ -944,6 +944,11 @@ int main( int argc, char * argv[] )
           } else {  
              // read the parcels in from a netcdf file
              
+             if ( verbose ) {
+                std::cerr << " netcdf input: using " << vertical << " for vert and " 
+                         << parcelVertical << " for parcel vert" << std::endl; 
+             }
+             
              flock = in_netcdf->create_Flock( pcl, parcelsource, pgrp, mcsr ); 
              delete in_netcdf;
              // The Parcels read in form the file have the time from the file.
@@ -953,6 +958,9 @@ int main( int argc, char * argv[] )
              }
           }   
 #endif
+          if ( verbose ) {
+             std::cerr << "Parcels have been read from input " << std::endl; 
+          }
           
 
           // Note: pcl was initialized w/ time 0.0.
@@ -1034,14 +1042,14 @@ int main( int argc, char * argv[] )
     
        // set this to 1 if you want copious output for debugging
        // a new met source
-       //metsource->debug = 0; // no debug messages
-       //metsource->debug = 1; // only basic data access and regridding messages
-       //metsource->debug = 2; // disk or memory cache usage
-       //metsource->debug = 3; // ???
-       //metsource->debug = 4; // data read details
-       //metsource->debug = 5; // sample data values on read
-       //metsource->debug = 10;
-       metsource->debug = debug;
+       //metsource->dbug = 0; // no debug messages
+       //metsource->dbug = 1; // only basic data access and regridding messages
+       //metsource->dbug = 2; // disk or memory cache usage
+       //metsource->dbug = 3; // ???
+       //metsource->dbug = 4; // data read details
+       //metsource->dbug = 5; // sample data values on read
+       //metsource->dbug = 10;
+       metsource->dbug = debug;
        
        if ( verbose ) {
           flock->dump();
@@ -1061,6 +1069,12 @@ int main( int argc, char * argv[] )
           out_netcdf = new NetcdfOut();
           out_netcdf->filename( outNetcdfFile );
           out_netcdf->contents("gigatraj trajectories");
+          if ( vertical != "" ) {
+             out_netcdf->vertical( vertical );
+          }
+          if ( conv_parcel_coords ) {
+             out_netcdf->addQuantity( parcelVertical );
+          }
           out_netcdf->format( fmt );
           out_netcdf->init( &pcl, flock->size() );
           out_netcdf->open();

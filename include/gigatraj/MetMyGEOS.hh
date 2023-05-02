@@ -444,7 +444,14 @@ class MetMyGEOS : public MetGridLatLonData {
       */
       void delay();
 
-      
+      /// sets the debuggind level 
+      /*! This method sets foe debugging level of both the MetMyGEOS object and its Catalog member.
+          The debugging level determined the verbosity of messages being printed out to stderr.
+          
+          \param level the debugging level.
+      */
+      virtual void debug( int level ); 
+         
       /// returns a copy of the object, cast to the MetGridData class
       /*!
            Sometimes a routine that deals with objects of a MetGridData subclass

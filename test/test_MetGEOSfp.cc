@@ -97,7 +97,7 @@ int main()
     // create a GEOSfp data object
     metsrc0 = new MetGEOSfp(basedate);
     
-    //metsrc0->debug = 10;
+    //metsrc0->dbug = 10;
 
     date2 = metsrc0->BaseTime();
     if ( basedate != date2 ) {
@@ -119,7 +119,7 @@ int main()
   
     //*************  Sfc-reading tests *******************************
 
-    //metsrc0->debug = 10;
+    //metsrc0->dbug = 10;
 
 
     // test sample values for a forecast 2D field
@@ -204,7 +204,7 @@ int main()
        exit(1);  
     }
     
-    //metsrc0->debug = 0;
+    //metsrc0->dbug = 0;
 
     // test direct access
     dd = metsrc0->getData( "ps", tyme, grid2d->longitude(nx/2+1), grid2d->latitude(ny/2+1), -999.0   );
@@ -240,7 +240,7 @@ int main()
 
     //*************  3D-reading tests *******************************
 
-    //metsrc0->debug = 10;
+    //metsrc0->dbug = 10;
     
 
     // test sample values for a forecast 3D field
@@ -378,8 +378,8 @@ int main()
     metsrc0->set_thinning( 0 );
 
 
-    //metsrc0->debug = 0;
-    //metsrc0->debug = 10;
+    //metsrc0->dbug = 0;
+    //metsrc0->dbug = 10;
     
     // test a quantity that is calculated on the fly
     d0 = (*grid3d)(nx/3,ny/4,nz/2) * POW( 1000.0/grid3d->level(nz/2), 2./7.);

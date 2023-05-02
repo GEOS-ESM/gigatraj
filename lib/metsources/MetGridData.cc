@@ -445,17 +445,17 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
     // whatever source we are trying to read from.
     // U, V, and W winds have their own dedicated caches.
     if ( quantity == wind_ew_name ) {
-       if ( debug > 2 ) {
+       if ( dbug > 2 ) {
            std::cerr << "MetGridData::new_mgmtGrid3D: using US for memory cache" << std::endl;
        }
        cache = us;
     } else if ( quantity == wind_ns_name ) {
-       if ( debug > 2 ) {
+       if ( dbug > 2 ) {
            std::cerr << "MetGridData::new_mgmtGrid3D: using VS for memory cache" << std::endl;
        }
        cache = vs;
     } else if ( quantity ==  wind_vert_name ) {
-       if ( debug > 2 ) {
+       if ( dbug > 2 ) {
            std::cerr << "MetGridData::new_mgmtGrid3D: using WS for memory cache" << std::endl;
        }
        cache = ws;
@@ -475,7 +475,7 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
 
     }        
 
-    if ( debug > 0 ) {
+    if ( dbug > 0 ) {
        std::cerr << "MetGridData::new_mgmtGrid3D: Want " << quantity << " on " << vquant << " @ " << time << std::endl;    
     }
     
@@ -495,7 +495,7 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
      
              // data not in cache.  we have to go get it.
 
-             if ( debug >= 1 ) {
+             if ( dbug >= 1 ) {
                 std::cerr << "MetGridData::new_mgmtGrid3D:  requesting to read " << quantity << std::endl;    
              }
 
@@ -503,7 +503,7 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
              grid = new_directGrid3D( quantity, time );
              if ( grid != NULLPTR ) {
              
-                if ( debug >= 1 ) {
+                if ( dbug >= 1 ) {
                    std::cerr << "MetGridData::new_mgmtGrid3D:     got " << grid->quantity() << " on " << grid->vertical() << std::endl;   
                 }
                 
@@ -521,7 +521,7 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
                 // Else if the data are read in on a different vertical coordinate
                 // than we are using...
                 if ( grid->vertical() != vquant ) {
-                   if ( debug >= 1 ) {
+                   if ( dbug >= 1 ) {
                       std::cerr << "MetGridData::new_mgmtGrid3D:  have " << grid->quantity() << " data on <<" << grid->vertical() 
                       << ">>  but need it on <<" << vquant << ">>"  << std::endl;
                    }
@@ -545,7 +545,7 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
                          throw (baddataload());
                       }      
                       delete vgrid;
-                      if ( debug >= 1 ) {
+                      if ( dbug >= 1 ) {
                          std::cerr << "MetGridData::new_mgmtGrid3D:              re-read & inverted to get " << grid->quantity() 
                          << " on " << grid->vertical() << std::endl;
                       }
@@ -566,7 +566,7 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
                             vgrid = new_mgmtGrid3D( grid->vertical(), time );
                          } catch (...) {
                             // we don't have the native-coord on desired-coord
-                            if ( debug >= 1 ) {
+                            if ( dbug >= 1 ) {
                                std::cerr << "MetGridData::new_mgmtGrid3D:              cannot find " << grid->vertical() 
                                << " on " << vquant << " for " << grid->quantity() << std::endl;
                             }
@@ -603,7 +603,7 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
                                
              //               } catch (...) {
              //                  // we don't have the native-coord on desired-coord
-             //                  if ( debug >= 1 ) {
+             //                  if ( dbug >= 1 ) {
              //                     std::cerr << "MetGridData::new_mgmtGrid3D:              cannot find " << grid->vertical() 
              //                     << " on " << vquant << " for " << grid->quantity() << std::endl;
              //                  }
@@ -620,7 +620,7 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
                          // Note: we do NOT delete vgrid, since it is now in the cache (i.e., a pointer
                          // in the cache points to that memory)!
                          grid = newgrid;             
-                         if ( debug >= 1 ) {
+                         if ( dbug >= 1 ) {
                             std::cerr << "MetGridData::new_mgmtGrid3D:              reProfiled to get " << grid->quantity() 
                             << " on " << grid->vertical() << std::endl;
                          }
@@ -634,19 +634,19 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
                 grid->setPgroup( my_pgroup, my_metproc ); 
              
                 // add it to the disk cache
-                if ( debug >= 2 ) {
+                if ( dbug >= 2 ) {
                    std::cerr << "MetGridData::new_mgmtGrid3D:  writing " << grid->quantity() << " @ " << grid->met_time() << " to disk cache" << std::endl;
                 }    
                 writeCache(grid);
 
              } else {
-                if ( debug > 0 ) {
+                if ( dbug > 0 ) {
                    std::cerr << "MetGridData::new_mgmtGrid3D:  failed to read met data from source" << std::endl;            
                 }
              }
              
           } else {
-             if ( debug >= 1 ) {
+             if ( dbug >= 1 ) {
                 std::cerr << "MetGridData::new_mgmtGrid3D:  request fulfilled from disk cache" << std::endl;
              }  
              
@@ -658,13 +658,13 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
           // either through reading from the data source or from disk cache
           if ( grid != NULLPTR ) {
              // add it to the in-memory cache
-             if ( debug >= 1 ) {
+             if ( dbug >= 1 ) {
                std::cerr << "MetGridData::new_mgmtGrid3D:  adding data to memory cache" << std::endl;
              }
              cache->add(grid);
           }   
     
-          if ( debug >= 2 ) {
+          if ( dbug >= 2 ) {
              std::cerr << "MetGridData::new_mgmtGrid3D:  cache report:" << std::endl;
              report();
           }                                                                              
@@ -678,13 +678,13 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
           // This grid object may then be cached in memory and pulled up
           // as needed.  Attempts to interpolate data from such an object
           // will talk to the met processor object instead.
-          if ( debug >= 1 ) {
+          if ( dbug >= 1 ) {
              std::cerr << "MetGridData::new_mgmtGrid3D:  (met client) asking met processor " << my_metproc << " for metadata" << std::endl;
           } 
           
           grid = new_clientGrid3D( quantity, time );   
        
-          if ( debug >= 1 ) {
+          if ( dbug >= 1 ) {
             std::cerr << "MetGridData::new_mgmtGrid3D:  (met client) grid created and received metadata from met processor" << std::endl;
           }    
           
@@ -694,7 +694,7 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
           // but we do want to save this in memeory cache
           if ( grid != NULLPTR ) {
              // add it to the in-memory cache
-             if ( debug >= 1 ) {
+             if ( dbug >= 1 ) {
                std::cerr << "MetGridData::new_mgmtGrid3D:  adding client grid to memory cache" << std::endl;
              }
              cache->add(grid);
@@ -705,14 +705,14 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
 
 
     } else {
-       if ( debug >= 1 ) {
+       if ( dbug >= 1 ) {
           std::cerr << "MetGridData::new_mgmtGrid3D:  request fullfilled from memory cache" << std::endl;
        } 
        // note: since the grid was retrieved from cache, its
        // group stuff is already in place.
     }
 
-    if ( debug > 0 ) {
+    if ( dbug > 0 ) {
        std::cerr << "MetGridData::new_mgmtGrid3D:  returning " << quantity << " on " << vquant << " @ " << time << std::endl;
     }
 
@@ -841,7 +841,7 @@ GridFieldSfc* MetGridData::new_mgmtGridSfc( const std::string& quantity, const s
     }    
 
 
-    if ( debug > 0 ) {
+    if ( dbug > 0 ) {
        std::cerr << "MetGridData::new_mgmtGridSfc: Want " << quantname << " on Sfc " << sfcname << " @ " << time << std::endl;    
     }
     
@@ -860,7 +860,7 @@ GridFieldSfc* MetGridData::new_mgmtGridSfc( const std::string& quantity, const s
 
              // data not in cache.  we have to go get it.
 
-             if ( debug >= 1 ) {
+             if ( dbug >= 1 ) {
                 std::cerr << "MetGridData::new_mgmtGridSfc:  requesting to read " << quantity << std::endl;    
              }
 
@@ -868,7 +868,7 @@ GridFieldSfc* MetGridData::new_mgmtGridSfc( const std::string& quantity, const s
              grid = new_directGridSfc( fullqname, time );
              if ( grid != NULLPTR ) {
        
-                if ( debug >= 1 ) {
+                if ( dbug >= 1 ) {
                    std::cerr << "MetGridData::new_mgmtGridSfc:       got " << grid->quantity() << " on Sfc " << grid->surface() << std::endl;
                 }
 
@@ -877,17 +877,17 @@ GridFieldSfc* MetGridData::new_mgmtGridSfc( const std::string& quantity, const s
                 grid->setPgroup( my_pgroup, my_metproc ); 
              
                 // add it to the disk cache
-                if ( debug >= 2 ) {
+                if ( dbug >= 2 ) {
                    std::cerr << "MetGridData::new_mgmtGridSfc:  writing " << grid->quantity() << " on Sfc " << grid->surface() << " @ " << grid->met_time() << " to disk cache" << std::endl;
                 }    
                 writeCache(grid);
              } else {
-                if ( debug > 0 ) {
+                if ( dbug > 0 ) {
                    std::cerr << "MetGridData::new_mgmtGridSfc:  failed to read met data from source" << std::endl;            
                 }
              }   
           } else {
-             if ( debug >= 1 ) {
+             if ( dbug >= 1 ) {
                 std::cerr << "MetGridData::new_mgmtGrid3D:  request fulfilled from disk cache" << std::endl;
              }  
              
@@ -899,7 +899,7 @@ GridFieldSfc* MetGridData::new_mgmtGridSfc( const std::string& quantity, const s
           // either through reading from the data source or from disk cache
           if ( grid == NULLPTR ) {
              // add it to the in-memory cache
-             if ( debug > 1 ) {
+             if ( dbug > 1 ) {
                std::cerr << "MetGridData::new_mgmtGridSfc:  adding data to memory cache" << std::endl;
              }
              cache->add(grid);
@@ -914,18 +914,18 @@ GridFieldSfc* MetGridData::new_mgmtGridSfc( const std::string& quantity, const s
           // This grid object may then be cached in memory and pulled up
           // as needed.  Attempts to interpolate data from such an object
           // will talk to the met processor object instead.
-          if ( debug >= 1 ) {
+          if ( dbug >= 1 ) {
              std::cerr << "MetGridData::new_mgmtGridSfc:  (met client) asking met processor for metadata" << std::endl;
           }  
           
           grid = new_clientGridSfc( quantity, time );  
-          if ( debug >= 1 ) {
+          if ( dbug >= 1 ) {
             std::cerr << "MetGridData::new_mgmtGridSfc:  (met client) grid created and received metadata from met processor" << std::endl;
           }    
           // but we do want to save this in memeory cache
           if ( grid != NULLPTR ) {
              // add it to the in-memory cache
-             if ( debug >= 1 ) {
+             if ( dbug >= 1 ) {
                std::cerr << "MetGridData::new_mgmtGridSfc:  adding client grid to memory cache" << std::endl;
              }
              cache->add(grid);
@@ -933,14 +933,14 @@ GridFieldSfc* MetGridData::new_mgmtGridSfc( const std::string& quantity, const s
        
        }
     } else {
-       if ( debug >= 1 ) {
+       if ( dbug >= 1 ) {
           std::cerr << "MetGridData::new_mgmtGridSfc:  request fullfilled from memory cache" << std::endl;
        }    
        // note: since the grid was retrieved from cache, its
        // group stuff is already in place.
     }
 
-    if ( debug > 0 ) {
+    if ( dbug > 0 ) {
        std::cerr << "MetGridData::new_mgmtGridSfc:  returning " << quantname << " on Sfc " << sfcname << " @ " << time  << std::endl;
     }
 

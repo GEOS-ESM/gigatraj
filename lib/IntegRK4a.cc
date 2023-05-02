@@ -47,7 +47,7 @@ void IntegRK4a :: go( real &lon, real &lat, real &z, double &t, MetData *metsrc,
     real mg1, mg2;
     int debug;
     
-    debug = metsrc->debug;
+    debug = metsrc->dbug;
     //debug = 101;
 
     // get the planetary radius
@@ -221,7 +221,7 @@ void IntegRK4a :: go( int n, real *lons, real *lats, real *zs, int *flags, doubl
     int nuse;
     real thslon, thslat, nxtlon, nxtlat;
     
-    debug = metsrc->debug;
+    debug = metsrc->dbug;
     //debug = 101;
 
     // get the planetary radius
