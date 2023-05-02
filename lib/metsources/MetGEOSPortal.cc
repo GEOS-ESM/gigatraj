@@ -2263,6 +2263,51 @@ void MetGEOSPortal::Portal_read_all_dims()
 
 
 
+void MetGEOSPortal::Portal_read_dim_doubles( std::vector<real>&vals, int varid, size_t len )
+{
+    double* buffr;
+    int err;
+    size_t zero = 0;
+    size_t count;
+    ptrdiff_t stride;
+    double delta;
+    double val;
+    int trial;
+    
+    buffr = new double[len];
+    count = len;
+    stride = 1;
+
+    //- std::cerr << "reading " << len << " double dims " << std::endl;    
+    trial = 0;
+    do {
+       err = nc_get_vars_double( ncid, varid, &zero, &count, &stride, buffr );
+    } while ( try_again( err, trial ) );       
+    if ( err != NC_NOERR ) {
+       std::cerr << "MetGEOSPortal::Portal_read_dim_doubles: Failed trying to read " << len << " NC_DOUBLEs " << std::endl;
+       throw(badNetcdfError(err));
+    }
+    
+    if ( len > 1 ) {
+       delta = buffr[1] - buffr[0];
+    } else {
+       delta = 0;
+    }
+    
+    vals.clear();
+    vals.reserve(len);
+    for ( int j=0; j<len; j++ ) {
+        val = buffr[j];
+        if ( (dbug > 5) && (j < 5) ) {
+           std::cerr << "MetGEOSPortal::Portal_read_dim_doubles: dim[" << j << "] = " << val << std::endl;
+        }
+        vals.push_back( val );
+    }
+    
+    delete buffr;
+    
+}
+
 void MetGEOSPortal::Portal_read_dim_doubles( double &first, double &last, double &delta, int varid, size_t len )
 {
     double buffr[2];
@@ -2290,55 +2335,20 @@ void MetGEOSPortal::Portal_read_dim_doubles( double &first, double &last, double
 
 }
 
-void MetGEOSPortal::Portal_read_dim_doubles( std::vector<real>&vals, int varid, size_t len )
-{
-    double buffr[2];
-    int err;
-    size_t zero = 0;
-    size_t count = 2;
-    ptrdiff_t stride;
-    double delta;
-    double val;
-    int trial;
-    
-    stride = len - 1;
-
-    //- std::cerr << "reading " << len << " double dims " << std::endl;    
-    trial = 0;
-    do {
-       err = nc_get_vars_double( ncid, varid, &zero, &count, &stride, buffr );
-    } while ( try_again( err, trial ) );       
-    if ( err != NC_NOERR ) {
-       std::cerr << "MetGEOSPortal::Portal_read_dim_doubles: Failed trying to read " << len << " NC_DOUBLEs " << std::endl;
-       throw(badNetcdfError(err));
-    }
-    
-    delta = ( buffr[1] - buffr[0] )/(len - 1);
-    
-    vals.clear();
-    vals.reserve(len);
-    for ( int j=0; j<len; j++ ) {
-        val = buffr[0] + j*delta;
-        if ( (dbug > 5) && (j < 5) ) {
-           std::cerr << "MetGEOSPortal::Portal_read_dim_doubles: dim[" << j << "] = " << val << std::endl;
-        }
-        vals.push_back( val );
-    }
-    
-}
-
 void MetGEOSPortal::Portal_read_dim_floats( std::vector<real>&vals, int varid, size_t len )
 {
-    float buffr[2];
+    float* buffr;
     int err;
     size_t zero = 0;
-    size_t count = 2;
+    size_t count;
     ptrdiff_t stride;
     float delta;
     float val;
     int trial;
     
-    stride = len - 1;
+    buffr = new float[len];
+    count = len;
+    stride = 1;
     
     trial = 0;
     do {
@@ -2349,11 +2359,16 @@ void MetGEOSPortal::Portal_read_dim_floats( std::vector<real>&vals, int varid, s
        throw(badNetcdfError(err));
     }
     
-    delta = ( buffr[1] - buffr[0] )/(len - 1);
+    if ( len > 1 ) {
+       delta = buffr[1] - buffr[0] ;
+    } else {
+       delta = 0;
+    }
+
     vals.clear();
     vals.reserve(len);
     for ( int j=0; j<len; j++ ) {
-        val = buffr[0] + j*delta;
+        val = buffr[j];
         if ( (dbug > 5) && (j < 5) ) {
            std::cerr << "MetGEOSPortal::Portal_read_dim_floats: dim[" << j << "] = " << val << std::endl;
         }
@@ -2400,7 +2415,9 @@ void MetGEOSPortal::Portal_read_dim_ints( std::vector<real>&vals, int varid, siz
     int val;
     int trial;
     
-    stride = len - 1;
+    buffr = new int[len];
+    count = len;
+    stride = 1;
     
     trial = 0;
     do {
@@ -2411,12 +2428,16 @@ void MetGEOSPortal::Portal_read_dim_ints( std::vector<real>&vals, int varid, siz
        throw(badNetcdfError(err));
     }
     
-    delta = (buffr[1] - buffr[0])/stride;
+    if ( len > 1 ) {
+       delta = buffr[1] - buffr[0];
+    } else {
+       delta = 0;
+    } 
     
     vals.clear();
     vals.reserve(len);
     for ( int j=0; j<len; j++ ) {
-        val = buffr[0] + j*delta;
+        val = buffr[j];
         if ( (dbug > 5) && (j < 5) ) {
            std::cerr << "MetGEOSPortal::Portal_read_dim_ints: dim[" << j << "] = " << val << std::endl;
         }
