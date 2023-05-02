@@ -9,7 +9,11 @@
 
 # define the attributes used in this (fake) dataset
 ;attr1; attr2; attr3 ;attr4
-
+# define the ealrieest date for which there can be data
+> 1900-01-01T00:00
+# define the latest date for which there could be data
+< 2023-01-01T00:00
+ 
 # string variable named "varA" with a value "stringA"
 litS01/S = "stringA"
 litS02/S = 'stringB'

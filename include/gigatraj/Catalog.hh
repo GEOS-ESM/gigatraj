@@ -2013,6 +2013,12 @@ class Catalog {
       */
       void clear();
 
+      
+      /// the first date for which there may be data
+      std::string first_date;
+      
+      /// the final data for which there m may be data
+      std::string final_date;
 
 
       ///  \brief retrieve filenames, given a quantity and timestamp

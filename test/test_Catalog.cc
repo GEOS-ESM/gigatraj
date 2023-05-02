@@ -59,6 +59,11 @@ int main(int argc, char * const argv[])
       exit(1);   
    }
    
+   // findConfig() looks in the current directory first,
+   // then in $GIGATRAJ_CATALOGS,
+   // and then in the directory denoted by GTCONFIGDIR in the code.
+   // Thus, the cfgfile returns might have a directory prepsneded to the
+   // base file name. If so, remove it for the check.
    cfgfile = catlog->findConfig();
    i = cfgfile.find_last_of('/');
    if ( i != std::string::npos ) {
@@ -79,10 +84,18 @@ int main(int argc, char * const argv[])
    }
    catlog->debug( 0 );
 
-   //catlog->debug( 100 );
-
    // load the config file
    catlog->load( cfgfile );
+   
+   // check the first and last dates
+   if ( catlog->first_date != "1900-01-01T00:00" ) {
+      cerr << "got the wrong first date: '" << catlog->first_date << "'" << endl;
+      exit(1);      
+   }
+   if ( catlog->final_date != "2023-01-01T00:00" ) {
+      cerr << "got the wrong final date: '" << catlog->final_date << "'" << endl;
+      exit(1);      
+   }
    
    // check the names of the attributes
    teststring = catlog->attrName( 0 );

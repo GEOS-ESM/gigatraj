@@ -3347,6 +3347,8 @@ void Catalog::clear()
      des_priorities.clear();
 
      my_confLocator = "";
+     first_date = "";
+     final_date = "";
      currentTarget = NULLPTR;
      des_tinc = 0.0;
      des_toff = 0.0;
@@ -3545,7 +3547,7 @@ Catalog::VarVal* Catalog::parseString(  const char* str, size_t& idx ) const
          result = new VarVal();
          // found the closing quote.
          // So check whether this is a string literal or a string
-         k = isStringLiteral( str, j, i );
+         k = isDateLiteral( str, j, i );
          if ( k > 0 ) {
             // a string literal
             if ( dbug > 10 ) {
@@ -4455,6 +4457,8 @@ void Catalog::parse( const std::string& conf )
 {
      const char *str;
      size_t idx;
+     size_t k;
+     size_t len;
      int state;
      std::string name;
      char varType;
@@ -4464,10 +4468,11 @@ void Catalog::parse( const std::string& conf )
      
      // initialize
      str = conf.c_str();
+     len = conf.size();
      idx = 0;
      state = 0;
      
-     if ( str[idx] != ';' ) {
+     if ( str[idx] != ';' && str[idx] != '>' && str[idx] != '<' ) {
         // this line starts with some kind of identifier
         name = getIdentifier( str, idx );
         if ( name == ""  ) {
@@ -4557,7 +4562,7 @@ void Catalog::parse( const std::string& conf )
           }
         
         }
-     } else {
+     } else if ( str[idx] == ';' ) {
         // only the attribute definition line starts with a ";"
         try {
            parseAttrNames(  str,  idx );
@@ -4565,6 +4570,29 @@ void Catalog::parse( const std::string& conf )
            std::cerr << "Bad attribute names config line: " << conf << std::endl;
            throw ( badConfigSyntax() );
         }
+     } else if ( str[idx] == '>' ) {
+         idx++;
+         skipwhite( str, idx );
+         k = isStringLiteral( str, len, idx );
+         if ( k > 0 ) {
+            first_date.assign( str, idx, k );
+         } else {
+           std::cerr << "Bad first_date config line: " << conf << std::endl;
+           throw ( badConfigSyntax() );         
+         }
+     } else if ( str[idx] == '<' ) {
+         idx++;
+         skipwhite( str, idx );
+         k = isStringLiteral( str, len, idx );
+         if ( k > 0 ) {
+            final_date.assign( str, idx, k );
+         } else {
+           std::cerr << "Bad final_date config line: " << conf << std::endl;
+           throw ( badConfigSyntax() );         
+         }
+     } else {
+           std::cerr << "Bad config line: " << conf << std::endl;
+           throw ( badConfigSyntax() );
      }
 
 }
