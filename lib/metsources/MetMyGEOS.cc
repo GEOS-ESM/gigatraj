@@ -4022,7 +4022,7 @@ void MetMyGEOS::Source_read_dim_floats( std::vector<real>&vals, int varid, size_
     
     buffr = new float[len];
     count = len;
-    stride = len;
+    stride = 1;
     
     trial = 0;
     do {
@@ -4032,11 +4032,13 @@ void MetMyGEOS::Source_read_dim_floats( std::vector<real>&vals, int varid, size_
        std::cerr << "MetMyGEOS::Source_read_dim_floats: Failed trying to read " << len << " NC_FLOATs " << std::endl;
        throw(badNetcdfError(err));
     }
+
     if ( len > 1 ) {
        delta = buffr[1] - buffr[0] ;
     } else {
        delta = 0;
     }
+
     vals.clear();
     vals.reserve(len);
     for ( int j=0; j<len; j++ ) {
