@@ -60,7 +60,13 @@ int main(int argc, char * const argv[])
    }
    
    cfgfile = catlog->findConfig();
-   if ( cfgfile != "test_Catalog.cat" ) {
+   i = cfgfile.find_last_of('/');
+   if ( i != std::string::npos ) {
+      i = i + 1;
+   } else {
+      i = 0;
+   }
+   if ( cfgfile.substr(i) != "test_Catalog.cat" ) {
       cerr << "findCatalog() returned " << cfgfile << endl;
       exit(1);
    }
@@ -73,9 +79,10 @@ int main(int argc, char * const argv[])
    }
    catlog->debug( 0 );
 
+   //catlog->debug( 100 );
+
    // load the config file
-   catlog->load( datdir + cfgfile );
-   
+   catlog->load( cfgfile );
    
    // check the names of the attributes
    teststring = catlog->attrName( 0 );
