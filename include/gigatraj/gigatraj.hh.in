@@ -420,10 +420,16 @@ namespace gigatraj {
 #define USE_GEOSFP
 #endif
 
+// Use MyGEOS met data
+#define DO_MYGEOS @DO_MYGEOS@
+#if DO_MYGEOS == 1
+#define USE_MYGEOS
+#endif
 
 
-// In POSIX environments, the usual convetion is for
-// programs to exit eith 0 on success and some number 1-255
+
+// In POSIX environments, the usual convention is for
+// programs to exit with 0 on success and some number 1-255
 // to indicate failure.  By defining these symbolically here,
 // we can make it easier to adapt gigatraj to other environments.
 #ifndef EXIT_SUCCESS
