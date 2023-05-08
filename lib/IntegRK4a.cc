@@ -280,12 +280,12 @@ void IntegRK4a :: go( int n, real *lons, real *lats, real *zs, int *flags, doubl
     // now calculate the the stage-1 displacement for each parcel
     for ( i=0; i<nuse; i++ ) {
     
+        // this point's current longitude and latitude
+        thslon = plons[i];
+        thslat = plats[i];
+
         if ( FINITE(kus[i]) && FINITE(kvs[i]) && FINITE(kws[i]) ) {
     
-           // this point's current longitude and latitude
-           thslon = plons[i];
-           thslat = plats[i];
-
            // convert m/s to km/s 
            k1u = kus[i]/1000.0;
            k1v = kvs[i]/1000.0;
@@ -350,11 +350,11 @@ void IntegRK4a :: go( int n, real *lons, real *lats, real *zs, int *flags, doubl
     
         ii = iused[i];
     
+        thslon = plons[i];
+        thslat = plats[i];
+    
         if ( FINITE(kus[i]) && FINITE(kvs[i]) && FINITE(kws[i]) 
           && FINITE(xhold[i]) && FINITE(yhold[i]) && FINITE(zhold[i]) ) {
-    
-           thslon = plons[i];
-           thslat = plats[i];
 
            k2u = kus[i]/1000.0;
            k2v = kvs[i]/1000.0;
@@ -415,12 +415,12 @@ void IntegRK4a :: go( int n, real *lons, real *lats, real *zs, int *flags, doubl
     
         ii = iused[i];
     
+        thslon = plons[i];
+        thslat = plats[i];
+
         if ( FINITE(kus[i]) && FINITE(kvs[i]) && FINITE(kws[i]) 
           && FINITE(xhold[i]) && FINITE(yhold[i]) && FINITE(zhold[i]) ) {
     
-           thslon = plons[i];
-           thslat = plats[i];
-
            k3u = kus[i]/1000.0;
            k3v = kvs[i]/1000.0;
            
@@ -480,12 +480,12 @@ void IntegRK4a :: go( int n, real *lons, real *lats, real *zs, int *flags, doubl
     
         ii = iused[i];
     
+        thslon = plons[i];
+        thslat = plats[i];
+
         if ( FINITE(kus[i]) && FINITE(kvs[i]) && FINITE(kws[i]) 
           && FINITE(xhold[i]) && FINITE(yhold[i]) && FINITE(zhold[i]) ) {
     
-           thslon = plons[i];
-           thslat = plats[i];
-
            k4u = kus[i]/1000.0;
            k4v = kvs[i]/1000.0;
 
