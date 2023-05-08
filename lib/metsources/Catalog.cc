@@ -906,6 +906,7 @@ void Catalog::VarSet::addValue( const std::string& name, const char type, VarExp
      define( name, type );
      
      item = vars.find( name );
+     // (the define() above guarantees that the name was found
      (*item).second.addValue( value, test );
 
 } 
@@ -917,8 +918,12 @@ Catalog::Variable* Catalog::VarSet::getVariable(  const std::string& name )
      
      // get the variable to be evaluated
      item = vars.find( name );
-     result = &(*item).second;     
-
+     if ( item != vars.end() ) {
+        result = &(*item).second;     
+     } else {
+        result = NULLPTR;
+     }
+     
      return result;
 }
 
@@ -1031,7 +1036,11 @@ Catalog::Target* Catalog::TargetSet::getTarget( const std::string& name )
      
      // get the variable to be evaluated
      item = targets.find( name );
-     result = &(*item).second;     
+     if ( item != targets.end() ) {
+        result = &(*item).second;     
+     } else {
+        result = NULLPTR;
+     }
 
      return result;
 }
@@ -1180,8 +1189,12 @@ Catalog::Quantity* Catalog::QuantitySet::getQuantity( const std::string& name )
      
      // get the variable to be evaluated
      item = quants.find( name );
-     result = &(*item).second;     
-
+     if ( item != quants.end() ) {
+         result = &(*item).second;     
+     } else {
+         result = NULLPTR;
+     }
+     
      return result;
 }
 
@@ -3109,7 +3122,9 @@ std::string Catalog::stdLookup( std::string& stdname )
      
     if ( quantityset.stdnames.count( stdname ) ) {
        item = quantityset.stdnames.find( stdname );
-       result = (*item).second;
+       if ( item != quantityset.stdnames.end() ) {
+          result = (*item).second;
+       }
     }
     
     return result;
@@ -6244,7 +6259,7 @@ void Catalog::bracket( double tyme, double& pre_t, double& post_t )
      
      
      // the number of time steps past the tbase time in the file
-     nt =  floor( (xt - tbase )/tinc );
+     nt =  floor( (xt - tbase )/tinc + 1.0/3600.0/2.0 );
      
      // the pre- and post- times
      pre_t  = t0 + (tbase + nt*tinc)/24.0;
