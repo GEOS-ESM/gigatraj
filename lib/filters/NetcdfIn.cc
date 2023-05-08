@@ -171,6 +171,7 @@ std::string NetcdfIn::findVertical()
     char* c_avalue;
     std::string aname;
     std::string avalue;
+    size_t alen;
     nc_type atype;
     char c_varname[NC_MAX_NAME + 1];
     bool done;
@@ -188,18 +189,41 @@ std::string NetcdfIn::findVertical()
                   aname = std::string(c_aname);
                   if ( aname == "vertical_coordinate" ) {
                      err = nc_inq_atttype( ncid, var_id, c_aname, &atype );
-                     if ( err == NC_NOERR && atype == NC_STRING ) {
-                        err = nc_get_att_string( ncid, var_id, c_aname, &c_avalue );
+                     if ( err == NC_NOERR ) {
+                        err = nc_inq_attlen( ncid, var_id, c_aname, &alen );
                         if ( err == NC_NOERR ) {
-                           avalue = std::string(c_avalue);
-                           if ( avalue == "yes" ) {
-                              nc_free_string( 1, &c_avalue );
-                              err = nc_inq_varname( ncid, var_id, c_varname );
+                        
+                           if ( atype == NC_STRING ) {
+                              err = nc_get_att_string( ncid, var_id, c_aname, &c_avalue );
                               if ( err == NC_NOERR ) {
-                                 result = std::string( c_varname );
-                                 done = true;
-                                 break;
+                                 avalue = std::string(c_avalue);
+                                 if ( avalue == "yes" ) {
+                                    nc_free_string( 1, &c_avalue );
+                                    err = nc_inq_varname( ncid, var_id, c_varname );
+                                    if ( err == NC_NOERR ) {
+                                       result = std::string( c_varname );
+                                       done = true;
+                                       break;
+                                    }
+                                 }
                               }
+                           } else if ( atype == NC_CHAR ) {
+                              c_avalue = new char[alen + 1];
+                              err = nc_get_att_text( ncid, var_id, c_aname, c_avalue );
+                              if ( err == NC_NOERR ) {
+                                 c_avalue[alen] = 0;
+                                 avalue = std::string(c_avalue);
+                                 if ( avalue == "yes" ) {
+                                    delete c_avalue;
+                                    err = nc_inq_varname( ncid, var_id, c_varname );
+                                    if ( err == NC_NOERR ) {
+                                       result = std::string( c_varname );
+                                       done = true;
+                                       break;
+                                    }
+                                 }
+                              }   
+                              
                            }
                         }
                      }
@@ -688,6 +712,10 @@ void NetcdfIn::open( std::string file )
         alt_vertname = findVertical();
         vid_z   = get_var_id( alt_vertname, true, "vertical_coordinate", &vtyp_z );
      }  
+     if ( vid_z < 0 ) {
+        alt_vertname = findVertical();
+        vid_z   = get_var_id( alt_vertname, true, "vertical_coordinate", &vtyp_z );     
+     }
      if ( dbug > 1 ) {
         std::cerr << "NetcdfIn::open: Got the id for the vertical coordiate: " << vcoord <<  std::endl;
      }
@@ -701,6 +729,13 @@ void NetcdfIn::open( std::string file )
            std::cerr << "NetcdfIn::open: Found a vertical coordinate " << vcoord <<  std::endl;
         }
      }
+     if ( vid_z < 0 ) {
+        if ( (vid_status == -1) && (do_status == 1) ) {
+           std::cerr <<  "No vertical coordinate was found in the netcdf input file" << std::endl;
+           throw (badFileConventions());
+        }
+     }
+     
      
      if ( do_status != 0 ) {   
         vid_status = get_var_id( "status", false, "", &vtyp_status );
