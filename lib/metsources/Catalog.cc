@@ -961,6 +961,139 @@ void Catalog::VarSet::dump( int indent) const
 
 //////////////////////////////////////////////////////////////////////////////////
 
+Catalog::TimeInterval::TimeInterval()
+{
+      years = 0;
+      months = 0;
+      days = 0;
+      secs = 0.0;
+}
+
+size_t Catalog::TimeInterval::parse( const std::string& interval )
+{
+    size_t result;
+    const char *cc;
+    
+    cc =  interval.c_str();
+    
+    result = parse( cc, interval.size(), 0 );
+
+    return result;
+}
+
+size_t Catalog::TimeInterval::parse( const char* interval, size_t len, size_t size )
+{
+    size_t result;
+    size_t i;
+    int numbr;
+    float tyme;
+    bool inTime;
+    int state;
+    
+    result = 0;
+    
+    years = 0;
+    months = 0;
+    days = 0;
+    secs = 0.0;
+    
+    /* 	state = 
+      x00: all done
+      x0f: looking for years, months, days, or time
+      x07: looking for months, days, or time
+      x03: looking for days or time
+      x01: looking for time
+      x70: in time, looking for hours, minutes, or seconds
+      x30; in time, looking for minutes or seconds
+      x10: in time, looking for seconds
+    */
+    state = 0;
+    
+    inTime = false;
+    
+    if ( len > 0 ) {
+    
+       i=0;
+       if ( interval[i] == 'P' ) {
+         
+          result = i;
+          
+          state = 0x0f;
+    
+          i++;
+          result = i;
+          
+          while ( (i < len) && (state != 0) ) {
+    
+             // if we are able to accept times...
+             if ( (state & 0x01) && (interval[i] == 'T') ) {
+                // we are starting to parse a time interval
+                state = 0x70;
+             
+                i++;
+                result = i;
+             
+             } else {
+             
+                // we should see a number at this point
+                numbr = 0;
+                if ( isDigit( interval[i] ) ) {
+                   while ( isDigit( interval[i] ) ) {
+                      numbr = numbr*10 + ( interval[i] - '0' );
+                      i++;
+                   }
+                   
+                   // got an integer. 
+                   // The code at the end of the number designates what it is
+                   // And our current state specifies what codes are acceptable.
+                   // This prevents cods form being repeated, as in "P5Y4Y".
+                   if ( (state & 0x0f) && (interval[i] == 'Y') ) {
+                      years = numbr;
+                      state = 0x07;
+                   } else if ( (state & 0x07) && (interval[i] == 'M') ) {
+                      months = numbr;
+                      state = 0x03;
+                   } else if ( (state & 0x03) && (interval[i] == 'D') ) {
+                      days = numbr;
+                      state = 0x01;
+                   } else if ( (state & 0xf0) && (interval[i] == 'H') ) {
+                      secs = secs + 3600.0*numbr;
+                      state = 0x30;
+                   } else if ( (state & 0x30) && (interval[i] == 'M') ) {
+                      secs = secs + 60.0*numbr;
+                      state = 0x10;
+                   } else if ( (state & 0x10) && (interval[i] == 'S') ) {
+                      secs = secs + numbr;
+                      state = 0;
+                   } else {
+                      // syntax error--bad code or code in the wrong place
+                      result = 0;
+                      state = 0;
+                      break;
+                   }
+                   
+                   i++;
+                   result = i;
+       
+                   
+                } else {
+                   // no digit when expecting one
+                   result = 0;
+                   break;
+                }
+             }   
+          } 
+          
+       }
+    
+    }
+    
+
+    return result;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+
 std::string Catalog::Target::getAttr( const std::string& attr)
 {
      std::string result;
@@ -2163,10 +2296,7 @@ bool Catalog::s2Date( const std::string& str, double& result )
      // what is the day of the year at the end of this month?
      dmax = daynums[month];
      // adjust for leap years as necessary
-     bool isLeap =(   ((year % 4) == 0) 
-             && ( ((year % 100) != 0) || (( year % 400) == 0 ) )
-            ); 
-     if ( isLeap ) {
+     if ( isLeap(year) ) {
         if ( month == 2 ) {
            // Leap February is longer
            monthlen++;
@@ -2207,6 +2337,16 @@ bool Catalog::s2Date( const std::string& str, double& result )
     return status;
 }
 
+bool Catalog::isLeap( int year )
+{
+    bool result;
+    
+    result =(   ((year % 4) == 0) 
+             && ( ((year % 100) != 0) || (( year % 400) == 0 ) )
+            ); 
+
+    return result;
+}
 
 void Catalog::d2parts( double val, int& year, int& month, int& dayofmonth, int& dayofyear, int& hours, int& minutes, float& seconds )
 {
@@ -2214,7 +2354,7 @@ void Catalog::d2parts( double val, int& year, int& month, int& dayofmonth, int& 
     int residual;
     // used for adjusting for leap years
     int leapadj = 0;
-    bool isLeap;
+    bool is_leap;
     double day;
     double day2;
     double d0;
@@ -2265,17 +2405,15 @@ void Catalog::d2parts( double val, int& year, int& month, int& dayofmonth, int& 
     month = ((m+2) % 12)+1;
     year = y+(m+2)/12;
     dayofmonth = d - (m*306+5)/10+1;
-    isLeap =(   ((year % 4) == 0) 
-             && ( ((year % 100) != 0) || (( year % 400) == 0 ) )
-            ); 
     
     iday = static_cast<int>( day );
     nyr = (iday*100)/36525;
     
     dayofyear = iday - nyr*365 - (nyr - 1)/4;
 /*      
+    is_leap = isLeap(year);
     d0 = (y - 1900)*365 + (y - 1900 -1)/4;
-    if ( isLeap ) {
+    if ( is_leap ) {
        d0 = d0 + 1.0;
     }
     dayofyear = d - d0;
@@ -2304,7 +2442,7 @@ bool Catalog::d2String( double val, std::string& result, int wid, int start )
     int y,d,m;
     int lastmon;
     int endidx;
-    bool isLeap;
+    bool is_leap;
     double day;
     
     status = false;
@@ -2362,10 +2500,7 @@ bool Catalog::d2String( double val, std::string& result, int wid, int start )
        hours = hours - 24;
        dayofmonth = dayofmonth + 1;
        lastmon = monthlengths[month];
-       isLeap = (   ((year % 4) == 0) 
-            && ( ((year % 100) != 0) || (( year % 400) == 0 ) )
-           ); 
-       if ( isLeap && ( month == 2 ) ) {
+       if ( isLeap(year) && ( month == 2 ) ) {
           lastmon++;
        }
        if ( dayofmonth > lastmon ) {
@@ -2958,6 +3093,8 @@ bool Catalog::query( const std::string& quantity, const std::string& validAt,  s
      std::string preStart;
      std::string postStart;
      bool junk;
+     double preURLtime;
+     double postURLtime;
      
      result = false;
      
@@ -2996,10 +3133,10 @@ bool Catalog::query( const std::string& quantity, const std::string& validAt,  s
                // set up local variables, so that bracket do evaluate var refs
                setup_vars( quantity, tyme, tag );
                
-               bracket( tyme, preTime, postTime );
+               bracket( tyme, preTime, preURLtime, preN, postTime, postURLtime, postN );
                
                // ok, now we neeed to set the temp variables to the Pre time
-               setup_vars( quantity, preTime, tag );
+               setup_vars( quantity, preURLtime, tag );
                            
                ok = false;
             
@@ -3018,11 +3155,11 @@ bool Catalog::query( const std::string& quantity, const std::string& validAt,  s
                   }
                   
                   // get the time characteristics of the target
-                  get_targetTimeInfo( *currentTarget, &preDelta, preStart, &preN );
+                  //get_targetTimeInfo( *currentTarget, &preDelta, preStart, &preN );
                   
-                  if ( preTime < tyme ) {
+                  if ( preURLtime < tyme ) {
                   
-                     setup_vars( quantity, postTime, tag );
+                     setup_vars( quantity, postURLtime, tag );
                      pattern = new VarVal( currentTarget->templayt, 'S' );
                      if ( dbug > 10 ) {
                         std::cerr << "Catalog::query pattern=" << std::endl;
@@ -3035,7 +3172,7 @@ bool Catalog::query( const std::string& quantity, const std::string& validAt,  s
                         }
 
                         // get the time characteristics of the target
-                        get_targetTimeInfo( *currentTarget, &postDelta, postStart, &postN );
+                        //get_targetTimeInfo( *currentTarget, &postDelta, postStart, &postN );
 
                         ok = true;
                      }
@@ -3043,8 +3180,7 @@ bool Catalog::query( const std::string& quantity, const std::string& validAt,  s
                  }  else {
                     s2 = s1;
                     postTime = preTime;
-                    postStart = preStart;
-                    postDelta = preDelta;
+                    postURLtime = preURLtime;
                     postN = preN;
                     ok = true;
                  }
@@ -3060,15 +3196,18 @@ bool Catalog::query( const std::string& quantity, const std::string& validAt,  s
                   dd.offset = (quant->tlist[it]).offset;
                   dd.description = (quant->tlist[it]).description;
                   
-                  //dd.t0 = preTime;
+                  dd.preStart_t = preURLtime;
                   junk = d2String( preTime, dd.t0 );
-                  dd.preStart = preStart;
-                  dd.tDelta = preDelta;
-                  dd.tN = preN;
+                  junk = d2String( preURLtime, dd.preStart );
+                  dd.preN = preN;
+                  
+                  dd.tDelta = ( postURLtime - preURLtime )/( preN + 1);
                   
                   //dd.t1 = postTime;
+                  dd.postStart_t = preURLtime;
                   junk = d2String( postTime, dd.t1 );
-                  dd.postStart = postStart;
+                  junk = d2String( postURLtime, dd.postStart );
+                  dd.postN = postN;
                   
                   if ( s1[0] == '/' 
                     || s1.substr(0,2) == "./"
@@ -4042,6 +4181,7 @@ Catalog::Target* Catalog::parseTarget( const char* str, size_t& idx ) const
     size_t i;
     int ii;
     int j;
+    int k;
     Target* result;
     int nattrs;
     std::string aname;
@@ -4088,6 +4228,24 @@ Catalog::Target* Catalog::parseTarget( const char* str, size_t& idx ) const
 //-       if ( ! s2Float( time, t ) ) {
 //-       result->basetime = t;
        
+    skipwhite( str, i );
+    j = findNext( ';', str, i );
+    ii = static_cast<int>(i);    
+    if ( j >= ii ) {
+       time.clear();
+       time.insert(0, str, i, j - i);
+       trim(time);
+       k = result->urlSep.parse( time );
+       if ( k == 0 ) {
+          std::cerr << "Bad URL separation time interval from target definition: '" << str << "'" << std::endl;
+          throw (badConfigSyntax());       
+       }
+    } else {
+       std::cerr << "Bad target definition: '" << str << "'" << std::endl;
+       throw (badConfigSyntax());       
+    }
+    
+    i = j + 1;
     
     result->inctime = 1.0;
     skipwhite( str, i );
@@ -6201,69 +6359,197 @@ void Catalog::dump( int indent ) const
    
 }
 
-void Catalog::bracket( double tyme, double& pre_t, double& post_t )
+void Catalog::bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n, double& post_t, double& post_url_t, int& post_n )
 {
-     int n;
-     int m;
-     double xt;
-     int nt;
-     double tinc;
-     double tbase;
-     double xtest;
-     double ytest;
-     double t0;
-     std::string xtime;
      VarVal* tmpVal;
-
+     double based;
+     double prev_based;
+     int year;
+     int month;
+     int dayofmonth;
+     int dayofyear;
+     int hours;
+     int minutes;
+     float seconds; 
+     double add_time;
+     double ydays;
+     double mdays;
+     double add_days;
+     double tinc;
+     double intra_delta;
+     double spac;
+ 
+     // get the Target's base date VarVal
      tmpVal = currentTarget->dbase.copy();
+     // evaluate it, so that we end up with a numeric time
      eval( tmpVal );
      if ( ! tmpVal->hasEval() ) {
         std::cerr << "Bad Target base date: " << currentTarget->dbase.nominal << std::endl;
         throw (badDateString());
      }
+     // and here we have it
+     based = tmpVal->evalD;
      
-     // get the base time of the file
-     tbase = ( tmpVal->evalD - floor( tmpVal->evalD ) )*24.0;
+     // If the user is specifying a time offset, we apply that here
+     if ( des_toff > 0 ) {
      
-     // 00Z of the day of the desired data
-     t0 = floor( tyme );
-     
-     // hours past 00Z on the date of the desired data
-     xt = ( tyme - t0 )*24.0;
-     
-     // get the native time increment and base time (offset)
-     tinc = currentTarget->inctime;
-
-     
-     // But does the user wish to override these?
-     if ( des_tinc > 0 ) {
-     
-        // check that the desired time inc and offset are compatible
-        // with the native inc and offset
+        based = based + des_toff/24.0;
         
-        xtest = des_tinc/tinc;
-        if ( fabs( xtest - round(xtest) ) < 0.0001 ) {
-           // ok, the desired increment is an integral multuple of the native increment
-           
-           ytest = ( des_toff - tbase )/tinc;
-           if ( fabs( ytest - round(ytest) ) < 0.0001 ) {
-              // ok, the time offsets are also compatible
-           
-              tbase = des_toff;
-              tinc = des_tinc;
-
-           }
+        // Take care fo the case where the base time is now
+        // after the desired time
+        if ( based > tyme ) {
+           based = based - des_tinc/24.0;
+        }
      
+     }
+     
+     // break the base time into year, month, day, etc.
+     d2parts( based, year, month, dayofmonth, dayofyear, hours, minutes, seconds ); 
+     
+     
+     // Now we advance the base time until we pass the desired time     
+     while ( based <= tyme ) {
+     
+         /* The spacing between successive URLs is held in currentTarget.urlSep.
+            This is broken into parts: year, month, day, seconds.
+            This is necessary because years and months have different durations.
+         */
+         
+         // We start by finding the number of days to advance for the years separation
+         ydays = 0.0;
+         for ( int i=1; i<=currentTarget->urlSep.years; i++ ) {
+         
+             ydays = ydays + 365.0;
+             // If this is a leap year, and a 1-year jump includes the leap day...
+             if ( isLeap( year ) && ( month <= 2 ) ) {
+                ydays = ydays + 1.0;
+             }
+             // If we are jumping into a leap year, past its leap day...
+             if ( isLeap( year + 1 ) && ( month > 2 ) ) {
+                ydays = ydays + 1.0;
+             }
+         
+             // on to the next 1-year jump
+             year++;
+             
+         }
+         
+         // Now find the number of days to advance for the months separation
+         // (note that we start after advancing any years)
+         mdays = 0.0;
+         for ( int i=1; i<=currentTarget->urlSep.months; i++ ) {
+             
+             int monlen = monthlengths[ month ];
+             if ( isLeap(year) && (month == 2) ) {
+                monlen++;
+             } 
+             
+             mdays = mdays + static_cast<double>(monlen);
+             
+             // on to the next month
+             month++;
+             // but take care of advancing into the next year
+             if ( month > 12 ) {
+                year++;
+                month = 1;
+             }
+             
+         }
+     
+         // advancing days ahead is easy
+         add_days = static_cast<double>( currentTarget->urlSep.days );
+         
+         // advancing the time interval (in seconds), converted to hours for now
+         add_time = currentTarget->urlSep.secs/3600.0;
+         
+         // do we need to impose an external desired time spacing?
+         if ( des_tinc > add_time ) {
+          
+            // check that an integral number of urlSep periods fits 
+            // within the desired time spacing
+            int des_n = round( des_tinc / add_time );
+            if ( abs( (des_n*des_tinc) - des_tinc ) < 1e-12 ) {
+               add_time = des_tinc;
+            }
+         
+         
+         }
+         add_time = add_time/24.0; // convert hours->days
+     
+         // save the current base date (it may become our preceeding time)
+         prev_based = based;
+         
+         // advance the base date by our interval
+         based = based + ydays + mdays + add_days + add_time;
+
+     }
+     
+     // these two are the times of the URLs that bracket the desired time(tyme); 
+     pre_url_t  = prev_based;
+     post_url_t = based;
+     
+     
+     // how far into the pre URL would our desired time be?
+     intra_delta = tyme - pre_url_t;
+
+     // get the internal-to-URL time increment, converted from hours to days 
+     tinc = currentTarget->inctime/24.0;
+
+     if ( tinc > 0 ) {
+        pre_n = static_cast<int>( floor( intra_delta/tinc + 1.0/24.0/60.0*0.5 ) );
+     } else {
+        // one snapshot per file, and this is it
+        pre_n = 0;
+     }
+     
+     pre_t = pre_url_t + pre_n*tinc;
+
+     // now turn to the time that follows our desired time
+     
+     // The spacing ot the next time tick is by default given by tinc.
+     spac = tinc;
+     if ( tinc <= 0 ) {
+        // only one snapshot in the URL,
+        // so the spacing is between URLs
+        spac = post_url_t - pre_url_t;
+     }
+     if ( spac < des_tinc/24.0 ) {
+        // impose a desired time increment
+        double hrspac = spac*24.0;
+        int des_n = round( des_tinc / hrspac );
+        if ( abs( (des_n*des_tinc) - des_tinc ) < 1e-12 ) {
+           spac = des_tinc/24.0;
         }
      }
      
+     // advance to the next data time snapshot
+     post_t = pre_t + spac;
      
-     // the number of time steps past the tbase time in the file
-     nt =  floor( (xt - tbase )/tinc + 1.0/3600.0/2.0 );
      
-     // the pre- and post- times
-     pre_t  = t0 + (tbase + nt*tinc)/24.0;
-     post_t = t0 + (tbase + (nt + 1)*tinc)/24.0;
+     if ( post_t < post_url_t ) {
+     
+        // our post time is before the next URL time.
+        // So we won;t have to go to the next URL
+        // We just use the pre URL for post
+        post_url_t = pre_url_t;
+     }
+     
+     // find how far into the post URL we need to go
+     post_n = 0;
+     if ( post_t > post_url_t ) {
+     
+        intra_delta = post_t - post_url_t;
+     
+        if ( tinc > 0 ) {
+           post_n = static_cast<int>( floor( intra_delta/tinc + 1.0/24.0/60.0*0.5 ) );
+        }
+     
+        // should not be necessary, but there may be roundoff
+        post_t = post_url_t + post_n*tinc;
+        
+     }
+     
+     
 
      delete tmpVal;
 }

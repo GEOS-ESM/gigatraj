@@ -307,7 +307,9 @@ for a configuration line is given by:
 
 
        <targetDef> = <targetID>, [ <whitespace> ], ":=", [ <whitespace> ]
-                     , <basedate>, [ <whitespace> ], ";", [ <whitespace> ], <inctime>, [ <whitespace> ]
+                     , <basedate>, [ <whitespace> ], ";", [ <whitespace> ]
+                     , <urlSpacing>, [ <whitespace> ], ";", [ <whitespace> ]
+                     , <inctime>, [ <whitespace> ]
                      , ";", [ <whitespace> ], <numtimes>, [ <whitespace> ]
                      , <attributeValueList>, [ <whitespace> ]
                      , ";", [ <whitespace> ], <template>, [ <whitespace> ];
@@ -315,9 +317,14 @@ for a configuration line is given by:
        
        <basedate> = <datespec>;
        
+       <urlSpacing> = <timePeriod>;
+       
        <inctime> = <float>;
        
        <numtimes> = <integer>;
+       
+       <timePeriod> = "P", [ <integer>, "Y" ], [ <integer>, "M" ], [ <integer>, "D" ]
+                     , [ "T", [ <integer>, "H" ], [ <integer>, "M" ], [ <integer>, "S" ] ] 
        
        <attributeValueList> = <attributeValue>, { [ <whitespace> ], ";", <attributeValue>, [ <whitespace> ] };
         
@@ -663,7 +670,7 @@ class Catalog {
 
            VarOperator |             operator | binary/unary | base priority  | allowed operands
            :------------: | :--------------------: | :------------: | :--------------: | :-----------:
-           TestOR    |  <code>\|\|</code>    |     b        |     10       |  boolean
+           TestOR    |  <code>\|\|</code>   |     b        |     10        |  boolean
            TestAND   |  <code>&&</code>     |     b        |     10        | boolean
            TestEQ    |  <code>==</code>     |     b        |     20        | boolean, int, float, date, string
            TestNE    |  <code>!=</code>     |     b        |     20        | boolean, int, float, date, string
@@ -1089,6 +1096,92 @@ class Catalog {
              
       };
 
+      /// \brief holds a time interval
+      /*! A TimeInterval holds an arbitrary time interval
+          that is split up into years, months, days, and seconds.
+          The splitting is needed because not every year is of the same lengths,
+          and neither does every month.
+          
+          The idea is to be able to apply a TimeInterval to a date and 
+          obtain a new date as a result. 
+           
+      */
+      class TimeInterval {
+      
+           public:
+           
+              /// the number of years
+              int years;
+              /// the number of months
+              int months;
+              /// the number of days
+              int days;
+              /// the number of seconds
+              double secs;
+              
+              /// the constructor
+              TimeInterval();
+              
+              /// Parses a string, extracting the parts
+              /*! This method parsea an ISO time period string, populating
+                  its members fomr the parts of the string.
+              
+                  The time period string
+                  starts with a 'P', 
+                  optionally followed by an integer and a'Y' (denoting the number of years),
+                  optionally followed by an integer and a 'M' (denoting the number of months), 
+                  optionally followed by an integer and a 'D' (denoting the number of days),
+                  optionally followed by a time interval specification.
+                  
+                  The time interval specification begins with a 'T',
+                  optionally followed by an integer and a 'H' (denoting the number of hours), 
+                  optionally followed by an integer and a 'M' (denoting the number of minutes),
+                  optionally followed by an integer and a 'S' (denoting the number of seconds).
+                  
+                  for example, "P1Y6" is a period of one year and six months.
+                  "P1M" is a period of one month.
+                  "PT1M" is a period of one minute.
+                  "PT1H" is a period of one hour.
+                                  
+              
+                  \param interval the string that specifies the interval
+                  \return returns the index o fthe final character parsed, 0 if parsing failed
+              
+              */
+              size_t parse( const std::string& interval );
+              
+              
+              /// Parses a string, extracting the parts
+              /*! This method parsea an ISO time period string, populating
+                  its members fomr the parts of the string.
+              
+                  The time period string
+                  starts with a 'P', 
+                  optionally followed by an integer and a'Y' (denoting the number of years),
+                  optionally followed by an integer and a 'M' (denoting the number of months), 
+                  optionally followed by an integer and a 'D' (denoting the number of days),
+                  optionally followed by a time interval specification.
+                  
+                  The time interval specification begins with a 'T',
+                  optionally followed by an integer and a 'H' (denoting the number of hours), 
+                  optionally followed by an integer and a 'M' (denoting the number of minutes),
+                  optionally followed by an integer and a 'S' (denoting the number of seconds).
+                  
+                  for example, "P1Y6" is a period of one year and six months.
+                  "P1M" is a period of one month.
+                  "PT1M" is a period of one minute.
+                  "PT1H" is a period of one hour.
+                                  
+              
+                  \param interval a character array that specifies the interval
+                  \param len the number of characters in the character array to parse
+                  \param start the starting position in the character array at which parsing is ot begin
+                  \return returns the index o fthe final character parsed, 0 if parsing failed
+              
+              */
+              size_t parse( const char* interval, size_t len, size_t size=0 );
+              
+      };
 
       /// \brief entity for determining filenames and URLs
       /*! A Target describes an entity that can be opened for reading data. Instead of a string that contains
@@ -1125,13 +1218,18 @@ class Catalog {
              
              /// the base time (in hours). This is the hour of the day of the first time snapshot contained in the file.
              double basetime;
-             /*! the date of the first time in the snapshot in the file. 
+
+             /*! holds the temporal spacing between successive URLs, as years, months, days, and seconds
+             */
+             TimeInterval urlSep;
+             
+             /*! a base date related true first time in the snapshot in the file. 
                 (the VarVal nominal is set to the date string (format of a date literal, but may contain 
                 embedded variable refs)
              */
              VarVal dbase;
              
-             /// the time increment (in hours). This is the time sepration between successfile time snapshots in the file
+             /// the time separation (in hours) between successive time snapshots within a single URL
              double inctime;
              
              /// the number of time snapshots in a single URL (value <=0 are valid and mean indeterminant)
@@ -1246,9 +1344,9 @@ class Catalog {
              */
              TargetRef();
              
-             /// The facny constuctor for a TargetRef
+             /// The fancy constructor for a TargetRef
              /*! this is the full-blown constructor for the TargetRef class, permitting
-             full specification of all the information it holds.
+                 full specification of all the information it holds.
              
              \param tget the name of the Target to be used to acquire a given quantity
              \param uu the units of the quantity
@@ -1612,6 +1710,13 @@ class Catalog {
       */
       static bool s2Date( const std::string& str, double& result );
          
+      /// \brief returns whether a given year is a leap year
+      /*! This method returns whether a given year is a leap year or not.
+      
+          \parma year the year to be examined
+          \return true if the year is a leap year, false otherwise
+      */
+      static bool isLeap( int year );
 
       /// \brief convert a numeric date into parts of a date: year, month, day, etc.
       /*! This method converts a numeric date and calculated the various parts that make up a date.
@@ -1762,20 +1867,35 @@ class Catalog {
                    * 2: OTF: e.g., "OTF://quant1,quant2", to indicate quantities needed to do on-the-fly calculations
               */
               int type;
-              /// the time delta in the pre/post URL, in days
-              double tDelta;
+
+
+
+
               /// the number of time snapshots in the pre/post URL
               int tN;
+
+
+              /// the time delta within the pre/post URL, in days
+              double tDelta;
               /// the time just preceeding or at the valid-at time
               std::string t0;
+              /// the first time snapshot in the pre URL, in days
+              double preStart_t;
               /// the first time snapshot in the pre URL
               std::string preStart;
+              /// the index of the time snapshot in the pre URL
+              int preN;
               /// a filename or URL for the source of the data just preceeding or at the valid-at time
               std::string pre;
+              
               /// the time just following the valid-at time
               std::string t1;
+              /// the first time snapshot in the pre URL, in days
+              double postStart_t;
               /// the first time snapshot in the post URL
               std::string postStart;
+              /// the index of the time snapshot in the pre URL
+              int postN;
               /// a filename or URL for the source of the data at or just following the valid-at time
               std::string post;
               
@@ -2101,7 +2221,7 @@ class Catalog {
       */
       std::string getAttr( const DataSource& dest, const std::string& attr );
 
-      /// \brief obtains the time increment and base time (offsit) for a DataSource
+      /// \brief obtains the time increment and base time (offset) for a DataSource
       /*! This method obtains the base time of a Datasource and the time increment
           between successive time snapshots within the file.
           
@@ -2698,10 +2818,14 @@ class Catalog {
      /*! This method finds two dsta snapshot times that bracket a given time
      
          \param tyme the time at which data are desired, in days elapsed since 1899-12-31T00 UTC
-         \param pret_t a reference to the output time snapshot that preceeeds the desired time
-         \param post_t a reference to the output time snapshot that follows the desired time
+         \param pre_t a reference to the data time snapshot that preceeeds the desired time
+         \param pre_url_t a reference to the data starting time of the URL or file that preceeds or contains the desired time
+         \param pre_n a reference to the index of the time snapshot within the pre_url_t URL or file, that immediately preceeds or falls on the desired time
+         \param post_t a reference to the data time snapshot that follows the desired time
+         \param post_url_t a reference to the data starting time of the URL or file that follows the desired time
+         \param post_n a reference to the index of the time snapshot within the post_url_t URL or file, that immediately follows the desired time
      */
-     void bracket( double tyme, double& pre_t, double& post_t );
+     void bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n, double& post_t, double& post_url_t, int& post_n );
 
      /// \brief filters candidate data sources according how how well the desired attributes match the actual
      /*! This method inspects a vector of Datasource object, re-ordering them or deleting them

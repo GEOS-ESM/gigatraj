@@ -905,10 +905,15 @@ class MetMyGEOS : public MetGridLatLonData {
            
            /// the time of the first snapshot in the file, in day1900 format
            double start;
+           /// the time of the first snapshot in the next file, in day1900 format
+           double next;
+           /// the delta between successive timesteps within the file, in days
+           double delta;
+           
+
+
            /// the time of the last snapshot in the file, in day1900 format
            double end;
-           /// the delta between successive timestaps, in days
-           double delta;
            /// the number of time snapshots in the file
            int n;
            /// The time of the first snapshot of the file, in day fractions
@@ -916,9 +921,8 @@ class MetMyGEOS : public MetGridLatLonData {
            double toff;
            /*! bitwise indicators for which items have been specified (as opposed to computed)
                  0x01 = start
-                 0x02 = end
+                 0x02 = next
                  0x04 = delta
-                 0x08 = n
            */
            int given;
            
@@ -940,13 +944,12 @@ class MetMyGEOS : public MetGridLatLonData {
                insofar as that is possible. If all data are specified, the set is
                tested for consistency.
            
-               \param tstart a pointer to the day1900 starting time. If NULLPTR, then it is unspecified
-               \param tend a pointer to the day1900 ending time. If NULLPTR, then it is unspecified
-               \param tdelta a pointer to the day1900 interval between successive timestamps. If NULLPTR, then it is unspecified
-               \param n a pointer to the number of time snapshots. If NULLPTR, then it is unspecified
+               \param tstart the day1900 starting time of the file. If NULLPTR, then it is unspecified
+               \param tnext the day1900 starting time of the next file. If NULLPTR, then it is unspecified
+               \param tdelta the day1900 interval between successive timestamps. If NULLPTR, then it is unspecified
                \return true if the given specs are complete and consistent, false otherwise
            */    
-           bool set( const double* tstart, const double* tend, const double* tdelta, const int* tn );
+           bool set( double tstart, double tnext, double tdelta );
 
            /// tests whether a time grid spec is compatible with this time grid spec
            /*! This method checks whether a given TGridSpec object's settings 
@@ -979,7 +982,7 @@ class MetMyGEOS : public MetGridLatLonData {
       double basetime;
       
       // catalog basetime -- this is the offset between model time and catalog time
-      double catbasetime;
+      double catTimeOffset;
       
       /// Object for dealing with Dates
       gigatraj::CalGregorian cal;
@@ -1214,6 +1217,27 @@ class MetMyGEOS : public MetGridLatLonData {
       */
       bool dsInit( const std::string& quantity="", const std::string& time = "" );     
 
+      /// \brief convert catalog time to met time (
+      /*!  This method converts a numeric time used in the Catalog (number of days since 1899-12-31T00)
+           to a model time (number of days elapsed from a specified time).
+          
+           \param catTime the input Catalog time
+           \return the output MetMyGEOS time
+      */
+      inline double catTime2metTime( double catTime ) const {
+          return catTime + catTimeOffset;
+      };     
+
+      /// \brief convert met time to catalog time  (
+      /*!  This method converts a numeric model time (number of days elapsed from a specified time)
+           to a Catalog (number of days since 1899-12-31T00) time.
+          
+           \param metTime the input MetMyGEOS time
+           \return the output Catalog time
+      */
+      inline double metTime2catTime( double metTime ) const {
+          return metTime - catTimeOffset;
+      };     
 
       /// \brief queries a test DataSource for its quantity code
       /*! This method returns the quantity of a DataSource
@@ -1228,7 +1252,7 @@ class MetMyGEOS : public MetGridLatLonData {
       /// \brief queries a test DataSource for its data units
       /*! This method returns the data units of a DataSource
       
-          \param index if >=0, the index into the internal vector oif DataSources, selecting the one to be queried
+          \param index if >=0, the index into the internal vector of DataSources, selecting the one to be queried
                        By default, the internal current test index is used.
           \return the units          
       

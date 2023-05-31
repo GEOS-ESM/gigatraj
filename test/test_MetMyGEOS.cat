@@ -6,7 +6,7 @@ ROOT/S = "/discover/nobackup/wjiang/gigatraj_merra2/scratch/"
 
 datdir/S = ${ROOT} + "/"
 
-tmain := [${YEAR}-${MONTH}-${DOM}T${HOUR}:00];1;1; 0.5x0.5; P48; ${datdir}/gigatraj_merra2.geosgcm_prog.${YEAR}${MONTH}${DOM}_${HOUR}${MINUTE}z.nc4
+tmain := [${YEAR}-${MONTH}-${DOM}T${HOUR}:00];PT1H;0;1; 0.5x0.5; P48; ${datdir}/gigatraj_merra2.geosgcm_prog.${YEAR}${MONTH}${DOM}_${HOUR}${MINUTE}z.nc4
 
 H:     edge_heights:                        3: tmain[m]
 O3:    ozone_mass_mixing_ratio:             3: tmai[kg kg-1]

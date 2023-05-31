@@ -42,7 +42,7 @@ MetMyGEOS::MetMyGEOS( std::string& date ) : MetGridLatLonData()
    
     basetime = cal.day1900( date );
     
-    catbasetime = basetime;
+    catTimeOffset = 0.0;
     
 }
 
@@ -61,7 +61,7 @@ MetMyGEOS::MetMyGEOS( const MetMyGEOS&  src) : MetGridLatLonData(src)
      mettag = src.mettag;
      modelrun = src.modelrun;
      basetime = src.basetime;
-     catbasetime = src.catbasetime;
+     catTimeOffset = src.catTimeOffset;
 
      altitude_name = src.altitude_name;
      pressure_name = src.pressure_name;
@@ -89,7 +89,7 @@ void MetMyGEOS::assign(const MetMyGEOS& src)
      mettag = src.mettag;
      modelrun = src.modelrun;
      basetime = src.basetime;
-     catbasetime = src.catbasetime;
+     catTimeOffset = src.catTimeOffset;
 
      altitude_name = src.altitude_name;
      pressure_name = src.pressure_name;
@@ -1163,7 +1163,7 @@ bool MetMyGEOS::bracket( const std::string &quantity, const std::string &time, s
         tcat = catlog.date2number( time );
         
         // now get the timebase from the difference btween the two
-        catbasetime = tcat - tcal;
+        catTimeOffset = tcal - tcat;
         
         idx = 0;
         
@@ -1307,19 +1307,20 @@ int MetMyGEOS::prep(  const std::string quantity, const std::string& time )
     init();
 
     // convert model time to calendar time
-    caltime = time;
-    
-    caltime = caltime.substr(0,10);  // use just the date part
-
     //std::cerr << " in setup w/ quant " << quantity << " at time " << time << std::endl;
     
     // do we need to find the basic attributes of this quantity?
     if ( dsInit( quantity, time ) ) {
-//-       time_zero = cal2Time(test_date) + basetime + test_tbase/60.0/24.0;
+          // get the file start time (string form)
           fileTime = ds[test_dsrc].t0;
-          catlog.get_timeSpacing( ds[test_dsrc], &tinc, tbasestr, &nt );
-          tbase = cal2Time( tbasestr );
-          time_zero = cal2Time( fileTime ) + (tbase + tinc)*60.0/24.0;
+          // get the file start time (catalog numeric form)
+          tbase = ds[test_dsrc].preStart_t; 
+          // Note: this is a (pretty good) guess at what the zero-base time in the file
+          // might be. It may well change when we read the metadata from the file
+          time_zero = cal2Time( fileTime ) ;
+          // For now, though, this is good enough to give us the offset between
+          // model time and catalog file.
+          catTimeOffset = time_zero - tbase;
     } else {
           throw(badDataNotFound());
     }
@@ -1541,7 +1542,7 @@ void MetMyGEOS::reset()
      mettag = "MetMyGEOS";
      modelrun = "";
      basetime = 0;
-     catbasetime = 0;
+     catTimeOffset = 0;
      skip = 0;
      skoff = 0;
      waittry = 1;
@@ -1584,7 +1585,7 @@ MetMyGEOS* MetMyGEOS::myNew()
 
    dup->mettag = this->mettag;
    dup->modelrun = this->modelrun;
-   dup->catbasetime = this->catbasetime;
+   dup->catTimeOffset = this->catTimeOffset;
    dup->basetime = this->basetime;
 
    dup->altitude_name = this->altitude_name;
@@ -1685,7 +1686,7 @@ bool  MetMyGEOS::dsInit( const std::string& quantity, const std::string& time )
      } 
      if ( ! doit ) {
         // the quantites are the same, or the given quantity
-        // is the default, meanign that we will use the old
+        // is the default, meaning that we will use the old
         // quantity.     
         if ( time == "" ) {
            // re-use the old time if the user doesn't care
@@ -1702,6 +1703,7 @@ bool  MetMyGEOS::dsInit( const std::string& quantity, const std::string& time )
         if ( result ) {
            test_dsrc = 0;
            opened_dsrc = -1;
+           // TODO: check if the ds is the same as one currently opened, so we don;t have to close and re-open?
         }
      } else {
         // no need for any new query
@@ -1848,6 +1850,7 @@ void MetMyGEOS::queryTimeSpacing( const std::string& quantity, double validAt, d
        if ( index < 0 ) {
           index = test_dsrc;
        }
+       
        
        catlog.get_timeSpacing( ds[index], &tinc, toffstr, &nt );
        toff = cal2Time( toffstr);
@@ -2014,7 +2017,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
                  std::cerr << "MetMyGEOS::Source_open: attempting initial nc_open of: <<" << url  << ">>" << std::endl;
               }
                  
-              //- std::cerr << " nc_opening url " << url << std::endl;
+              //std::cerr << " nc_opening url " << url << std::endl;
               err = nc_open( url.c_str(), NC_NOWRITE, &ncid);     
               //- std::cerr << " nc_opened url " << url << std::endl;
               
@@ -2061,7 +2064,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
                        std::cerr << "MetMyGEOS::Source_open: attempting nc_open of: <<" << url  << ">>" << std::endl;
                     }
                     
-                    //- std::cerr << " nc_opening url " << url << std::endl;
+                    std::cerr << " nc_opening url " << url << std::endl;
                     err = nc_open( url.c_str(), NC_NOWRITE, &ncid);     
                     //- std::cerr << " nc_opened url " << url << std::endl;
                     
@@ -2300,14 +2303,13 @@ double MetMyGEOS::Source_deltime_nativeTo1900( double nativeDelTime )
 
 int MetMyGEOS::Source_findtime(const std::string& quantity, const double desired_time )
 {
-    double diff;
     int result;
+    std::string validTime;
     int idx;
-    int nt;
-    double itime;
     double xtime;
     double btime;
     double tincrement;
+    bool ok;
     
     
     result = -1;
@@ -2319,39 +2321,52 @@ int MetMyGEOS::Source_findtime(const std::string& quantity, const double desired
        std::cerr << "MetMyGEOS::Source_findtime: Looking for time " << desired_time  << std::endl;
     }
     
-    queryTimeSpacing( quantity, desired_time, tincrement, btime ); 
-
-    if ( dbug > 4 ) {
-       std::cerr << "MetMyGEOS::Source_findtime:  time inc is " << tincrement << std::endl;
-       std::cerr << "MetMyGEOS::Source_findtime:  base time is " << btime << std::endl;
-    }
+    // put the time into string form, to feed to the Castalog
+    validTime = time2Cal( desired_time );
+    // Now have the Catalog look it up
+    ok =  dsInit(quantity, validTime );
+    if ( ok ) {
     
-    itime = round( (desired_time - btime)/(tincrement/24.0) );
-    idx =  itime ;
+       // get the time of the first snapshot in the file, 
+       // converted from Catalog time to model time
+       btime = catTime2metTime( ds[test_dsrc].preStart_t );
+       // get the delta time between snapshoits in the file
+       tincrement = ds[test_dsrc].tDelta;
+       if ( dbug > 4 ) {
+          std::cerr << "MetMyGEOS::Source_findtime:  time inc is " << tincrement << std::endl;
+          std::cerr << "MetMyGEOS::Source_findtime:  base time is " << btime << std::endl;
+       }
     
-    xtime = btime + idx*tincrement/24.0;
-    if ( dbug > 4 ) {
-       std::cerr << "MetMyGEOS::Source_findtime:  determined index " << idx << " for " << xtime << std::endl;
-    }    
+    
+       idx = 0;
+       if ( tincrement > 0 ) {
+          idx = round( (desired_time - btime)/tincrement );
+       }
+       
+       xtime = btime + idx*tincrement;
+       if ( dbug > 4 ) {
+          std::cerr << "MetMyGEOS::Source_findtime:  determined index " << idx << " for " << xtime << std::endl;
+       }    
    
-    if ( idx >= 0  ) {
-       // should be within 2 minutes
-       if ( ABS(xtime - desired_time) < (2.0/60.0/24.0) ) {
-          result = idx;
-       } else {
-         if ( dbug > 5 ) {
-            double xt2 = desired_time;
-            double xt1 = xtime;
-            std::string st1 =  cal.date1900( xt1 );
-            std::string st2 =  cal.date1900( xt2 );
-            std::cerr << "MetMyGEOS::Source_findtime:  outside time tolerance  " 
-                      << xtime  << "(" << st1 << ")"
-                      << " vs " 
-                      << desired_time   << "(" << st2  << ")"
-                      << " diff = " << ABS(xtime - desired_time) 
-                      << std::endl;
-         }
-       }   
+       if ( idx >= 0  ) {
+          // should be within 2 minutes
+          if ( ABS(xtime - desired_time) < (2.0/60.0/24.0) ) {
+             result = idx;
+          } else {
+            if ( dbug > 5 ) {
+               double xt2 = desired_time;
+               double xt1 = xtime;
+               std::string st1 =  cal.date1900( xt1 );
+               std::string st2 =  cal.date1900( xt2 );
+               std::cerr << "MetMyGEOS::Source_findtime:  outside time tolerance  " 
+                         << xtime  << "(" << st1 << ")"
+                         << " vs " 
+                         << desired_time   << "(" << st2  << ")"
+                         << " diff = " << ABS(xtime - desired_time) 
+                         << std::endl;
+            }
+          }   
+       }
     }
     
     if ( dbug > 4 ) {
@@ -3796,16 +3811,15 @@ void MetMyGEOS::update_vgrid()
 
 void MetMyGEOS::update_tgrid()
 {
-     double start, end, delta;
+     double start, next, delta;
      int n;
      std::string tx;
+          
+     start = catTime2metTime( ds[test_dsrc].preStart_t );
+     next  = catTime2metTime( ds[test_dsrc].postStart_t );
+     delta = ds[test_dsrc].tDelta;
      
-     
-     catlog.get_timeSpacing( ds[test_dsrc], &delta, tx, &n );
-     
-     start = cal2Time( tx );
-     
-     tgrid.set( &start, NULLPTR, &delta, &n );
+     tgrid.set( start, next, delta );
 
 }
 
@@ -3861,7 +3875,7 @@ void MetMyGEOS::Source_read_all_dims()
        std::cerr << "MetMyGEOS::Source_read_all_dims: Unimplemented format for dim " << dname << ": " << dim_type << std::endl;
        throw(badDimsForm());
     }
-    url_tgrid.set( &tstart, NULLPTR, &tdelta, &tn );
+    url_tgrid.set( tstart, tstart + tn*tdelta, tdelta );
     if ( ! tgrid.test( url_tgrid ) ) {
        std::cerr << "MetMyGEOS::Source_read_all_dims: The file's time gridding is incompatible with its specifications. " << dname << ": " << dim_type << std::endl;
        throw(badDimsForm()); 
@@ -5840,7 +5854,7 @@ void MetMyGEOS::TGridSpec::clear()
    given = 0;
 }
 
-bool MetMyGEOS::TGridSpec::set( const double* tstart, const double* tend, const double* tdelta, const int* tn )
+bool MetMyGEOS::TGridSpec::set( double tstart, double tnext, double tdelta )
 {
     bool result;
     double xstart;
@@ -5850,155 +5864,19 @@ bool MetMyGEOS::TGridSpec::set( const double* tstart, const double* tend, const 
     int nn;
     double qend;
     
-    result = false;
+    result = true;
     
-    if ( tstart != NULLPTR ) {
-       xstart = *tstart;
-       if ( tend != NULLPTR ) {
-          xend = *tend;
-          if ( tdelta != NULLPTR ) {
-             xdelta = *tdelta;
-             if ( tn != NULLPTR ) {
-                xn = *tn; // note: converting int to double here
-             } else {
-                // No tn is given, but the others are present
-                if ( xdelta > 0 ) {
-                   xn = ( xend - xstart )/xdelta; 
-                } else {
-                   xn = 1.0;
-                }
-             }
-             result = true;
-          } else {
-             // no tdelta is given
-             if ( tn != NULLPTR ) {
-                xn = *tn;
-                if ( xn > 0 ) {
-                   // compute xdelta from xstart, xdelta, and xn
-                   xdelta = ( xend - xstart)/xn;
-                   result = true;
-                } else {
-                   // tn was given but has a bad value
-                   
-                }
-             } else {
-                // neither tdelta nor tn was given. 
-                // thi sis ok only if tstart == tend. Otherwise
-                // we have an under-constrained time spec
-                if ( xstart == xend ) {
-                   // (yes, ordinarily it is a really bad idea to compare doubles, but it's ok here)
-                   xn = 1.0;
-                   xdelta = 0.0;
-                   result = true;
-                }
-             }
-          }
-       } else {
-          // tstart, but no tend
-          if ( tdelta != NULLPTR ) {
-             xdelta = *tdelta;
-             
-             if ( tn != NULLPTR ) {
-                xn = *tn;
-                // tstart, tdelta, tn all given.
-                // compute xend
-                xend = xstart + xdelta*xn;
-                result = true;
-             } else {
-                // only tstart and tdelta given.
-                // only if tdelta is 0 is this OK. otherwise
-                // we have an under-constrained time spec
-                if ( xdelta == 0.0 ) {
-                   xend = xstart;
-                   xn = 1.0;
-                   result = true;
-                }
-             }
-          } else {
-             // no tend or tdelta
-             // tn had better be 1 or else we have an under-constrained time spec
-             if ( tn != NULLPTR ) {
-                xn = *tn;
-                if ( *tn == 1 ) {
-                   xend = xstart;
-                   xdelta = 0.0;
-                   result = true;
-                }
-             }
+    start = tstart;
+    next = tnext;
+    delta = tdelta;
+    if ( next >= start ) {
+       if ( delta == 0.0 ) {
+          if ( start != next ) {
+             delta = next - start;
           }
        }
-    
-    } else {
-       // no tstart.
-
-       if ( tend != NULLPTR ) {
-          xend = *tend;
-          
-          if ( tdelta != NULLPTR ) {
-             xdelta = *tdelta;
-       
-             if ( tn != NULLPTR ) {
-                xn = *tn;
-                xstart = xend - xdelta*xn;
-             } else {
-                if ( xdelta == 0.0 ) {
-                   xn = 1.0;
-                   xstart = xend;
-                   result = true;
-                }
-             }
-          } else {
-             
-             if ( tn != NULLPTR ) {
-                xn = *tn;
-                
-                if ( *tn == 1 ) {
-                   xdelta = 0.0;
-                   xstart = xend;
-                   result = true;
-                }
-             } else {
-                // no tstart or tdelta or tn--give up
-             }
-          }   
-
-       } else {
-           // no tstart or tend--hopeless
-       }
-    
     }
-    
-    if ( result ) {
-       // now check for internal consistency
-       qend = xstart + xn*xdelta;
-       // should be within 10 seconds
-       if ( fabs( qend - xend ) < 10.0/3600.0/24.0 ) {
-          
-          clear();
-          
-          start = xstart;
-          end = xend;
-          delta = xdelta;
-          n =  xn + 0.5;
-          
-          given = 0;
-          if ( tstart != NULLPTR ) {
-             given = given | 0x01;
-          }   
-          if ( tend != NULLPTR ) {
-             given = given | 0x02;
-          }   
-          if ( tdelta != NULLPTR ) {
-             given = given | 0x04;
-          }   
-          if ( tn != NULLPTR ) {
-             given = given | 0x08;
-          }   
-          
-       } else {
-          result = false;
-       }
-    }
+
     
     return result;
 
@@ -6015,9 +5893,24 @@ bool MetMyGEOS::TGridSpec::test( const TGridSpec& cmp ) const
     
     result = false;
     
-    threshold = 10.0/60.0/24.0;
+    // times must match within 10 seconds
+    threshold = 10.0/3600.0/24.0;
     
-
+    // the start times must match
+    if ( fabs( start - cmp.start ) < threshold ) {
+       if ( (delta != 0.0) && (cmp.delta != 0.0) ) {
+          if ( fabs( delta - cmp.delta ) < threshold ) {
+             if ( fabs( next - cmp.next ) < threshold ) {   
+                result = true;;
+             }
+          }
+       } else {
+          // at least one of the deltas is zero, which matches anything
+          result = true;
+       }
+    }
+       
+/*
     // the number of times must match, unless one of them is zero
     if ( (n == cmp.n) || (n == 0) || (cmp.n == 0) ) {
     
@@ -6041,6 +5934,7 @@ bool MetMyGEOS::TGridSpec::test( const TGridSpec& cmp ) const
           }
        }
     }
+*/
     
     return result;
 }
