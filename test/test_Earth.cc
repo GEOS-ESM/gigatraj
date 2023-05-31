@@ -43,6 +43,7 @@ int main()
     real *vxIn, *vxOut, *vxTarget;
     real *vyIn, *vyOut, *vyTarget;
     real vx, vy;
+    real lonlimit;
     
     
     if ( e.id != string("Earth") )
@@ -74,7 +75,16 @@ int main()
        cerr << "Bad wrap 360.0 -> " << lonw << endl;
        exit(1);
     }   
-#ifdef WRAP_180
+    
+    e.wrappingLongitude( -77.7 );
+    lonlimit = e.wrappingLongitude();
+    if ( mismatch( lonlimit, -77.7 ) ) { 
+       cerr << "Failed to set wrappinglongitude to -77.7. Value is " << lonlimit << endl;
+       exit(1);
+    }   
+
+    e.wrappingLongitude( -180.0 );
+    
     // should not wrap
     lonw = e.wrap(-40.0);
     if ( mismatch( lonw, -40.0)  ) 
@@ -111,7 +121,8 @@ int main()
        exit(1);
     }   
     
-#else
+    e.wrappingLongitude( 0.0 );
+
     // should wrap
     lonw = e.wrap(-40.0);
     if ( mismatch( lonw, 320.0)  ) 
@@ -147,7 +158,6 @@ int main()
        cerr << "Bad wrap 359.999 -> " << lonw << endl;
        exit(1);
     }   
-#endif
 
 
 
@@ -291,7 +301,8 @@ int main()
     targetlons[0] = 15.0;
     targetlats[0] = 30.0;
     
-#ifdef WRAP_180
+    e.wrappingLongitude( -180.0 );
+    
     // increment across longitude wrapping point
     lons[1] = 178.0;
     lats[1] = 20.0;
@@ -313,7 +324,9 @@ int main()
     dlats[3] = -3.0;
     targetlons[3] = -130.0;
     targetlats[3] = -88.0;
-#else
+
+    e.wrappingLongitude( 0.0 );
+
     // increment across longitude wrapping point
     lons[1] = 358.0;
     lats[1] = 20.0;
@@ -335,7 +348,7 @@ int main()
     dlats[3] = -3.0;
     targetlons[3] = 230.0;
     targetlats[3] = -88.0;
-#endif
+
     
     for ( int i=0; i<n; i++ ) {
         try {
@@ -581,11 +594,11 @@ int main()
     lats[4] = 90.0;
     dists[4] = 111.0;
     bearings[4] = 0.0;
-#ifdef WRAP_180
-    targetlons[4] = -135.0;
-#else
-    targetlons[4] = 225.0;
-#endif
+    if ( e.wrappingLongitude() != 0.0 ) {
+        targetlons[4] = -135.0;
+    } else {
+        targetlons[4] = 225.0;
+    }
     targetlats[4] = 89.0018;
 
     lons[5] = 45.0;
@@ -606,11 +619,11 @@ int main()
     lats[7] = 90.0;
     dists[7] = 111.0;
     bearings[7] = -90.0;
-#ifdef WRAP_180
-    targetlons[7] = -45.0;
-#else
-    targetlons[7] = 315.0;
-#endif
+    if ( e.wrappingLongitude() != 0.0 ) {
+        targetlons[7] = -45.0;
+    } else {
+        targetlons[7] = 315.0;
+    }
     targetlats[7] = 89.0018;
     
     // from south pole, in all four directions
@@ -632,22 +645,22 @@ int main()
     lats[10] = -90.0;
     dists[10] = 111.0;
     bearings[10] = 180.0;
-#ifdef WRAP_180
-    targetlons[10] = -135.0;
-#else
-    targetlons[10] = 225.000;
-#endif
+    if ( e.wrappingLongitude() != 0.0 ) {
+        targetlons[10] = -135.0;
+    } else {
+        targetlons[10] = 225.000;
+    }
     targetlats[10] = -89.0018;
     
     lons[11] = 45.0;
     lats[11] = -90.0;
     dists[11] = 111.0;
     bearings[11] = -90.0;
-#ifdef WRAP_180
-    targetlons[11] = -45.0;
-#else
-    targetlons[11] = 315.0;
-#endif
+    if ( e.wrappingLongitude() != 0.0 ) {
+        targetlons[11] = -45.0;
+    } else {
+        targetlons[11] = 315.0;
+    }
     targetlats[11] = -89.0018;
 
     for ( int i=0; i<n; i++ ) {
