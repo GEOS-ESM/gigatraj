@@ -44,6 +44,15 @@ PlanetNav :: ~PlanetNav()
 }
 
 
+void PlanetNav :: wrappingLongitude( real limit )
+{
+     wraplon = limit;
+}
+
+real PlanetNav :: wrappingLongitude() const
+{
+     return wraplon;
+}
 
 
 real PlanetNav :: wrap( real longitude ) 

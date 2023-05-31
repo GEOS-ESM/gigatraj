@@ -61,6 +61,43 @@ class PlanetNav {
       /// The destructor
       ~PlanetNav(); 
 
+      /// sets the longitude at which longitudes are to be wrapped
+      /*! This method sets the longitude wrapping limit.
+      
+          Because the earth is round and winds blow roughly west to east,
+          parcel trajectories will often follow some generally circumpolar path,
+          around and around. It is convenient to restrict the value of the 
+          parcel longitudes to some preferred range by adding or subtracting 
+          multiples of 360 degrees until the longitude fits within the range.
+          
+          however, there are two main schools of thought regarding what
+          is the proper range: 0 to 360, and -180 to 180. Or more precisely,
+          [0, 360) and [-180, 180).  With the [0,360) range, for example, a longitude 
+          of 359.999 would remani unchanged, but a value of 360.000 would be remapped to 0.000.
+          This remapping is called "wrapping".
+          
+          This method sets the limit at and beyond which longitudinal values will be
+          wrapped.  Once set, the range of allowed longitudes becomes [value, value+360).
+          Note that any value is allowed here. The most common and widely-accepted values,
+          however, are the two mentioned above. The default value is set at library compile time,
+          depending on whether the DO_WRAP0 or the DO_WRAP180 macros are defined, so that 
+          an institutional preference can be set site-wide.
+          
+          \param limit the value of the longitudinal wrapping limit
+          
+      */
+      void wrappingLongitude( real limit );
+      
+      /// returns the current longitude at which longitudes are wrapped.
+      /*! This method returns the current value of the longitude wrapping limit.
+          The wrapping limit marks the interval [value, value+360) into which all longitudes
+          may be wrapped with the wrap() method.
+          
+          \return the value of the longitude wrapping limit
+      
+      */
+      real wrappingLongitude() const;
+
       /// wraps longitude values
       /*! This function returns a longitude value that has been wrapped by adding 
           and subtracting 360 degrees until it falls within the
