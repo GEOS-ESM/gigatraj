@@ -40,7 +40,7 @@ Catalog::VarVal::VarVal( const std::string& val, char typ )
      fmt1 = -1;
      fmt2 = -1;
      
-     nominal = val;
+     nominal.assign( val );
      flags = ValidNominal;
      
      // set the eval* value from the nominal
@@ -660,7 +660,8 @@ Catalog::VarExprItem::VarExprItem( Catalog::VarVal* v )
      op = NULLPTR;
      isVal = false;
      isOp = false;
-    set( v );
+     
+     set( v );
 }
 
 Catalog::VarExprItem::VarExprItem( Catalog::VarOp* o )
@@ -669,7 +670,8 @@ Catalog::VarExprItem::VarExprItem( Catalog::VarOp* o )
      op = NULLPTR;
      isVal = false;
      isOp = false;
-    set( o );
+     
+     set( o );
 }
 
 Catalog::VarExprItem::~VarExprItem()
@@ -699,6 +701,7 @@ void Catalog::VarExprItem::set( Catalog::VarVal* v )
      val = v->copy();
      isVal = true; 
 }
+
 void Catalog::VarExprItem::set( Catalog::VarOp* o )
 {
      clear();
@@ -981,7 +984,7 @@ size_t Catalog::TimeInterval::parse( const std::string& interval )
     return result;
 }
 
-size_t Catalog::TimeInterval::parse( const char* interval, size_t len, size_t size )
+size_t Catalog::TimeInterval::parse( const char* interval, size_t len, size_t start )
 {
     size_t result;
     size_t i;
@@ -1013,7 +1016,7 @@ size_t Catalog::TimeInterval::parse( const char* interval, size_t len, size_t si
     
     if ( len > 0 ) {
     
-       i=0;
+       i=start;
        if ( interval[i] == 'P' ) {
          
           result = i;
@@ -4051,6 +4054,7 @@ Catalog::VarExpr* Catalog::parseVarExpr( const char* str, size_t& idx, int stop 
           if ( vval != NULLPTR ) {
              result->add( vval );
              prev_was_val = true;
+             delete vval;
           } else {
              // check for "[" and date literal and "]"
              vval = parseDate( str, i );
@@ -4058,6 +4062,7 @@ Catalog::VarExpr* Catalog::parseVarExpr( const char* str, size_t& idx, int stop 
                 // deal w/ the varval
                 result->add( vval );
                 prev_was_val = true;
+                delete vval;
              } else {
                 // check for "true" or "false" for boolean literal
                 vval = parseBool( str, i );
@@ -4065,17 +4070,20 @@ Catalog::VarExpr* Catalog::parseVarExpr( const char* str, size_t& idx, int stop 
                    // deal with varvel
                    result->add( vval );
                    prev_was_val = true;
+                   delete vval;
                  } else {   
                    // check for [+-0-9] and float litreral or else int literal
                    vval = parseNumber( str, i );
                    if ( vval != NULLPTR ) {
                       result->add( vval );
                       prev_was_val = true;
+                      delete vval;
                    } else {
                       vval = parseVarRef( str, i );
                       if ( vval != NULLPTR ) {
                          result->add( vval );
                          prev_was_val = true;
+                         delete vval;
                       }
                    }
                 }

@@ -1179,7 +1179,7 @@ class Catalog {
                   \return returns the index o fthe final character parsed, 0 if parsing failed
               
               */
-              size_t parse( const char* interval, size_t len, size_t size=0 );
+              size_t parse( const char* interval, size_t len, size_t start=0 );
               
       };
 
@@ -1713,7 +1713,7 @@ class Catalog {
       /// \brief returns whether a given year is a leap year
       /*! This method returns whether a given year is a leap year or not.
       
-          \parma year the year to be examined
+          \param year the year to be examined
           \return true if the year is a leap year, false otherwise
       */
       static bool isLeap( int year );
