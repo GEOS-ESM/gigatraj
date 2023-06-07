@@ -1170,7 +1170,7 @@ bool MetMyGEOS::bracket( const std::string &quantity, const std::string &time, s
         *t1 = ds[idx].t0;
         *t2 = ds[idx].t1;
     
-        sametime = ( *t1 == *t2 );
+        sametime = ( *t1 == time );
     }
 
 
@@ -1214,29 +1214,29 @@ int MetMyGEOS::setup(  const std::string quantity, const double time )
        
        return prep( "T", caltime );
 
-    } else if ( quantity == "ThetaDot" || quantity == "net_heating_rate" ) {
+    } else if ( quantity == verticalWinds[pottemp_name].name || quantity == "net_heating_rate" ) {
        // we want theta, but we will be calculating theta 
        // on the fly from temperatures.  So the quantity that
        // we really need to ask for is temperature and pressure
        
        return prep( "DTDTTOT", caltime ) & prep( "T", caltime ) ;
 
-    } else if ( quantity == "W" || quantity == "upward_air_velocity" ) {
+    } else if ( quantity == verticalWinds[altitude_name].name || quantity == "upward_air_velocity" ) {
        
        return prep( "OMEGA", caltime );
 
-    } else if (quantity == "P" || quantity == "air_pressure" ) {
+    } else if (quantity == pressure_name || quantity == "air_pressure" ) {
 
-       return prep( "U", caltime );
+       return prep( wind_ew_name, caltime );
        
     } else if ( quantity == palt_name || quantity == "pressure_altitude" ) {
        
        // same as for pressure, above
-       return prep( "U", caltime );
+       return prep( wind_ew_name, caltime );
 
     } else if (quantity == altitude_name ) {
 
-       return prep( "U", caltime );
+       return prep( wind_ew_name, caltime );
        
     } else {
        // just ask for the quantity directly
@@ -1262,29 +1262,29 @@ int MetMyGEOS::setup(  const std::string quantity, const std::string &time )
        
        return prep( "T", caltime );
 
-    } else if ( quantity == "ThetaDot" || quantity == "net_heating_rate" ) {
+    } else if ( quantity == verticalWinds[pottemp_name].name || quantity == "net_heating_rate" ) {
        // we want theta, but we will be calculating theta 
        // on the fly from temperatures.  So the quantity that
        // we really need to ask for is temperature and pressure
        
        return prep( "DTDTTOT", caltime ) & prep( "T", caltime ) ;
 
-    } else if ( quantity == "W" || quantity == "upward_air_velocity" ) {
+    } else if ( quantity == verticalWinds[altitude_name].name || quantity == "upward_air_velocity" ) {
        
        return prep( "OMEGA", caltime );
 
-    } else if (quantity == "P" || quantity == "air_pressure" ) {
+    } else if (quantity == pressure_name || quantity == "air_pressure" ) {
 
-       return prep( "U", caltime );
+       return prep( wind_ew_name, caltime );
        
     } else if ( quantity == palt_name || quantity == "pressure_altitude" ) {
        
        // same as for pressure, above
-       return prep( "U", caltime );
+       return prep( wind_ew_name, caltime );
 
     } else if (quantity == altitude_name ) {
 
-       return prep( "U", caltime );
+       return prep( wind_ew_name, caltime );
        
     } else {
        // just ask for the quantity directly
@@ -1429,6 +1429,7 @@ GridLatLonFieldSfc* MetMyGEOS::GetSfc( const std::string quantity, const std::st
 void MetMyGEOS::init()
 {
     std::string cfgFile;
+    std::string qname;
     
     if ( ! ready ) {
        
@@ -1438,6 +1439,43 @@ void MetMyGEOS::init()
        
        if ( cfgFile != "" ) {
           catlog.load( cfgFile );
+          
+          if ( catlog.variableValue( "pressure_name", qname ) ) {
+             verticalWinds[qname] = verticalWinds[pressure_name];
+             pressure_name = qname;
+          }
+          if ( catlog.variableValue( "pottemp_name", qname ) ) {
+             verticalWinds[qname] = verticalWinds[pottemp_name];
+             pottemp_name = qname;
+          }
+          if ( catlog.variableValue( "palt_name", qname ) ) {
+             verticalWinds[qname] = verticalWinds[palt_name];
+             palt_name = qname;
+          }
+          if ( catlog.variableValue( "alt_name", qname ) ) {
+             verticalWinds[qname] = verticalWinds[altitude_name];
+             altitude_name = qname;
+          }
+          if ( catlog.variableValue( "pressure_w_name", qname ) ) {
+             verticalWinds[pressure_name].name = qname;
+          }
+          if ( catlog.variableValue( "pottemp_w_name", qname ) ) {
+             verticalWinds[pottemp_name].name = qname;
+          }
+          if ( catlog.variableValue( "palt_w_name", qname ) ) {
+             verticalWinds[palt_name].name = qname;
+          }
+          if ( catlog.variableValue( "alt_w_name", qname ) ) {
+             verticalWinds[altitude_name].name = qname;
+          }
+          if ( catlog.variableValue( "wind_ew_name", qname ) ) {
+             wind_ew_name = qname;
+          }
+          if ( catlog.variableValue( "wind_ns_name", qname ) ) {
+             wind_ns_name = qname;
+          }
+ 
+          
           catlog.timeSpacing( override_tspace, override_tbase );
           ready = true;
        } else {
@@ -1657,7 +1695,7 @@ bool  MetMyGEOS::dsInit( const std::string& quantity, const std::string& time )
      init();
      
      // use this as the default quantity
-     quant = "U";
+     quant = wind_ew_name;
      if ( quantity != "" ) {
         quant = quantity;
      }
@@ -3875,7 +3913,7 @@ void MetMyGEOS::Source_read_all_dims()
        std::cerr << "MetMyGEOS::Source_read_all_dims: Unimplemented format for dim " << dname << ": " << dim_type << std::endl;
        throw(badDimsForm());
     }
-    url_tgrid.set( tstart, tstart + tn*tdelta, tdelta );
+    url_tgrid.set( tstart, tstart + tn*tdelta/24.0, tdelta/24.0 );
     if ( ! tgrid.test( url_tgrid ) ) {
        std::cerr << "MetMyGEOS::Source_read_all_dims: The file's time gridding is incompatible with its specifications. " << dname << ": " << dim_type << std::endl;
        throw(badDimsForm()); 
@@ -5869,11 +5907,15 @@ bool MetMyGEOS::TGridSpec::set( double tstart, double tnext, double tdelta )
     start = tstart;
     next = tnext;
     delta = tdelta;
-    if ( next >= start ) {
+    if ( next > start ) {
        if ( delta == 0.0 ) {
           if ( start != next ) {
              delta = next - start;
           }
+       }
+    } else if ( next == start ) {
+       if ( delta > 0.0 ) {
+          next = start + delta;
        }
     }
 

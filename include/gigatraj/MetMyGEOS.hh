@@ -564,7 +564,7 @@ class MetMyGEOS : public MetGridLatLonData {
          \param t1 the last data-valid time before or at the desired time
          \param t2 the first data-valid time after or at the desired time.
                    If t1 == t2, then the model time is exctly at a snapshot time.
-         \return true if the bracketing times are the same; false if they are different.
+         \return true if the first bracketing time is the same as the desired time; false if they are different.
       */   
       bool bracket( const std::string &quantity, double time, double *t1, double *t2);
 
@@ -578,7 +578,7 @@ class MetMyGEOS : public MetGridLatLonData {
          \param time the desired model time, expressed as a calendar string.
          \param t1 the last data-valid time before or at the desired time
          \param t2 the first data-valid time after or at the desired time
-         \return true if the bracketing times are the same; false if they are different.
+         \return true if the first bracketing time is the same as the desired time; false if they are different.
       */   
       bool bracket( const std::string &quantity, const std::string &time, std::string *t1, std::string *t2);
 
