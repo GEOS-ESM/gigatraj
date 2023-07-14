@@ -343,7 +343,8 @@ bool MetMyGEOS::legalQuantity( const std::string quantity )
      if ( quantity == pressure_name
        || quantity == pottemp_name
        || quantity == palt_name
-       || quantity == altitude_name ) {
+       || quantity == altitude_name 
+       || quantity == "Model-Levels" ) {
        
        // these quantities are legal by definition,
        // since they are built-in 
@@ -496,17 +497,14 @@ GridLatLonField3D* MetMyGEOS::new_directGrid3D( const std::string quantity, cons
           // data are on model levels--read the mid-layer pressures PL
           // (NOT the DELP layer thicknesses!)
           // and calculate pressure from them
-          /*
-          component_1 = defaultThis->new_directGrid3D("DELP", time);
-          // the "1.0" is the pressure (in Pa) imposed at the top GMAO model level
-          tmp1 = dynamic_cast<GridLatLonField3D*>(getpress.calc( *component_1, 1.0 ));
-          *grid3d = *tmp1;
-          delete tmp1;
-          defaultThis->remove( component_1 );
-          */
-          component_1 = defaultThis->new_directGrid3D("PL", time);
-          *grid3d = *component_1;
-          defaultThis->remove( component_1 );
+          if ( quantity != "PL" ) { 
+             component_1 = defaultThis->new_directGrid3D("PL", time);
+             *grid3d = *component_1;
+             grid3d->set_quantity(quantity);
+             defaultThis->remove( component_1 );
+          } else {
+             readSource( quantity, time, grid3d );   
+          }   
           // Note: pressure data are in Pa; convert to hPa (mb)
           grid3d->transform("hPa", 100.0, 0.0);
        } else {
@@ -567,7 +565,10 @@ GridLatLonField3D* MetMyGEOS::new_directGrid3D( const std::string quantity, cons
     } else if ( quantity == "Model-Levels" ) {
     
           // model data is not to be found on any data surfaces
-          throw (badDataNotFound());
+          //throw (badDataNotFound());
+    
+          delete grid3d;
+          grid3d = NULLPTR;
     
     } else {
 
@@ -575,11 +576,13 @@ GridLatLonField3D* MetMyGEOS::new_directGrid3D( const std::string quantity, cons
 
     }
     
-    grid3d->setPgroup( my_pgroup, my_metproc );
+    if ( grid3d != NULLPTR ) {
+       grid3d->setPgroup( my_pgroup, my_metproc );
     
-    // set the expiration time
-    zeep = expiration( time );
-    grid3d->set_expires( zeep );
+       // set the expiration time
+       zeep = expiration( time );
+       grid3d->set_expires( zeep );
+    }
     
     if ( dbug > 20 ) {
        std::cerr << "MetMyGEOS::new_directGrid3D: leaving  quantity=" << quantity << " @ " << time << std::endl;
@@ -2055,7 +2058,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
                  std::cerr << "MetMyGEOS::Source_open: attempting initial nc_open of: <<" << url  << ">>" << std::endl;
               }
                  
-              //std::cerr << " nc_opening url " << url << std::endl;
+              std::cerr << " nc_opening url " << url << std::endl;
               err = nc_open( url.c_str(), NC_NOWRITE, &ncid);     
               //- std::cerr << " nc_opened url " << url << std::endl;
               
@@ -3818,7 +3821,7 @@ void MetMyGEOS::update_vgrid()
           
        vgrid.set( vspec, altitude_name, "km", &scale, &offset, NULLPTR );
        
-    } else if ( vspec == "L" ) {
+    } else if ( vspec[0] == 'L' ) {
     
        scale = 1.0;
        offset = 0.0;
@@ -5781,7 +5784,46 @@ bool MetMyGEOS::VGridSpec::set( const std::string& vcode, const std::string& qua
        
        nLevs = levs.size();
     
-    } else if ( code == "L" ) {
+    } else if ( code == "L1" ) {
+       // model level coordinates
+
+       if ( scale == NULLPTR ) {
+          
+          if ( units == "" ) {
+              units = "";
+              mksScale = 1.0;
+              mksOffset = 0.0;                       
+          } 
+       
+       } else {
+       
+          mksScale = *scale;
+          
+          if ( offset == NULLPTR ) { 
+             mksOffset = 0.0;
+          } else {
+             mksOffset = *offset;
+          }
+       }
+
+       if ( levels == NULLPTR ) {
+          
+          levs.clear();
+          
+          // default level set
+          for ( int i=1; i<=72; i++ ) {
+             levs.push_back(  i );  
+          }
+                   
+       } else {
+       
+          levs = *levels;
+       
+       }
+       
+       nLevs = levs.size();
+    
+    } else if ( code == "2" ) {
        // 2D--no vertical coordinate
 
        if ( scale == NULLPTR ) {
