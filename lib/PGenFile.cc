@@ -95,16 +95,19 @@ int PGenFile :: readparcel( std::istream* input, Parcel *p )
                 status = 0;
 
             } catch (...) {
+               std::cerr << "Badly formatted line in input file" << std::endl;
                status = -2;
             }             
          }
       } else {
          // return EOF status
+         std::cerr << "End of input file" << std::endl;
          status = -1;
       }   
       
    } catch (std::ios::failure) {
       // return error status
+      std::cerr << "Error reading input file" << std::endl;
       status = -2;
    }   
    
