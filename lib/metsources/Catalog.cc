@@ -6399,11 +6399,11 @@ void Catalog::bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n
      based = tmpVal->evalD;
      
      // If the user is specifying a time offset, we apply that here
-     if ( des_toff > 0 ) {
+     if ( des_toff >= 0 ) {
      
-        based = based + des_toff/24.0;
+        based = floor(based) + des_toff/24.0;
         
-        // Take care fo the case where the base time is now
+        // Take care of the case where the base time is now
         // after the desired time
         if ( based > tyme ) {
            based = based - des_tinc/24.0;
@@ -6476,7 +6476,7 @@ void Catalog::bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n
             // check that an integral number of urlSep periods fits 
             // within the desired time spacing
             int des_n = round( des_tinc / add_time );
-            if ( abs( (des_n*des_tinc) - des_tinc ) < 1e-12 ) {
+            if ( abs( (des_n*add_time) - des_tinc ) < 1e-12 ) {
                add_time = des_tinc;
             }
          
@@ -6514,7 +6514,7 @@ void Catalog::bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n
 
      // now turn to the time that follows our desired time
      
-     // The spacing ot the next time tick is by default given by tinc.
+     // The spacing to the next time tick is by default given by tinc.
      spac = tinc;
      if ( tinc <= 0 ) {
         // only one snapshot in the URL,
@@ -6525,7 +6525,7 @@ void Catalog::bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n
         // impose a desired time increment
         double hrspac = spac*24.0;
         int des_n = round( des_tinc / hrspac );
-        if ( abs( (des_n*des_tinc) - des_tinc ) < 1e-12 ) {
+        if ( abs( (des_n*hrspac) - des_tinc ) < 1e-12 ) {
            spac = des_tinc/24.0;
         }
      }
