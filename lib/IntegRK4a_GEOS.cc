@@ -37,7 +37,7 @@ void IntegRK4a_GEOS :: go( real &lon, real &lat, real &z, double &t, MetGEOSDist
     // adjusted/"rotate" wind components
     real up,vp;
     // time in seconds
-    real dt;
+    double dt;
     // delta-lons and delta-lats, delta-zs
     real dlon1, dlon2, dlon3, dlon4;
     real dlat1, dlat2, dlat3, dlat4;
@@ -205,7 +205,7 @@ void IntegRK4a_GEOS :: go( int n, real *lons, real *lats, real *zs, int *flags, 
     // adjusted/"rotate" wind components
     real up,vp;
     // time in seconds
-    real dt;
+    double dt;
     // delta-lons and delta-lats, delta-zs
     real dlon1, dlon2, dlon3, dlon4;
     real dlat1, dlat2, dlat3, dlat4;
@@ -268,12 +268,12 @@ void IntegRK4a_GEOS :: go( int n, real *lons, real *lats, real *zs, int *flags, 
            pzs[ii]   = zs[i];
         }    
     }
-    
+
     // get the winds at those parcels' locations
     metsrc->get_uvw(t, nuse, plons, plats, pzs, kus, kvs, kws);
-    if ( debug >= 100 ) {
+    if ( debug >= 100  && nuse >= 1) {
        dyt = metsrc->time2Cal(t, 3);
-       std::cerr << "     IntegRK4a_GEOS-vector @ (" << t << "/" << dyt << ", " << plons[0] << "," << plats[0] 
+       std::cerr << "     IntegRK4a_GEOS-vector 0 @ (" << t << "/" << dyt << ", " << plons[0] << "," << plats[0] 
        << ", " << pzs[0] << ", " << t << "): u1=" << kus[0] << ", v1=" << kvs[0] << std::endl;
      
     }
@@ -333,15 +333,15 @@ void IntegRK4a_GEOS :: go( int n, real *lons, real *lats, real *zs, int *flags, 
         tmpzs[i] = tmpz;
     }
     nav->deltapos( nuse, tmplons, tmplats, dlons, dlats, 1.0/2.0 );
-    if ( debug >= 100 ) {
-       std::cerr << "IntegRK4-vector: time1=" << t + dt0/2.0 << std::endl;
+    if ( debug >= 100 && nuse >= 1 ) {
+       std::cerr << "IntegRK4-vector: time 1/2=" << t + dt0/2.0 << std::endl;
     }
 
     // now get the winds at the first-stage intermediate points (tmplons,tmplats)
     metsrc->get_uvw(t + dt0/2.0, nuse, tmplons, tmplats, tmpzs, kus, kvs, kws );
-    if ( debug >= 100 ) {
+    if ( debug >= 100 && nuse >= 1 ) {
        dyt = metsrc->time2Cal(t + dt0/2.0, 3);
-       std::cerr << "     IntegRK4a_GEOS-vector @ (" << t << "/" << dyt << ", "  << tmplons[0] << "," << tmplats[0] 
+       std::cerr << "     IntegRK4a_GEOS-vector 1/2 @ (" << t << "/" << dyt << ", "  << tmplons[0] << "," << tmplats[0] 
                  << ", " << tmpzs[0] << ", " << t+dt0/2.0 << "): u2=" << kus[0] << ", v2=" << kvs[0] << std::endl;
     }
 
@@ -397,16 +397,16 @@ void IntegRK4a_GEOS :: go( int n, real *lons, real *lats, real *zs, int *flags, 
         tmpzs[i] =  tmpz;
     } 
     nav->deltapos( nuse, tmplons, tmplats, dlons, dlats, 1.0/2.0 );
-    if ( debug >= 100 ) {
+    if ( debug >= 100 && nuse >= 1 ) {
        std::cerr << "     IntegRK4a_GEOS-vector: dlons2, dlats2 = " << dlons[0] << ", " << dlats[0] << std::endl;
     }
 
     // get the winds data at the second-stage intermediate points
     //std::cerr << "IntegRK4-vector: time2=" << t + dt0/2.0 << std::endl;
     metsrc->get_uvw(t + dt0/2.0, nuse, tmplons, tmplats, tmpzs, kus, kvs, kws );
-    if ( debug >= 100 ) {
+    if ( debug >= 100 && nuse >= 1 ) {
        dyt = metsrc->time2Cal(t + dt0/2.0, 3);
-       std::cerr << "     IntegRK4a_GEOS-vector @ (" << t << "/" << dyt << ", "  << tmplons[0] << "," << tmplats[0] 
+       std::cerr << "     IntegRK4a_GEOS-vector 1/2: @ (" << t << "/" << dyt << ", "  << tmplons[0] << "," << tmplats[0] 
                  << ", " << tmpzs[0] << ", " << t+dt0/2.0 << "): u3=" << kus[0] << ", v3=" << kvs[0] << std::endl;
     }
 
@@ -462,16 +462,16 @@ void IntegRK4a_GEOS :: go( int n, real *lons, real *lats, real *zs, int *flags, 
         tmpzs[i] =  tmpz;
     } 
     nav->deltapos( nuse, tmplons, tmplats, dlons, dlats );
-    if ( debug >= 100 ) {
+    if ( debug >= 100 && nuse >= 1 ) {
        std::cerr << "     IntegRK4a_GEOS-vector: dlons3, dlats3 = " << dlons[0] << ", " << dlats[0] << std::endl;
     }
 
     /// get the met data at the stage-3 intermediate points
     metsrc->get_uvw(t + dt0, nuse, tmplons, tmplats, tmpzs,  kus, kvs, kws );
-    if ( debug >= 100 ) {
+    if ( debug >= 100 && nuse >= 1 ) {
        //std::cerr << "IntegRK4-vector: time3=" << t + dt0 << std::endl;
        dyt = metsrc->time2Cal(t + dt0, 3);
-       std::cerr << "     IntegRK4a_GEOS-vector @ (" << t << "/" << dyt << ", "  << tmplons[0] << "," << tmplats[0] 
+       std::cerr << "     IntegRK4a_GEOS-vector end @ (" << t << "/" << dyt << ", "  << tmplons[0] << "," << tmplats[0] 
                  << ", " << tmpzs[0] << ", " << t+dt0 << "): u4=" << kus[0] << ", v4=" << kvs[0] << std::endl;
     }
 

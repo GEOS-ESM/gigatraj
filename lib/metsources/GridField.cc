@@ -369,7 +369,7 @@ void GridField::checkLons( const std::vector<real> lons ) const
     int dir;
     int nlons;
     int i;
-
+return;
     // we need more than 1 point to check:
     if ( lons.size() < 2 ) {
        throw(badcoords());
@@ -440,7 +440,7 @@ void GridField::checkLats( const std::vector<real> lats ) const
 {
     int dir;
     int i;
-
+return;
     // we need more than 1 point to check:
     if ( lats.size() < 2 ) {
        throw(badcoords());

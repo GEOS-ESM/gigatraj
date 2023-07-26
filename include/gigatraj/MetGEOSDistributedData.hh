@@ -45,9 +45,11 @@ class MetGEOSDistributedData {
       void getData( string quantity, double time, int n, real* lons, real* lats, real* values, int flags=0 );
 
       std::string time2Cal( const double time, int format=-999 );
+      void defineCal(std::string caldate, double time);
+      double cal2Time(std::string caldate);
       int debug = 100;
    //protected:
-
+      double basetime;
       int comm;
       int my_rank;
       int npes;

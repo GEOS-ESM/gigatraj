@@ -71,7 +71,9 @@ MetGEOSDistributedData::MetGEOSDistributedData(
  
   std::vector<real>  xdata;
 
-  double time = cal.day1900(ctime);
+  defineCal(ctime, 0.0);
+
+  double time = cal2Time(ctime);
 
   
   u0= new GridLatLonField3D();
@@ -151,7 +153,7 @@ MetGEOSDistributedData & MetGEOSDistributedData::operator=(const MetGEOSDistribu
 
 std::string MetGEOSDistributedData::time2Cal( double time, int format )
 {
-    return cal.date1900(time, format );
+    return cal.date1900(time+basetime, format );
 }
 
 void MetGEOSDistributedData::get_uvw( double time, real lon, real lat, real z, real *u, real *v, real *w){
@@ -160,15 +162,15 @@ void MetGEOSDistributedData::get_uvw( double time, real lon, real lat, real z, r
 void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* lats, float* zs, float *u, float *v, float *w){
   //double pi = 3.1415926535;
   float dlon = 360.0 /nlons_global;
-  float dlat = 180.0 /nlats_global;
+  float dlat = 180.0 /(nlats_global-1);
   int II[n]{};
 
   for (int i=0; i<n; i++){
-    II[i] = floor(lons[i]/dlon);
+    II[i] = floor((lons[i]+dlon/2.0)/dlon);
   }  
   int JJ[n]{};
   for (int i=0; i<n; i++){
-    JJ[i] = floor((lats[i]+90.0)/dlat);
+    JJ[i] = floor((lats[i]+90.0+dlat/2.0)/dlat);
   }  
 
   int Ranks[n] {};
@@ -229,7 +231,10 @@ void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* la
   // At this point, the particles are distributed 
   double t1 = u0->time();
   double t2 = u1->time();
-
+  if( new_num >=1){
+    std::cerr << "t1: " << t1 << "time :" << time << " t2: " << t2 << std::endl;
+    std::cerr << "lon lat P: " << new_lons[0]<< ":" << new_lats[0] << ": " << new_levs[0] << std::endl;
+  }
   real lonvals [new_num] = {0.0};
   real latvals [new_num] = {0.0};
   real  wvals  [new_num] = {0.0};
@@ -242,9 +247,17 @@ void MetGEOSDistributedData::get_uvw( double time, int n, float* lons, float* la
 
   hin->vinterpVector( new_num, new_lons, new_lats, new_levs, lonvals1, latvals1, *u0, *v0, *vin );
   hin->vinterp      ( new_num, new_lons, new_lats, new_levs, wvals1, *w0, *vin );
+  if( new_num >=1){
+    std::cerr << "get u0: " << lonvals1[0] << "v0 :" << latvals1[0] << std::endl;
+    std::cerr << "get P0: " << wvals1[0]<< std::endl;
+  }
   if (t1 < time) {
      hin->vinterpVector( new_num, new_lons, new_lats, new_levs, lonvals2, latvals2, *u1, *v1, *vin );
      hin->vinterp      ( new_num, new_lons, new_lats, new_levs, wvals2, *w1, *vin );
+     if( new_num >=1){
+       std::cerr << "get u1: " << lonvals2[0] << "v1 :" << latvals2[0] << std::endl;
+       std::cerr << "get P1: " << wvals2[0]<< std::endl;
+     }
   } 
        
   for (int i = 0; i< new_num; i++){
@@ -275,21 +288,24 @@ void MetGEOSDistributedData::getData( string quantity, double time, int n, real*
 
   if( other->quantity() != quantity) {
    //more info here
+   
+   std::cerr <<"quantity diff: "<< other->quantity() << "!=" << quantity << std::endl;
   }
   if ( abs(other->time() - time) >=10.e-9){
    //more info here
+   std::cerr <<"time diff: " << other->time() << " !=" << time << std::endl;
   }
 
   float dlon = 360.0 /nlons_global;
-  float dlat = 180.0 /nlats_global;
+  float dlat = 180.0 /(nlats_global-1.0);
   int II[n]{};
 
   for (int i=0; i<n; i++){
-    II[i] = floor(lons[i]/dlon);
+    II[i] = floor((lons[i]+dlon/2.0)/dlon);
   }  
   int JJ[n]{};
   for (int i=0; i<n; i++){
-    JJ[i] = floor((lats[i]+90.0)/dlat);
+    JJ[i] = floor((lats[i]+90.0+dlat/2.0)/dlat);
   }  
 
   int Ranks[n] {};
@@ -375,15 +391,15 @@ void MetGEOSDistributedData::getData( string quantity, double time, int n, real*
   }
 
   float dlon = 360.0 /nlons_global;
-  float dlat = 180.0 /nlats_global;
+  float dlat = 180.0 /(nlats_global-1);
   int II[n]{};
 
   for (int i=0; i<n; i++){
-    II[i] = floor(lons[i]/dlon);
+    II[i] = floor((lons[i]+dlon/2.0)/dlon);
   }  
   int JJ[n]{};
   for (int i=0; i<n; i++){
-    JJ[i] = floor((lats[i]+90.0)/dlat);
+    JJ[i] = floor((lats[i]+90.0+dlat/2.0)/dlat);
   }  
 
   int Ranks[n] {};
@@ -460,3 +476,16 @@ void MetGEOSDistributedData::getData( string quantity, double time, int n, real*
     values[i] = W_recv[pos[i]];
   }
 }
+
+void MetGEOSDistributedData::defineCal( std::string caldate, double time )
+{
+
+     // convert cal to a time and set basetime to the offset between that and time
+     basetime = ( cal.day1900( caldate ) - time );
+
+}
+
+double MetGEOSDistributedData ::cal2Time( std::string date )
+{
+    return (cal.day1900( date ) - basetime);
+} 

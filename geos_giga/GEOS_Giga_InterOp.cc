@@ -22,7 +22,6 @@ gigatraj::IntegRK4a_GEOS rk4a;
 
 // Functions to be call by GEOS Fortran
 extern "C" {
-   void* initGigaGridLatLonField3D(int, int, int, float *, float *, float*, char*, char *, char*);
 
    void* initGigaGridDistributedData(int comm, int* ij, int ig, int jg,int lv, int il, int jl, int nzs, float* lons, float* lats, float* zs, char* ctime);
 
@@ -37,40 +36,6 @@ extern "C" {
 
 }
 
-
-void* initGigaGridLatLonField3D(int nlons, int nlats, int nzs, float * lons, float* lats, float* levels, char* name, char* units, char* ctime) {
-
-   std::vector<real>  xlons;
-   std::vector<real>  xlats;
-   std::vector<real>  xlevs;
-   std::vector<real>  xdata;
-
-   GridLatLonField3D *metSrc = new GridLatLonField3D();
-
-   metSrc->set_quantity(name);
-   metSrc->set_units(units);
-   metSrc->set_vertical("air_pressure");
-   double time = calendar.day1900(ctime);
-   metSrc->set_time(time,ctime);
-
-   for (int i=0; i<nlons; i++) {
-     xlons.push_back(*(lons+i));
-   }
-   for (int i=0; i<nlats; i++) {
-     xlats.push_back(*(lats+i));
-   }
-   for (int i=0; i<nzs; i++) {
-     xlevs.push_back(*(levels+i));
-   }
-   for (int i=0; i<nlons*nlats*nzs; i++) {
-     xdata.push_back(0.0);
-   }
-   
-   metSrc->load(xlons, xlats, xlevs, xdata);
-
-   return (void*) metSrc;
-
-}
 
 void* initGigaGridDistributedData(int comm, int* IJ_rank, int Ig, int Jg, int lv, int nlon_local, int nlat_local, int nzs,
                                   float * lons, float* lats, float* eta, char* ctime){ 
@@ -102,7 +67,7 @@ void updateFields(MetGEOSDistributedData * metSrc, char* ctime, float* u, float*
    GridLatLonField3D* raw_v = new GridLatLonField3D();
    GridLatLonField3D* raw_w = new GridLatLonField3D();
    GridLatLonField3D* raw_p = new GridLatLonField3D();
-   double time = calendar.day1900(ctime);
+   double time = metSrc->cal2Time(ctime);
 
    raw_u->set_quantity("U");
    raw_u->set_units("m/s");
@@ -140,7 +105,7 @@ void updateFields(MetGEOSDistributedData * metSrc, char* ctime, float* u, float*
 
 void setData(MetGEOSDistributedData * metSrc, char* ctime, char* quantity, float* values){
 
-   double time = calendar.day1900(ctime);
+   double time = metSrc->cal2Time(ctime);
    std::string dim="_2D";
    std::string qt = std::string(quantity);
    int nlevs = 1;
@@ -175,7 +140,7 @@ void setData(MetGEOSDistributedData * metSrc, char* ctime, char* quantity, float
 void setSfcData(MetGEOSDistributedData * metSrc, char* ctime, char* quantity, float* values){
 
    metSrc->gridSfc->set_quantity(quantity);
-   double time = calendar.day1900(ctime);
+   double time = metSrc->cal2Time(ctime);
    metSrc->gridSfc->set_time(time,ctime);
    std::vector<real> data;
    int Nsize = metSrc->nlats_local*metSrc->nlons_local;
@@ -201,24 +166,24 @@ void test_Field3D( GridLatLonField3D * field3d) {
     std::cout << field3d->time()     << std::endl;
 }
 
-void rk4a_advance( MetGEOSDistributedData *metsrc, char* ctime, double dt, int n, float* lons, float* lats, float* levs){
+void rk4a_advance( MetGEOSDistributedData *metSrc, char* ctime, double dt, int n, float* lons, float* lats, float* levs){
 
   int flags[n]={0};
-  double time = calendar.day1900(ctime);
-  rk4a.go(n, lons, lats, levs, flags, time, metsrc, &e, dt); 
+  double time = metSrc->cal2Time(ctime);
+  rk4a.go(n, lons, lats, levs, flags, time, metSrc, &e, dt); 
 
 }
 
 void getData (MetGEOSDistributedData * metSrc, char* ctime, char* quantity, int n, float* lons, float* lats, float* zs, float* values){
 
-  double time = calendar.day1900(ctime);
+  double time = metSrc->cal2Time(ctime);
   metSrc->getData( std::string(quantity), time, n, lons, lats, zs, values);
 
 }
 
 void getData2d (MetGEOSDistributedData * metSrc, char* ctime, char* quantity, int n, float* lons, float* lats, float* values){
 
-  double time = calendar.day1900(ctime);
+  double time = metSrc->cal2Time(ctime);
   metSrc->getData( std::string(quantity), time, n, lons, lats, values);
 
 }
