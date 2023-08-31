@@ -1757,6 +1757,249 @@ void BilinearHinterp::vinterpVector( int n, const real* lons, const real* lats, 
      vinterpVector( n, lons, lats, zs, xvals, yvals, dynamic_cast<const GridLatLonField3D&>(xgrid), dynamic_cast<const GridLatLonField3D&>(ygrid), vin, flags );
 }
 
+void BilinearHinterp::vinterpVector( int n, const real* lons, const real* lats, const real* zs, real* xvals, real* yvals, const GridCubedSphereField3D& xgrid, const GridCubedSphereField3D& ygrid, const Vinterp& vin, int flags ) const 
+{
+     // array indices that bound a desired longitude
+     int i1, i2;
+     // array indices that bound a desired latitude
+     int j1, j2;
+     // the bad-or-missing-data fill value
+     real xbad, ybad;
+     // data values at the four grid points that surround each desired lat and lon
+     real *xvalsprf, *yvalsprf;
+     // longitude indices of the four grid points that surround each desired lat and lon
+     int *is;
+     // latitude indices of the four grid points that surround each desired lat and lon
+     int *js;
+     // vertical grid point of the surface/level within the 3D object
+     // on which we are doing the interpolation
+     int *ks;
+     // direct indices into the data array 
+     int *indices;
+     // loop index for the locations we are interpolating to
+     int i;
+     // loop index for the grid vertical level
+     int k;
+     // dimensions of the input data grid
+     int nlons, nlats, nzs;
+     // a vector to hold horizontally-interpolated data,
+     // which will subsequently be vertically interpolated
+     std::vector<real> xprofile, yprofile;
+     // index offset used in assembling indices from different grid levels
+     int idx;
+     // temporary variable to hold an interpolated result
+     real val;
+     // the vertical levels from the input data grid
+     std::vector<real> zlevs;
+     // temp values for conformal adjustment
+     real xtmp, ytmp;
+     // other temp values
+     real x_val, y_val;
+     // lat, lon, vert
+     real lat, lon, z;
+     real lat1,lat2,lon1,lon2;
+     int pos0, pos1, pos2, pos3;
+     
+     // 
+     real cdlon, sdlon;
+     //
+     real tmplon;
+
+     if ( n <= 0 ) {
+        return;
+     }
+
+     if ( ! xgrid.compatible( ygrid ) )  {
+        throw (badincompatible());
+     }
+     
+     // get the dimensions of the input data grid
+     xgrid.dims( &nlons, &nlats, &nzs );
+     
+     // the bad-or-missing-data fill value
+     xbad = xgrid.fillval();
+     ybad = ygrid.fillval();
+     
+     // create an array to hold the grid point values
+     xvalsprf = new real[4*nzs*n];
+     yvalsprf = new real[4*nzs*n];
+
+     // create arrays to hold grid point index values
+     is = new int[4*nzs*n];
+     js = new int[4*nzs*n];
+     ks = new int[4*nzs*n];
+     indices = new int[4*nzs*n];
+     
+     
+     for ( int i=0; i<n; i++ ) {
+      
+         lon = xgrid.wrap( lons[i] );
+         lat = lats[i];
+         z = zs[i];
+         
+     
+         // get the i and j array coordinates that
+         // correspond to this longitude and latitude
+         //xgrid.lonindex(lon, &i1, &i2);
+         //xgrid.latindex(lat, &j1, &j2);
+         xgrid.latlonindex(lat,lon, i1, j1);
+         //convert to lower-left
+         i1 = (i1+1)/2;
+         j1 = (j1+1)/2;
+         // convert to relative to halo
+         i1 = i1 - xgrid.iStart;
+         j1 = j1 - xgrid.jStart;
+
+         i2 = i1+1;    
+         j2 = j1+1;    
+
+         // for each vertical level...
+         for ( k=0; k<nzs; k++ ) {
+     
+            // make the base index into the grid-index arrays
+            idx = (i*nzs + k)*4;
+
+            // set the four corders of the grid box that encompasses
+            // our desired lat and lon location
+            is[idx+0] = i1;
+            js[idx+0] = j1;
+            ks[idx+0] =  k;
+            is[idx+1] = i1;
+            js[idx+1] = j2;
+            ks[idx+1] =  k;
+            is[idx+2] = i2;
+            js[idx+2] = j1;
+            ks[idx+2] =  k;
+            is[idx+3] = i2;
+            js[idx+3] = j2;
+            ks[idx+3] =  k;
+
+            indices[idx + 0] = xgrid.joinIndex( i1, j1, k );
+            indices[idx + 1] = xgrid.joinIndex( i1, j2, k );
+            indices[idx + 2] = xgrid.joinIndex( i2, j1, k );
+            indices[idx + 3] = xgrid.joinIndex( i2, j2, k );
+         }
+
+     }
+     
+     // Get the values at those four grid points.
+     // (We do it this way in order to take advantage
+     // of any parallization or caching, which are handled
+     // by the grid object. 
+     // The 0x02 flag ensures that each gridpoints() call results in a svr_done() call.
+     xgrid.ask_for_data();
+     try {
+     //xgrid.gridpoints( 4*nzs*n, indices, xvalsprf, do_local(flags) | 0x02 );
+     xgrid.gridpoints( 4*nzs*n, is, js, ks, xvalsprf, do_local(flags) | 0x02 );
+     } catch (...) {
+         std::cerr << "************* HERE!" << std::endl;
+         throw;
+     }
+     ygrid.ask_for_data();
+     try {
+     //ygrid.gridpoints( 4*nzs*n, indices, yvalsprf, do_local(flags) | 0x02 );
+     ygrid.gridpoints( 4*nzs*n, is, js, ks, yvalsprf, do_local(flags) | 0x02 );
+     } catch (...) {
+         std::cerr << "************* THERE!" << std::endl;
+         throw;
+     }
+
+     for ( i=0; i<n; i++ ) {
+
+        lon = xgrid.wrap( lons[i] );
+        lat = lats[i];
+        z = zs[i];
+
+        if ( confml == 1 ) {
+           if ( lat >= NEARPOLE || lat <= -NEARPOLE ) { 
+              for ( k=0; k<nzs; k++ ) {
+                  idx = (i*nzs + k)*4;
+                  for ( int ii=0; ii<4; ii++ ) {
+                      pos0 = js[idx+ii]*nlons + is[idx+ii];
+                      tmplon = xgrid.longitude(pos0);
+                      cdlon = COS( (tmplon - lon)*RCONV  );
+                      sdlon = SIN( (tmplon - lon)*RCONV  );
+                      xtmp =  xvalsprf[idx + ii]*cdlon + yvalsprf[idx + ii]*sdlon; 
+                      ytmp = -xvalsprf[idx + ii]*sdlon + yvalsprf[idx + ii]*cdlon;
+                      xvalsprf[idx + ii] = xtmp;
+                      yvalsprf[idx + ii] = ytmp;
+                  }
+              }
+           }
+        }
+        
+        // empty out the vertical profile
+        xprofile.clear();
+        yprofile.clear();
+     
+        // for each vertical level in the profile
+        for ( k=0; k<nzs; k++ ) {
+            
+            // make the base index again
+            idx = ( i*nzs + k)*4;
+     
+            // all four values surrounding this location must be good
+            if ( xvalsprf[idx+0] != xbad && xvalsprf[idx+1] != xbad && xvalsprf[idx+2] != xbad && xvalsprf[idx+3] != xbad 
+              && yvalsprf[idx+0] != ybad && yvalsprf[idx+1] != ybad && yvalsprf[idx+2] != ybad && yvalsprf[idx+3] != ybad ) {
+
+                 // do the weighted average (see the header file for the inline
+                 //   function minicalc() )
+                 pos0 = js[idx+0]*nlons + is[idx+0];
+                 pos1 = js[idx+1]*nlons + is[idx+1];
+                 pos2 = js[idx+2]*nlons + is[idx+2];
+                 pos3 = js[idx+3]*nlons + is[idx+3];
+
+                 x_val = xgrid.minicalc( lon, lats[i]
+                          , xgrid.longitude(pos0), xgrid.latitude(pos0)
+                          , xgrid.longitude(pos1), xgrid.latitude(pos1)
+                          , xgrid.longitude(pos2), xgrid.latitude(pos2)
+                          , xgrid.longitude(pos3), xgrid.latitude(pos3)
+                          , xvalsprf[idx+0], xvalsprf[idx+1], xvalsprf[idx+2], xvalsprf[idx+3] );
+                 y_val = ygrid.minicalc( lon, lats[i]
+                          , ygrid.longitude(pos0), ygrid.latitude(pos0)
+                          , ygrid.longitude(pos1), ygrid.latitude(pos1)
+                          , ygrid.longitude(pos2), ygrid.latitude(pos2)
+                          , ygrid.longitude(pos3), ygrid.latitude(pos3)
+                         , yvalsprf[idx+0], yvalsprf[idx+1], yvalsprf[idx+2], yvalsprf[idx+3] );
+
+                /* x_val = xgrid->minicalc( lon, lat
+                         , xgrid.longitude(is[idx+0]), xgrid.latitude(js[idx+0])
+                         , xgrid.longitude(is[idx+3]), xgrid.latitude(js[idx+3])
+                         , xvalsprf[idx+0], xvalsprf[idx+1], xvalsprf[idx+2], xvalsprf[idx+3] );
+
+                 y_val = this->minicalc( lon, lat
+                         , ygrid.longitude(is[idx+0]), ygrid.latitude(js[idx+0])
+                         , ygrid.longitude(is[idx+3]), ygrid.latitude(js[idx+3])
+                         , yvalsprf[idx+0], yvalsprf[idx+1], yvalsprf[idx+2], yvalsprf[idx+3] );
+               */
+            } else {
+                 x_val = xbad;
+                 y_val = ybad;
+            }
+
+
+            // store the horizontally-interpolated result in the profile
+            xprofile.push_back(x_val);
+            yprofile.push_back(y_val);
+     
+        }
+
+        // interpolate the horizontally-interplated profile vertically
+        xvals[i] = vin.profile( xgrid.levels(), xprofile, z, xbad, flags );
+        yvals[i] = vin.profile( ygrid.levels(), yprofile, z, ybad, flags );
+
+     }
+     
+     // drop all the temporary variables
+     // before we leave
+     delete indices;
+     delete ks;
+     delete js;
+     delete is;
+     delete xvalsprf;
+     delete yvalsprf;
+     
+}
 //////////////////
 
 std::vector<real>* BilinearHinterp::vinterp( const std::vector<real>& lons, const std::vector<real>& lats, const std::vector<real>& zs, const GridLatLonField3D& grid, const Vinterp& vin, int flags ) const
@@ -2232,6 +2475,172 @@ void BilinearHinterp::vinterp( const int n, const real* lons, const real* lats, 
 
 }
   
+void BilinearHinterp::vinterp( const int n, const real* lons, const real* lats, const real* zs, real* results, const GridCubedSphereField3D& grid, const Vinterp& vin, int flags ) const
+{
+     // array indices that bound a desired longitude
+     int i1, i2;
+     // array indices that bound a desired latitude
+     int j1, j2;
+     // the bad-or-missing-data fill value
+     real bad;
+     // data values at the four grid points that surround each desired lat and lon
+     real *vals;
+     // longitude indices of the four grid points that surround each desired lat and lon
+     int *is;
+     // latitude indices of the four grid points that surround each desired lat and lon
+     int *js;
+     // direct indices into the data array 
+     int *indices;
+     // vertical grid point of the surface/level within the 3D object
+     // on which we are doing the interpolation
+     int *ks;
+     // loop index for the locations we are interpolating to
+     int i;
+     // loop index for the grid vertical level
+     int k;
+     // temporary longitude variable
+     real lon;
+     // dimensions of the input data grid
+     int nlons, nlats, nzs;
+     // a vector to hold horizontally-interpolated data,
+     // which will subsequently be vertically interpolated
+     std::vector<real> profile;
+     // index offset used in assembling indices from different grid levels
+     int idx;
+     // temporary variable to hold an interpolated result
+     real val;
+     int pos0, pos1, pos2, pos3;
+     
+     
+     // get the dimensions of the input data grid
+     grid.dims( &nlons, &nlats, &nzs );
+     
+     
+     // the bad-or-missing-data fill value
+     bad = grid.fillval();
+     
+     // create an array to hold the grid point values
+     vals = new real[4*n*nzs];
+     // create arrays to hold grid point index values
+     is = new int[4*n*nzs];
+     js = new int[4*n*nzs];
+     ks = new int[4*n*nzs];
+     indices = new int[4*n*nzs];
+     
+     // for each input lat/lon location...     
+     for ( i=0; i<n; i++ ) {
+         // take care of any out-of-range longitude values
+         lon = grid.wrap(lons[i]);
+         
+         // get the i and j array coordinates that
+         // correspond to this longitude and latitude
+         //grid.lonindex(lon, &i1, &i2);
+         //grid.latindex(lats[i], &j1, &j2);
+         // i1, i2 is left-lower conner
+         grid.latlonindex(lats[i], lon, i1, j1);
+         //convert to lower-left
+         i1 = (i1+1)/2;
+         j1 = (j1+1)/2;
+         // convert to relative to halo
+         i1 = i1 - grid.iStart;
+         j1 = j1 - grid.jStart;
+         
+         i2 = i1+1;    
+         j2 = j1+1; 
+
+         // for each vertical level...
+         for ( k=0; k<nzs; k++ ) {
+          
+            // make the base index into the grid-index arrays
+            idx = ( k + i*nzs )*4;
+
+            // set the four corders of the grid box that encompasses
+            // our desired lat and lon location
+            is[idx+0] = i1;
+            js[idx+0] = j1;
+            ks[idx+0] =  k;
+            is[idx+1] = i1;
+            js[idx+1] = j2;
+            ks[idx+1] =  k;
+            is[idx+2] = i2;
+            js[idx+2] = j1;
+            ks[idx+2] =  k;
+            is[idx+3] = i2;
+            js[idx+3] = j2;
+            ks[idx+3] =  k;
+
+            indices[idx + 0] = grid.joinIndex( i1, j1, k );
+            indices[idx + 1] = grid.joinIndex( i1, j2, k );
+            indices[idx + 2] = grid.joinIndex( i2, j1, k );
+            indices[idx + 3] = grid.joinIndex( i2, j2, k );
+         }
+     }
+          
+     // Get the values at those four grid points.
+     // (We do it this way in order to take advantage
+     // of any parallization or caching, which are handled
+     // by the grid object. 
+     grid.ask_for_data();
+     grid.gridpoints( 4*n*nzs, indices, vals, do_local(flags) );
+
+     // for each input point
+     for ( i=0; i<n; i++ ) {
+         
+         // take care of any out-of-range longitude values
+         lon = grid.wrap(lons[i]);
+         
+         // empty out the vertical profile
+         profile.clear();
+         
+         // for each vertical level in the profile
+         for ( k=0; k<nzs; k++ ) {
+             
+             // make the base index again
+             idx = ( k + i*nzs )*4;
+
+             // all four values surrounding this location must be good
+             if ( vals[idx+0] != bad && vals[idx+1] != bad 
+               && vals[idx+2] != bad && vals[idx+3] != bad ) {
+
+                  // do the weighted average (see the header file for the inline
+                  //   function minicalc() )
+                 
+                  pos0 = js[idx+0]*nlons + is[idx+0];
+                  pos1 = js[idx+1]*nlons + is[idx+1];
+                  pos2 = js[idx+2]*nlons + is[idx+2];
+                  pos3 = js[idx+3]*nlons + is[idx+3];
+ 
+                  val = grid.minicalc( lon, lats[i]
+                          , grid.longitude(pos0), grid.latitude(pos0)
+                          , grid.longitude(pos1), grid.latitude(pos1)
+                          , grid.longitude(pos2), grid.latitude(pos2)
+                          , grid.longitude(pos3), grid.latitude(pos3)
+                          , vals[idx+0], vals[idx+1], vals[idx+2], vals[idx+3] );
+
+             } else {
+                  val = bad;
+             }
+
+             // store the horizontally-interpolated result in the profile
+             profile.push_back(val);
+        
+         }
+
+         // interpolate the horizontally-interplated profile vertically,
+         results[i] = vin.profile( grid.levels(), profile, zs[i], bad, flags );
+
+     }
+     
+
+     // drop all the temporary variables
+     // before we leave
+     delete indices;
+     delete ks;
+     delete js;
+     delete is;
+     delete vals;
+     
+}
 
 //----------------------  standard methods follow ------------------------------------------
 

@@ -6,6 +6,7 @@
 #include "gigatraj/gigatraj.hh"
 #include "gigatraj/Hinterp.hh"
 #include "gigatraj/GridLatLonField3D.hh"
+#include "gigatraj/GridCubedSphereField3D.hh"
 #include "gigatraj/GridLatLonFieldSfc.hh"
 
 namespace gigatraj {
@@ -366,6 +367,9 @@ class HLatLonInterp : public Hinterp {
        \param  flags flag values affecting the interpolation
       */
       virtual void vinterpVector( int n, const real* lons, const real* lats, const real* zs, real *xvals, real *yvals, const GridLatLonField3D& xgrid, const GridLatLonField3D& ygrid, const Vinterp& vin, int flags=0 ) const = 0; 
+
+      virtual void vinterpVector( int n, const real* lons, const real* lats, const real* zs, real* xvals, real* yvals, const GridCubedSphereField3D& xgrid, const GridCubedSphereField3D& ygrid, const Vinterp& vin, int flags=0 ) const = 0;
+     virtual  void vinterp( const int n, const real* lons, const real* lats, const real* zs, real* results, const GridCubedSphereField3D& grid, const Vinterp& vin, int flags=0 ) const = 0;
 
    
    protected:

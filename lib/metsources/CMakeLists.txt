@@ -12,9 +12,13 @@ GridField.cc              MetGEOSfpFcast.cc     PAltOTF.cc
 GridFieldSfc.cc           MetGEOSPortal.cc      PressOTF.cc
 GridLatLonField3D.cc      MetGridData.cc        ThetaDotOTF.cc
 GridLatLonFieldSfc.cc     MetGridLatLonData.cc  ThetaOTF.cc
+GridCubedSphereField3D.cc 
+GridCubedSphereFieldSfc.cc
 Hinterp.cc                MetGridSBRot.cc       TropOTF.cc
 LinearVinterp.cc          MetMERRA2.cc          Vinterp.cc
 MetGEOSDistributedData.cc
+MetGEOSDistributedLatLonData.cc
+MetGEOSDistributedCubedData.cc
 ) 
 
 set (BASEDIR $ENV{BASEDIR})

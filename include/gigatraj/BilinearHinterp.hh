@@ -5,7 +5,8 @@
 
 #include "gigatraj/gigatraj.hh"
 #include "gigatraj/HLatLonInterp.hh"
-
+#include "gigatraj/GridCubedSphereField3D.hh"
+#include "gigatraj/GridCubedSphereFieldSfc.hh"
 #include <vector>
 #include <math.h>
 
@@ -308,6 +309,7 @@ class BilinearHinterp : public HLatLonInterp {
       */
        void vinterp( const int n, const real* lons, const real* lats, const real* zs, real* results, const GridLatLonField3D& grid, const Vinterp& vin, int flags=0 ) const; 
 
+       void vinterp( const int n, const real* lons, const real* lats, const real* zs, real* results, const GridCubedSphereField3D& grid, const Vinterp& vin, int flags=0 ) const;
 
       /// interpolates a vector field to an array of points, horizontally and vertically
       /*!
@@ -329,6 +331,7 @@ class BilinearHinterp : public HLatLonInterp {
        \param  flags flag values affecting the interpolation
       */
       void vinterpVector( int n, const real* lons, const real* lats, const real* zs, real *xvals, real *yvals, const GridLatLonField3D& xgrid, const GridLatLonField3D& ygrid, const Vinterp& vin, int flags=0 ) const; 
+      void vinterpVector( int n, const real* lons, const real* lats, const real* zs, real* xvals, real* yvals, const GridCubedSphereField3D& xgrid, const GridCubedSphereField3D& ygrid, const Vinterp& vin, int flags=0 ) const;
 
 /*! \name Standard Hinterp methods
  These methods implement the standard methods required by the Hinterp class. 
@@ -675,8 +678,6 @@ class BilinearHinterp : public HLatLonInterp {
       */    
       static const real NEARPOLE;
 
-         
-      
    protected:
    
       /// private convenience function
