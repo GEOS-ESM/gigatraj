@@ -131,7 +131,10 @@ test/test_StreamPrintMPI
 test/test_StreamReadMPI
 test/test_ChangeVertical
 test/test_NetcdfIn
+test/test_NetcdfOutMPI
+test/test_NetcdfInMPI
 test/test_NetcdfOut
 test/valgrind*.log
 gigatraj*.tar.gz
+*.zip
 

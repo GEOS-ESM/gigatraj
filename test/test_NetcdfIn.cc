@@ -164,7 +164,7 @@ int main()
     
     nxt = input.next_parcel();
     if ( nxt != -1 ) {
-      cerr << "the no-more-parcels idnex is " << nxt << " instead of " << -1 << endl;
+      cerr << "the no-more-parcels index is " << nxt << " instead of " << -1 << endl;
       exit(1);
     }
     

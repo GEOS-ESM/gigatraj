@@ -101,6 +101,10 @@ const ParcelStatus HitBad = 0x0002;
   \ingroup parcelstatusvals
 */
 const ParcelStatus NonVert = 0x0004;      
+/*! \brief  ParcelStatus value:  Inert = parcel is not being traced for some reason
+  \ingroup parcelstatusvals
+*/
+const ParcelStatus Inert = 0x0008;      
  
  
       

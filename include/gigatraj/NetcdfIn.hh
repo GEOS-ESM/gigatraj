@@ -510,6 +510,11 @@ class NetcdfIn : public ParcelInitializer {
       // (if the longitude is bad, then all of the Parcel info except
       // for status and flags is also bad.)
       real badlon;
+      // similarly for the other components
+      real badlat;
+      real badvert;
+      double badtag;
+      // and we use the met source bad-values for interpolated met fields )
       
       // flags to turn off reading flags, status, tags
       // -1 = read if available

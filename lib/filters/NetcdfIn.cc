@@ -95,7 +95,12 @@ double NetcdfIn::time()
 
 void NetcdfIn::at_end( bool select )
 {
-    end = select;
+    if ( ! isOpen() ){
+       end = select;
+    } else {
+       std::cerr << "at_end() can be calle donly before open()" << std::endl;
+       throw(badNetcdfTooLate()); 
+    }
 }
 
 void NetcdfIn::readFlags( int mode )
@@ -682,9 +687,9 @@ void NetcdfIn::open( std::string file )
      
      vid_lon = get_var_id( "lon", true, "", &vtyp_lon );
      if ( dbug > 1 ) {
-        std::cerr << "NetcdfIn::open: Got the id for the 'lon' coordiate." <<  std::endl;
+        std::cerr << "NetcdfIn::open: Got the id for the 'lon' coordinate." <<  std::endl;
      }
-     // get thje bad-value flag for longitudes
+     // get the bad-value flag for longitudes
 #ifdef USING_DOUBLE
      err = nc_get_att_double( ncid, vid_lon, "missing_value", &badlon);
 #else
@@ -703,8 +708,24 @@ void NetcdfIn::open( std::string file )
      
      vid_lat = get_var_id( "lat", true, "", &vtyp_lat );
      if ( dbug > 1 ) {
-        std::cerr << "NetcdfIn::open: Got the id for the 'lat' coordiate." <<  std::endl;
+        std::cerr << "NetcdfIn::open: Got the id for the 'lat' coordinate." <<  std::endl;
      }
+     // get the bad-value flag for latitudes
+#ifdef USING_DOUBLE
+     err = nc_get_att_double( ncid, vid_lat, "missing_value", &badlat);
+#else
+     err = nc_get_att_float( ncid, vid_lat, "missing_value", &badlat);
+#endif 
+     if ( err != NC_NOERR ) {
+#ifdef USING_DOUBLE
+        err = nc_get_att_double( ncid, vid_lat, "_FillValue", &badlat);
+#else
+        err = nc_get_att_float( ncid, vid_lat, "_FillValue", &badlat);
+#endif      
+        if ( err != NC_NOERR ) {
+           badlat = ACOS(2.0); // i.e., NaN
+        }
+     }    
      
      try {
         vid_z   = get_var_id( vcoord, true, "vertical_coordinate", &vtyp_z );
@@ -717,7 +738,7 @@ void NetcdfIn::open( std::string file )
         vid_z   = get_var_id( alt_vertname, true, "vertical_coordinate", &vtyp_z );     
      }
      if ( dbug > 1 ) {
-        std::cerr << "NetcdfIn::open: Got the id for the vertical coordiate: " << vcoord <<  std::endl;
+        std::cerr << "NetcdfIn::open: Got the id for the vertical coordinate: " << vcoord <<  std::endl;
      }
      if ( vcoord == "" ) {
         err = nc_inq_varname( ncid, vid_z, c_vname );
@@ -735,6 +756,21 @@ void NetcdfIn::open( std::string file )
            throw (badFileConventions());
         }
      }
+#ifdef USING_DOUBLE
+     err = nc_get_att_double( ncid, vid_z, "missing_value", &badvert);
+#else
+     err = nc_get_att_float( ncid, vid_z, "missing_value", &badvert);
+#endif 
+     if ( err != NC_NOERR ) {
+#ifdef USING_DOUBLE
+        err = nc_get_att_double( ncid, vid_z, "_FillValue", &badvert);
+#else
+        err = nc_get_att_float( ncid, vid_z, "_FillValue", &badvert);
+#endif      
+        if ( err != NC_NOERR ) {
+           badvert = ACOS(2.0); // i.e., NaN
+        }
+     }    
      
      
      if ( do_status != 0 ) {   
@@ -772,9 +808,18 @@ void NetcdfIn::open( std::string file )
         if ( (vid_tag != -1) && (do_tag == 0) ) {
            vid_tag = -1;
         }
-        if ( dbug > 1 && vid_tag >= 0 ) {
-           std::cerr << "NetcdfIn::open: Got the id for the tag coordinate." <<  std::endl;
-        }
+        if ( vid_tag >= 0 ) {
+           if ( dbug > 1 ) {
+              std::cerr << "NetcdfIn::open: Got the id for the tag coordinate." <<  std::endl;
+           }
+           err = nc_get_att_double( ncid, vid_tag, "missing_value", &badtag);
+           if ( err != NC_NOERR ) {
+              err = nc_get_att_double( ncid, vid_tag, "_FillValue", &badtag);
+              if ( err != NC_NOERR ) {
+                 badtag = ACOS(2.0); // i.e., NaN
+              }
+           }   
+        }    
      }
 
      
@@ -1152,6 +1197,7 @@ void NetcdfIn::apply( Parcel& p )
     double t;
     int status,flags;
     
+    
     lon = 0.0;
     rd_real( vid_lon, vtyp_lon, 1, &lon );
 
@@ -1164,7 +1210,7 @@ void NetcdfIn::apply( Parcel& p )
     p.setTime( t0 );
     
     if ( vid_tag >= 0 ) {
-       tag = 0.0;
+       tag = badtag;
        rd_real( vid_tag, vtyp_tag, 1, &tag );
     
        p.tag( tag );
@@ -1191,6 +1237,8 @@ void NetcdfIn::apply( Parcel& p )
        p.setZ( z );
     } else {
        p.setNoTrace();
+       p.setPos( 0.0, 0.0 );
+       p.setZ( 0.0 );
     }
         
     ip = ip + 1;
@@ -1269,7 +1317,7 @@ void NetcdfIn::apply( std::deque<Parcel>& p )
 
 void NetcdfIn::apply( Flock& p ) 
 {
-    Flock::iterator ip;
+    Flock::iterator itp;
     int n;
     Parcel px;
     bool i_am_root;

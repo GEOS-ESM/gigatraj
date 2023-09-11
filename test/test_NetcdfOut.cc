@@ -409,19 +409,24 @@ int main()
             p.setPos( lon, lat );
             p.setZ( z );
             p.setTime( time );
+            if ( it >= 3 && ip == 5 ) {
+               p.setNoTrace();
+            }
+            
             pf->set( ip, p);
+            
         }
         out->apply( *pf );    
     }            
     dr = out->direction();
     if ( dr != 1 ) {
-       cerr << "Trajection should be forward but is " << dr << endl;
+       cerr << "Flock Trajectory direction should be forward but is " << dr << endl;
        exit(1);
     }            
     out->close();
     delete pf;
       
-    // try reading it again
+    // try reading it again, at the start
     in = new NetcdfIn();
     in->open( outfile );
     ps.clear();
@@ -454,7 +459,48 @@ int main()
         
         }
     }
-    
+    // try reading it again, at the end
+    in = new NetcdfIn();
+    in->at_end( true );
+    in->open( outfile );
+    ps.clear();
+    for ( int i=0; i < np; i++ ) {
+        ps.push_back(p);
+    }
+    in->apply(ps);
+    in->close();
+    delete in;
+    it = 6;
+    for ( int i=0; i<np; i++ ) {
+        time0 = it*0.15;
+        lat0 = 45.0 + (i - np/2)*0.5 + time0/50.0;
+        lon0 = COS( lat0/180*PI );
+        z0 = baseZ + time0/100.0;
+        
+        ps[i].getPos( &lon, &lat );
+        z = ps[i].getZ();
+        time = ps[i].getTime();
+        
+        if ( i != 5 ) {
+           if ( mismatch(lon0, lon) || mismatch(lat0,lat) 
+             || mismatch( z0, z) || mismatch( time0, time) ) {
+              cerr << "NetcdfOut failed to set Flock parcel[" << i << "] position "
+              << " lon " << lon << " instead of " << lon0 << ", "
+              << ", lat " << lat << " instead of " << lat0 
+              << ", z " << z << " instead of " << z0 
+              << ", time " << time << " instead of " << time0
+              << endl; 
+              exit(1);              
+        
+           }
+        } else {
+           if ( ! ps[i].queryNoTrace()  ) {
+              cerr << "trace is set on untraced parcel " << ip << " at time " << time0 << endl;
+              exit(1);
+           }   
+        }
+    }
+
     // write a Swarm of Parcels
     np = 16;
     out->init( &p, np );
@@ -468,6 +514,7 @@ int main()
             lat = 45.0 + (ip - np/2)*0.5 + time/50.0;
             lon = COS( lat/180*PI );
             z = baseZ + time/100.0;
+            p.clearNoTrace();
             p.setPos( lon, lat );
             p.setZ( z );
             p.setTime( time );
@@ -521,7 +568,6 @@ int main()
         
         }
     }
-    
     
     
     // clean up

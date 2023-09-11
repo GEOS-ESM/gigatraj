@@ -157,11 +157,19 @@ if MPI
    check_PROGRAMS += test_StreamPrintMPI 
    TESTS += test_StreamReadMPI.sh
    check_PROGRAMS += test_StreamReadMPI 
+if NETCDF
+   TESTS += test_NetcdfInMPI.sh
+   check_PROGRAMS += test_NetcdfInMPI 
+   TESTS += test_NetcdfOutMPI.sh
+   check_PROGRAMS += test_NetcdfOutMPI 
+endif
 endif   
 EXTRA_DIST += test_FlockMPI.sh \
               test_SwarmMPI.sh \
               test_StreamPrintMPI.sh \
-              test_StreamReadMPI.sh 
+              test_StreamReadMPI.sh \
+              test_NetcdfInMPI.sh \
+              test_NetcdfOutMPI.sh 
 
 TESTS += test_PGenRep test_PGenGrid test_PGenRnd \
          test_PGenRndDisc test_PGenDisc test_PGenFile
@@ -332,6 +340,12 @@ test_NetcdfIn_DEPENDENCIES = ../lib/libgigatraj.a
 
 test_NetcdfOut_SOURCES = test_NetcdfOut.cc test_utils.cc test_utils.hh
 test_NetcdfOut_DEPENDENCIES = ../lib/libgigatraj.a
+
+test_NetcdfInMPI_SOURCES = test_NetcdfInMPI.cc test_utils.cc test_utils.hh
+test_NetcdfInMPI_DEPENDENCIES = ../lib/libgigatraj.a
+
+test_NetcdfOutMPI_SOURCES = test_NetcdfOutMPI.cc test_utils.cc test_utils.hh
+test_NetcdfOutMPI_DEPENDENCIES = ../lib/libgigatraj.a
 
 test_PGenNetcdf_SOURCES = test_PGenNetcdf.cc test_utils.cc test_utils.hh
 test_PGenNetcdf_DEPENDENCIES = ../lib/libgigatraj.a

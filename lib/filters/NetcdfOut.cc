@@ -869,7 +869,7 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
         }        
      
      }
-     
+
      // write Trajectory_start global attribute
      aname = "Trajectory_start";
      if ( (tstamp == "") && (met != NULLPTR) ) {
@@ -1493,13 +1493,21 @@ void NetcdfOut::writeout( double t, unsigned int n, real *lons, real *lats, real
 
    i_am_root = is_root();
 
+
    if ( dbug > 5 ) {
       std::cerr << "NetcdfOut::writeout: seeking to write " << n << " Parcels at time " << t << std::endl;
    }
-   if ( ( ! finite( tyme ) ) || ( ( t != tyme ) && (! notrace) ) ) {
+   if ( ( ip == 0 ) || ( ! finite( tyme ) ) || ( ( t != tyme ) && (! notrace) ) ) {
       // new time to output to file as part of the time dimension
       if ( dbug > 10 ) {
          std::cerr << "NetcdfOut::writeout: advancing time from " << tyme << " to " << t << std::endl;
+      }
+      
+      // sanity check
+      if ( ip != 0 ) {
+         std::cerr << "NetcdfOut::writeout: starting a new time, but with ip (" << ip 
+         << ")!= pnum (" << pnum << ")" << std::endl;
+         throw(badNetcdfBadNumberParcels());         
       }
       
       // between the two times, determine which direction we are moving
@@ -1565,6 +1573,7 @@ void NetcdfOut::writeout( double t, unsigned int n, real *lons, real *lats, real
    }
    
    // Can we write this many Parcels?
+//std::cerr << "n=" << n << ", ip=" << ip << ", pnum=" << pnum << std::endl;
    if ( ( n > 0 ) && ( (ip+n) <= pnum ) ) {
    
        put_start[0] = tnum - 1;
@@ -1651,7 +1660,13 @@ void NetcdfOut::writeout( double t, unsigned int n, real *lons, real *lats, real
    
    
        ip += n;
+       
+       if ( ip >= pnum ) {
+          ip = 0;
+       }
+       
    } else {
+      std::cerr << "Attempted to write " <<  n << " Parcels." << std::endl;
       throw(badNetcdfBadNumberParcels());
    } 
    
@@ -2346,7 +2361,9 @@ void NetcdfOut::apply( Flock& p )
    real* lats;
    real* zs;
    double* tags;
-   bool *notrace;
+   bool *xnotrace;
+   bool notrace;
+   bool anytrace;
    int* flags;
    int* statuses;
    real **stuff;
@@ -2360,18 +2377,16 @@ void NetcdfOut::apply( Flock& p )
    bool gotit;
    
    i_am_root = p.is_root();
-
    
    n = p.size();
    
    if ( n > 0 )  { 
    
-      notrace = new bool[pnum];
-      
       // allocate the space for this chunk
       lons = new real[maxchunk];
       lats = new real[maxchunk];
       zs   = new real[maxchunk];
+      xnotrace = new bool[maxchunk];
       flags = NULL;
       if ( do_flags ) {
           flags = new int[maxchunk];
@@ -2384,6 +2399,7 @@ void NetcdfOut::apply( Flock& p )
       if ( do_tag ) {
           tags = new double[maxchunk];
       } 
+      // misc met fields
       stuff = NULL;   
       nstuff = other.size();
       if ( nstuff > 0 ) {
@@ -2399,13 +2415,18 @@ void NetcdfOut::apply( Flock& p )
       // (A better way to do this would be to have each
       // processor find the time for all of its share of the parcels.
       // then have the root processor select the best time from the other processors.)
+      
+      // initialize the parcle time to NaN
       tt = dNaN;
+      // Assume that none of the parcels is valid
+      anytrace = false;
+      // for each Parcel in the Flock....
       for ( int j=0; j < pnum; j++ ) {
           
-          notrace[j] = true;
+          notrace = true;
           
           try {
-             // get the parcel.
+             // Try to get the parcel.
              // If this is the root processor, we get a valid pointer.
              // If this is the non-root owner processor, we also get a valid pointer 
              // If this is a non-root non-owner processor for the ith parcel, we get NULLPTR
@@ -2419,60 +2440,115 @@ void NetcdfOut::apply( Flock& p )
             gotit = false; 
           }; 
           if ( gotit ) {
+             // OK, we are in the root processor with a valid parcel pointer
              
-             notrace[j] = px->queryNoTrace();
+             // is this parcel being traced?
+             notrace = px->queryNoTrace();
+             // are any of the parcels in this Flock being traced?
+             anytrace = anytrace || ( ! notrace );
              
+             // get this parcel's time
              tttmp = px->getTime();
-             if ( j == 0 ) {
-                ttbck = tttmp;
-             } else {
+             if ( j != 0 ) {
+                // not the first parcel
                 if ( dir == -1 ) {
-                   // note: this works even if tyme is still NaN
+                   // note: this does the right thing even if the output time is still NaN
                    if ( tttmp < tyme ) {
+                      // the direction is backwards, and 
+                      // this parcel's time is before the output time
+                      // so replace the previous parcel time with this parcel's time.
                       ttbck = tttmp;
                    }   
                 } else if ( dir == 1 ) {
                    if ( tttmp > tyme ) {
-                       ttbck = tttmp;
+                      // the direction is forward, and
+                      // this parcel's time is after the output time,
+                      // so replace the previous parcel time with this parcel's time
+                      ttbck = tttmp;
                    }
                 }
+             } else {
+                // first time through: initialize
+                // the previous parcel time to be the same as this parcel's time
+                ttbck = tttmp;
              }
-             if ( ! notrace[j] ) {
-                // probably need to be more sophisticated about this
-               tt = tttmp;
+             if ( ! notrace ) {
+                // if we are are tracing this parcel, then set
+                // the time to this parcel's time, as determined above.
+                // Otherwise, the time tt remains NaN as set above.
+                // (probably need to be more sophisticated about this)
+                tt = tttmp;
              }
           }   
       }
+      
       if ( ! FINITE(tt) ) {
-         // all Parcels in this batch are no-trace
-         tt = ttbck;
+         // No Parcels in this batch being traced.
+         // We must therefore be careful, since none
+         // of their times are valid for output, and
+         // thus we need to output them with a made-up time. 
+         
+         // We start with a valid time
+         // but if there is no valid time yet, we use the
+         // last valid parcel time that we know of
+         if ( FINITE(tyme) ) {
+            tt = tyme;
+         } else {
+            tt = ttbck;
+         }
          // this is probably a previously-used time
          // so shift this item by about 10 s.
          if ( dir == -1 ) {
-            tt = ttbck - 1e-4;
+            tt = tt - 1e-4;
          } else if ( dir == 1 ) {
-            tt = ttbck + 1e-4;
+            tt = tt + 1e-4;
          }
       } 
       if ( dbug > 50 ) {
          std::cerr << " output time tt=" << tt << std::endl;      
       }
+      
+      // we will be writing the data out in chunks
+      
+      // ii is the parcel base index (i.e. the start of the current chunk of output)
       ii = 0;
+      // for each parcel, chunked...
       while ( ii < n ) {
    
+         // how many parcels are left to do?
+         // this will be the chunk size, up
+         // to a maximum size of maxchunk
          chunksize = n - ii;
          if ( chunksize > maxchunk ) {
             chunksize = maxchunk;
          }
          
         
-         // now load the content
+         // now load the content for this chunk
+         
+         // for each of the parcels in this chunk...
          for ( int i=0; i < chunksize; i++ ) {
          
+             // the parcel number: the base index plus the chunk-relative index
              j = ii + i;
          
+             // start by assuming this is no valid parcel
+             notrace = true;
+             lons[i] = badval;
+             lats[i] = badval;
+             zs[i]   = badval;
+             if ( do_tag ) {
+                tags[i] = dbadval;
+             }   
+             if ( do_flags ) {
+                flags[i] = NoTrace;
+             }
+             if ( do_status ) {
+                statuses[i] = Inert;
+             }
+             
              try {
-                // get the parcel.
+                // Now try to get the parcel.
                 // If this is the root processor, we get a valid pointer.
                 // If this is the non-root owner processor, we also get a valid pointer 
                 // If this is a non-root non-owner processor for the ith parcel, we get NULLPTR
@@ -2481,25 +2557,32 @@ void NetcdfOut::apply( Flock& p )
                 // But we only want the case of the root processor
                 gotit = ( ( px != NULLPTR ) && i_am_root );
 
-             } catch (Swarm::badparcelindex()) {
+             } catch (Flock::badparcelindex()) {
                // no problem. ignore this. 
                gotit = false; 
              }; 
              if ( gotit ) {
-                if ( ! notrace[j] ) {
+                // we have a parcel to output
+                
+                //notrace = xnotrace[j];
+                notrace = px->queryNoTrace();
+                if ( ! anytrace ) {
+                   // this should not be necessary
+                   notrace = true;
+                }
+                if ( ! notrace ) {
                    // we only output parcels which are around the standard time for this batch of parcels
                    if (  abs( px->getTime() - tt ) > 1e-5 ) {
-                      notrace[j] = true;
+                      notrace = true;
                    }
                 }
+                
+                // save for later
+                xnotrace[i] = notrace;
              
-                lons[i] = badval;
-                lats[i] = badval;
-                zs[i]   = badval;
-                if ( do_tag ) {
-                   tags[i] = dbadval;
-                }   
-                if ( ! notrace[j] ) {
+                if ( ! notrace ) {
+                   // load the position and tag data
+                   // only if this parcel is being traced
                    px->getPos( &(lons[i]), &(lats[i]) );
                    zs[i] = px->getZ();
                    
@@ -2518,12 +2601,14 @@ void NetcdfOut::apply( Flock& p )
              }
          }
          if ( nstuff > 0 ) {
-            for ( int i=0; i < nstuff; i++ ) {
-               met->getData( other[i], tt, chunksize, lons, lats, zs, stuff[i], METDATA_NANBAD );
-               for ( int k=0; k < chunksize; k++ ) {
-                   j = ii + k;
-                   if ( notrace[j] ) {
-                      (stuff[i])[k] = badval;
+            // for each extra met field we want to outpout...
+            for ( int k=0; k < nstuff; k++ ) {
+               met->getData( other[k], tt, chunksize, lons, lats, zs, stuff[k], METDATA_NANBAD );
+               for ( int i=0; i < chunksize; i++ ) {
+                   j = ii + i;
+                   notrace = xnotrace[i];
+                   if ( notrace ) {
+                      (stuff[k])[i] = badval;
                    }
                }
             }
@@ -2551,12 +2636,14 @@ void NetcdfOut::apply( Flock& p )
       if ( flags != NULL ) {
          delete flags;
       } 
+      delete xnotrace;
       delete zs;
       delete lats;
       delete lons;
    
    } else {
       // zero or fewer Parcels
+      std::cerr << "Flock size if " <<  n << "Parcels." << std::endl;
       throw(badNetcdfBadNumberParcels());
    } 
    
@@ -2567,12 +2654,16 @@ void NetcdfOut::apply( Swarm& p )
    int chunksize;
    double t;
    double tt;
+   double ttbck;
+   double tttmp;
    real val;
    real* lons;
    real* lats;
    real* zs;
    double* tags;
+   bool *xnotrace;
    bool notrace;
+   bool anytrace;
    int* flags;
    int* statuses;
    real **stuff;
@@ -2586,7 +2677,6 @@ void NetcdfOut::apply( Swarm& p )
    bool gotit;
    
    i_am_root = p.is_root();
-
    
    n = p.size();
    
@@ -2596,6 +2686,7 @@ void NetcdfOut::apply( Swarm& p )
       lons = new real[maxchunk];
       lats = new real[maxchunk];
       zs   = new real[maxchunk];
+      xnotrace = new bool[maxchunk];
       flags = NULL;
       if ( do_flags ) {
           flags = new int[maxchunk];
@@ -2608,6 +2699,7 @@ void NetcdfOut::apply( Swarm& p )
       if ( do_tag ) {
           tags = new double[maxchunk];
       }    
+      stuff = NULL;   
       nstuff = other.size();
       if ( nstuff > 0 ) {
          stuff = new real*[nstuff];
@@ -2622,8 +2714,12 @@ void NetcdfOut::apply( Swarm& p )
       // (A better way to do this would be to have each
       // processor find the time for all of its share of the parcels.
       // then have the root processor select the best time from the other processors.)
-      tt = 0.0;
+      tt = dNaN;
+      anytrace = false;
       for ( int j=0; j < pnum; j++ ) {
+
+          notrace = true;
+          
           try {
              // get the parcel.
              // If this is the root processor, we get a valid pointer.
@@ -2639,13 +2735,47 @@ void NetcdfOut::apply( Swarm& p )
             gotit = false; 
           }; 
           if ( gotit ) {
+
              notrace = px->queryNoTrace();
+             //xnotrace[j] = px->queryNoTrace();
+             anytrace = anytrace || ( ! notrace );
+             
+             tttmp = px->getTime();
+             if ( j != 0 ) {
+                if ( dir == -1 ) {
+                   // note: this works even if tyme is still NaN
+                   if ( tttmp < tyme ) {
+                      ttbck = tttmp;
+                   }   
+                } else if ( dir == 1 ) {
+                   if ( tttmp > tyme ) {
+                      ttbck = tttmp;
+                   }
+                }
+             } else {
+                ttbck = tttmp;
+             }
              if ( ! notrace ) {
                 // probably need to be more sophisticated about this
-               tt = px->getTime();
+                tt = tttmp;
              }
           }   
       }
+      if ( ! FINITE(tt) ) {
+         // all Parcels in this batch are no-trace
+         if ( FINITE(tyme) ) {
+            tt = tyme;
+         } else {
+            tt = ttbck;
+         }
+         // this is probably a previously-used time
+         // so shift this item by about 10 s.
+         if ( dir == -1 ) {
+            tt = tt - 1e-4;
+         } else if ( dir == 1 ) {
+            tt = tt + 1e-4;
+         }
+      } 
       if ( dbug > 50 ) {
          std::cerr << " output time tt=" << tt << std::endl;      
       }
@@ -2663,6 +2793,20 @@ void NetcdfOut::apply( Swarm& p )
          
              j = ii + i;
          
+             notrace = true;
+             lons[i] = badval;
+             lats[i] = badval;
+             zs[i]   = badval;
+             if ( do_tag ) {
+                tags[i] = dbadval;
+             }   
+             if ( do_flags ) {
+                flags[i] = NoTrace;
+             }
+             if ( do_status ) {
+                statuses[i] = Inert;
+             }
+
              try {
                 // get the parcel.
                 // If this is the root processor, we get a valid pointer.
@@ -2678,20 +2822,22 @@ void NetcdfOut::apply( Swarm& p )
                gotit = false; 
              }; 
              if ( gotit ) {
+             
+                //notrace = xnotrace[j];
                 notrace = px->queryNoTrace();
+                if ( ! anytrace ) {
+                   // this should not be necessary
+                   notrace = true;
+                }
                 if ( ! notrace ) {
                    // we only output parcels which are out the standard time for this batch of parcels
                    if (  abs( px->getTime() - tt ) > 1e-5 ) {
                       notrace = true;
                    }
                 }
-             
-                lons[i] = badval;
-                lats[i] = badval;
-                zs[i]   = badval;
-                if ( do_tag ) {
-                   tags[i] = dbadval;
-                }   
+                
+                xnotrace[i] = notrace;
+
                 if ( ! notrace ) {
                    px->getPos( &(lons[i]), &(lats[i]) );
                    zs[i] = px->getZ();
@@ -2711,18 +2857,17 @@ void NetcdfOut::apply( Swarm& p )
              }
          }
          if ( nstuff > 0 ) {
-            for ( int i=0; i < nstuff; i++ ) {
-               met->getData( other[i], tt, chunksize, lons, lats, zs, stuff[i], METDATA_NANBAD );
-               for ( int k=0; k < chunksize; k++ ) {
-                   j = ii + k;
-                   notrace = vi->queryNoTrace();
-                   if ( notrace ) {
-                      (stuff[i])[j] = badval;
+            for ( int k=0; k < nstuff; k++ ) {
+               met->getData( other[k], tt, chunksize, lons, lats, zs, stuff[k], METDATA_NANBAD );
+               for ( int i=0; i < chunksize; i++ ) {
+                   j = ii + i;
+                   if ( xnotrace[i] ) {
+                      (stuff[k])[j] = badval;
                    }
                }
             }
          }
-        
+
          writeout( tt, chunksize, lons, lats, zs, flags, statuses, tags, stuff );
         
          // on to the next chunk
@@ -2745,12 +2890,14 @@ void NetcdfOut::apply( Swarm& p )
       if ( flags != NULL ) {
          delete flags;
       } 
+      delete xnotrace;
       delete zs;
       delete lats;
       delete lons;
    
    } else {
       // zero or fewer Parcels
+      std::cerr << "Swarm size if " <<  n << "Parcels." << std::endl;
       throw(badNetcdfBadNumberParcels());
    } 
    
