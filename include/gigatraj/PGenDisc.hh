@@ -1,8 +1,6 @@
 #ifndef PGENDISC_H
 #define PGENDISC_H
 
-#include "config.h"
-
 #include <cstdlib>
 #include <deque>
 #include <list>
