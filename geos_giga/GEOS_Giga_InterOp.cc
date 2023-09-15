@@ -74,38 +74,6 @@ void updateFields(MetGEOSDistributedData * metSrc, char* ctime, float* u, float*
 void setData(MetGEOSDistributedData * metSrc, char* ctime, char* quantity, float* values){
 
    metSrc->setData(ctime, quantity, values);
-/*
-   double time = metSrc->cal2Time(ctime);
-   std::string dim="_2D";
-   std::string qt = std::string(quantity);
-   int nlevs = 1;
-   if (qt.find(dim) == std::string::npos){
-     nlevs = metSrc->nlevs_global;
-   }
-   int Nsize = metSrc->nlats_local*metSrc->nlons_local*nlevs;
-   std::vector<real> data;
-   for (int i=0; i<Nsize; i++){
-     data.push_back(*(values+i));
-   }
-    
-   if (qt.find(dim) == std::string::npos){
-     GridLatLonField3D *raw_field = new GridLatLonField3D();
-     raw_field->set_quantity(quantity);
-     raw_field->set_vertical("air_pressure"); // not correct, not important for now
-     raw_field->set_units("K");               // not coorect, not important for now
-     raw_field->set_time(time,ctime);
-
-     raw_field->load(metSrc->xlons, metSrc->xlats, metSrc->xlevs, data);
-     delete(metSrc->other);
-     metSrc->other =  dynamic_cast<GridLatLonField3D*> (metSrc->vin->reProfile(*raw_field, *(metSrc->vertical)));
-     delete(raw_field);
-   }else {
-     metSrc->gridSfc->set_quantity(quantity);
-     metSrc->gridSfc->set_units("K");               // not coorect, not important for now
-     metSrc->gridSfc->set_time(time,ctime);
-     metSrc->gridSfc->load(data);
-   }
-*/
 }
 
 void setSfcData(MetGEOSDistributedData * metSrc, char* ctime, char* quantity, float* values){

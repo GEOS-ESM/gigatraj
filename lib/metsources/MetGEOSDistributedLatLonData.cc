@@ -575,7 +575,7 @@ void MetGEOSDistributedLatLonData::setData(char* ctime, char* quantity, float* v
      delete(raw_field);
    }else {
      gridSfc->set_quantity(quantity);
-     gridSfc->set_units("K");               // not coorect, not important for now
+     gridSfc->set_units("K");               // not correct, not important for now
      gridSfc->set_time(time,ctime);
      gridSfc->load(data);
    }

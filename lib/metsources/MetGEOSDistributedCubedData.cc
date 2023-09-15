@@ -557,8 +557,17 @@ void MetGEOSDistributedCubedData::setData(char* ctime, char* quantity, float* va
      data.push_back(*(values+i));
    }
 
+
+   int Iglobal, i1,i2,j1, j2, nf;
+   Iglobal = nlons_global;
+   i1 = ithStart;
+   i2 = ithStart + nlons_local -3;
+   j1 = jthStart;
+   j2 = jthStart + nlats_local -3;
+   nf = nthFace;
+
    if (qt.find(dim) == std::string::npos){
-     GridCubedSphereField3D *raw_field = new GridCubedSphereField3D();
+     GridCubedSphereField3D *raw_field = new GridCubedSphereField3D(Iglobal, i1,i2,j1, j2, nf, nlevs);
      raw_field->set_quantity(quantity);
      raw_field->set_vertical("air_pressure"); // not correct, not important for now
      raw_field->set_units("K");               // not coorect, not important for now
