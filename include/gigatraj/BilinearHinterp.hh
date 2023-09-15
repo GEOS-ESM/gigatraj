@@ -1,8 +1,6 @@
 #ifndef GIGATRAJ_BILINEARHINTERP_H
 #define GIGATRAJ_BILINEARHINTERP_H
 
-#include "config.h"
-
 #include "gigatraj/gigatraj.hh"
 #include "gigatraj/HLatLonInterp.hh"
 
