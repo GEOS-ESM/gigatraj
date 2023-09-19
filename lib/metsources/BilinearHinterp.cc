@@ -405,6 +405,127 @@ std::vector<real>*  BilinearHinterp::calc( const std::vector<real>& lons, const 
 
 };
 
+std::vector<real>*  BilinearHinterp::calc( const std::vector<real>& lons, const std::vector<real>& lats, const GridCubedSphereFieldSfc& grid, int flags ) const
+{
+     // array indices that bound a desired longitude
+     int i1, i2;
+     // array indices that bound a desired latitude
+     int j1, j2;
+     // vector of the output interpolated values
+     std::vector<real> *results;
+     // the bad-or-missing-data fill value
+     real bad, val;
+     // data values at the four grid points that surround each desired lat and lon
+     real *vals;
+     // longitude indices of the four grid points that surround each desired lat and lon
+     int *is;
+     // latitude indices of the four grid points that surround each desired lat and lon
+     int *js;
+     // loop index for the locations we are interpolating to
+     int i;
+     // temporary longitude value
+     real lon;
+     // the number of input locations
+     int n, pos0, pos1, pos2,pos3, idx, nlons, nlats;
+     
+     n = lons.size();
+     grid.dims( &nlons, &nlats);
+     // create the vector to hold the output results
+     results = new std::vector<real>;
+     results->reserve(n);
+     
+     // the bad-or-missing-data fill value
+     bad = grid.fillval();
+     
+     // create an array to hold the grid point values
+     vals = new real[4*n];
+     // create arrays to hold grid point index values
+     is = new int[4*n];
+     js = new int[4*n];
+     
+     // for each point we are interpolating to...
+     for ( i=0; i<n; i++ ) {
+     
+         // take care of any out-of-range longitude values
+         lon = grid.wrap(lons[i]);
+
+         // get the i and j array coordinates that
+         // correspond to this longitude and latitude
+         //grid.lonindex(lon, &i1, &i2);
+         //grid.latindex(lats[i], &j1, &j2);
+         grid.latlonindex(lats[i], lon, i1, j1);
+         i1 = (i1+1)/2;
+         j1 = (j1+1)/2;
+         // convert to relative to halo
+         i1 = i1 - grid.iStart;
+         j1 = j1 - grid.jStart;
+
+         i2 = i1+1;
+         j2 = j1+1;
+         // set the four corders of the grid box that encompasses
+         // our desired lat and lon location
+         is[i*4+0] = i1;
+         js[i*4+0] = j1;
+         is[i*4+1] = i1;
+         js[i*4+1] = j2;
+         is[i*4+2] = i2;
+         js[i*4+2] = j1;
+         is[i*4+3] = i2;
+         js[i*4+3] = j2;
+     }
+          
+     // Get the values at those four grid points.
+     // (We do it this way in order to take advantage
+     // of any parallization or caching, which are handled
+     // by the grid object. 
+     grid.ask_for_data();
+     grid.gridpoints( 4*n, is, js, vals, do_local(flags) );
+
+     // for each location...
+     for ( i=0; i<n; i++ ) {
+         // wrap the longitude again
+         lon = grid.wrap(lons[i]);
+         idx = 4*i;     
+         // all four values surrounding this location must be good
+         if ( vals[i*4+0] != bad && vals[i*4+1] != bad 
+           && vals[i*4+2] != bad && vals[i*4+3] != bad ) {
+
+             pos0 = js[idx+0]*nlons + is[idx+0];
+             pos1 = js[idx+1]*nlons + is[idx+1];
+             pos2 = js[idx+2]*nlons + is[idx+2];
+             pos3 = js[idx+3]*nlons + is[idx+3];
+
+             val = minicalc( lon, lats[i]
+                          , grid.longitude(pos0), grid.latitude(pos0)
+                          , grid.longitude(pos1), grid.latitude(pos1)
+                          , grid.longitude(pos2), grid.latitude(pos2)
+                          , grid.longitude(pos3), grid.latitude(pos3)
+                          , vals[idx+0], vals[idx+1], vals[idx+2], vals[idx+3] );
+             results->push_back(val);
+             // do the weighted average (see the header file for the inline
+             //   function minicalc() )
+             // results->push_back( this->minicalc( lon, lats[i]
+             //             , grid.longitude(is[i*4+0]), grid.latitude(js[i*4+0])
+             //             , grid.longitude(is[i*4+3]), grid.latitude(js[i*4+3])
+             //             , vals[i*4+0], vals[i*4+1], vals[i*4+2], vals[i*4+3] ) );
+
+
+
+         } else {
+              results->push_back( bad );
+         }
+        
+     }   
+     
+     
+     // drop all the temporary variables
+     // before we leave
+     delete js;
+     delete is;
+     delete vals;
+     
+     return results;         
+};
 
 real* BilinearHinterp::calc( const int n, const real *lons, const real *lats, const GridLatLonField3D& grid, const int k, int flags ) const
 {
@@ -1949,13 +2070,13 @@ void BilinearHinterp::vinterpVector( int n, const real* lons, const real* lats, 
                  pos2 = js[idx+2]*nlons + is[idx+2];
                  pos3 = js[idx+3]*nlons + is[idx+3];
 
-                 x_val = xgrid.minicalc( lon, lats[i]
+                 x_val = minicalc( lon, lats[i]
                           , xgrid.longitude(pos0), xgrid.latitude(pos0)
                           , xgrid.longitude(pos1), xgrid.latitude(pos1)
                           , xgrid.longitude(pos2), xgrid.latitude(pos2)
                           , xgrid.longitude(pos3), xgrid.latitude(pos3)
                           , xvalsprf[idx+0], xvalsprf[idx+1], xvalsprf[idx+2], xvalsprf[idx+3] );
-                 y_val = ygrid.minicalc( lon, lats[i]
+                 y_val = minicalc( lon, lats[i]
                           , ygrid.longitude(pos0), ygrid.latitude(pos0)
                           , ygrid.longitude(pos1), ygrid.latitude(pos1)
                           , ygrid.longitude(pos2), ygrid.latitude(pos2)
@@ -2610,7 +2731,7 @@ void BilinearHinterp::vinterp( const int n, const real* lons, const real* lats, 
                   pos2 = js[idx+2]*nlons + is[idx+2];
                   pos3 = js[idx+3]*nlons + is[idx+3];
  
-                  val = grid.minicalc( lon, lats[i]
+                  val = minicalc( lon, lats[i]
                           , grid.longitude(pos0), grid.latitude(pos0)
                           , grid.longitude(pos1), grid.latitude(pos1)
                           , grid.longitude(pos2), grid.latitude(pos2)
@@ -2727,3 +2848,48 @@ real* BilinearHinterp::vinterp( const int n, const real* lons, const real* lats,
     return vinterp( n, lons, lats, zs,dynamic_cast<const GridLatLonField3D&>(grid), vin, flags);
 
 }
+
+real BilinearHinterp::gcdist( real lat1,real long1,real lat2,real long2) const
+{
+  real d;
+  //real long1; //!! longitude of first site [rad]
+  //real lat1;  // !! latitude of the first site [rad]
+  //real long2; // !! longitude of the second site [rad]
+  //real lat2;  //  !! latitude of the second site [rad]
+
+  real clat1,clat2,slat1,slat2,dlon,cdlon;
+  double pi = 3.1415926535;
+  double c2r = pi/180.0;
+  clat1 = std::cos(lat1*c2r);
+  clat2 = std::cos(lat2*c2r);
+  slat1 = std::sin(lat1*c2r);
+  slat2 = std::sin(lat2*c2r);
+  dlon = long1-long2;
+  cdlon = std::cos(dlon*c2r);
+
+  d = acos(slat1*slat2+clat1*clat2*cdlon);
+  return d;
+}
+
+real BilinearHinterp::minicalc( real lon, real lat
+                                 , real lon11, real lat11
+                                 , real lon21, real lat21
+                                 , real lon12, real lat12
+                                 , real lon22, real lat22
+                                 , real d11, real d21, real d12, real d22 ) const
+{
+   // assuming all lon are from 0:360
+   real result;
+   real dis, dis11, dis12, dis21, dis22;
+
+   dis11 = gcdist(lat,lon,lat11,lon11);
+   dis12 = gcdist(lat,lon,lat12,lon12);
+   dis21 = gcdist(lat,lon,lat21,lon21);
+   dis22 = gcdist(lat,lon,lat22,lon22);
+   dis = dis11+dis12+dis21+dis22;
+
+   result = dis11/dis * d11 + dis12/dis * d12 + dis21/dis * d21 + dis22/dis * d22;
+
+   return result;
+}
+

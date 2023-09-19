@@ -958,7 +958,7 @@ void GridCubedSphereField3D::angle_to_index( double xval, double yval, int& i, i
    if (j == 2 * IM_WORLD) {j = 2*IM_WORLD-1;}
    if (i == 2 * IM_WORLD) {i = 2*IM_WORLD-1;}
 }
-
+/*
 // great cirle distance in unit sphere
 real GridCubedSphereField3D::gcdist( real lat1,real long1,real lat2,real long2) const
 {
@@ -1003,7 +1003,7 @@ real GridCubedSphereField3D::minicalc( real lon, real lat
 
    return result;
 }
-
+*/
 void GridCubedSphereField3D::gridpoints( int n, int* indices, real* vals, int flags) const
 {
      int cmd;

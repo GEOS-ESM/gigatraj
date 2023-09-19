@@ -89,7 +89,7 @@ MetGEOSDistributedCubedData::MetGEOSDistributedCubedData(
   w1= new GridCubedSphereField3D(Iglobal, i1,i2,j1, j2, nf, lv);
   vertical = new GridCubedSphereField3D(Iglobal, i1,i2,j1, j2, nf, lv);
   other    = new GridCubedSphereField3D(Iglobal, i1,i2,j1, j2, nf, lv);
-  gridSfc  = new GridCubedSphereFieldSfc();
+  gridSfc  = new GridCubedSphereFieldSfc(Iglobal, i1,i2,j1, j2, nf);
 
   u0->set_quantity("U");
   u0->set_units("m/s");
@@ -377,29 +377,29 @@ void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, 
 }
 
 void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, real* lons, real* lats, real* values, int flags ){
-  //double pi = 3.1415926535;
 
-  std::cerr <<" MetGEOSDistributedCubedData::getData surface not inplemented" << std::endl;
-/*  if( other->quantity() != quantity) {
+  if( gridSfc->quantity() != quantity) {
    //more info here
+
+   std::cerr <<"quantity diff: "<< gridSfc->quantity() << "!=" << quantity << std::endl;
   }
-  if ( abs(other->time() - time) >=10.e-9){
+  if ( abs(gridSfc->time() - time) >=10.e-9){
    //more info here
-  }
-
-  float dlon = 360.0 /nlons_global;
-  float dlat = 180.0 /(nlats_global-1);
-  int II[n]{};
-
-  for (int i=0; i<n; i++){
-    II[i] = floor((lons[i]+dlon/2.0)/dlon);
-  }  
-  int JJ[n]{};
-  for (int i=0; i<n; i++){
-    JJ[i] = floor((lats[i]+90.0+dlat/2.0)/dlat);
-  }  
+   std::cerr <<"time diff: " << gridSfc->time() << " !=" << time << std::endl;
+  } 
 
   int Ranks[n] {};
+  int II[n]{};
+  int JJ[n]{};
+  int i0,j0;
+  for (int i=0; i<n; i++){
+    gridSfc->latlonindex(lats[i], lons[i], i0,j0);
+    i0 = i0/2;
+    j0 = j0/2 + (nthFace-1)*nlons_global;
+    II[i] = i0;
+    JJ[i] = j0;
+  }
+
   for (int i=0; i<n; i++){
     Ranks[i] = CellToRank[JJ[i]][II[i]];
   }
@@ -451,7 +451,6 @@ void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, 
   MPI_Alltoallv(lats_send, counts_send, disp_send, MPI_FLOAT, new_lats, counts_recv, disp_recv, MPI_FLOAT, comm);
 
   // At this point, the particles are distributed 
-
   
   real  wvals  [new_num] = {0.0};
   std::vector<real> lons_vec (new_lons, new_lons+new_num);
@@ -473,7 +472,6 @@ void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, 
     values[i] = W_recv[pos[i]];
   }
 
-*/
 }
 
 void MetGEOSDistributedCubedData :: updateField( char* ctime, float* u, float* v, float* w, float* p)
@@ -579,7 +577,7 @@ void MetGEOSDistributedCubedData::setData(char* ctime, char* quantity, float* va
      delete(raw_field);
    }else {
      gridSfc->set_quantity(quantity);
-     gridSfc->set_units("K");               // not coorect, not important for now
+     gridSfc->set_units("K");               // not correct, not important for now
      gridSfc->set_time(time,ctime);
      gridSfc->load(data);
    }

@@ -662,13 +662,14 @@ class GridCubedSphereField3D : public GridField3D {
       */
       int* joinIndex( int n, int *index, int* i, int* j, int* k ) const;
 
-      real gcdist( real lat1, real long1, real lat2, real long2) const;
+/*      real gcdist( real lat1, real long1, real lat2, real long2) const;
       real minicalc( real lon, real lat
                                  , real lon11, real lat11
                                  , real lon21, real lat21
                                  , real lon12, real lat12
                                  , real lon22, real lat22
                                  , real d11, real d21, real d12, real d22 ) const;
+*/
 //   protected:
 
       /// vector of longitudes

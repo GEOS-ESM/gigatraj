@@ -32,6 +32,23 @@ GridCubedSphereFieldSfc::GridCubedSphereFieldSfc() : GridFieldSfc()
    
 }
 
+GridCubedSphereFieldSfc::GridCubedSphereFieldSfc(int IM, int i1, int i2, int j1, int j2, int face): GridFieldSfc()
+{
+   iStart = i1;
+   iEnd   = i2;
+   jStart = j1;
+   jEnd   = j2;
+   nthFace = face;
+   nlons = i2-i1 +1 + 2; // include halo 2
+   nlats = j2-j1 +1 + 2; // include halo 2
+   IM_WORLD = IM;
+   londir = 0;
+   latdir = 0;
+   wraps = 0;
+
+}
+
+
 // Default destructor
 GridCubedSphereFieldSfc::~GridCubedSphereFieldSfc()
 {
@@ -48,7 +65,14 @@ GridCubedSphereFieldSfc::GridCubedSphereFieldSfc(const GridCubedSphereFieldSfc& 
         wraps = src.wraps; 
        londir = src.londir;
        latdir = src.latdir;
-
+       iStart = src.iStart;
+        jStart = src.jStart;
+        iEnd   = src.iEnd;
+        jEnd   = src.jEnd;
+        nlons  = src.nlons;
+        nlats  = src.nlats;
+        IM_WORLD = src.IM_WORLD;
+         data = src.data;
 }
 
 
@@ -101,7 +125,13 @@ GridCubedSphereFieldSfc& GridCubedSphereFieldSfc::operator=(const GridCubedSpher
       lats = src.latitudes();
     latdir = src.latdir;
      wraps = src.wraps; 
-
+         iStart = src.iStart;
+         jStart = src.jStart;
+         iEnd   = src.iEnd;
+         jEnd   = src.jEnd;
+         nlons  = src.nlons;
+         nlats  = src.nlats;
+         IM_WORLD = src.IM_WORLD;
     return *this;
 }      
 
@@ -225,22 +255,23 @@ std::vector<real> GridCubedSphereFieldSfc::latitudes()  const
 
 real GridCubedSphereFieldSfc::longitude( int i )  const
 {
-   if ( wraps ) {
+/*   if ( wraps ) {
       i = iwrap( i );
    } else {
       if ( i < 0 || i >= nlons ) {
           throw (baddatareq());
       }
    }
-
+*/
    return lons[i];
 };
    
 real GridCubedSphereFieldSfc::latitude( const int j ) const
 {
-   if ( j < 0 || j >= nlats ) {
+/*   if ( j < 0 || j >= nlats ) {
        throw (baddatareq());
    }    
+*/
    return lats[j];
 };   
  
@@ -291,7 +322,7 @@ real GridCubedSphereFieldSfc::wrap( real lon ) const
 
 int GridCubedSphereFieldSfc::iwrap( int i ) const
 {
-     
+  /*   
      if ( nlons <= 1 ) {
         throw (baddataindex());
      }
@@ -308,7 +339,7 @@ int GridCubedSphereFieldSfc::iwrap( int i ) const
            throw (baddataindex());
         }
      }
-     
+   */  
      return i;
 
 };
@@ -496,55 +527,56 @@ void GridCubedSphereFieldSfc::latindex( real lat, int* i1, int* i2 ) const
 
 */
 
-void GridCubedSphereFieldSfc::latlonindex( int IM_WORLD, real lat, real lon, int& i, int& j ) const
+void GridCubedSphereFieldSfc::latlonindex(real lat_deg, real lon_deg, int& i, int& j ) const
 {
    double shift  = 0.174532925199433;
-   double tolerance    = 10.e-10;
- 
+   double tolerance    = 10.e-7;
+
+   double pi = 3.1415926535;
+   double c2r = pi/180.0;
+   double lon = lon_deg*c2r;
+   double lat = lat_deg*c2r;
+
    lon = lon + shift;
+
    double x = cos(lat)*cos(lon);
    double y = cos(lat)*sin(lon);
    double z = sin(lat);
 
    double max_abs = std::max(std::abs(z),std::max(std::abs(x), std::abs(y)));
+
    x = x/max_abs;
    y = y/max_abs;
    z = z/max_abs;
 
    // face = 1
    if ( std::abs(x-1.0) <= tolerance) {
-       angle_to_index(IM_WORLD, y, z, i, j);
+       angle_to_index( y, z, i, j);
    }
   // face = 2
    else if (std::abs(y-1.0) <= tolerance) {
-         angle_to_index(IM_WORLD, -x,  z, i, j);
-         j = j + IM_WORLD*2;
+         angle_to_index(-x,  z, i, j);
    }
 
    // face = 3
    else if (abs(z-1.0) <= tolerance) {
-         angle_to_index(IM_WORLD, -x, -y, i, j);
-         j = j + IM_WORLD*4;
+         angle_to_index(-x, -y, i, j);
     }
    // face = 4
     else if (abs(x+1.0) <= tolerance) {
-         angle_to_index(IM_WORLD, -z, -y, i, j);
-         j = j + IM_WORLD*6;
+         angle_to_index(-z, -y, i, j);
     }
     // face = 5
     else if (abs(y+1.0) <= tolerance) {
-         angle_to_index(IM_WORLD, -z,  x, i, j);
-         j = j + IM_WORLD*8;
+         angle_to_index(-z,  x, i, j);
     }
     // face = 6
     else if (abs(z+1.0) <= tolerance) {
-         angle_to_index(IM_WORLD, y,  x, i, j);
-         j = j + IM_WORLD*10;
+         angle_to_index(y,  x, i, j);
     }
-  
 }
 
-void GridCubedSphereFieldSfc::angle_to_index(int IM_WORLD, double xval, double yval, int& i, int& j) const
+void GridCubedSphereFieldSfc::angle_to_index(double xval, double yval, int& i, int& j) const
 {
    double sqr2   = 1.41421356237310;
    double alpha  = 0.615479708670387;
@@ -619,14 +651,14 @@ void GridCubedSphereFieldSfc::load( const realvec& inlons, const realvec& inlats
    int indx = 0;
    int i;
    
-   checkLons(inlons);
-   checkLats(inlats);
+   //checkLons(inlons);
+   //checkLats(inlats);
       
-   nlons = inlons.size();
-   nlats = inlats.size();
+   //nlons = inlons.size();
+   //nlats = inlats.size();
    
    lons = inlons;
-   for ( i=1; i<nlons; i++ ) {
+   for ( i=1; i<nlons*nlats; i++ ) {
        lons[i] = wrap(inlons[i]);
    }    
    lats = inlats;
@@ -655,11 +687,11 @@ void GridCubedSphereFieldSfc::load( const realvec& inlons, const realvec& inlats
    real dlon;
    int i;
    
-   checkLons(inlons);
-   checkLats(inlats);
+  // checkLons(inlons);
+  // checkLats(inlats);
    
-   nlons = inlons.size();
-   nlats = inlats.size();
+   //nlons = inlons.size();
+   //nlats = inlats.size();
    
    lons = inlons;
    //for ( i=1; i<nlons; i++ ) {
@@ -692,7 +724,6 @@ void GridCubedSphereFieldSfc::load( const realvec& indata, const int loadFlags )
    int indx = 0;
    real dlon;
    int i;
-   
    if ( nlons*nlats != indata.size() ) {
       throw(badincompatcoords());
    }      
@@ -705,7 +736,6 @@ void GridCubedSphereFieldSfc::load( const realvec& indata, const int loadFlags )
    /// we do not call set_Wraps(), setLonDir(), or setLatDir() here.   
 
 }
-
 
 
 bool GridCubedSphereFieldSfc::compatible( const GridFieldSfc& obj, int compatFlags ) const  
@@ -723,8 +753,8 @@ bool GridCubedSphereFieldSfc::compatible( const GridFieldSfc& obj, int compatFla
        if ( compatFlags & METCOMPAT_HORIZ ) {
           // check that the longitudes match in number and values
           dim = trueobj->longitudes();
-          if ( dim.size() == nlons ) {
-             for ( int i=0; i<nlons; i++ ) {
+          if ( dim.size() == nlons*nlats ) {
+             for ( int i=0; i<nlons*nlats; i++ ) {
                 // longitudes must be within 0.001 degrees
                 if ( ABS( dim[i] - lons[i] ) > 0.001 ) {
                    result = false;
@@ -733,8 +763,8 @@ bool GridCubedSphereFieldSfc::compatible( const GridFieldSfc& obj, int compatFla
           }   
           // check that the latitudes match in number and values
           dim = trueobj->latitudes();
-          if ( dim.size() == nlats ) {
-             for ( int i=0; i<nlats; i++ ) {
+          if ( dim.size() == nlats*nlons ) {
+             for ( int i=0; i<nlats*nlons; i++ ) {
                 // latitudes must be within 0.001 degrees
                 if ( ABS( dim[i] - lats[i] ) > 0.001 ) {
                    result = false;

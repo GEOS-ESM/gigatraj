@@ -390,7 +390,7 @@ class BilinearHinterp : public HLatLonInterp {
                variable when it is no longer needed.
       */
       std::vector<real>* calc( const std::vector<real>& lon, const std::vector<real>& lat, const GridFieldSfc& grid, int flags=0 ) const;      
-
+      std::vector<real>* calc( const std::vector<real>& lon, const std::vector<real>& lat, const GridCubedSphereFieldSfc& grid, int flags=0 ) const;      
 
       /// interpolates a GridField3D object to an array of points
       /*!
@@ -677,6 +677,14 @@ class BilinearHinterp : public HLatLonInterp {
           we apply the simple conformal vector adjustment
       */    
       static const real NEARPOLE;
+
+      real gcdist( real lat1,real long1,real lat2,real long2) const;
+      real minicalc( real lon, real lat
+                                 , real lon11, real lat11
+                                 , real lon21, real lat21
+                                 , real lon12, real lat12
+                                 , real lon22, real lat22
+                                 , real d11, real d21, real d12, real d22 ) const;
 
    protected:
    

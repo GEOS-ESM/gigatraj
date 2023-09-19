@@ -8,6 +8,7 @@
 #include "gigatraj/GridLatLonField3D.hh"
 #include "gigatraj/GridCubedSphereField3D.hh"
 #include "gigatraj/GridLatLonFieldSfc.hh"
+#include "gigatraj/GridCubedSphereFieldSfc.hh"
 
 namespace gigatraj {
 
@@ -117,6 +118,7 @@ class HLatLonInterp : public Hinterp {
       */
       virtual std::vector<real>* calc( const std::vector<real>& lon, const std::vector<real>& lat, const GridLatLonFieldSfc& grid, int flags=0 ) const = 0;      
 
+      virtual std::vector<real>* calc( const std::vector<real>& lon, const std::vector<real>& lat, const GridCubedSphereFieldSfc& grid, int flags=0 ) const = 0;      
 
       /// interpolates to an array of longitudes and latitudes
       /*! This function interpolates a level of a 3D field to an array 

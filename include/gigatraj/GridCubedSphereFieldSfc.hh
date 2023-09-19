@@ -57,7 +57,7 @@ class GridCubedSphereFieldSfc : public GridFieldSfc {
          This is the default contructor for the GridFieldSfc class.
       */
       GridCubedSphereFieldSfc();
-      
+      GridCubedSphereFieldSfc(int IM, int i1, int i2, int j1, int j2, int face);      
       /// Default destructor
       /*!
          This is the default destructor for the GridFieldSfc class.
@@ -219,8 +219,8 @@ class GridCubedSphereFieldSfc : public GridFieldSfc {
 
       // given lat lon, find the lower-left coner indexed that contains the pont lat lone 
       // (i0, j0), (i0+1, j0), (i0+1, j0+1) (i0, j0+1) are the four coners 
-      void latlonindex   (int IM, real lat,real lon, int& i0, int& j0 ) const;
-      void angle_to_index( int IM, double lat, double lon, int& i0, int& j0 ) const;
+      void latlonindex   ( real lat,real lon, int& i0, int& j0 ) const;
+      void angle_to_index( double lat, double lon, int& i0, int& j0 ) const;
 
       ///  loads data and dimensions into this object
       /*!  This method loads data and dimensions into this object.
@@ -474,7 +474,7 @@ class GridCubedSphereFieldSfc : public GridFieldSfc {
       GridFieldSfc* areas() const;
       
 
-   protected:
+//   protected:
 
 
       /// vector of longitudes
@@ -525,7 +525,10 @@ class GridCubedSphereFieldSfc : public GridFieldSfc {
           \param j a pointer to the latitude index
       */
       void getindices( int index, int* i, int*j ) const;
-
+      int IM_WORLD;
+      int iStart, iEnd;
+      int jStart, jEnd;
+      int nthFace;
 };
 }
 
