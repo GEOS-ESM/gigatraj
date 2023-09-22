@@ -137,4 +137,6 @@ test/test_NetcdfOut
 test/valgrind*.log
 gigatraj*.tar.gz
 *.zip
+eval/testing
+
 

@@ -383,12 +383,12 @@ int main()
           exit(1);  
        } 
     }
-    delete dlats;
-    delete dlons;
-    delete targetlats;
-    delete targetlons;
-    delete lats;
-    delete lons;
+    delete[] dlats;
+    delete[] dlons;
+    delete[] targetlats;
+    delete[] targetlons;
+    delete[] lats;
+    delete[] lons;
 
 
     // =============================   method deltaxy
@@ -465,12 +465,12 @@ int main()
         }
     }
     
-    delete dys;
-    delete dxs;
-    delete targetlats;
-    delete targetlons;
-    delete lats;
-    delete lons;
+    delete[] dys;
+    delete[] dxs;
+    delete[] targetlats;
+    delete[] targetlons;
+    delete[] lats;
+    delete[] lons;
 
 
 
@@ -531,12 +531,12 @@ int main()
         }    
     }
     
-    delete targetdists;
-    delete dists;
-    delete lats2;
-    delete lons2;
-    delete lats;
-    delete lons;
+    delete[] targetdists;
+    delete[] dists;
+    delete[] lats2;
+    delete[] lons2;
+    delete[] lats;
+    delete[] lons;
 
 
     // =============================   method radius
@@ -692,14 +692,14 @@ int main()
         }   
     }
     
-    delete lats2;
-    delete lons2;
-    delete targetlats;
-    delete targetlons;
-    delete bearings;
-    delete dists;
-    delete lats;
-    delete lons;
+    delete[] lats2;
+    delete[] lons2;
+    delete[] targetlats;
+    delete[] targetlons;
+    delete[] bearings;
+    delete[] dists;
+    delete[] lats;
+    delete[] lons;
     
 
     // =============================   vector relocations
@@ -909,16 +909,16 @@ int main()
         }   
     }
 
-    delete vyTarget;
-    delete vyOut;
-    delete vyIn;
-    delete vxTarget;
-    delete vxOut;
-    delete vxIn;
-    delete lats2;
-    delete lons2;
-    delete lats;
-    delete lons; 
+    delete[] vyTarget;
+    delete[] vyOut;
+    delete[] vyIn;
+    delete[] vxTarget;
+    delete[] vxOut;
+    delete[] vxIn;
+    delete[] lats2;
+    delete[] lons2;
+    delete[] lats;
+    delete[] lons; 
 
     // =============================   method deltaxy (again, this time w/ conformal adjustment)
     n = 4;
@@ -995,12 +995,12 @@ int main()
         }
     }
     
-    delete dys;
-    delete dxs;
-    delete targetlats;
-    delete targetlons;
-    delete lats;
-    delete lons;
+    delete[] dys;
+    delete[] dxs;
+    delete[] targetlats;
+    delete[] targetlons;
+    delete[] lats;
+    delete[] lons;
 
 
     // if we got this far, everything is OK

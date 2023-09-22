@@ -29,7 +29,7 @@ MetGridData::MetGridData() : MetData()
       vin = new LinearVinterp();
       myVin = true;
       hin = new BilinearHinterp();
-      myHin = false;
+      myHin = true;
       maxsnaps = 3;
       
       // use CF conventions by default
@@ -127,8 +127,11 @@ void MetGridData::assign( const MetGridData& src )
       }   
       if ( src.myVin ) {
          vin = src.vin->copy();
+         // this is just a copy, so we should delete it when we are done
          myVin = true;
       } else {
+         // the vin in the source is not native
+         // to that source, so we just copy the pointer
          set_vinterp( src.vin );
       }
       if ( myHin ) {
@@ -174,22 +177,22 @@ void MetGridData::assign( const MetGridData& src )
 
 }
 
-void MetGridData::set_vinterp( Vinterp* vinterp )
+void MetGridData::set_vinterp( Vinterp* vinterp, bool okToDelete  )
 {
      if ( myVin ) {
         delete vin;
      }
      vin = vinterp;
-     myVin = false;
+     myVin = okToDelete;
 }
 
-void MetGridData::set_hinterp( HLatLonInterp* hinterp )
+void MetGridData::set_hinterp( HLatLonInterp* hinterp, bool okToDelete )
 {
      if ( myHin ) {
         delete hin;
      }
      hin = hinterp;
-     myHin = false;
+     myHin = okToDelete;
 }
 
 void MetGridData::flush_cache() 

@@ -238,13 +238,13 @@ void MetGEOSPortal::set_BaseTime( std::string& date )
 }        
 std::string MetGEOSPortal::BaseTime( ) const
 {
-    std::string *result;
+    //std::string *result;
+    std::string result;
+   // result = new std::string;
     
-    result = new std::string;
+    result = cal.date1900( basetime );
     
-    *result = cal.date1900( basetime );
-    
-    return *result;
+    return result;
 }           
 
 
@@ -325,7 +325,6 @@ void MetGEOSPortal::assign(const MetGEOSPortal& src)
 void MetGEOSPortal::reset()
 {
    
-   desired_tave = -1;
    strict = StrictAboutNothing;
    skip = 0;
    skoff = 0;
@@ -335,6 +334,12 @@ void MetGEOSPortal::reset()
    openwait = 1;
    isOpen = 0;
    cur_url = "";
+   
+   desired_hgrid_id = -1;
+   desired_vgrid_id = -1;
+   desired_tspace = -1;
+   desired_tave = -1;
+   desired_tbase = -1;
    
    test_vgrid = -1;
    test_ndims = -1;
@@ -794,7 +799,7 @@ int MetGEOSPortal::prep(  const std::string quantity, const double time )
   
 int MetGEOSPortal::prep(  const std::string quantity, const std::string &time )
 {
-    // the generic verison is to just call setup()
+    // the generic version is to just call setup()
     return setup( quantity, time );
 }   
 
@@ -824,8 +829,11 @@ void MetGEOSPortal::Portal_open(const std::string& url )
      // but first, sleep some time between opens, to avoid being obnoxious to the server
      if ( openwait > 0 ) {
         if ( dbug > 2 ) {
-           std::cerr << "************* About to wait " << openwait << " seconds on proc " 
-                     << my_pgroup->id() << " group " << my_pgroup->group_id() << std::endl;
+           std::cerr << "************* About to wait " << openwait << " seconds on proc ";
+           if ( my_pgroup != NULLPTR ) {
+              std::cerr << my_pgroup->id() << " group " << my_pgroup->group_id();
+           }
+           std::cerr << std::endl;
         }
         (void) sleep( openwait ); // sleep this time between opens, to avoid being obnoxious to the server
      }
@@ -1691,7 +1699,7 @@ void MetGEOSPortal::Portal_read_attr( std::string &result, char *attr_name, int 
 
     s_value.assign(val, len);
 
-    delete val;
+    delete[] val;
    
 }
 
@@ -1823,7 +1831,7 @@ void MetGEOSPortal::Portal_read_attr( std::vector<float> &result, char *attr_nam
         result.push_back( val[i] );
     }    
     
-    delete val;
+    delete[] val;
 
 }
 
@@ -1854,7 +1862,7 @@ void MetGEOSPortal::Portal_read_attr( std::vector<double> &result, char *attr_na
         result.push_back( val[i] );
     }    
     
-    delete val;
+    delete[] val;
 
 }
 
@@ -2304,7 +2312,7 @@ void MetGEOSPortal::Portal_read_dim_doubles( std::vector<real>&vals, int varid, 
         vals.push_back( val );
     }
     
-    delete buffr;
+    delete[] buffr;
     
 }
 
@@ -2374,6 +2382,8 @@ void MetGEOSPortal::Portal_read_dim_floats( std::vector<real>&vals, int varid, s
         }
         vals.push_back( val );
     }
+    
+    delete[] buffr;
 
 }
 
@@ -2444,6 +2454,8 @@ void MetGEOSPortal::Portal_read_dim_ints( std::vector<real>&vals, int varid, siz
         vals.push_back( static_cast<real>(val) );
     }
     
+    delete[] buffr;
+    
 }
 
 void MetGEOSPortal::Portal_read_dim_ints( int &first, int &last, int &delta, int varid, size_t len )
@@ -2489,6 +2501,19 @@ void MetGEOSPortal::Portal_read_data_floats( std::vector<real>&vals, int var_id,
      int nchunks;
      ptrdiff_t chunksize;
      int toread;
+     
+     my_starts[0] = 0;
+     my_starts[1] = 0;
+     my_starts[2] = 0;
+     my_starts[3] = 0;
+     my_counts[0] = 0;
+     my_counts[1] = 0;
+     my_counts[2] = 0;
+     my_counts[3] = 0;
+     my_strides[0] = 0;
+     my_strides[1] = 0;
+     my_strides[2] = 0;
+     my_strides[3] = 0;
      
      if ( ndims == 3 ) {
         // three-dimensional surface
@@ -2551,11 +2576,10 @@ void MetGEOSPortal::Portal_read_data_floats( std::vector<real>&vals, int var_id,
 
      vals.clear();
      vals.reserve(totsize);
-     //vals.resize(totsize);
 
 
      err = NC_NOERR;
-     bp = buffr;
+     bp = &(buffr[0]);
      int isample = toread/10;
      for ( int ichunk = 0; (ichunk < nchunks) && (err == NC_NOERR) ; ichunk++ ) {
 
@@ -2593,7 +2617,7 @@ void MetGEOSPortal::Portal_read_data_floats( std::vector<real>&vals, int var_id,
          } while ( try_again( err, trial ) );       
 
          if ( err != NC_NOERR ) {
-            delete buffr;   
+            delete[] buffr;   
             throw(badNetcdfError(err));
          }
 
@@ -2617,7 +2641,7 @@ void MetGEOSPortal::Portal_read_data_floats( std::vector<real>&vals, int var_id,
          }
      }
 
-     delete buffr;   
+     delete[] buffr;   
 }
 
 

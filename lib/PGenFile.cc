@@ -101,7 +101,7 @@ int PGenFile :: readparcel( std::istream* input, Parcel *p )
          }
       } else {
          // return EOF status
-         std::cerr << "End of input file" << std::endl;
+         //std::cerr << "End of input file" << std::endl;
          status = -1;
       }   
       
@@ -124,11 +124,11 @@ void PGenFile :: initbunch( Seq<Parcel>* seq, const Parcel& p, int *np, std::ist
      real lon,lat,z;
      int status = 0;
      
+     // read a parcel location from the file
+     Parcel *it = new Parcel(p); // copy the input parcel's settings
+     
      while ( status >= 0 ) {
         try {
-
-           // read a parcel location from the file
-           Parcel *it = new Parcel(p); // copy the input parcel's settings
 
            status = readparcel( input, it );
         
@@ -141,6 +141,8 @@ void PGenFile :: initbunch( Seq<Parcel>* seq, const Parcel& p, int *np, std::ist
           throw (ParcelGenerator :: badgeneration());
        }
      }
+     
+     delete it;
      
 };
 

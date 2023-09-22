@@ -221,16 +221,6 @@ void* Parcel :: operator new[](size_t sz)
    return ::new char[sz];
 };   
 
-// array delete
-void Parcel :: operator delete[](void* p)
-{
-   // delete of void * is OK here, since by this point the destructor
-   // has already been called on the Parcel that p points to.
-   // (See Eckel, Vol 1, p. 556)
-   ::delete []p;
-};   
-
-
 void Parcel :: send( const ProcessGrp* pgroup, const int id) const
 {
     real loc[3];

@@ -605,7 +605,7 @@ int main()
     }
 
     // do pressure interpolation (log-linear)
-    metsrc0->set_vinterp( new LogLinearVinterp() );
+    metsrc0->set_vinterp( new LogLinearVinterp(), true );
     dd3 = metsrc0->getData( "T", tyme, eLon6, eLat6, eVrt6a  );
     d0 = (LOG(eVrt6a) - LOG(eVrt2))/(LOG(eVrt6) - LOG(eVrt2))*(dd2 - dd) + dd;
     if ( mismatch(dd3, d0) ) {

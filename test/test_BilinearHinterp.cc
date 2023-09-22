@@ -158,10 +158,12 @@ int main()
            << ", " << -0.127548 << " vs. " << tstvals[2] << endl;
        exit(1);
     }
-    delete tstvals;
+    delete[] tstvals;
     
 
     // =========================  method calc(vlons, vlat, grid3D, k)
+    vlons.clear();
+    vlats.clear();
     vlons.push_back( -76.3 );
     vlats.push_back( 39.7 );
     vlons.push_back(  0.5 );
@@ -219,10 +221,12 @@ int main()
        exit(1);
     }
     
-    delete tstvals; // (see above)
+    delete[] tstvals; // (see above)
     
     
     // =========================  method calc(vlons, vlats, gridSfc )
+    vlons.clear();
+    vlats.clear();
     vlons.push_back( -76.3 );
     vlats.push_back( 39.7 );
     vlons.push_back(  0.5 );
@@ -353,9 +357,10 @@ int main()
     }
     
     
-    delete tstvals; // (see above)
+    delete[] tstvals; // (see above)
         
     // =========================  method vinterp(lons, lats, zs, grid, vin )
+    vzs.clear();
     vzs.push_back( 225.0 );
     vzs.push_back( 100.0 );
     vzs.push_back( 80.0 );

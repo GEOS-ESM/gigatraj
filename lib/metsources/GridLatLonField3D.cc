@@ -1029,7 +1029,7 @@ void GridLatLonField3D::gridpoints( int n, int* is, int* js, int* ks, real* vals
          
      }
      
-     delete coords;
+     delete[] coords;
 
 }
 
@@ -1135,7 +1135,7 @@ void GridLatLonField3D::receive_meta()
          for ( i=0; i<nlons; i++ ) {
              lons.push_back(dimvals[i]);
          }    
-         delete dimvals;
+         delete[] dimvals;
          if ( nlons > 1 ) {
              if ( lons[1] > lons[0] ) {
                 londir = 1;
@@ -1157,7 +1157,7 @@ void GridLatLonField3D::receive_meta()
          for ( i=0; i<nlats; i++ ) {
              lats.push_back(dimvals[i]);
          }    
-         delete dimvals;
+         delete[] dimvals;
          if ( nlats > 1 ) {
              if ( lats[1] > lats[0] ) {
                 latdir = 1;
@@ -1179,7 +1179,7 @@ void GridLatLonField3D::receive_meta()
          for ( i=0; i<nzs; i++ ) {
              zs.push_back(dimvals[i]);
          }    
-         delete dimvals;
+         delete[] dimvals;
          if ( nzs > 1 ) {
              if ( zs[1] > zs[0] ) {
                 zdir = 1;
@@ -1263,7 +1263,7 @@ void GridLatLonField3D::svr_send_meta(int id) const
          }    
          pgroup->send_reals( id, nlons, dimvals, PGR_TAG_GDIMS ); 
          //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-230: " << nlons << " to " << id << std::endl;
-         delete dimvals;
+         delete[] dimvals;
 
          // send the latitudes
          try {
@@ -1276,7 +1276,7 @@ void GridLatLonField3D::svr_send_meta(int id) const
          }    
          pgroup->send_reals( id, nlats, dimvals, PGR_TAG_GDIMS ); 
          //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-240:" << nlats << " to " << id << std::endl;
-         delete dimvals;
+         delete[] dimvals;
    
          // send the vertical coordinate values
          try {
@@ -1289,7 +1289,7 @@ void GridLatLonField3D::svr_send_meta(int id) const
          }    
          pgroup->send_reals( id, nzs, dimvals, PGR_TAG_GDIMS ); 
          //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-250: " << nzs << " to" << id << std::endl;
-         delete dimvals;
+         delete[] dimvals;
    
          //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-260" << std::endl;
      }

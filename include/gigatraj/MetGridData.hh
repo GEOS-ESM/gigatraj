@@ -248,8 +248,10 @@ class MetGridData : public MetData {
                           pointer is stored as-is, so the calling routine must not delete it
                           until this MetGridData object is deleted or a new Vinterp object is assigned.
       
+           \param okToDelete if true, then this MetGridData object can delete the Vinterp object when 
+                             it is done using it. 
       */
-      void set_vinterp( Vinterp* vinterp );
+      void set_vinterp( Vinterp* vinterp, bool okToDelete=false );
       
       /// gets the vertical interpolator
       /*! This method retrieves the vertical interpolator object. It can then be used to obtain data values on isosurfaces 
@@ -266,9 +268,11 @@ class MetGridData : public MetData {
           obtain data values at point locations.
            
           \param hinterp a pointer to the HLatLonInterp object to be the new interpolator
+          \param okToDelete if true, then this MetGridData object can delete the Hinterp object when 
+                             it is done using it. 
      
       */
-      void set_hinterp( HLatLonInterp* hinterp );
+      void set_hinterp( HLatLonInterp* hinterp, bool okToDelete=false );
       
       /// gets the horizontal interpolator
       /*! This method retrieves the horizontal interpolator object. It can then be used to regrid data surfaces and
@@ -1076,12 +1080,12 @@ class MetGridData : public MetData {
       
       /// pointer to the vertical interpolator used
       Vinterp *vin;
-      /// indicates whether vin has been supplied externally
+      /// indicates whether vin has been supplied externally (true = No) (I.e., do we need to delete the interpolator when we are done with it?)
       bool myVin;
       
       /// pointer to the horizontal interpolator used
       HLatLonInterp *hin;
-      /// indicates whether hin has been supplied externally
+      /// indicates whether hin has been supplied externally (true = No) (I.e., do we need to delete the interpolator when we are done with it?)
       bool myHin;
       
       /// copy an object into this one
@@ -1095,7 +1099,7 @@ class MetGridData : public MetData {
       int maxsnaps;
       
       /// set the number of grid snapshots to hold in memory.
-      /*! This method sets the number of grid snapshots to hold in memory (a sopposed to disk caching).
+      /*! This method sets the number of grid snapshots to hold in memory (a supposed to disk caching).
 
            \param n the maximum number of time snapshots to keep in memory
       

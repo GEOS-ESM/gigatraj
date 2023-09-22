@@ -219,7 +219,7 @@ std::string NetcdfIn::findVertical()
                                  c_avalue[alen] = 0;
                                  avalue = std::string(c_avalue);
                                  if ( avalue == "yes" ) {
-                                    delete c_avalue;
+                                    delete[] c_avalue;
                                     err = nc_inq_varname( ncid, var_id, c_varname );
                                     if ( err == NC_NOERR ) {
                                        result = std::string( c_varname );
@@ -569,7 +569,7 @@ void NetcdfIn::open( std::string file )
               std::cerr << "NetcdfIn::open: base time: " << time0 << std::endl;
            }
            
-           delete val;
+           free(val);
 
         }
         // todo: handle the case where the timestamp is a char array
@@ -947,7 +947,7 @@ int NetcdfIn::get_var_id( const std::string &varname, bool required, const std::
                           throw(badNetcdfError(err));
                        }
                        att_val.assign( c_att_val );
-                       delete c_att_val;
+                       free(c_att_val);
                        
                        if ( att_val == "yes" ) {
                           result = var_id;
@@ -1033,7 +1033,7 @@ void NetcdfIn::rd_real( int var_id, int var_type, size_t n, real* destination )
              destination[i] = fbuffr[i];
          }
     
-         delete fbuffr;
+         delete[] fbuffr;
          
          break;
     case NC_DOUBLE:
@@ -1048,7 +1048,7 @@ void NetcdfIn::rd_real( int var_id, int var_type, size_t n, real* destination )
              destination[i] = dbuffr[i];
          }
     
-         delete dbuffr;
+         delete[] dbuffr;
          
          break;
     case NC_SHORT:
@@ -1063,7 +1063,7 @@ void NetcdfIn::rd_real( int var_id, int var_type, size_t n, real* destination )
              destination[i] = sbuffr[i];
          }
     
-         delete sbuffr;
+         delete[] sbuffr;
         
          break;
     case NC_INT:
@@ -1078,7 +1078,7 @@ void NetcdfIn::rd_real( int var_id, int var_type, size_t n, real* destination )
              destination[i] = ibuffr[i];
          }
     
-         delete ibuffr;
+         delete[] ibuffr;
       
          break;
     }
@@ -1137,7 +1137,7 @@ void NetcdfIn::rd_int( int var_id, int var_type, size_t n, int* destination )
              destination[i] = roundf(fbuffr[i]);
          }
     
-         delete fbuffr;
+         delete[] fbuffr;
          
          break;
     case NC_DOUBLE:
@@ -1152,7 +1152,7 @@ void NetcdfIn::rd_int( int var_id, int var_type, size_t n, int* destination )
              destination[i] = round(dbuffr[i]);
          }
     
-         delete dbuffr;
+         delete[] dbuffr;
          
          break;
     case NC_SHORT:
@@ -1167,7 +1167,7 @@ void NetcdfIn::rd_int( int var_id, int var_type, size_t n, int* destination )
              destination[i] = sbuffr[i];
          }
     
-         delete sbuffr;
+         delete[] sbuffr;
         
          break;
     case NC_INT:
@@ -1182,7 +1182,7 @@ void NetcdfIn::rd_int( int var_id, int var_type, size_t n, int* destination )
              destination[i] = ibuffr[i];
          }
     
-         delete ibuffr;
+         delete[] ibuffr;
       
          break;
     }

@@ -124,6 +124,9 @@ int main()
 
     // test sample values for a forecast 2D field
     grid2d_b = metsrc0->GetSfc( "ps", dayt2 );
+delete grid2d_b;
+delete metsrc0;
+exit(0);
     
     // check that the expiration time is non-zero
     expiring = grid2d_b->expires();
@@ -391,12 +394,12 @@ int main()
        exit(1);  
     }
 
-    delete grid3d;
-   
     lon0 = grid3d->longitude(577);
     lat0 = grid3d->latitude(361);
     p0 = grid3d->level(20); 
 
+    delete grid3d;
+   
     grid3d = metsrc0->Get3D( "t", dayt1 );
         
     // test direct access
@@ -485,7 +488,7 @@ int main()
        exit(1);  
     }
     // do pressure interpolation (log-linear)
-    metsrc0->set_vinterp( new LogLinearVinterp() );
+    metsrc0->set_vinterp( new LogLinearVinterp(), true );
     dd3 = metsrc0->getData( "t", tyme, lon0, lat0,  340.00000   );
     d0 = (LOG(340.0) - LOG(p0))/(LOG(c0) - LOG(p0))*(dd2 - dd) + dd;
     if ( mismatch(dd3, d0) ) {

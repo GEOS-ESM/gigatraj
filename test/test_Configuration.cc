@@ -43,6 +43,7 @@ int main(int argc, char * const argv[])
    
 
     conf.add("conf1", cConfig, "test_config_01.cfg", "x", 0, "config file" );
+   
     conf.add("conf2", cConfig, "test_config_02.cfg", "y", 0, "extra config file" );
     conf.add("conf3", cConfig, "nonexistent.cfg"   , "z", 0, "optional ocnfig file" );
 
@@ -71,8 +72,6 @@ int main(int argc, char * const argv[])
        exit(1);
     }   
      
-   
-   
     // load the parameters from files and/or the command line options
     xarg = conf.load(argc,argv);
    
@@ -97,6 +96,9 @@ int main(int argc, char * const argv[])
     //if ( xarg > 0 ) {
     //   cout << "arg 1: " << argv[xarg] << endl;
     //}
+   
+   
+   conf.clear();
     
    exit(0);
 

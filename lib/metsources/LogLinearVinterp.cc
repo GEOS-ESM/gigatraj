@@ -284,10 +284,10 @@ std::vector<real>* LogLinearVinterp::calc( const std::vector<real>&  zs, const G
      }   
      
      // drop the temporary variables
-     delete ks;
-     delete js;
-     delete is;
-     delete vals;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
      return results;         
      
@@ -363,10 +363,10 @@ real* LogLinearVinterp::calc( int n, const real* zs, const GridField3D& grid, in
      
      
      // drop the temporary variables
-     delete ks;
-     delete js;
-     delete is;
-     delete vals;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
      return results;         
      
@@ -477,10 +477,10 @@ GridFieldSfc* LogLinearVinterp::surface( const real z, const GridField3D& grid, 
      }   
      
      // drop the temporary variables
-     delete ks;
-     delete js;
-     delete is;
-     delete vals;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
      
      return sfcgrid;

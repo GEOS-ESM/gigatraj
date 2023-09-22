@@ -239,20 +239,6 @@ class Parcel {
       */     
       void* operator new[](size_t sz);
       
-      /// \brief delete an array of Parcel objects 
-      /*! This overlay operator poermits destruction of an array of Parcel objects
-          that was created with the new[] method.
-          
-          As with the new[] method, tt is recommended that users not call this 
-          method directly in their code, 
-          but instead use or implement a ParcelGenerator class.  Nevertheless, this
-          method is available if needed.
-          
-          \param p pointer to storage allocated for Parcel objects
-      */    
-      void operator delete[](void* p);
-      
-
       /// \brief changes the planetary navigation used by Parcels
       /*!
           This method changes which planetary navigation object to be used

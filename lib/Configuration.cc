@@ -62,6 +62,7 @@ Configuration::Configuration(const std::vector<std::string> &cfgs)
 
 Configuration::~Configuration()
 {
+    clear();
 }
 
 Configuration::Configuration(const Configuration& src)
@@ -293,7 +294,7 @@ void Configuration::add( const std::string &name, const ConfigType type, const s
 {
     // holds the new parameter specs
     struct param p;
-    
+
     // copy the specs into place
     p.name = name;
     p.type = type;
@@ -368,7 +369,49 @@ char *Configuration::cstring( std::string s ) {
 
 }
 
-void Configuration::setupGetopts( struct gostuff &go ) {
+Configuration::GoInfo::GoInfo() 
+{
+
+    names = NULLPTR;
+    shortopts = NULLPTR;
+#ifdef USE_LONGARGS
+    longopts = NULLPTR;
+#endif
+
+}
+
+Configuration::GoInfo::~GoInfo() 
+{
+    clear();
+}
+
+void Configuration::GoInfo::clear() 
+{
+    if ( names != NULLPTR ) {
+       for (int i=0; i<n; i++ ) {
+           if ( names[i] != NULLPTR ) {
+              delete[] names[i];
+           }
+       }
+       delete[] names;
+       names = NULLPTR;
+    }
+    if ( shortopts != NULLPTR ) {
+       delete[] shortopts;
+       shortopts = NULLPTR;
+    }   
+#ifdef USE_LONGARGS
+    if ( longopts != NULLPTR ) {
+       delete[] longopts;
+       longopts = NULLPTR;
+    }
+#endif
+}
+
+
+
+
+void Configuration::setupGetopts( GoInfo &go ) {
 
     // short options string
     std::string shortopts;
@@ -382,9 +425,12 @@ void Configuration::setupGetopts( struct gostuff &go ) {
     struct param p;
     // jholding string
     char *cstr;
+    char *tttt;
 #ifdef USE_LONGARGS
     struct option *longopts;
 #endif
+    
+    go.clear();
     
     // how many parameters are defined in this object?
     go.n = params.size();
@@ -414,6 +460,9 @@ void Configuration::setupGetopts( struct gostuff &go ) {
        go.names = new char*[go.n];
     } catch(...) {
        throw(badmemerr());
+    }
+    for ( int i=0; i<go.n; i++ ) {
+       go.names[i] = NULLPTR;
     }
     
     
@@ -482,22 +531,14 @@ void Configuration::setupGetopts( struct gostuff &go ) {
 
 }
 
-void Configuration::takedownGetopts( struct gostuff &go ) {
+void Configuration::takedownGetopts( GoInfo &go ) 
+{
     
     int i;
-    
-#ifdef USE_LONGARGS
-    for (i=0; i<go.n; i++ ) {
-        delete go.names[i];
-    }
-    delete go.names;
-    delete go.longopts;
-#endif
-    delete go.shortopts;
+
+    go.clear();    
 
 }
-
-
 
 void Configuration::cmdLineConfigs(int argc, char * const argv[] )
 {
@@ -524,7 +565,7 @@ void Configuration::cmdLineConfigs(int argc, char * const argv[] )
     // 
     char *cstr;
     // getopts stuff
-    struct gostuff go;
+    GoInfo go;
     
     
     // how many parameters are defined in this object?
@@ -786,7 +827,7 @@ int Configuration::loadCmdLine(int argc, char * const argv[] )
     // counter
     int i;  
     // getopts stuff
-    struct gostuff go;
+    GoInfo go;
     // argv index of first non-option argument 
     int pcount = 0;
     
@@ -795,6 +836,7 @@ int Configuration::loadCmdLine(int argc, char * const argv[] )
     n = params.size();
 
     setupGetopts( go );
+    
     shortopts = go.shortopts;
     longopts = static_cast< struct option *>(go.longopts);
 
@@ -957,6 +999,15 @@ int Configuration::load(int argc, char * const argv[] )
      return first;
 }
 
+void Configuration::clear()
+{
+     configs.clear();
+     cfgnames.clear();
+     paramNames.clear();
+     params.clear();
+     
+     status = 0;
+}
 
 std::string Configuration::get(const std::string &name)
 {

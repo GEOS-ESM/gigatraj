@@ -43,7 +43,7 @@ void StreamDump :: apply( Parcel& p )
           output = p.bserialize( &bn );
           os->write( reinterpret_cast<char *>(&bn), static_cast<std::streamsize>(sizeof(int)) );
           os->write( output, static_cast<std::streamsize>(bn*sizeof(char)) );
-          delete output;
+          delete[] output;
        }
     } catch (std::ios::failure) {
        throw (StreamDump::badstreamdump());
@@ -88,7 +88,7 @@ void StreamDump :: apply( Parcel * const p, const int n )
              throw (StreamDump::badstreamdump());
           }   
        }
-       delete output; 
+       delete[] output; 
     }
 };
 
@@ -132,7 +132,7 @@ void StreamDump :: apply( std::vector<Parcel>& p )
              throw (StreamDump::badstreamdump());
           }   
        }   
-       delete output; 
+       delete[] output; 
     }
 
 };
@@ -177,7 +177,7 @@ void StreamDump :: apply( std::list<Parcel>& p )
              throw (StreamDump::badstreamdump());
           }   
        }   
-       delete output; 
+       delete[] output; 
     }
 
 };
@@ -221,7 +221,7 @@ void StreamDump :: apply( std::deque<Parcel>& p )
              throw (StreamDump::badstreamdump());
           }   
        }   
-       delete output; 
+       delete[] output; 
     }
 
 };
@@ -296,7 +296,7 @@ void StreamDump :: apply( Flock& p )
     }
     
     if ( output != NULL ) {   
-       delete output; 
+       delete[] output; 
     }
 
 };
@@ -371,7 +371,7 @@ void StreamDump :: apply( Swarm& p )
     }
     
     if ( output != NULL ) {   
-       delete output; 
+       delete[] output; 
     }
 
 };

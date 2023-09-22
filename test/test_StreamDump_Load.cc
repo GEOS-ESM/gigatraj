@@ -140,5 +140,6 @@ int main()
        exit(1);
     }
     delete si;
+    delete input;
 
 }

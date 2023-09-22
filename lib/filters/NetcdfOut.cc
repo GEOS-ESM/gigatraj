@@ -29,6 +29,7 @@ NetcdfOut::NetcdfOut()
     vcoord = "";
     vunits = "";
     vdesc = "";
+    vdir = 0;
     
     tagquant = "";
     tagunits = "";
@@ -1762,6 +1763,8 @@ void NetcdfOut::apply( Parcel * const p, const int n )
    int ii;
    int j;
    
+   stuff = NULLPTR;
+   
    if ( n > 0 )  { 
    
       // first, allocate the space for this chunk
@@ -1869,22 +1872,22 @@ void NetcdfOut::apply( Parcel * const p, const int n )
       // now free the space for this chunk
       if ( nstuff > 0 ) {
          for ( int i=0; i < nstuff; i++ ) {
-             delete stuff[i];
+             delete[] stuff[i];
          }
-         delete stuff;
+         delete[] stuff;
       }
       if ( tags != NULL ) {
-         delete tags;
+         delete[] tags;
       }
       if ( statuses != NULL ) {
-         delete statuses;
+         delete[] statuses;
       }
       if ( flags != NULL ) {
-         delete flags;
+         delete[] flags;
       } 
-      delete zs;
-      delete lats;
-      delete lons;
+      delete[] zs;
+      delete[] lats;
+      delete[] lons;
    
    } else {
       // zero or fewer Parcels
@@ -1916,6 +1919,8 @@ void NetcdfOut::apply( std::vector<Parcel>& p )
    
    n = p.size();
    
+   stuff = NULLPTR;
+   
    if ( n > 0 )  { 
    
       // first, allocate the space for this chunk
@@ -2021,22 +2026,22 @@ void NetcdfOut::apply( std::vector<Parcel>& p )
       // now free the space for this chunk
       if ( nstuff > 0 ) {
          for ( int i=0; i < nstuff; i++ ) {
-             delete stuff[i];
+             delete[] stuff[i];
          }
-         delete stuff;
+         delete[] stuff;
       }
       if ( tags != NULL ) {
-         delete tags;
+         delete[] tags;
       }
       if ( statuses != NULL ) {
-         delete statuses;
+         delete[] statuses;
       }
       if ( flags != NULL ) {
-         delete flags;
+         delete[] flags;
       } 
-      delete zs;
-      delete lats;
-      delete lons;
+      delete[] zs;
+      delete[] lats;
+      delete[] lons;
    
    } else {
       // zero or fewer Parcels
@@ -2068,6 +2073,8 @@ void NetcdfOut::apply( std::list<Parcel>& p )
    
    n = p.size();
    
+   stuff = NULLPTR;
+   
    if ( n > 0 )  { 
    
       // first, allocate the space for this chunk
@@ -2173,22 +2180,22 @@ void NetcdfOut::apply( std::list<Parcel>& p )
       // now free the space for this chunk
       if ( nstuff > 0 ) {
          for ( int i=0; i < nstuff; i++ ) {
-             delete stuff[i];
+             delete[] stuff[i];
          }
-         delete stuff;
+         delete[] stuff;
       }
       if ( tags != NULL ) {
-         delete tags;
+         delete[] tags;
       }
       if ( statuses != NULL ) {
-         delete statuses;
+         delete[] statuses;
       }
       if ( flags != NULL ) {
-         delete flags;
+         delete[] flags;
       } 
-      delete zs;
-      delete lats;
-      delete lons;
+      delete[] zs;
+      delete[] lats;
+      delete[] lons;
    
    } else {
       // zero or fewer Parcels
@@ -2217,6 +2224,7 @@ void NetcdfOut::apply( std::deque<Parcel>& p )
    int n;
    std::deque<Parcel>::iterator vi;
    
+   stuff = NULLPTR;
    
    n = p.size();
    
@@ -2325,22 +2333,22 @@ void NetcdfOut::apply( std::deque<Parcel>& p )
       // now free the space for this chunk
       if ( nstuff > 0 ) {
          for ( int i=0; i < nstuff; i++ ) {
-             delete stuff[i];
+             delete[] stuff[i];
          }
-         delete stuff;
+         delete[] stuff;
       }
       if ( tags != NULL ) {
-         delete tags;
+         delete[] tags;
       }
       if ( statuses != NULL ) {
-         delete statuses;
+         delete[] statuses;
       }
       if ( flags != NULL ) {
-         delete flags;
+         delete[] flags;
       } 
-      delete zs;
-      delete lats;
-      delete lons;
+      delete[] zs;
+      delete[] lats;
+      delete[] lons;
    
    } else {
       // zero or fewer Parcels
@@ -2376,6 +2384,8 @@ void NetcdfOut::apply( Flock& p )
    Parcel* px;
    bool gotit;
    
+   stuff = NULLPTR;
+
    i_am_root = p.is_root();
    
    n = p.size();
@@ -2400,7 +2410,7 @@ void NetcdfOut::apply( Flock& p )
           tags = new double[maxchunk];
       } 
       // misc met fields
-      stuff = NULL;   
+      stuff = NULLPTR;   
       nstuff = other.size();
       if ( nstuff > 0 ) {
          stuff = new real*[nstuff];
@@ -2623,23 +2633,23 @@ void NetcdfOut::apply( Flock& p )
       // now free the space for this chunk
       if ( nstuff > 0 ) {
          for ( int i=0; i < nstuff; i++ ) {
-             delete (stuff[i]);
+             delete[] (stuff[i]);
          }
-         delete stuff;
+         delete[] stuff;
       }
       if ( tags != NULL ) {
-         delete tags;
+         delete[] tags;
       }
       if ( statuses != NULL ) {
-         delete statuses;
+         delete[] statuses;
       }
       if ( flags != NULL ) {
-         delete flags;
+         delete[] flags;
       } 
-      delete xnotrace;
-      delete zs;
-      delete lats;
-      delete lons;
+      delete[] xnotrace;
+      delete[] zs;
+      delete[] lats;
+      delete[] lons;
    
    } else {
       // zero or fewer Parcels
@@ -2675,7 +2685,9 @@ void NetcdfOut::apply( Swarm& p )
    bool i_am_root;
    Parcel* px;
    bool gotit;
-   
+
+   stuff = NULLPTR;
+      
    i_am_root = p.is_root();
    
    n = p.size();
@@ -2759,6 +2771,9 @@ void NetcdfOut::apply( Swarm& p )
                 // probably need to be more sophisticated about this
                 tt = tttmp;
              }
+             
+             delete px;
+             
           }   
       }
       if ( ! FINITE(tt) ) {
@@ -2854,6 +2869,8 @@ void NetcdfOut::apply( Swarm& p )
                    statuses[i] = px->status();
                 }
          
+                delete px;
+                
              }
          }
          if ( nstuff > 0 ) {
@@ -2877,23 +2894,23 @@ void NetcdfOut::apply( Swarm& p )
       // now free the space for this chunk
       if ( nstuff > 0 ) {
          for ( int i=0; i < nstuff; i++ ) {
-             delete stuff[i];
+             delete[] stuff[i];
          }
-         delete stuff;
+         delete[] stuff;
       }
       if ( tags != NULL ) {
-         delete tags;
+         delete[] tags;
       }
       if ( statuses != NULL ) {
-         delete statuses;
+         delete[] statuses;
       }
       if ( flags != NULL ) {
-         delete flags;
+         delete[] flags;
       } 
-      delete xnotrace;
-      delete zs;
-      delete lats;
-      delete lons;
+      delete[] xnotrace;
+      delete[] zs;
+      delete[] lats;
+      delete[] lons;
    
    } else {
       // zero or fewer Parcels

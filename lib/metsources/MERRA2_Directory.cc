@@ -55,6 +55,12 @@ MERRA2_Directory::MVarDesc::MVarDesc(const std::string Quantity, const int Ndims
      longname = Longname;
      units = Units;
      ndims = Ndims;
+     
+     hgrid = -1;
+     vcoord = -1;
+     tspace = -1;
+     tavg = -1;
+     tbase = -1;
 
      //std::cerr << "Quantity=" << Quantity << std::endl;
      //std::cerr << "Stdname=" << Stdname << std::endl;
@@ -161,6 +167,11 @@ MERRA2_Directory::MVarDesc::~MVarDesc()
 
 MERRA2_Directory::MERRA2_Directory()
 {
+
+   gmao_vars.clear();
+   gmao_names.clear();
+   cf_names.clear();
+
       //cf_names["Q250"] = "specific_humidity_at_250_hPa";
       //gmao_names["specific_humidity_at_250_hPa"] = "Q250";
       //gmao_vars["Q250"] = new MVarDesc( "Q250", 0, "specific_humidity_at_250_hPa", "Specific humidity at 250 hPa", "kg/kg", "http://goldsmr2.gesdisc.eosdis.nasa.gov/opendap/MERRA/,MAT1NXSLV.5.2.0,MERRA100.prod.assim.tavg1_2d_slv_Nx,0,0,1" );
@@ -214,13 +225,17 @@ int MERRA2_Directory::LookUp(const std::string merra2Name, const std::string dat
     std::string *url0;
     int basetime = 0;
 
-    // Grab the infomration about the desired quantity
+    // Grab the information about the desired quantity
     // If we don't have it, then throw an error
-    try {
+    item = NULLPTR;
+    if ( gmao_vars.count( merra2Name ) > 0 ) {
        item = gmao_vars.at(merra2Name);
-    } catch (const std::out_of_range& cor) {
+    //} catch (const std::out_of_range& cor) {
+    } else {
+       std::cerr << "Unknown MERRA2 quantity " << merra2Name << std::endl;
        throw (badNotFound());
     }   
+ 
 
     // Copy these into place, if the user desires
     // We test for NULL, so that the user can

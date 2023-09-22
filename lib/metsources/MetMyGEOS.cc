@@ -1406,13 +1406,11 @@ void MetMyGEOS::set_BaseTime( std::string& date )
 
 std::string MetMyGEOS::BaseTime( ) const
 {
-    std::string *result;
+    std::string result;
     
-    result = new std::string;
+    result = cal.date1900( basetime );
     
-    *result = cal.date1900( basetime );
-    
-    return *result;
+    return result;
 }           
 
 
@@ -3051,7 +3049,7 @@ void MetMyGEOS::Source_read_attr( std::string &result, char *attr_name, int vari
     result.clear();
     result.assign(val, len);
 
-    delete val;
+    delete[] val;
    
 }
 
@@ -3088,7 +3086,7 @@ void MetMyGEOS::Source_read_attr( std::vector<unsigned char> &result, char *attr
         result.push_back( val[i] );
     }    
     
-    delete val;
+    delete[] val;
    
 }
 
@@ -3119,7 +3117,7 @@ void MetMyGEOS::Source_read_attr( std::vector<short> &result, char *attr_name, i
         result.push_back( val[i] );
     }    
     
-    delete val;
+    delete[] val;
 
 }
 
@@ -3151,7 +3149,7 @@ void MetMyGEOS::Source_read_attr( std::vector<int> &result, char *attr_name, int
         result.push_back( val[i] );
     }    
     
-    delete val;
+    delete[] val;
 
 }
 
@@ -3183,7 +3181,7 @@ void MetMyGEOS::Source_read_attr( std::vector<float> &result, char *attr_name, i
         result.push_back( val[i] );
     }    
     
-    delete val;
+    delete[] val;
 
 }
 
@@ -3214,7 +3212,7 @@ void MetMyGEOS::Source_read_attr( std::vector<double> &result, char *attr_name, 
         result.push_back( val[i] );
     }    
     
-    delete val;
+    delete[] val;
 
 }
 
@@ -4028,7 +4026,7 @@ void MetMyGEOS::Source_read_dim_doubles( std::vector<real>&vals, int varid, size
         vals.push_back( buffr[j] );
     }
     
-    delete buffr;
+    delete[] buffr;
     
 }
 
@@ -4100,7 +4098,7 @@ void MetMyGEOS::Source_read_dim_floats( std::vector<real>&vals, int varid, size_
         vals.push_back( buffr[j] );
     }
     
-    delete buffr;
+    delete[] buffr;
 
 }
 
@@ -4177,7 +4175,7 @@ void MetMyGEOS::Source_read_dim_ints( std::vector<real>&vals, int varid, size_t 
         vals.push_back( static_cast<real>(buffr[j]) );
     }
     
-    delete buffr;
+    delete[] buffr;
     
 }
 
@@ -4339,7 +4337,7 @@ void MetMyGEOS::Source_read_data_floats( std::vector<real>&vals, int var_id, int
          } while ( try_again( err, trial ) );       
 
          if ( err != NC_NOERR ) {
-            delete buffr;   
+            delete[] buffr;   
             throw(badNetcdfError(err));
          }
 
@@ -4363,7 +4361,7 @@ void MetMyGEOS::Source_read_data_floats( std::vector<real>&vals, int var_id, int
          }
      }
 
-     delete buffr;   
+     delete[] buffr;   
 }
 
 

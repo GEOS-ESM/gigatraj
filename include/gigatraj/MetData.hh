@@ -584,6 +584,7 @@ class MetData {
           \return the value of the quantity at the given location and time
 
       */
+     // virtual real getData( string quantity, double time, real lon, real lat, real z, int flags=0) { return 0.0; };
       virtual real getData( string quantity, double time, real lon, real lat, real z, int flags=0) { return 0.0; };
 
       /// obtain the value of a meteorological field at a set of given points 

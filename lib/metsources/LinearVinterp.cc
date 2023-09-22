@@ -289,10 +289,10 @@ std::vector<real>* LinearVinterp::calc( const std::vector<real>&  zs, const Grid
      }   
      
      // drop the temporary variables
-     delete ks;
-     delete js;
-     delete is;
-     delete vals;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
      return results;         
      
@@ -370,10 +370,10 @@ real* LinearVinterp::calc( int n, const real* zs, const GridField3D& grid, int i
      
      
      // drop the temporary variables
-     delete ks;
-     delete js;
-     delete is;
-     delete vals;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
      return results;         
      
@@ -485,10 +485,10 @@ GridFieldSfc* LinearVinterp::surface( const real z, const GridField3D& grid, int
      }   
      
      // drop the temporary variables
-     delete ks;
-     delete js;
-     delete is;
-     delete vals;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
      
      return sfcgrid;

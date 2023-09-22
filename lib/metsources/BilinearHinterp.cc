@@ -290,10 +290,10 @@ std::vector<real>*  BilinearHinterp::calc( const std::vector<real>& lons, const 
      
      // drop all the temporary variables
      // before we leave
-     delete ks;
-     delete js;
-     delete is;
-     delete vals;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
      return results;         
      
@@ -395,9 +395,9 @@ std::vector<real>*  BilinearHinterp::calc( const std::vector<real>& lons, const 
      
      // drop all the temporary variables
      // before we leave
-     delete js;
-     delete is;
-     delete vals;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
      return results;         
      
@@ -503,10 +503,10 @@ real* BilinearHinterp::calc( const int n, const real *lons, const real *lats, co
      
      // drop all the temporary variables
      // before we leave
-     delete ks;
-     delete js;
-     delete is;
-     delete vals;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
      return results;         
      
@@ -600,9 +600,9 @@ real* BilinearHinterp::calc( const int n, const real *lons, const real *lats, co
      
      // drop all the temporary variables
      // before we leave
-     delete js;
-     delete is;
-     delete vals;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
      return results;         
      
@@ -693,9 +693,9 @@ void BilinearHinterp::calc( const int n, const real *lons, const real *lats, rea
      
      // drop all the temporary variables
      // before we leave
-     delete js;
-     delete is;
-     delete vals;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
 
 };
@@ -990,10 +990,10 @@ void BilinearHinterp::calc( int n, real* lons, real* lats, real* xvals, real* yv
          
      }     
 
-     delete yvtmp;
-     delete xvtmp;
-     delete js;
-     delete is;
+     delete[] yvtmp;
+     delete[] xvtmp;
+     delete[] js;
+     delete[] is;
 
 };
 
@@ -1338,11 +1338,11 @@ real BilinearHinterp::vinterp( real lon, real lat, real z, const GridLatLonField
 
      // drop all the temporary variables
      // before we leave
-     delete indices;
-     delete ks;
-     delete js;
-     delete is;
-     delete vals;
+     delete[] indices;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
      return result;         
      
@@ -1522,12 +1522,12 @@ void BilinearHinterp::vinterpVector( real lon, real lat, real z, real &xval, rea
 
      // drop all the temporary variables
      // before we leave
-     delete indices;
-     delete ks;
-     delete js;
-     delete is;
-     delete xvals;
-     delete yvals;
+     delete[] indices;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] xvals;
+     delete[] yvals;
      
 }
 
@@ -1742,12 +1742,12 @@ void BilinearHinterp::vinterpVector( int n, const real* lons, const real* lats, 
      
      // drop all the temporary variables
      // before we leave
-     delete indices;
-     delete ks;
-     delete js;
-     delete is;
-     delete xvalsprf;
-     delete yvalsprf;
+     delete[] indices;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] xvalsprf;
+     delete[] yvalsprf;
      
 
 }
@@ -1800,6 +1800,10 @@ std::vector<real>* BilinearHinterp::vinterp( const std::vector<real>& lons, cons
      
      // how many input points?
      n = lons.size();
+     if ( n != lats.size() || n != zs.size() ) {
+        std::cerr << "BilinearLatLon::vinterp(): Point location vectors must have the same size!" << std::endl;
+        throw (badhinterp());
+     }
 
      // make something to hold the output results
      results = new std::vector<real>;
@@ -1904,7 +1908,7 @@ std::vector<real>* BilinearHinterp::vinterp( const std::vector<real>& lons, cons
         
          }
 
-         // interpolate the horizontally-interplated profile vertically,
+         // interpolate the horizontally-interpolated profile vertically,
          results->push_back( vin.profile( grid.levels(), profile, zs[i], bad, flags ) );
 
      }
@@ -1912,11 +1916,11 @@ std::vector<real>* BilinearHinterp::vinterp( const std::vector<real>& lons, cons
 
      // drop all the temporary variables
      // before we leave
-     delete indices;
-     delete ks;
-     delete js;
-     delete is;
-     delete vals;
+     delete[] indices;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
      return results;         
      
@@ -2068,11 +2072,11 @@ real* BilinearHinterp::vinterp( const int n, const real* lons, const real* lats,
 
      // drop all the temporary variables
      // before we leave
-     delete indices;
-     delete ks;
-     delete js;
-     delete is;
-     delete vals;
+     delete[] indices;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
      return results;         
      
@@ -2217,11 +2221,11 @@ void BilinearHinterp::vinterp( const int n, const real* lons, const real* lats, 
 
      // drop all the temporary variables
      // before we leave
-     delete indices;
-     delete ks;
-     delete js;
-     delete is;
-     delete vals;
+     delete[] indices;
+     delete[] ks;
+     delete[] js;
+     delete[] is;
+     delete[] vals;
      
 }
 

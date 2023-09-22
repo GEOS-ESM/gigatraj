@@ -877,6 +877,7 @@ void Catalog::VarSet::define( const std::string& name, const char type )
         var->name = name;
         var->type = type;
         vars.insert( make_pair(name, *var) );
+        delete var;
      }
 
 }
@@ -3152,7 +3153,6 @@ bool Catalog::query( const std::string& quantity, const std::string& validAt,  s
                
                if ( eval( pattern ) ) {
                   s1 = pattern->evalS;
-                  delete pattern;
                   if ( dbug > 60 ) {
                      std::cerr << "*+*+*+*+ Catalog::query: finishd pattenr eval: " << s1 << std::endl;
                   }
@@ -3163,6 +3163,7 @@ bool Catalog::query( const std::string& quantity, const std::string& validAt,  s
                   if ( preURLtime < tyme ) {
                   
                      setup_vars( quantity, postURLtime, tag );
+                     delete pattern;
                      pattern = new VarVal( currentTarget->templayt, 'S' );
                      if ( dbug > 10 ) {
                         std::cerr << "Catalog::query pattern=" << std::endl;
@@ -3188,6 +3189,7 @@ bool Catalog::query( const std::string& quantity, const std::string& validAt,  s
                     ok = true;
                  }
                }
+               delete pattern;
                
                if ( ok ) {
                   dd.name = quantity;
@@ -3640,6 +3642,7 @@ void Catalog::parseVarDef( Variable* var, const char* str, size_t& idx )
         test = new VarVal( true );
         // texp->operands.push_back( test );
         texp->add( test );
+        delete test;
         
         // parse the value expression
 
@@ -3701,7 +3704,6 @@ Catalog::VarVal* Catalog::parseString(  const char* str, size_t& idx ) const
          if ( dbug > 50 ) {
             std::cerr << "parseString: extracted: <<" << s << ">> from chars " << i << " through " << j << std::endl;
          }
-         result = new VarVal();
          // found the closing quote.
          // So check whether this is a string literal or a string
          k = isDateLiteral( str, j, i );
@@ -3757,7 +3759,6 @@ Catalog::VarVal* Catalog::parseDate(  const char* str, size_t& idx ) const
       j = scanFor( ']', str, i );
       if ( j > idx ) {
          s.insert(0, str + i, j - i);
-         result = new VarVal();
          // found the closing date marker.
          // So check whether this is a well-formed date literal or not
          k = isDateLiteral( str, j, i );
@@ -4035,6 +4036,11 @@ Catalog::VarExpr* Catalog::parseVarExpr( const char* str, size_t& idx, int stop 
    prev_was_val = false;
    prev_was_op = false;
    
+   if ( dbug > 50 ) {
+      std::cerr << "Catalog::parseVarExpr: entering to parse to char " << stop 
+      << " in <<" << str+idx << ">>" << std::endl; 
+   }
+   
    // until we hit the terminating null char (or the specified stop point) ...
    while ( ! ( (str[i] == 0) || ( (stop>=idx) && (i == stop) ) )) {
        // skip any leading whitespace
@@ -4145,6 +4151,24 @@ Catalog::VarExpr* Catalog::parseVarExpr( const char* str, size_t& idx, int stop 
                got_token = true;
                prev_was_val = false;
             }          
+         } else {
+            if ( str[i] == '(' ) {
+               priority += 100;
+               i++;
+               prev_was_val = false;
+               prev_was_op = false;
+               got_token = true;
+            } else if ( str[i] == ')' ) {
+               priority -= 100;
+               if ( priority < 0 ) {
+                   std::cerr << "unbalanced parenthees expression in '" << str + idx << "'" << std::endl;
+                   throw (badConfigSyntax());                      
+               }
+               i++;
+               prev_was_val = false;
+               prev_was_op = false;
+               got_token = true;
+            }
          }  
        }
        if ( ! got_token ) {
@@ -6005,9 +6029,11 @@ bool Catalog::eval( VarVal* val )
                     val->evalD = found->evalD;
                     val->flags = val->flags | VarVal::ValidEval | VarVal::IsLiteral;
                     result = true;
+                    delete found;
                  } else {
                     std::cerr << "Bad date pseudo-literal: " << teststring << std::endl;
                     val->dump();
+                    delete found;
                     throw (badExpression());
                  }
               } else {

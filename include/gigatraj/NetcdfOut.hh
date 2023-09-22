@@ -598,7 +598,7 @@ class NetcdfOut : public ParcelReporter {
       /// the contacts string for metadata
       std::string hdr_contact;
       
-      /// the direction: -1 = back-trajectories, 1 = foreward trajectories, 0 = undetermined 
+      /// the direction: -1 = back-trajectories, 1 = forward trajectories, 0 = undetermined 
       int dir;
       
       /// says whether the file has bene opened or not
@@ -747,7 +747,7 @@ class NetcdfOut : public ParcelReporter {
           \param flags either NULL or a pointer to an array of parcel flag data
           \param statuses either NULL or a pointer to an array of parcel status data
           \param tags either NULL or a pointer to an array of parcel tag data
-          \param stuff eithe rNULL or a pointer to an array of pointers, each of which point to an array of arbitratry meteorological data values
+          \param stuff either NULL or a pointer to an array of pointers, each of which point to an array of arbitratry meteorological data values
      */
      void writeout( double t, unsigned int n, real *lons, real *lats, real *zs, int *flags, int *statuses, double *tags, real **stuff );
     

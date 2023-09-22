@@ -56,6 +56,12 @@ GEOSfpAssim_Directory::MVarDesc::MVarDesc(const std::string Quantity, const int 
      units = Units;
      ndims = Ndims;
 
+     hgrid = -1;
+     vcoord = -1;
+     tavg = -1;
+     tspace = -1;
+     tbase = -1;
+
      //std::cerr << "Quantity=" << Quantity << std::endl;
      //std::cerr << "Stdname=" << Stdname << std::endl;
      //std::cerr << "Longname=" << Longname << std::endl;
@@ -161,6 +167,11 @@ GEOSfpAssim_Directory::MVarDesc::~MVarDesc()
 
 GEOSfpAssim_Directory::GEOSfpAssim_Directory()
 {
+
+   gmao_vars.clear();
+   gmao_names.clear();
+   cf_names.clear();
+
       //cf_names["Q250"] = "specific_humidity_at_250_hPa";
       //gmao_names["specific_humidity_at_250_hPa"] = "Q250";
       //gmao_vars["Q250"] = new MVarDesc( "Q250", 0, "specific_humidity_at_250_hPa", "Specific humidity at 250 hPa", "kg/kg", "http://goldsmr2.gesdisc.eosdis.nasa.gov/opendap/MERRA/,MAT1NXSLV.5.2.0,MERRA100.prod.assim.tavg1_2d_slv_Nx,0,0,1" );
@@ -213,11 +224,15 @@ int GEOSfpAssim_Directory::LookUp(const std::string geosName
     std::string *url0;
     int basetime = 0;
 
-    // Grab the infomration about the desired quantity
+    // Grab the information about the desired quantity
     // If we don't have it, then throw an error
-    try {
+    //try {
+    item = NULLPTR;
+    if ( gmao_vars.count(geosName) > 0 ) {
        item = gmao_vars.at(geosName);
-    } catch (const std::out_of_range& cor) {
+    } else {
+    //} catch (const std::out_of_range& cor) {
+       std::cerr << "Unknown GEOS FP quantity " << geosName << std::endl;
        throw (badNotFound());
     }   
 
