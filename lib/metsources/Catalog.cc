@@ -964,6 +964,201 @@ void Catalog::VarSet::dump( int indent) const
 }
 
 //////////////////////////////////////////////////////////////////////////////////
+Catalog::Dimension::Dimension()
+{
+
+      name = "";
+      units = "";
+      mode = 0;
+      start = 0.0;
+      end = 0.0;
+      delta = 0.0;
+      n = 0;
+
+}
+
+void Catalog::Dimension::set( float strt, size_t num, float delt)
+{
+     if ( num > 0 ) {
+         
+         n = num;         
+         start = strt;         
+         delta = delt;         
+         mode = 2;
+     
+     }
+}
+
+void Catalog::Dimension::set( float strt, float fin, size_t num)
+{
+
+     if ( num > 0 ) {
+         
+         n = num;         
+         start = strt;         
+         end = fin;         
+         mode = 3;
+     
+     }
+
+}
+
+void Catalog::Dimension::set( std::vector<float>& v )
+{
+    vals = v;
+    mode = 1;
+}
+
+std::vector<float>* Catalog::Dimension::values()
+{
+    std::vector<float>* result;
+    
+    result = NULLPTR;
+    
+    switch (mode) {
+    case 0: break;
+    case 1:
+            result = new std::vector<float>;
+            *result = vals;
+            break;
+    case 2:
+            result = new std::vector<float>;
+            for ( int i=0; i < n ; i++ ) {
+                result->push_back( start + i*delta );
+            }
+            break;
+    case 3:
+            result = new std::vector<float>;
+            if ( n > 1 ) {
+               delta = ( end - start )/(n - 1);
+            } else {
+               delta = 0.0;
+            }   
+            for ( int i=0; i < n ; i++ ) {
+                result->push_back( start + i*delta );
+            }
+            break;    
+    }
+    
+    return result;
+    
+}
+void Catalog::Dimension::dump( int indent ) const
+{
+   std::string spaces;
+   std::map< std::string, std::string >::const_iterator item;
+   
+   for ( int i=0; i < indent; i++ ) {
+       spaces.push_back(' ');
+   }
+
+   std::cerr << spaces << "++++++++Dimension '" << name << "':" << std::endl;
+   std::cerr << spaces << "     " << "quantity = '" << quant << "'" << std::endl; 
+   std::cerr << spaces << "     " << "units = '" << units << "'" << std::endl; 
+   std::cerr << spaces << "     " << "mode = " << mode  << std::endl; 
+   if ( mode == 2 ) {
+      std::cerr << spaces << "     " << "start = " << start 
+                << ", delta = " << delta << ", n = " << n << std::endl; 
+   } else if ( mode == 3 ) {
+      std::cerr << spaces << "     " << "start = " << start 
+                << ", end = " << end << ", n = " << n << std::endl;   
+   } else if ( mode == 1 ) {
+      std::cerr << spaces << "     " << "values = " << vals[0];
+      for ( int i=1; i < vals.size(); i++ ) {
+           std::cerr << ", " << vals[i];
+      }    
+      std::cerr << std::endl;   
+   
+   }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+
+void Catalog::DimensionSet::define( const Dimension* dim )
+{
+     Dimension *tar;
+     std::map< std::string, Dimension>::iterator item;
+     std::string name;
+     
+     name = dim->name;
+     
+     if ( exists( name ) ) {
+        std::cerr << "Multiple definitions of Dimension " << name <<  std::endl;
+        throw (badMultiplyDefinedDimension());
+     } else {
+        dims.insert( make_pair(name, *dim) );
+     }
+}
+
+bool Catalog::DimensionSet::exists( const std::string& name ) const
+{
+    bool result;
+    size_t items;
+    
+    items = dims.count( name );
+    
+    result = ( items > 0 );
+
+    return result;
+}
+
+Catalog::Dimension* Catalog::DimensionSet::getDimension( const std::string& name )
+{
+     std::map< std::string, Dimension>::iterator item;
+     Dimension* result;
+     
+     // get the variable to be evaluated
+     item = dims.find( name );
+     if ( item != dims.cend() ) {
+        result = &(*item).second;     
+     } else {
+        result = NULLPTR;
+     }
+
+     return result;
+}
+
+void Catalog::DimensionSet::clear()
+{
+     std::map< std::string, Dimension>::iterator item;
+     Dimension* dim;
+  
+     for ( item = dims.begin(); item != dims.end(); item++ ) {
+         dim = &(item->second);
+         // delete dim;
+     }
+     
+     dims.clear();
+}
+
+void Catalog::DimensionSet::dump( int indent ) const
+{
+   std::map< std::string, Dimension>::const_iterator item;
+   std::string spaces;
+   int i;
+   const Dimension* dim;
+   
+   for ( int i=0; i < indent; i++ ) {
+       spaces.push_back(' ');
+   }
+   
+   std::cerr << spaces << "******* Begin DimensionSet Dump ********** " << std::endl;
+   
+   std::cerr << spaces << dims.size() << " Dimensions defined: " << std::endl;
+   
+   for ( item = dims.cbegin(); item != dims.cend(); item++ ) {
+       dim = &(item->second);
+       dim ->dump();
+   }
+   
+   std::cerr << spaces << "******* End DimensionSet Dump ********** " << std::endl;
+
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
 
 Catalog::TimeInterval::TimeInterval()
 {
@@ -971,6 +1166,7 @@ Catalog::TimeInterval::TimeInterval()
       months = 0;
       days = 0;
       secs = 0.0;
+      allHere = true;
 }
 
 size_t Catalog::TimeInterval::parse( const std::string& interval )
@@ -978,10 +1174,19 @@ size_t Catalog::TimeInterval::parse( const std::string& interval )
     size_t result;
     const char *cc;
     
-    cc =  interval.c_str();
+    if ( interval != "" ) {
+       cc =  interval.c_str();
+       
+       allHere = false;
+       
+       result = parse( cc, interval.size(), 0 );
     
-    result = parse( cc, interval.size(), 0 );
+    } else {
+       // empty spec means all the data are present
+       allHere = true;
 
+       result = 0;
+    }
     return result;
 }
 
@@ -1920,7 +2125,7 @@ bool Catalog::s2Int( const std::string& str, int &result )
            }
        }
        if ( i = slen ) {
-           // got all th eway to the end of the string with
+           // got all the way to the end of the string with
            // no unexpected characters
            if ( sign < 0 ) {
               result = - result;
@@ -3134,12 +3339,12 @@ bool Catalog::query( const std::string& quantity, const std::string& validAt,  s
               // (note: for this it is not necessary for the dbase to have the date right
               // We just need the base time right)
               
-               // set up local variables, so that bracket do evaluate var refs
+               // set up local variables, so that bracket() is called with the built-in time variabled defined
                setup_vars( quantity, tyme, tag );
                
-               bracket( tyme, preTime, preURLtime, preN, postTime, postURLtime, postN );
+               bracket( tyme, preTime, preURLtime, preN, postTime, postURLtime, postN, nt );
                
-               // ok, now we neeed to set the temp variables to the Pre time
+               // ok, now we need to set the temp variables to the actual Pre time
                setup_vars( quantity, preURLtime, tag );
                            
                ok = false;
@@ -3154,7 +3359,7 @@ bool Catalog::query( const std::string& quantity, const std::string& validAt,  s
                if ( eval( pattern ) ) {
                   s1 = pattern->evalS;
                   if ( dbug > 60 ) {
-                     std::cerr << "*+*+*+*+ Catalog::query: finishd pattenr eval: " << s1 << std::endl;
+                     std::cerr << "*+*+*+*+ Catalog::query: finishd pattern eval: " << s1 << std::endl;
                   }
                   
                   // get the time characteristics of the target
@@ -3200,16 +3405,30 @@ bool Catalog::query( const std::string& quantity, const std::string& validAt,  s
                   dd.scale  = (quant->tlist[it]).scale;
                   dd.offset = (quant->tlist[it]).offset;
                   dd.description = (quant->tlist[it]).description;
+                  dd.tN = nt;
                   
                   dd.preStart_t = preURLtime;
                   junk = d2String( preTime, dd.t0 );
                   junk = d2String( preURLtime, dd.preStart );
                   dd.preN = preN;
                   
-                  dd.tDelta = ( postURLtime - preURLtime )/( preN + 1);
+                  //dd.tDelta = ( postURLtime - preURLtime )/( preN + 1);
+                  dd.tDelta = currentTarget->inctime/24.0;
+                  if ( dd.tDelta == 0 ) {
+                     if ( preN > 0 ) {
+                        dd.tDelta = ( preTime - preURLtime )/( preN );
+                     } else {
+                        if (currentTarget->nt > 0 ) {
+                           dd.tDelta = ( postURLtime - preURLtime )/(currentTarget->nt);
+                        } else {
+                           dd.tDelta = ( postURLtime - preURLtime );                        
+                        }
+                     }
+                  }
                   
                   //dd.t1 = postTime;
-                  dd.postStart_t = preURLtime;
+                  // dd.postStart_t = preURLtime;
+                  dd.postStart_t = postURLtime;
                   junk = d2String( postTime, dd.t1 );
                   junk = d2String( postURLtime, dd.postStart );
                   dd.postN = postN;
@@ -3452,6 +3671,32 @@ bool Catalog::variableValue( const std::string& name, std::string& output )
      return result;
 }
 
+bool Catalog::dimensionValues( const std::string& name, std::string& quantity, std::string& units, std::vector<float>** values )
+{
+     bool result;
+     Dimension* dim;
+     
+     result = false;
+     units = "";
+     if ( values != NULLPTR ) {
+        *values = NULLPTR;
+     }
+       
+     if ( dimset.exists(name) ) {
+        dim = dimset.getDimension( name );
+        result = true;
+        units = dim->units;
+        quantity = dim->quant;
+        if ( values != NULLPTR ) {
+           *values = dim->values();
+        }
+        
+        //delete dim;
+     }
+     
+     return result;
+     
+}    
 
 
 bool Catalog::fileExists( const std::string& fname ) const
@@ -3500,6 +3745,7 @@ void Catalog::clear()
 
      varset.clear();
      attrNames.clear();
+     dimset.clear();
      targetset.clear();
      quantityset.clear();
      des_attrs.clear();
@@ -3615,6 +3861,170 @@ void Catalog::parseAttrNames( const char* str, size_t& idx )
 
 }
 
+Catalog::Dimension* Catalog::parseDimDef( const char* str, size_t& idx )
+{
+     Dimension* result;
+     size_t i;
+     int isep;
+     size_t sep;
+     std::string quantity;
+     std::string units;
+     std::string mode;
+     std::vector<float> vals;
+     bool more;
+     size_t n;
+     VarVal* vx;
+
+     if ( dbug > 5 ) {
+       std::cerr << "parseDimension: parsing <<" << std::string(str) << ">>, starting at " << idx << std::endl;
+     }
+     
+     result = NULLPTR;
+     
+     i = idx;
+     
+     // look for the next semicolon
+     isep = scanFor( ';', str, i );
+     sep = static_cast<size_t>(isep);
+     if ( dbug > 70 ) {
+        std::cerr << "parseDimension:found next ; at " << isep << ", idx=" << idx << std::endl;
+     }
+     if ( isep != -1 ) {
+     
+        quantity.insert( 0, str + i, sep - i );
+        if ( dbug > 70 ) {
+           std::cerr << "parseDimension: quantity = <<" << quantity << ">>" << std::endl;
+        }
+        trim(quantity);
+        
+        i = isep + 1;
+ 
+        isep = scanFor( ';', str, i );
+        sep = static_cast<size_t>(isep);
+        if ( dbug > 70 ) {
+          std::cerr << "parseDimension:found next ; at " << isep << ", idx=" << idx << std::endl;
+        }
+        if ( isep != -1 ) {
+     
+           units.insert( 0, str + i, sep - i );
+           if ( dbug > 70 ) {
+              std::cerr << "parseDimension: units = <<" << units << ">>" << std::endl;
+           }
+           trim(units);
+        
+           i = isep + 1;
+        
+           // now extract the format code
+           skipwhite( str, i );
+           isep = scanFor( ';', str, i );
+           sep = static_cast<size_t>(isep);
+           if ( dbug > 70 ) {
+             std::cerr << "parseDimension:found next ; at " << isep << ", i=" << i << ", str[i]=" << str[i] << std::endl;
+           }
+           if ( isep != -1 ) {
+     
+              mode.insert( 0, str + i, sep - i );
+              trim(mode);
+              if ( dbug > 70 ) {
+                 std::cerr << "parseDimension: mode = <<" << mode << ">>" << std::endl;
+              }
+        
+              i = isep + 1;
+              skipwhite( str, i );
+        
+              // now scan through and get the floating-point numbers
+              more = true;
+              while ( more ) {
+                 if ( dbug > 70 ) {
+                   std::cerr << "parseDimension: looking for number at " << i << std::endl;
+                 }
+              
+                 vx = parseNumber( str, i );
+                 if ( vx != NULLPTR ) {
+                    if ( dbug > 70 ) {
+                      std::cerr << "parseDimension: found number up to " << i << std::endl;
+                    }
+                    if ( vx->hasLiteral() ) {
+                       vx->n2e();
+                       vx->convertType('F'); 
+                       if ( dbug > 70 ) {
+                         vx->dump();
+                         std::cerr << "parseDimension:    value is  " << vx->evalF << std::endl;
+                       }
+                       vals.push_back( vx->evalF );
+                    } else {
+                        std::cerr << "Dimension values must be literal: " << str << std::endl;
+                        throw (badConfigSyntax());                                    
+                    }
+                 
+                    delete vx;
+                    
+                 } else {
+                    if ( dbug > 70 ) {
+                      std::cerr << "parseDimension: hit nom-number at " << i << std::endl;
+                    }
+                    std::cerr << "Dimension hit non-numeric: " << str << " after " << i << std::endl;
+                    throw (badConfigSyntax());                                    
+                 }
+                 
+                 // find the next comma separator
+                 isep = scanFor( ',', str, i );
+                 sep = static_cast<size_t>(isep);
+                 if ( dbug > 70 ) {
+                   std::cerr << "parseDimension:found next , at " << isep << ", idx=" << idx << std::endl;
+                 }
+                 if ( isep != -1 ) {
+     
+                   i = isep + 1;
+                   skipwhite( str, i );
+              
+                 } else {
+                    more = false;
+                 }
+                 
+              }    
+              
+              result = new Dimension();
+              result->quant = quantity;
+              result->units = units;
+                 
+              if ( mode == "LDN" ) {
+                 if ( vals.size() == 3 ) {
+                    n = vals[2];
+                    result->set( vals[0], n, vals[1] );
+                 } else {
+                    std::cerr << "Dimension format LDN must have exactly three values: " << str  << std::endl;
+                    throw (badConfigSyntax());                                    
+                 }
+              } else if ( mode == "LHN" ) {
+                 if ( vals.size() == 3 ) {
+                    n = vals[2];
+                    result->set( vals[0], vals[1], n );               
+                 } else {
+                    std::cerr << "Dimension format LHN must have exactly three values: " << str  << std::endl;
+                    throw (badConfigSyntax());                                    
+                 }
+              
+              } else if ( mode == "V" ) {
+                 if ( vals.size() >= 1 ) {
+                    result->set( vals );                              
+                 } else {
+                    std::cerr << "Dimension format V must have at least one value: " << str  << std::endl;
+                    throw (badConfigSyntax());                                    
+                 }
+              
+              } else {
+                 std::cerr << "Dimension definition has an invalid format code: " << str << std::endl;
+                 throw (badConfigSyntax());                                                   
+              }
+           }
+        }
+     }
+     
+     return result;   
+     
+}
+
 void Catalog::parseVarDef( Variable* var, const char* str, size_t& idx )
 {
      int isep;
@@ -3706,7 +4116,8 @@ Catalog::VarVal* Catalog::parseString(  const char* str, size_t& idx ) const
          }
          // found the closing quote.
          // So check whether this is a string literal or a string
-         k = isDateLiteral( str, j, i );
+         k = isStringLiteral( str, j, i );
+         //k = isDateLiteral( str, j, i );
          if ( k > 0 ) {
             // a string literal
             if ( dbug > 10 ) {
@@ -4268,7 +4679,7 @@ Catalog::Target* Catalog::parseTarget( const char* str, size_t& idx ) const
        time.insert(0, str, i, j - i);
        trim(time);
        k = result->urlSep.parse( time );
-       if ( k == 0 ) {
+       if ( k == 0 && time != "" ) {
           std::cerr << "Bad URL separation time interval from target definition: '" << str << "'" << std::endl;
           throw (badConfigSyntax());       
        }
@@ -4461,12 +4872,18 @@ void Catalog::parseQuantity(Catalog::Quantity* quant, const char* str, size_t& i
         << "in '" << str << "'" << std::endl;     
      }
 
+     int kkk = 0;
      while ( ! done ) {
+     
+         kkk++;
+         if ( kkk > 2000 ) {
+            std::cerr << "bad wolf!" << kkk << std::endl;
+         }
      
          // we may need to backtrack, so work with
          // this temporary copy of idx fo rnow
          i = idx;
-         
+
          skipwhite( str, i );
      
          tname = getIdentifier( str, i );
@@ -4670,14 +5087,19 @@ void Catalog::parse( const std::string& conf )
      Variable* varib;
      Target* tgt;
      Quantity* quant;
+     Dimension *dim;
      
      // initialize
      str = conf.c_str();
      len = conf.size();
      idx = 0;
      state = 0;
-     
+
+     // starts w/ ';'? it's the attribute definition line
+     // starts w/ '>'? it's the lower time limit line
+     // starts w/ '<'? it's the upper time limit line
      if ( str[idx] != ';' && str[idx] != '>' && str[idx] != '<' ) {
+     
         // this line starts with some kind of identifier
         name = getIdentifier( str, idx );
         if ( name == ""  ) {
@@ -4727,6 +5149,23 @@ void Catalog::parse( const std::string& conf )
               delete quant;
             
            }
+        } else if ( str[idx] == '~' ) {
+            // dimensional definition
+            
+            idx++;
+            skipwhite( str, idx );
+            dim = parseDimDef( str, idx );                  
+            if ( dim != NULLPTR ) {
+            
+               dim->name = name;
+            
+               //dim->dump();
+               
+               dimset.define( dim );
+               
+               delete dim;
+            }
+            
         } else {
            // probably a variable definiition
            
@@ -6387,13 +6826,105 @@ void Catalog::dump( int indent ) const
    std::cerr << std::endl;
    varset.dump(10);
    std::cerr << std::endl;
+   dimset.dump(10);
+   std::cerr << std::endl;
    targetset.dump(10);
    std::cerr << std::endl;
    quantityset.dump(10);
    
 }
 
-void Catalog::bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n, double& post_t, double& post_url_t, int& post_n )
+double Catalog::advanceTime( double base, TimeInterval& tinc )
+{
+     int year;
+     int month;
+     int dayofmonth;
+     int dayofyear;
+     int hours;
+     int minutes;
+     float seconds; 
+     double ydays;
+     double mdays;
+     double add_days;
+     double add_time;
+     double result;
+
+     if ( tinc.allHere ) {
+        result = base;
+     }
+
+     // break the base time into year, month, day, etc.
+     d2parts( base, year, month, dayofmonth, dayofyear, hours, minutes, seconds ); 
+     
+     // We start by finding the number of days to advance for the years separation
+     ydays = 0.0;
+     for ( int i=1; i<=tinc.years; i++ ) {
+     
+         ydays = ydays + 365.0;
+         // If this is a leap year, and a 1-year jump includes the leap day...
+         if ( isLeap( year ) && ( month <= 2 ) ) {
+            ydays = ydays + 1.0;
+         }
+         // If we are jumping into a leap year, past its leap day...
+         if ( isLeap( year + 1 ) && ( month > 2 ) ) {
+            ydays = ydays + 1.0;
+         }
+     
+         // on to the next 1-year jump
+         year++;
+         
+     }
+     
+     // Now find the number of days to advance for the months separation
+     // (note that we start after advancing any years)
+     mdays = 0.0;
+     for ( int i=1; i<=tinc.months; i++ ) {
+         
+         int monlen = monthlengths[ month ];
+         if ( isLeap(year) && (month == 2) ) {
+            monlen++;
+         } 
+         
+         mdays = mdays + static_cast<double>(monlen);
+         
+         // on to the next month
+         month++;
+         // but take care of advancing into the next year
+         if ( month > 12 ) {
+            year++;
+            month = 1;
+         }
+         
+     }
+     
+     // advancing days ahead is easy
+     add_days = static_cast<double>( tinc.days );
+     
+     // advancing the time interval (in seconds), converted to hours for now
+     add_time = tinc.secs/3600.0;
+     
+     // do we need to impose an external desired time spacing?
+     if ( des_tinc > add_time ) {
+      
+        // check that an integral number of urlSep periods fits 
+        // within the desired time spacing
+        int des_n = round( des_tinc / add_time );
+        if ( abs( (des_n*add_time) - des_tinc ) < 1e-12 ) {
+           add_time = des_tinc;
+        }
+     
+     
+     }
+     add_time = add_time/24.0; // convert hours->days
+     
+     
+     // advance the base date by our interval
+     result = base + ydays + mdays + add_days + add_time;
+
+     return result;
+}
+
+void Catalog::bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n, double& post_t, double& post_url_t, int& post_n, int& ntot )
 {
      VarVal* tmpVal;
      double based;
@@ -6437,85 +6968,26 @@ void Catalog::bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n
      
      }
      
-     // break the base time into year, month, day, etc.
-     d2parts( based, year, month, dayofmonth, dayofyear, hours, minutes, seconds ); 
-     
      
      // Now we advance the base time until we pass the desired time     
-     while ( based <= tyme ) {
+     if ( ! currentTarget->urlSep.allHere ) {
+        while ( based <= tyme ) {
      
-         /* The spacing between successive URLs is held in currentTarget.urlSep.
-            This is broken into parts: year, month, day, seconds.
-            This is necessary because years and months have different durations.
-         */
-         
-         // We start by finding the number of days to advance for the years separation
-         ydays = 0.0;
-         for ( int i=1; i<=currentTarget->urlSep.years; i++ ) {
-         
-             ydays = ydays + 365.0;
-             // If this is a leap year, and a 1-year jump includes the leap day...
-             if ( isLeap( year ) && ( month <= 2 ) ) {
-                ydays = ydays + 1.0;
-             }
-             // If we are jumping into a leap year, past its leap day...
-             if ( isLeap( year + 1 ) && ( month > 2 ) ) {
-                ydays = ydays + 1.0;
-             }
-         
-             // on to the next 1-year jump
-             year++;
-             
-         }
-         
-         // Now find the number of days to advance for the months separation
-         // (note that we start after advancing any years)
-         mdays = 0.0;
-         for ( int i=1; i<=currentTarget->urlSep.months; i++ ) {
-             
-             int monlen = monthlengths[ month ];
-             if ( isLeap(year) && (month == 2) ) {
-                monlen++;
-             } 
-             
-             mdays = mdays + static_cast<double>(monlen);
-             
-             // on to the next month
-             month++;
-             // but take care of advancing into the next year
-             if ( month > 12 ) {
-                year++;
-                month = 1;
-             }
-             
-         }
-     
-         // advancing days ahead is easy
-         add_days = static_cast<double>( currentTarget->urlSep.days );
-         
-         // advancing the time interval (in seconds), converted to hours for now
-         add_time = currentTarget->urlSep.secs/3600.0;
-         
-         // do we need to impose an external desired time spacing?
-         if ( des_tinc > add_time ) {
-          
-            // check that an integral number of urlSep periods fits 
-            // within the desired time spacing
-            int des_n = round( des_tinc / add_time );
-            if ( abs( (des_n*add_time) - des_tinc ) < 1e-12 ) {
-               add_time = des_tinc;
-            }
-         
-         
-         }
-         add_time = add_time/24.0; // convert hours->days
-     
-         // save the current base date (it may become our preceeding time)
-         prev_based = based;
-         
-         // advance the base date by our interval
-         based = based + ydays + mdays + add_days + add_time;
+            /* The spacing between successive URLs is held in currentTarget.urlSep.
+               This is broken into parts: year, month, day, seconds.
+               This is necessary because years and months have varying durations.
+            */
+                 
+            // save the current base date (it may become our preceeding time)
+            prev_based = based;
+            
+            // advance the base date by our interval
+            based = advanceTime( prev_based, currentTarget->urlSep );
 
+        }
+     } else {
+        // all the timestamps are in one URL
+        prev_based = based;
      }
      
      // these two are the times of the URLs that bracket the desired time(tyme); 
@@ -6529,10 +7001,14 @@ void Catalog::bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n
      // get the internal-to-URL time increment, converted from hours to days 
      tinc = currentTarget->inctime/24.0;
 
+     // determine the number of time snapshots in the pre URL
+     // and the offset index into the URL of the data just before our desired time
      if ( tinc > 0 ) {
+        ntot = static_cast<int>( floor( (based - prev_based)/tinc + 1.0/24.0/60.0*0.5 ) );
         pre_n = static_cast<int>( floor( intra_delta/tinc + 1.0/24.0/60.0*0.5 ) );
      } else {
         // one snapshot per file, and this is it
+        ntot = 1;
         pre_n = 0;
      }
      

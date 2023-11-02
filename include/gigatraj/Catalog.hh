@@ -70,7 +70,7 @@ about the time spacing of the data a filCe contains, as well as a set of named a
 that can be used for descriptions of such things as the file's horizontal resolution, vertical coordinate,
 time averaging, and so on.
 
-Where do the values of these varDensOTF.cciable references come from? Some of them are defined
+Where do the values of these variable references come from? Some of them are defined
 automatically:
 
   * QUANTITY = the name of the quantity being requested
@@ -90,6 +90,8 @@ automatically:
 
 In addition to these, other variables may be defined within the
 configuration file (see below).
+But you should never attempt to define any of these automatically-defined variables in your configuration files, because
+any such definitions will be overwritten by the definitions above.
 
 If a variable is not defined either automatically or explicitly in the configuration,
 then the Target's attributes are inspected. If an attribute is found with the same
@@ -205,6 +207,27 @@ and the automatically-defined DOY (the day of the year of the data request).
 
 Note that circular definitions of variables is not permitted. You cannot define "FOO" with an expression involving "BAR" 
 and then define "BAR" with an expression involving "FOO".
+
+The Catalog also permits defining Dimensions, to describe the dimensions of the data.
+A Dimension definition line begins with an identifier, followed by a tilde ("~") character.
+This is foillowed by several fields separated by semicolons (";"). The first field is
+the name of the physical quantity used as the dimension. This is typically not one of the defined
+Quantities in the Catalog, but it might be. More often, it is a quantity such as longitude, latitude, or pressure
+(where the data set uses pressure as its vertical coordinate and consequently does not provide
+an explicit pressure product). The next field after the quantity name is the quantity units.
+After that is a code to specify how the values of the dimension are given: "LDN" (Low-Delta-Number) means
+that the numeric values that follow give the low or starting vlaue, the delta between successive values, and the number of values.
+"LHN" (Low-High-Number) means that the values the follow are the starting vlaue, the ending value, and the number of values.
+"V" means that all of the values are given explicitly.
+The final field in the line is a comma-separated list of floating-point numbers.
+
+Note that variable references cannot be used in Dimension definitions.
+
+One way to use Dimensions is to set up attributes correspondin to, say, longitude, latitude,
+and the vertical. Then each Target definition could have a Dimension name as its respective
+attribute value. 
+
+
 
 
 
@@ -411,7 +434,20 @@ for a configuration line is given by:
         
         <binaryOperator> = "+" | "-" | "*" | "/" | "%" | "==" | "!=" | ">=" | ">" | "<=" | "<" | "&&" | "||";
         
+        <DimensionDef> = <dimensionID>, { <whitespace> }, "~", { <whitespace> }, 
+                          <quantity>, { <whitespace> }, ";", { <whitespace> }, 
+                          <units>, { <whitespace> }, ";", { <whitespace> }, 
+                          [ "LDN" | "LHN" | "V" ],  { <whitespace> }, ";", 
+                          { <whitespace> },<value> { <whitespace> }, { ",", { <whitespace> }, <value>{ <whitespace> } }
         
+        <dimensionID> = <identifier>;
+        
+        <quantity> =  <noSemicolonChar>, { <noSemicolonChar> };
+        
+        <units> = <noSemicolonChar>, { <noSemicolonChar> };
+        
+        <value> = <float>;
+
 \endcode          
 
 
@@ -595,7 +631,7 @@ class Catalog {
            */    
            bool isLiteral( std::string& str );
            
-           /// generates a string that correspsonds the the VarVal's value.
+           /// generates a string that corresponds the the VarVal's value.
            /*! This methid takes the value of the VarVal and prints it to a string.
                The VarVal must be a literal, andit must have a valid eval value.
                (Conversion from the nominal value is not done automatically.)
@@ -1096,6 +1132,151 @@ class Catalog {
              
       };
 
+
+      /// \brief hold a dimension
+      /*! A Dimension hold the specifications for a spatial dimension of gridded data.
+          
+      */
+      class Dimension {
+      
+          public:
+           
+              /// the name of the dimension
+              std::string name;
+              /// the physical quantity represented by this dimension
+              std::string quant;
+              /// the units of the dimension
+              std::string units;
+              /*! specifies how the dimensional values are specified:
+                  - 0 = uninitialzied
+                  - 1 = values are explicitly given and stored in values
+                  - 2 = start, delta, and n are specified
+                  - 3 = start, end, and n are specified
+              */
+              int mode;
+              /// the starting value of a set of regularly-spaced dimensional values
+              float start;
+              /// the ending value of a set of regularly-spaced dimensional values
+              float end;
+              /// the difference between successive values of a set of regularly-spaced dimensional values
+              float delta;
+              /// the number of successive values of a set of regularly-spaced dimensional values
+              size_t n;
+              /// contains the values of an explicitly-defined set of dimensional values
+              std::vector<float> vals;
+              
+              /// the constructor
+              Dimension();
+              
+              /// sets the start, number of values, and the delta between values
+              /*! This method sets the dimension by specifiying
+                  the starting value, the number of values, and the delta between values
+                  
+                  \param strt the starting value
+                  \param num the number of values
+                  \param delt the delta between successive values
+              
+              */    
+              void set( float strt, size_t num, float delt);
+              
+              /// sets the start, the end, and the number of values
+              /*! This method sets the dimension by specifiying
+                  the starting value, the ending value, and the numkber of values
+                  
+                  \param strt the starting value
+                  \param fin the ending value
+                  \param num the number of values
+              
+              */    
+              void set( float strt, float fin, size_t num);
+
+              /// sets the values explicitly
+              /*! This method sets the dimension by specifiying
+                  them all.
+                  
+                  \param v a reference to a vector of values
+              
+              */    
+              void set( std::vector<float>& v );
+              
+              /// returns the values of the dimension
+              /*! This methoid returns a vector of dimensional values
+                  computed if necessary from the start, end, n, and/or delta.
+                  
+                  \return a pointer to a vector of floats containing the gridpoint values of the dimension.
+                          It is hte responsibility of the calling routine to delete this 
+                          vector once it is no longer needed.
+              */
+              std::vector<float>* values();
+
+             /// diagnostic dump of the Dimension
+             /*! This method writes the contents of the Dimensionj to std::cerr
+                 in a human-readable text format. 
+                 
+                 \param indent the number of spaces to indent each line of output.
+                        This allows the Dimension dump to be nested within of other objects' dumps.
+             */
+             void dump( int indent=0 ) const;
+              
+      }; 
+      
+      
+      /// The collection of Dimensions
+      /*! The DimensionSet class manages the Dimensions of a Catalog.
+          This makes it possible to easily add Dimensions, retrieve them, and 
+          query for their existence.
+      */
+      class DimensionSet {
+          public:
+          
+             /// defines a new Dimension in the DimensionSet
+             /*! This method adds a new Dimension to the Dimensionset.
+             
+                 \param dim a pointer to the new Dimension. 
+             
+             */
+             void define( const Dimension* dim );
+
+             /// returns whether a given Dimension exists
+             /*! This method is used for query the DimensionSet to see whather a Dimension
+                 with a given name exists within.
+                 
+                 \param name the name of the Dimension whose existence is to be determined
+                 \return true if the Dimension is defined in this DimensionSet, false otherwise
+             */    
+             bool exists( const std::string& name ) const;
+
+             /// retrives a named Dimension
+             /*! This method retrieves a Dimension from the DimensionSet.
+             
+                 \param name the name of the Dimension to be retrievd
+                 \return a pointer to the Dimension, or NULLPTR if no Dimension by that name is defined.
+                 
+             */
+             Dimension* getDimension( const std::string& name );
+
+             /// destroys all Dimensions
+             /*! This method clears all definitoins of all Dimensions in the DimensionSet.
+             */
+             void clear();
+          
+             /// diagnostic dump of the DimensionSet
+             /*! This method writes the contents of the DimensionSet to std::cerr
+                 in a human-readable text format. 
+                 
+                 \param indent the number of spaces to indent each line of output.
+                        This allows the DimensionSet dump to be nested within of other objects' dumps.
+             */
+             void dump( int indent=0 ) const;
+
+         private:
+         
+             /// the collection of Dimensions
+             std::map< std::string, Dimension > dims;
+      };
+
+      
+
       /// \brief holds a time interval
       /*! A TimeInterval holds an arbitrary time interval
           that is split up into years, months, days, and seconds.
@@ -1118,6 +1299,8 @@ class Catalog {
               int days;
               /// the number of seconds
               double secs;
+              /// true if all timestamps are in one URL
+              bool allHere;
               
               /// the constructor
               TimeInterval();
@@ -1151,9 +1334,9 @@ class Catalog {
               size_t parse( const std::string& interval );
               
               
-              /// Parses a string, extracting the parts
+              /// Parses a time period string, extracting the parts
               /*! This method parsea an ISO time period string, populating
-                  its members fomr the parts of the string.
+                  its members from the parts of the string.
               
                   The time period string
                   starts with a 'P', 
@@ -1265,7 +1448,7 @@ class Catalog {
              /*! This method adds a new Target to the Targetset.
              
                  \param tgt a pointer to the new Target. Once handed to the TargetSet, the TargetSet assumes all responsibility 
-                        for managing the Target. In particular, the calling routine should not delete the Target pointed to be
+                        for managing the Target. In particular, the calling routine should not delete the Target pointed to by
                         tgt.
              
              */
@@ -1281,7 +1464,7 @@ class Catalog {
              bool exists( const std::string& name ) const;
 
              /// retrives a named Target
-             /*! This method retrieves a Target form the TargetSet.
+             /*! This method retrieves a Target from the TargetSet.
              
                  \param name the name of the Target to be retrievd
                  \return a pointer to the Target, or NULLPTR if no Target by that name is defined.
@@ -1871,7 +2054,7 @@ class Catalog {
 
 
 
-              /// the number of time snapshots in the pre/post URL
+              /// the number of time snapshots in the pre URL
               int tN;
 
 
@@ -1936,6 +2119,9 @@ class Catalog {
 
    /// \brief multiply-defined target error
    class badMultiplyDefinedTarget {};
+
+   /// \brief multiply-defined dimension error
+   class badMultiplyDefinedDimension {};
 
    /// \brief multiply-defined quanity error
    class badMultiplyDefinedQuantity {};
@@ -2163,7 +2349,7 @@ class Catalog {
 
       /// finds a quantity name, given a standard name
       /*! This method looks up the name of a quantity in a data set that
-          corresponds to a stamdard name. for example, if CF naming conventions
+          corresponds to a standard name. for example, if CF naming conventions
           are the standard being used, then a query for "air_temperature"
           might return a quantity name such as "T".
           
@@ -2252,6 +2438,19 @@ class Catalog {
       bool variableValue( const std::string& name, std::string& output );
 
 
+      /// returns dimensional values
+      /*! This method looks up a dimension and returns information about it.
+      
+          \param name a referecne ot a string that contains the name of the desired dimension
+          \param quantity a reference to a string that contains the name of the physical quantity (e.g. "lon") of the dimension
+          \param units the units of the dimensional values. "" if the dimension is not defined.
+          \param values a points to a pointer to a vector of floats contaiing the set of values along the dimension.
+                        *values is set to NULLPTR if the dimension is not defined.
+                        If values is itself set to NULLPTR on input, then no values will be returned.
+           \return true if the dimension exists, falseotherwise
+       */
+       bool dimensionValues( const std::string& name, std::string& quantity, std::string& units, std::vector<float>** values );    
+
       /// converts a date string to a catalog numeric time
       /*! This method concerts a date string to the numeric time (in days since 1899-12-31T00:00:00) used by Catalog.
       
@@ -2287,6 +2486,9 @@ class Catalog {
       
       /// the set of targets
       TargetSet targetset;
+      
+      /// the set of dimensions
+      DimensionSet dimset;
       
       /// ppinter to a target being evaluated
       Target* currentTarget;
@@ -2375,13 +2577,32 @@ class Catalog {
       */
       void parseAttrNames( const char* str, size_t& idx );
 
+      /// parse a dimensional specification
+      /*! This method parses an array of characters as a dimensional definition line.
+      
+          A dimension definition line consust of a dimension identifier, wolloed by "~",
+          followed by a string contaiing the units of the dimensional vlaues,
+          followed by ";", followed by a format specfifier (eithe r"LDN", "LHN", or "V"),
+          followed by ":", followe dby a comma-separated list of floating point values.
+      
+          \param str the character array being scanned.
+          \param idx the index into the character array. On return, this
+                     is the index of the next character that no longer fits the dimension-definition format,
+                     or of the terminating null.
+          \return a pointer to a new Dimension object. If an error was encountered parsing the string,
+                  then NULLPTR is returned. Note that it is the responsibility of the calling routine to delete
+                  the new dimension once it is no longer needed. 
+       */
+       Dimension* parseDimDef( const char* str, size_t& idx );
+
       /// parse a variable value (and test)
-      /*! This method parsea sn array of rcharacters as a Variable defintion line.
+      /*! This method parsea sn array of characters as a Variable defintion line.
           
           A Variable definitions line begins with a Variable identifier, followe dby a "=",
           optionally followed by a test expression and a "?", followed by 
           a value expression.
           
+          \param var a pointer to the Var object to be pupulated by the string's specifications
           \param str the character array being scanned.
           \param idx the index into the character array. On return, this
                      is the index of the next character that no longer fits the variable-definition format,
@@ -2813,6 +3034,17 @@ class Catalog {
           \return true if the reconciliation succeeded, false otherwise
      */     
      bool reconcileVals( VarVal* v1, VarVal* v2 ); 
+     
+     /// find the time after an base time is advance by a TimeInterval
+     /*! This method uses a TimeInterval object to advance a base time
+         to determine a future time.
+         
+         \param base the starting time
+         \param tinc a reference to the TimeInterval object that specifes how far in the future to advance
+         \return the new time
+     */    
+     double advanceTime( double base, TimeInterval& tinc );
+     
              
      /// \brief finds two times that bracket a given time
      /*! This method finds two dsta snapshot times that bracket a given time
@@ -2824,8 +3056,9 @@ class Catalog {
          \param post_t a reference to the data time snapshot that follows the desired time
          \param post_url_t a reference to the data starting time of the URL or file that follows the desired time
          \param post_n a reference to the index of the time snapshot within the post_url_t URL or file, that immediately follows the desired time
+         \param ntot a reference to the number of time snapshots within the "pre" URL
      */
-     void bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n, double& post_t, double& post_url_t, int& post_n );
+     void bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n, double& post_t, double& post_url_t, int& post_n, int& ntot );
 
      /// \brief filters candidate data sources according how how well the desired attributes match the actual
      /*! This method inspects a vector of Datasource object, re-ordering them or deleting them
