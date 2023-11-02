@@ -27,6 +27,7 @@ MetMyGEOS::MetMyGEOS() : MetGridLatLonData()
     ready = false;
     is_open = false;
     fillval = 1.0e15;
+    max_data = 9000000;
     
     reset();   
 
@@ -37,6 +38,7 @@ MetMyGEOS::MetMyGEOS( std::string& date ) : MetGridLatLonData()
 
     ready = false;
     is_open = false;
+    max_data = 9000000;
     
     reset();
    
@@ -51,7 +53,9 @@ MetMyGEOS::MetMyGEOS( std::string& date ) : MetGridLatLonData()
 // destructor
 MetMyGEOS::~MetMyGEOS() 
 {
-    
+    if ( is_open ) {
+       Source_close();
+    }
 }
 
 // copy constructor
@@ -63,10 +67,25 @@ MetMyGEOS::MetMyGEOS( const MetMyGEOS&  src) : MetGridLatLonData(src)
      basetime = src.basetime;
      catTimeOffset = src.catTimeOffset;
 
-     altitude_name = src.altitude_name;
-     pressure_name = src.pressure_name;
-     palt_name = src.palt_name;
-     pottemp_name = src.pottemp_name;
+     timeName = src.timeName;
+     lonName = src.lonName;
+     latName = src.latName;
+     levelName = src.levelName;
+
+     altitude_name    = src.altitude_name;
+     pressure_name    = src.pressure_name;
+     palt_name        = src.palt_name;
+     pottemp_name     = src.pottemp_name;
+     modellevel_name = src.modellevel_name;
+     modeledge_name = src.modeledge_name;
+
+     altDot_name      = src.altDot_name;
+     pressureDot_name = src.pressureDot_name;
+     paltDot_name     = src.paltDot_name;
+     thetaDot_name    = src.thetaDot_name;
+
+     temperature_name = src.temperature_name;
+     temperatureDot_name = src.temperatureDot_name;
 
      verticalWinds = src.verticalWinds;
      legalDims = src.legalDims;
@@ -78,6 +97,7 @@ MetMyGEOS::MetMyGEOS( const MetMyGEOS&  src) : MetGridLatLonData(src)
      openwait = src.openwait;
      ntries = src.ntries;
      time_zero = src.time_zero;
+     max_data = src.max_data;
 }    
 
 void MetMyGEOS::assign(const MetMyGEOS& src)
@@ -91,10 +111,25 @@ void MetMyGEOS::assign(const MetMyGEOS& src)
      basetime = src.basetime;
      catTimeOffset = src.catTimeOffset;
 
+     lonName = src.lonName;
+     latName = src.latName;
+     levelName = src.levelName;
+     timeName = src.timeName;
+
      altitude_name = src.altitude_name;
      pressure_name = src.pressure_name;
      palt_name = src.palt_name;
      pottemp_name = src.pottemp_name;
+     modellevel_name = src.modellevel_name;
+     modeledge_name = src.modeledge_name;
+
+     altDot_name      = src.altDot_name;
+     pressureDot_name = src.pressureDot_name;
+     paltDot_name     = src.paltDot_name;
+     thetaDot_name    = src.thetaDot_name;
+
+     temperature_name = src.temperature_name;
+     temperatureDot_name = src.temperatureDot_name;
 
      verticalWinds = src.verticalWinds;
      legalDims = src.legalDims;
@@ -106,6 +141,7 @@ void MetMyGEOS::assign(const MetMyGEOS& src)
      openwait = src.openwait;
      ntries = src.ntries;
      time_zero = src.time_zero;
+     max_data = src.max_data;
 }    
 
 /// assignment operator
@@ -170,6 +206,50 @@ void MetMyGEOS::setOption( const std::string &name, const std::string &value )
         metTag( value );
      } else if ( name == "ModelRun" ) {
         modelRun( value );
+     } else if ( name == "LongitudeName" ) {
+        lonName = value;
+        load_legalDims();
+     } else if ( name == "LatitudeName" ) {
+        latName = value;
+        load_legalDims();
+     } else if ( name == "VerticalName" ) {
+        levelName = value;
+        load_legalDims();
+     } else if ( name == "TimeName" ) {
+        timeName = value;
+        load_legalDims();
+     } else if ( name == "PressureName" ) {
+        pressure_name = value;
+        load_vertWindInfo();
+     } else if ( name == "AltitudeName" ) {
+        altitude_name = value;
+        load_vertWindInfo();
+     } else if ( name == "PressureAltitudeName" ) {
+        palt_name = value;
+        load_vertWindInfo();
+     } else if ( name == "ModelLevelName" ) {
+        modellevel_name = value;
+     } else if ( name == "ModelEdgeName" ) {
+        modeledge_name = value;
+     } else if ( name == "PotentialTemperatureName" ) {
+        pottemp_name = value;
+        load_vertWindInfo();
+     } else if ( name == "PressureDotName" ) {
+        pressureDot_name = value;
+        load_vertWindInfo();
+     } else if ( name == "AltitudeDotName" ) {
+        altDot_name = value;
+        load_vertWindInfo();
+     } else if ( name == "PressureAltitudeDotName" ) {
+        paltDot_name = value;
+        load_vertWindInfo();
+     } else if ( name == "PotentialTemperatureDotName" ) {
+        thetaDot_name = value;
+        load_vertWindInfo();
+     } else if ( name == "TemperatureName" ) {
+        temperature_name = value;
+     } else if ( name == "TemperatureDotName" ) {
+        temperatureDot_name = value;
      }
 }
 
@@ -198,6 +278,8 @@ void MetMyGEOS::setOption( const std::string &name, double value )
 {
 }
 
+
+
 bool MetMyGEOS::getOption( const std::string &name, std::string &value )
 {
    bool result;
@@ -211,6 +293,43 @@ bool MetMyGEOS::getOption( const std::string &name, std::string &value )
    } else if ( name == "ModelRun" ) {
       value = modelrun;
       result = true;
+      modelRun( value );
+   } else if ( name == "LongitudeName" ) {
+      value = lonName;
+      result = true;
+   } else if ( name == "LatitudeName" ) {
+      value = latName;
+      result = true;
+   } else if ( name == "VerticalName" ) {
+      value = levelName;
+      result = true;
+   } else if ( name == "TimeName" ) {
+      value = timeName;
+      result = true;
+   } else if ( name == "PressureName" ) {
+      value = pressure_name;
+   } else if ( name == "AltitudeName" ) {
+      value = altitude_name;
+   } else if ( name == "PressureAltitudeName" ) {
+      value = palt_name;
+   } else if ( name == "ModelLevelName" ) {
+      value = modellevel_name;
+   } else if ( name == "ModelEdgeName" ) {
+      value = modeledge_name;
+   } else if ( name == "PotentialTemperatureName" ) {
+      value = pottemp_name;
+   } else if ( name == "PressureDotName" ) {
+      value = pressureDot_name;
+   } else if ( name == "AltitudeDotName" ) {
+      value = altDot_name;
+   } else if ( name == "PressureAltitudeDotName" ) {
+      value = paltDot_name;
+   } else if ( name == "PotentialTemperatureDotName" ) {
+      value = thetaDot_name;
+   } else if ( name == "TemperatureName" ) {
+      value = temperature_name;
+   } else if ( name == "TemperatureDotName" ) {
+      value = temperatureDot_name;
    }
    return result;
 }
@@ -286,11 +405,11 @@ void MetMyGEOS::set_vertical( const std::string quantity, const std::string unit
 
      if ( my_quant == altitude_name || my_quant == "altitude" ) {
         my_units = "km";
-        my_wind_vert_name = "W";
+        my_wind_vert_name = altDot_name;
         wfctr = 0.001; // w gets scaled from m/s to km/s
      } else if ( my_quant == pressure_name || my_quant == "air_pressure" ) {
         my_units = "hPa";
-        my_wind_vert_name = "OMEGA";;
+        my_wind_vert_name = pressureDot_name;;
         wfctr = 0.01; // omega get scaled from Pa/s to hPa/s
      } else if ( my_quant == pottemp_name || my_quant == "air_potential_temperature" ) {
         my_units = "K";
@@ -298,7 +417,7 @@ void MetMyGEOS::set_vertical( const std::string quantity, const std::string unit
         wfctr = 1.0;
      } else if ( my_quant == palt_name || my_quant == "pressure_altitude" ) {
         my_units = "km";
-        my_wind_vert_name = "PAltDot";;
+        my_wind_vert_name = paltDot_name;;
         wfctr = 0.001; // w gets scaled from m/s to km/s
      } else {
         throw(badVerticalCoord());
@@ -344,7 +463,7 @@ bool MetMyGEOS::legalQuantity( const std::string quantity )
        || quantity == pottemp_name
        || quantity == palt_name
        || quantity == altitude_name 
-       || quantity == "Model-Levels" ) {
+       || quantity == modellevel_name ) {
        
        // these quantities are legal by definition,
        // since they are built-in 
@@ -471,8 +590,9 @@ GridLatLonField3D* MetMyGEOS::new_directGrid3D( const std::string quantity, cons
        // with default settings (except for caching), and we use that to
        // read in our component quantities.
        defaultThis = myNew();
+
        // set in the above call: defaultThis->diskcaching = this->diskcaching;
-       component_1 = defaultThis->new_directGrid3D("T", time);
+       component_1 = defaultThis->new_directGrid3D(temperature_name, time);
        component_2 = defaultThis->new_directGrid3D(pressure_name, time);
        tmp1 = dynamic_cast<GridLatLonField3D*>(gettheta.calc( *component_1, *component_2 ));
        *grid3d = *tmp1;
@@ -521,7 +641,7 @@ GridLatLonField3D* MetMyGEOS::new_directGrid3D( const std::string quantity, cons
           But we ought to use the OMEGA field in the calculation
           as well.
        */    
-       component_1 = defaultThis->new_directGrid3D("DTDTTOT", time);
+       component_1 = defaultThis->new_directGrid3D(temperatureDot_name, time);
        component_2 = defaultThis->new_directGrid3D(pottemp_name, time);
        if ( ! component_2->compatible( *component_1 ) ) {
           // make sure the two fields are on the same spatial grid.
@@ -539,11 +659,11 @@ GridLatLonField3D* MetMyGEOS::new_directGrid3D( const std::string quantity, cons
        defaultThis->remove( component_1 );
        delete defaultThis;
     
-    } else if ( quantity == "W" || quantity == "upward_air_velocity" ) {
+    } else if ( quantity == altDot_name || quantity == "upward_air_velocity" ) {
 
        defaultThis = myNew();
        // set in the above call: defaultThis->diskcaching = this->diskcaching;
-       component_1 = defaultThis->new_directGrid3D("OMEGA", time);
+       component_1 = defaultThis->new_directGrid3D(pressureDot_name, time);
        component_2 = defaultThis->new_directGrid3D(pressure_name, time);
        tmp1 = dynamic_cast<GridLatLonField3D*>(getpaltdot.calc( *component_1, *component_2 ));
        *grid3d = *tmp1;
@@ -562,7 +682,7 @@ GridLatLonField3D* MetMyGEOS::new_directGrid3D( const std::string quantity, cons
        defaultThis->remove( component_1 );
        delete defaultThis;    
     
-    } else if ( quantity == "Model-Levels" ) {
+    } else if ( quantity == modellevel_name ) {
     
           // model data is not to be found on any data surfaces
           //throw (badDataNotFound());
@@ -641,7 +761,7 @@ GridLatLonFieldSfc* MetMyGEOS::new_directGridSfc( const std::string quantity, co
        gridsfc->set_surface(sfcname);
     
        // get the 3D temperatures on our desired vertical coordinate
-       grid3D = new_directGrid3D("t", time); // get temperature on altitude
+       grid3D = new_directGrid3D(temperature_name, time); // get temperature on altitude
        // compute tropopause from temp on the desired vertical coordinate
        desiredsfc = new GridLatLonFieldSfc();
        desiredsfc->setPgroup( my_pgroup, my_metproc );
@@ -902,11 +1022,11 @@ std::vector<real>* MetMyGEOS::vcoords( const std::string *coordSys ) const
        result->push_back( 57.1530   );
        result->push_back( 64.9467   );
     
-    } else if ( *vc == "Model-Levels" ) {
+    } else if ( *vc == modellevel_name ) {
        for ( int i=0; i<72; i++ ) {
           result->push_back( i );  
        }
-    } else if ( *vc == "Model-Edges" ) {
+    } else if ( *vc == modeledge_name ) {
        for ( int i=0; i<73; i++ ) {
           result->push_back( i );  
        }
@@ -1174,6 +1294,10 @@ bool MetMyGEOS::bracket( const std::string &quantity, const std::string &time, s
         *t2 = ds[idx].t1;
     
         sametime = ( *t1 == time );
+    } else {
+        std::cerr << "Unknown quantity " << (*testquants)[0] 
+        << " for time " << time << std::endl;
+        throw(badDataNotFound());
     }
 
 
@@ -1215,18 +1339,18 @@ int MetMyGEOS::setup(  const std::string quantity, const double time )
        // on the fly from temperatures.  So the quantity that
        // we really need to ask for is temperature and pressure
        
-       return prep( "T", caltime );
+       return prep( temperature_name, caltime );
 
     } else if ( quantity == verticalWinds[pottemp_name].name || quantity == "net_heating_rate" ) {
        // we want theta, but we will be calculating theta 
        // on the fly from temperatures.  So the quantity that
        // we really need to ask for is temperature and pressure
        
-       return prep( "DTDTTOT", caltime ) & prep( "T", caltime ) ;
+       return prep( temperatureDot_name, caltime ) & prep( temperature_name, caltime ) ;
 
     } else if ( quantity == verticalWinds[altitude_name].name || quantity == "upward_air_velocity" ) {
        
-       return prep( "OMEGA", caltime );
+       return prep( pressureDot_name, caltime );
 
     } else if (quantity == pressure_name || quantity == "air_pressure" ) {
 
@@ -1263,18 +1387,18 @@ int MetMyGEOS::setup(  const std::string quantity, const std::string &time )
        // on the fly from temperatures.  So the quantity that
        // we really need to ask for is temperature and pressure
        
-       return prep( "T", caltime );
+       return prep( temperature_name, caltime );
 
     } else if ( quantity == verticalWinds[pottemp_name].name || quantity == "net_heating_rate" ) {
        // we want theta, but we will be calculating theta 
        // on the fly from temperatures.  So the quantity that
        // we really need to ask for is temperature and pressure
        
-       return prep( "DTDTTOT", caltime ) & prep( "T", caltime ) ;
+       return prep( temperatureDot_name, caltime ) & prep( temperature_name, caltime ) ;
 
     } else if ( quantity == verticalWinds[altitude_name].name || quantity == "upward_air_velocity" ) {
        
-       return prep( "OMEGA", caltime );
+       return prep( pressureDot_name, caltime );
 
     } else if (quantity == pressure_name || quantity == "air_pressure" ) {
 
@@ -1315,7 +1439,7 @@ int MetMyGEOS::prep(  const std::string quantity, const std::string& time )
     // do we need to find the basic attributes of this quantity?
     if ( dsInit( quantity, time ) ) {
           // get the file start time (string form)
-          fileTime = ds[test_dsrc].t0;
+          fileTime = ds[test_dsrc].preStart;
           // get the file start time (catalog numeric form)
           tbase = ds[test_dsrc].preStart_t; 
           // Note: this is a (pretty good) guess at what the zero-base time in the file
@@ -1427,6 +1551,80 @@ GridLatLonFieldSfc* MetMyGEOS::GetSfc( const std::string quantity, const std::st
 
 /////////////////////////////////////////////
 
+
+void MetMyGEOS::load_legalDims()
+{
+    legalDims.clear();
+    legalDims.push_back(lonName);
+    legalDims.push_back(latName);
+    legalDims.push_back(levelName);
+    legalDims.push_back(timeName);
+
+}
+
+void MetMyGEOS::load_vertWindInfo()
+{
+    // vertical wind
+    Catalog::DataSource vw;
+    
+    verticalWinds.clear();
+    
+    // setup vertical wind descriptions
+    vw.name = altDot_name;
+    vw.units = "m/s";
+    vw.scale = 1.0;
+    vw.offset = 0.0;
+    verticalWinds[ altitude_name ] = vw;
+    
+    vw.name = pressureDot_name;
+    vw.units = "Pa/s";
+    vw.scale = 1.0;
+    vw.offset = 0.0;
+    verticalWinds[ pressure_name ] = vw;
+    
+    vw.name = thetaDot_name;
+    vw.units = "K/s";
+    vw.scale = 1.0;
+    vw.offset = 0.0;
+    verticalWinds[ pottemp_name ] = vw;
+
+    vw.name = paltDot_name;
+    vw.units = "m/s";
+    vw.scale = 1.0;
+    vw.offset = 0.0;
+    verticalWinds[ pottemp_name ] = vw;
+
+}
+
+void MetMyGEOS::refresh_OTF()
+{
+    gettheta.set_quantity(pottemp_name);
+    gettheta.setTemperatureName(temperature_name);
+    gettheta.setPressureName(pressure_name);
+    
+    getpress.set_quantity(pressure_name);
+    getpress.setTemperatureName(temperature_name);
+    getpress.setPotentialTemperatureName(pottemp_name);
+    getpress.setPressureThicknessName("DELP");
+    getpress.setDensityName("Density");
+
+    getthetadot.set_quantity((vertwind_quants[ pottemp_name ]).quantity);
+    getthetadot.setTemperatureDotName(temperatureDot_name); // note: this is not present in all data streams on the server
+    getthetadot.setTemperatureName(temperature_name);
+    getthetadot.setPressureName(pressure_name);
+    getthetadot.setPotentialTemperatureName(pottemp_name);
+    getthetadot.setPressureDotName((vertwind_quants[ pressure_name ]).quantity);
+    
+    getpalt.set_quantity(palt_name);
+    getpalt.setPressureName( pressure_name );
+
+    getpaltdot.set_quantity((vertwind_quants[ palt_name ]).quantity);
+    getpaltdot.setPressureAltitudeName(palt_name);
+    getpaltdot.setPressureName(pressure_name);
+    getpaltdot.setPressureDotName((vertwind_quants[ pressure_name ]).quantity);
+
+}
+
 void MetMyGEOS::init()
 {
     std::string cfgFile;
@@ -1440,34 +1638,87 @@ void MetMyGEOS::init()
        
        if ( cfgFile != "" ) {
           catlog.load( cfgFile );
+
+          if ( catlog.variableValue( "name_of_longitude", qname ) ) {
+             lonName = qname;
+          }
+          if ( catlog.variableValue( "name_of_latitude", qname ) ) {
+             latName = qname;
+          }
+          if ( catlog.variableValue( "name_of_time", qname ) ) {
+             timeName = qname;
+          }
+          if ( catlog.variableValue( "name_of_vertical", qname ) ) {
+             levelName = qname;
+          }
+          if ( catlog.variableValue( "name_of_altitude", qname ) ) {
+             altitude_name = qname;
+          }
+          if ( catlog.variableValue( "name_of_pressure", qname ) ) {
+             pressure_name = qname;
+          }
+          if ( catlog.variableValue( "name_of_pressurealtitude", qname ) ) {
+             palt_name = qname;
+          }
+          if ( catlog.variableValue( "name_of_potentialtemperature", qname ) ) {
+             pottemp_name = qname;
+          }
+          if ( catlog.variableValue( "name_of_modellevel", qname ) ) {
+             modellevel_name = qname;
+          }
+          if ( catlog.variableValue( "name_of_modeledge", qname ) ) {
+             modeledge_name = qname;
+          }
+          if ( catlog.variableValue( "name_of_uwind", qname ) ) {
+             wind_ew_name = qname;
+          }
+          if ( catlog.variableValue( "name_of_vwind", qname ) ) {
+             wind_ns_name = qname;
+          }
+          if ( catlog.variableValue( "name_of_temperature", qname ) ) {
+             temperature_name = qname;
+          }
+          if ( catlog.variableValue( "name_of_altitudeDot", qname ) ) {
+             altDot_name = qname;
+          }
+          if ( catlog.variableValue( "name_of_pressureDot", qname ) ) {
+             pressureDot_name = qname;
+          }
+          if ( catlog.variableValue( "name_of_pressurealtitudeDot", qname ) ) {
+             paltDot_name = qname;
+          }
+          if ( catlog.variableValue( "name_of_potentialtemperatureDot", qname ) ) {
+             thetaDot_name = qname;
+          }
+          if ( catlog.variableValue( "name_of_temperatureDot", qname ) ) {
+             temperatureDot_name = qname;
+          }
+          
+          // for backwards compatibility...
           
           if ( catlog.variableValue( "pressure_name", qname ) ) {
-             verticalWinds[qname] = verticalWinds[pressure_name];
              pressure_name = qname;
           }
           if ( catlog.variableValue( "pottemp_name", qname ) ) {
-             verticalWinds[qname] = verticalWinds[pottemp_name];
              pottemp_name = qname;
           }
           if ( catlog.variableValue( "palt_name", qname ) ) {
-             verticalWinds[qname] = verticalWinds[palt_name];
              palt_name = qname;
           }
           if ( catlog.variableValue( "alt_name", qname ) ) {
-             verticalWinds[qname] = verticalWinds[altitude_name];
              altitude_name = qname;
           }
           if ( catlog.variableValue( "pressure_w_name", qname ) ) {
-             verticalWinds[pressure_name].name = qname;
+             pressureDot_name = qname;
           }
           if ( catlog.variableValue( "pottemp_w_name", qname ) ) {
-             verticalWinds[pottemp_name].name = qname;
+             thetaDot_name = qname;
           }
           if ( catlog.variableValue( "palt_w_name", qname ) ) {
-             verticalWinds[palt_name].name = qname;
+             paltDot_name = qname;
           }
           if ( catlog.variableValue( "alt_w_name", qname ) ) {
-             verticalWinds[altitude_name].name = qname;
+             altDot_name = qname;
           }
           if ( catlog.variableValue( "wind_ew_name", qname ) ) {
              wind_ew_name = qname;
@@ -1475,6 +1726,12 @@ void MetMyGEOS::init()
           if ( catlog.variableValue( "wind_ns_name", qname ) ) {
              wind_ns_name = qname;
           }
+          
+
+          load_legalDims();
+          load_vertWindInfo();
+          refresh_OTF();
+
  
           
           catlog.timeSpacing( override_tspace, override_tbase );
@@ -1494,71 +1751,27 @@ void MetMyGEOS::init()
 
 void MetMyGEOS::setup_vars()
 {
-    // vertical wind
-    Catalog::DataSource vw;
     
     // these are legal quantities for input coordinates
-    legalDims.push_back("lon");
-    legalDims.push_back("lat");
-    legalDims.push_back("lev");
-    legalDims.push_back("time");
+    load_legalDims();
 
     // set names of possible vertical coorindate quantities for this data set
     altitude_name = "Z";
+    altDot_name = "W";
     pressure_name = "P";
+    pressureDot_name = "OMEGA";
     palt_name = "PAlt";
+    paltDot_name = "PAltDot";
     pottemp_name = "Theta";
-    
-    // setup vertical wind descriptions
-    vw.name = "W";
-    vw.units = "m/s";
-    vw.scale = 1.0;
-    vw.offset = 0.0;
-    verticalWinds[ altitude_name ] = vw;
-    
-    vw.name = "OMEGA";
-    vw.units = "Pa/s";
-    vw.scale = 1.0;
-    vw.offset = 0.0;
-    verticalWinds[ pressure_name ] = vw;
-    
-    vw.name = "ThetaDot";
-    vw.units = "K/s";
-    vw.scale = 1.0;
-    vw.offset = 0.0;
-    verticalWinds[ pottemp_name ] = vw;
-
-    vw.name = "PAltDot";
-    vw.units = "m/s";
-    vw.scale = 1.0;
-    vw.offset = 0.0;
-    verticalWinds[ pottemp_name ] = vw;
+    thetaDot_name = "ThetaDot";
+    temperature_name = "T";
+    temperatureDot_name = "DTDTTOT";
+    modellevel_name = "Model-Levels";
+    modeledge_name = "Model-Edges";
+      
+    load_vertWindInfo();
         
-    gettheta.set_quantity(pottemp_name);
-    gettheta.setTemperatureName("T");
-    gettheta.setPressureName(pressure_name);
-    
-    getpress.set_quantity(pressure_name);
-    getpress.setTemperatureName("T");
-    getpress.setPotentialTemperatureName(pottemp_name);
-    getpress.setPressureThicknessName("DELP");
-    getpress.setDensityName("Density");
-
-    getthetadot.set_quantity((vertwind_quants[ pottemp_name ]).quantity);
-    getthetadot.setTemperatureDotName("DTDTTOT"); // note: this is not present in all data streams on the server
-    getthetadot.setTemperatureName("T");
-    getthetadot.setPressureName(pressure_name);
-    getthetadot.setPotentialTemperatureName(pottemp_name);
-    getthetadot.setPressureDotName((vertwind_quants[ pressure_name ]).quantity);
-    
-    getpalt.set_quantity(palt_name);
-    getpalt.setPressureName( pressure_name );
-
-    getpaltdot.set_quantity((vertwind_quants[ palt_name ]).quantity);
-    getpaltdot.setPressureAltitudeName(palt_name);
-    getpaltdot.setPressureName(pressure_name);
-    getpaltdot.setPressureDotName((vertwind_quants[ pressure_name ]).quantity);
-    
+    refresh_OTF();    
     
 }
 
@@ -1571,6 +1784,11 @@ void MetMyGEOS::reset()
      }
      current_file = "";
      is_url = false;
+     
+     timeName = "time";
+     lonName = "lon";
+     latName = "lat";
+     levelName = "lev";
      
      // clear the catalog
      if ( ready ) {
@@ -1626,11 +1844,25 @@ MetMyGEOS* MetMyGEOS::myNew()
    dup->modelrun = this->modelrun;
    dup->catTimeOffset = this->catTimeOffset;
    dup->basetime = this->basetime;
+     
+   dup->timeName = this->timeName;
+   dup->lonName = this->lonName;
+   dup->latName = this->latName;
+   dup->levelName = this->levelName;
 
    dup->altitude_name = this->altitude_name;
    dup->pressure_name = this->pressure_name;
    dup->palt_name = this->palt_name;
    dup->pottemp_name = this->pottemp_name;
+   dup->modellevel_name = this->modellevel_name;
+
+   dup->altDot_name = this->altDot_name;
+   dup->pressureDot_name = this->pressureDot_name;
+   dup->paltDot_name = this->paltDot_name;
+   dup->thetaDot_name = this->thetaDot_name;
+   
+   dup->temperature_name = this->temperature_name;
+   dup->temperatureDot_name = this->temperatureDot_name;
 
    dup->verticalWinds = this->verticalWinds;
    dup->legalDims = this->legalDims;
@@ -1656,21 +1888,21 @@ std::vector<std::string> *MetMyGEOS::testQuantity( const std::string& quantity )
      
      if ( quantity == pottemp_name || quantity == "air_potential_temperature" ) {
         // for theta, we test for T
-        result->push_back("T");
+        result->push_back(temperature_name);
      } else if (quantity == "ThetaDot" || quantity == "net_heating_rate" ) {
         // for theta-dot (net heating rate), we test for T and DTDTTOT
-        result->push_back("T");
-        result->push_back("DTDTTOT");
-     } else if (quantity == "W" || quantity == "upward_air_velocity" ) {
-        result->push_back("OMEGA");
+        result->push_back(temperature_name);
+        result->push_back(temperatureDot_name);
+     } else if (quantity == altDot_name || quantity == "upward_air_velocity" ) {
+        result->push_back(pressureDot_name);
      } else if (quantity == pressure_name || quantity == "air_pressure" ) {
         // for pressure, we test for T
-        result->push_back("T");
+        result->push_back(temperature_name);
      } else if ( quantity == palt_name || quantity == "pressure_altitude" ) {
         // same as for pressure, above
-        result->push_back("T");
+        result->push_back(temperature_name);
      } else if (quantity == altitude_name ) {
-        result->push_back("T");
+        result->push_back(temperature_name);
      } else {
         // all else, we test for the quantity itself
         result->push_back(quantity);
@@ -1903,6 +2135,8 @@ std::string MetMyGEOS::queryVertical( int index )
     std::string result;
     bool ok;
     std::string vcode;
+    std::string vquant;
+    std::string vunits;
     
     result = "";
     
@@ -1914,6 +2148,23 @@ std::string MetMyGEOS::queryVertical( int index )
        }
        
        vcode = catlog.getAttr( ds[index], "vertCoord" );
+       if ( catlog.dimensionValues( vcode, vquant, vunits, NULLPTR ) ) {
+       
+          if ( vquant == pressure_name ) {
+             vcode = "P";
+          } else if ( vquant == altitude_name ) {
+             vcode = "z";    
+          } else if ( vquant == pottemp_name ) {
+             vcode = "H";       
+          } else if ( vquant == palt_name ) {
+             vcode = "a";       
+          } else if ( vquant == modellevel_name ) {
+             vcode = "L";       
+          } else if ( vquant == modeledge_name ) {
+             vcode = "E";          
+          }
+       }
+       
        
        //result.push_back( vcode[0] );   
        result = vcode;    
@@ -1927,6 +2178,8 @@ std::string MetMyGEOS::queryVertical( int index )
 std::string MetMyGEOS::queryHorizontal( int index )
 {
     std::string result;
+    std::string latcode;
+    std::string loncode;
     bool ok;
     
     result = "";
@@ -1938,8 +2191,13 @@ std::string MetMyGEOS::queryHorizontal( int index )
           index = test_dsrc;
        }
        
-       result = catlog.getAttr( ds[test_dsrc], "horizCoord" );
-
+       loncode = catlog.getAttr( ds[index], "lonCoord" );
+       latcode = catlog.getAttr( ds[index], "latCoord" );
+       if ( latcode != "" && loncode != "" ) {
+          result = loncode + "/" + latcode;
+       } else {
+          result = catlog.getAttr( ds[index], "horizCoord" );
+       }
     }
 
     return result;
@@ -2103,7 +2361,7 @@ void MetMyGEOS::Source_open( bool pre, int index )
                        std::cerr << "MetMyGEOS::Source_open: attempting nc_open of: <<" << url  << ">>" << std::endl;
                     }
                     
-                    std::cerr << " nc_opening url " << url << std::endl;
+                    std::cerr << " nc_opening url at " << url << std::endl;
                     err = nc_open( url.c_str(), NC_NOWRITE, &ncid);     
                     //- std::cerr << " nc_opened url " << url << std::endl;
                     
@@ -2252,7 +2510,7 @@ void MetMyGEOS::Source_close()
     if ( is_open ) {
        trial = 0;
        do {
-          //- std::cerr << "nc_closing url" << std::endl;
+          //- std::cerr << "nc_closing url " << opened_url << std::endl;
           err = nc_close(ncid);
           //- std::cerr << "nc_closed url" << std::endl;
        } while ( try_again( err, trial ) );   
@@ -2657,7 +2915,7 @@ void MetMyGEOS::Source_getattrs(const int var_id, const int nattrs, GridLatLonFi
              Source_read_attr( outval, attrname, var_id, attr_size );
 
              if ( aname == "units" ) {
-                if ( datagrid->units() != outval ) {
+                if ( datagrid->units() != "" && datagrid->units() != outval ) {
                    std::cerr << "Warning; " << datagrid->quantity() << " units are really "
                    << outval << " instead of " << datagrid->units() << std::endl;
                 }
@@ -3218,7 +3476,7 @@ void MetMyGEOS::Source_read_attr( std::vector<double> &result, char *attr_name, 
 
 
 
-void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanTriplet &span) 
+void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanTriplet &span, double* scale, double*offset) 
 {
      // name of the dimension
      const char *c_dim_name;
@@ -3261,6 +3519,8 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
      // time delta from file attributes
      double tdelta;
      
+     *scale = 1.0;
+     *offset = 0.0;
      
      // by default, the times in the file are in minutes
      // so to convert to days we do multiply by
@@ -3331,7 +3591,7 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
      // If this is time, look at the attributes, since
      // the reference starting point of the time values is
      // usually given here
-     if ( dim_name == "time" ) {
+     if ( dim_name == timeName ) {
 
         sconv.str("");
         sconv.setf(std::ios::dec, std::ios::basefield);
@@ -3488,15 +3748,23 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
            
            }
            
-           if ( refTime1 != "" ) {
-              refTime = cal2Time( refTime1 );
-           } else if ( refTime2 != "" ) {
+        } // end of attr loop
+
+
+        if ( refTime1 != "" ) {
+           refTime = cal2Time( refTime1 );
+        } else if ( refTime2 != "" ) {
+           if ( refTime2 != "1-1-1 00:0T:0.0" ) {
               refTime = cal2Time( refTime2 );
            } else {
-              refTime = 0.0;
+              // note the "T" in the above comes form inserting into char,
+              // which is where it would go in a "normal" date string
+              refTime = cal2Time("2020-01-01T00") - 43830.0 -693596.00;
            }
+        } else {
+           refTime = 0.0;
+        }
         
-        } // end of attr loop
 
      }
      
@@ -3511,12 +3779,12 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
         span.floatSpec.last = f_last;
         span.floatSpec.delta = f_delta;
         span.floatSpec.size = dim_size;
-        if ( dim_name == "time" ) {
+        if ( dim_name == timeName ) {
            span.floatSpec.first = f_first*tfactor + refTime;
            span.floatSpec.last = f_last*tfactor + refTime;
-           span.floatSpec.delta = f_delta*tfactor*24.0;  // hours
+           span.floatSpec.delta = f_delta*tfactor; // *24.0;  // hours
            if ( tdelta >= 0 ) {
-              span.floatSpec.delta = tdelta;
+              span.floatSpec.delta = tdelta/24.0; //*tfactor*24.0;
            }
         }
         break;
@@ -3529,12 +3797,12 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
         span.doubleSpec.last = d_last;
         span.doubleSpec.delta = d_delta;
         span.doubleSpec.size = dim_size;
-        if ( dim_name == "time" ) {
+        if ( dim_name == timeName ) {
            span.doubleSpec.first = d_first*tfactor + refTime;
            span.doubleSpec.last = d_last*tfactor + refTime;
-           span.doubleSpec.delta = d_delta*tfactor*24.0;  // hours
+           span.doubleSpec.delta = d_delta*tfactor; //*24.0;  // hours
            if ( tdelta >= 0 ) {
-              span.doubleSpec.delta = tdelta;
+              span.doubleSpec.delta = tdelta/24.0; //*tfactor*24.0;
            }
         }
         break;
@@ -3547,6 +3815,10 @@ void MetMyGEOS::Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanT
         span.intSpec.last = i_last;
         span.intSpec.delta = i_delta;
         span.intSpec.size = dim_size;
+
+        *offset = refTime;
+        *scale  = tfactor;
+
         break;
      default:
         std::cerr << "MetMyGEOS::Source_read_dim: Unimplemented dimensional netcdf format: " << dim_type << std::endl;
@@ -3663,81 +3935,145 @@ void MetMyGEOS::update_hgrid()
     int nlon;
     real latstrt, latend, latdelta;
     int nlat;
-    
+    size_t hsep;
+    std::string loncode, latcode;
+    std::string hquant;
+    std::string hunits;
+    std::vector<float>* hvals;
 
     ok =  dsInit();
     if ( ok ) {
        hspec = queryHorizontal();
-    
     }
     
-    if ( hspec == "MN" ) {
     
-       hgrid.code = hspec;
+    hsep = hspec.find("/");
+    if ( hsep != std::string::npos ) {
 
-       lonstrt = -180.0;
-       lonend = 179.375;
-       nlon = 576;
-       latstrt = -90.0;
-       latend = 90.0;
-       nlat = 361;
+       ok = false;
+
+       loncode = hspec.substr(0, hsep );
+       latcode = hspec.substr( hsep + 1, std::string::npos );
        
-       if ( ! hgrid.set( &lonstrt, &lonend, NULLPTR, &nlon, &latstrt, &latend, NULLPTR, &nlat ) ) {
+       if ( catlog.dimensionValues( loncode, hquant, hunits, &(hvals) ) ) {
+          if ( hvals != NULLPTR ) {
+             
+             lonstrt = (*hvals)[0];
+             nlon    =  hvals->size();
+             lonend  = (*hvals)[ nlon - 1 ];
+             
+             delete hvals;
+             if ( catlog.dimensionValues( latcode, hquant, hunits, &(hvals) ) ) {
+                if ( hvals != NULLPTR ) {
+
+                   latstrt = (*hvals)[0];
+                   nlat    =  hvals->size();
+                   latend  = (*hvals)[ nlat - 1 ];
+             
+                   delete hvals;
+                   
+                   ok = true;
+                }    
+             }
+        
+             if ( ok ) {
+                ok =  hgrid.set( &lonstrt, &lonend, NULLPTR, &nlon, &latstrt, &latend, NULLPTR, &nlat );
+             }         
+
+          }  
+       }          
+       if ( ! ok ) {
           std::cerr << "Bad horizontal grid: " << hspec << std::endl;
           throw (badCoordinateGrid());
        }
     
-    } else if ( hspec == "FN" ) {
-    
-       hgrid.code = hspec;
-
-       lonstrt = -180.0;
-       lonend = 179.6875;
-       nlon = 1152;
-       latstrt = -90.0;
-       latend = 90.0;
-       nlat = 721;
-       
-       if ( ! hgrid.set( &lonstrt, &lonend, NULLPTR, &nlon, &latstrt, &latend, NULLPTR, &nlat ) ) {
-          std::cerr << "Bad horizontal grid: " << hspec << std::endl;
-          throw (badCoordinateGrid());
-       }
-
-    } else if ( hspec == "1x1" ) {
-    
-       hgrid.code = hspec;
-
-       lonstrt = -180.0;
-       lonend = 179.0;
-       nlon = 360;
-       latstrt = -90.0;
-       latend = 90.0;
-       nlat = 181;
-       
-       if ( ! hgrid.set( &lonstrt, &lonend, NULLPTR, &nlon, &latstrt, &latend, NULLPTR, &nlat ) ) {
-          std::cerr << "Bad horizontal grid: " << hspec << std::endl;
-          throw (badCoordinateGrid());
-       }
-
-    } else if ( hspec == "0.5x0.5" ) {
-    
-       hgrid.code = hspec;
-
-       lonstrt = -180.0;
-       lonend = 179.5;
-       nlon = 720;
-       latstrt = -90.0;
-       latend = 90.0;
-       nlat = 361;
-       
-       if ( ! hgrid.set( &lonstrt, &lonend, NULLPTR, &nlon, &latstrt, &latend, NULLPTR, &nlat ) ) {
-          std::cerr << "Bad horizontal grid: " << hspec << std::endl;
-          throw (badCoordinateGrid());
-       }
-
     } else {
-        std::cerr << "Unknown coordinate grid: " << hspec << std::endl;
-        throw (badCoordinateGrid());
+    
+       if ( hspec == "MN" ) {
+    
+          hgrid.code = hspec;
+    
+          lonstrt = -180.0;
+          lonend = 179.375;
+          nlon = 576;
+          latstrt = -90.0;
+          latend = 90.0;
+          nlat = 361;
+          
+          if ( ! hgrid.set( &lonstrt, &lonend, NULLPTR, &nlon, &latstrt, &latend, NULLPTR, &nlat ) ) {
+             std::cerr << "Bad horizontal grid: " << hspec << std::endl;
+             throw (badCoordinateGrid());
+          }
+    
+       } else if ( hspec == "FN" ) {
+    
+          hgrid.code = hspec;
+    
+          lonstrt = -180.0;
+          lonend = 179.6875;
+          nlon = 1152;
+          latstrt = -90.0;
+          latend = 90.0;
+          nlat = 721;
+          
+          if ( ! hgrid.set( &lonstrt, &lonend, NULLPTR, &nlon, &latstrt, &latend, NULLPTR, &nlat ) ) {
+             std::cerr << "Bad horizontal grid: " << hspec << std::endl;
+             throw (badCoordinateGrid());
+          }
+    
+       } else if ( hspec == "MR" ) {
+    
+          hgrid.code = hspec;
+    
+          lonstrt = -180.0;
+          lonend = 179.33333333333333333;
+          nlon = 540;
+          latstrt = -90.0;
+          latend = 90.0;
+          nlat = 361;
+          
+          if ( ! hgrid.set( &lonstrt, &lonend, NULLPTR, &nlon, &latstrt, &latend, NULLPTR, &nlat ) ) {
+             std::cerr << "Bad horizontal grid: " << hspec << std::endl;
+             throw (badCoordinateGrid());
+          }
+    
+       } else if ( hspec == "1x1" ) {
+    
+          hgrid.code = hspec;
+    
+          lonstrt = -180.0;
+          lonend = 179.0;
+          nlon = 360;
+          latstrt = -90.0;
+          latend = 90.0;
+          nlat = 181;
+          
+          if ( ! hgrid.set( &lonstrt, &lonend, NULLPTR, &nlon, &latstrt, &latend, NULLPTR, &nlat ) ) {
+             std::cerr << "Bad horizontal grid: " << hspec << std::endl;
+             throw (badCoordinateGrid());
+          }
+    
+       } else if ( hspec == "0.5x0.5" ) {
+    
+          hgrid.code = hspec;
+    
+          lonstrt = -180.0;
+          lonend = 179.5;
+          nlon = 720;
+          latstrt = -90.0;
+          latend = 90.0;
+          nlat = 361;
+          
+          if ( ! hgrid.set( &lonstrt, &lonend, NULLPTR, &nlon, &latstrt, &latend, NULLPTR, &nlat ) ) {
+             std::cerr << "Bad horizontal grid: " << hspec << std::endl;
+             throw (badCoordinateGrid());
+          }
+    
+       } else {
+           std::cerr << "Unknown coordinate grid: " << hspec << std::endl;
+           throw (badCoordinateGrid());
+       }
+    
     }
     
     // adjust the horiz grid if we are thinning things out
@@ -3755,27 +4091,28 @@ void MetMyGEOS::update_hgrid()
        newLen++;
     }
 
-     // reset the lons and lats
-     lons.clear();
-     lons.reserve( newLen );
-     for ( int i=0; i<newLen; i++ ) {
-         lons.push_back( hgrid.startLon + hgrid.deltaLon*(hgrid.thin_offset + hgrid.thin*i) );
-     }
-     nlons = lons.size();
-         
-     newLen = hgrid.nLats/hgrid.thin;
-     if ( newLen*hgrid.thin < hgrid.nLats ) {
-        newLen++;
-     }
+    // reset the lons and lats
+    lons.clear();
+    lons.reserve( newLen );
+    for ( int i=0; i<newLen; i++ ) {
+        lons.push_back( hgrid.startLon + hgrid.deltaLon*(hgrid.thin_offset + hgrid.thin*i) );
+    }
+    nlons = lons.size();
+        
+    newLen = hgrid.nLats/hgrid.thin;
+    if ( newLen*hgrid.thin < hgrid.nLats ) {
+       newLen++;
+    }
  
-     lats.clear();
-     lats.reserve( newLen );
-     for ( int i=0; i<newLen; i++ ) {
-         lats.push_back( hgrid.startLat + hgrid.deltaLat*hgrid.thin*i );
-     }
-     nlats = lats.size();
+    lats.clear();
+    lats.reserve( newLen );
+    for ( int i=0; i<newLen; i++ ) {
+        lats.push_back( hgrid.startLat + hgrid.deltaLat*hgrid.thin*i );
+    }
+    nlats = lats.size();
 
 }
+
 void MetMyGEOS::update_vgrid()
 {
     int nz;
@@ -3783,80 +4120,131 @@ void MetMyGEOS::update_vgrid()
     std::string vspec;
     int newLen;
     real scale, offset;
+    std::string vquant;
+    std::string vunits;
+    std::vector<float>* vvals;
+    std::vector<real> levelvals;
+    std::string vcode;
     
-    ok =  dsInit();
-    if ( ok ) {
-       vspec = queryVertical();
-    }
 
     vgrid.clear();
     
-    if ( vspec[0] == 'P' ) {
-    
-       scale = 100.0;
-       offset = 0.0;
-          
-       vgrid.set( vspec, pressure_name, "hPa", &scale, &offset, NULLPTR );
-              
-    } else if ( vspec == "H" ) {
-    
-       scale = 1.0;
-       offset = 0.0;
-          
-       vgrid.set( vspec, pottemp_name, "K", &scale, &offset, NULLPTR );
+    ok =  dsInit();
+    if ( ok ) {
        
-    } else if ( vspec == "a" ) {
-    
-       scale = 1000.0;
-       offset = 0.0;
-          
-       vgrid.set( vspec, palt_name, "km", &scale, &offset, NULLPTR );
+       vcode = queryVertical();
        
-    } else if ( vspec == "z" ) {
-    
-       scale = 1000.0;
-       offset = 0.0;
-          
-       vgrid.set( vspec, altitude_name, "km", &scale, &offset, NULLPTR );
-       
-    } else if ( vspec[0] == 'L' ) {
-    
-       scale = 1.0;
-       offset = 0.0;
-          
-       vgrid.set( vspec, "Model-Levels", "1", &scale, &offset, NULLPTR );
-       
-    } else if ( vspec == "E" ) {
-    
-       scale = 1.0;
-       offset = 0.0;
-          
-       vgrid.set( vspec, "Model-Edges", "1", &scale, &offset, NULLPTR );
+       vspec= catlog.getAttr( ds[test_dsrc], "vertCoord" );
 
-    } else if ( vspec == "2" ) {
-        std::cerr << "Cannot set a vert coordinate for a 2D grid: " << vspec << std::endl;
-        throw (badCoordinateGrid());
-    } else {
-        std::cerr << "Unknown vert coordinate grid: " << vspec << std::endl;
-        throw (badCoordinateGrid());
+       ok = catlog.dimensionValues( vspec, vquant, vunits, &vvals );
+       if ( ok  && (vvals != NULLPTR) ) {
+          // this dimension is defined in the Catalog, so use what it gives us
+          
+          scale = 1.0;
+          offset = 0.0;   
+          
+          if ( vunits == "hPa" || vunits == "mb" ) {
+              scale = 100.0;
+              offset = 0.0;             
+          } else if ( vunits == "km" ) {       
+              scale = 0.001;
+              offset = 0.0;   
+          } 
+          
+          // convert floats to reals
+          levelvals.clear();
+          for ( int i=0; i < vvals->size(); i++ ) {
+              levelvals.push_back( (*vvals)[i] );
+          }
+          delete vvals;
+    
+          // prepend a dot so that the vgrid.set() method
+          // wil know to acceupt our values instead of trying
+          // to come up with its own.
+          vcode = "." + vcode;
+          
+          vgrid.set( vcode, vquant, vunits, &scale, &offset, &levelvals );
+
+       } else {
+          if ( vspec[0] == 'P' ) {
+    
+             scale = 100.0;
+             offset = 0.0;
+                
+             vgrid.set( vspec, pressure_name, "hPa", &scale, &offset, NULLPTR );
+                    
+          } else if ( vspec == "H" ) {
+    
+             scale = 1.0;
+             offset = 0.0;
+                
+             vgrid.set( vspec, pottemp_name, "K", &scale, &offset, NULLPTR );
+             
+          } else if ( vspec == "a" ) {
+    
+             scale = 1000.0;
+             offset = 0.0;
+                
+             vgrid.set( vspec, palt_name, "km", &scale, &offset, NULLPTR );
+             
+          } else if ( vspec == "z" ) {
+    
+             scale = 1000.0;
+             offset = 0.0;
+                
+             vgrid.set( vspec, altitude_name, "km", &scale, &offset, NULLPTR );
+             
+          } else if ( vspec[0] == 'L' ) {
+    
+             scale = 1.0;
+             offset = 0.0;
+                
+             vgrid.set( vspec, modellevel_name, "1", &scale, &offset, NULLPTR );
+             
+          } else if ( vspec == "E" ) {
+    
+             scale = 1.0;
+             offset = 0.0;
+                
+             vgrid.set( vspec, modeledge_name, "1", &scale, &offset, NULLPTR );
+
+          } else if ( vspec == "2" ) {
+              std::cerr << "Cannot set a vert coordinate for a 2D grid: " << vspec << std::endl;
+              throw (badCoordinateGrid());
+          } else {
+              std::cerr << "Unknown vert coordinate grid: " << vspec << std::endl;
+              throw (badCoordinateGrid());
+          }
+       }
+
+
+       // native is what we are using
+       native_zs = vgrid.levs;
+       native_nzs = vgrid.nLevs;
+
     }
-
-
-    // native is what we are using
-    native_zs = vgrid.levs;
-    native_nzs = vgrid.nLevs;
-
 }
 
 void MetMyGEOS::update_tgrid()
 {
      double start, next, delta;
+     double t;
      int n;
      std::string tx;
-          
+     const char *nanstr = "";          
+
      start = catTime2metTime( ds[test_dsrc].preStart_t );
-     next  = catTime2metTime( ds[test_dsrc].postStart_t );
      delta = ds[test_dsrc].tDelta;
+     t =  ds[test_dsrc].postStart_t;
+     if ( t == ds[test_dsrc].preStart_t ) {
+        if ( ds[test_dsrc].tN > 0 ) {
+           t = t + delta*ds[test_dsrc].tN;
+        } else {
+           // flags this as an all-times-are-in-this-one-URL situation        
+           t = nan(nanstr);  
+        }
+     }
+     next  = catTime2metTime( t );
      
      tgrid.set( start, next, delta );
 
@@ -3888,9 +4276,10 @@ void MetMyGEOS::Source_read_all_dims()
     HGridSpec url_hgrid;
     VGridSpec url_vgrid;
     TGridSpec url_tgrid;
+    double offset, scale;
     
     dname = legalDims[3]; // time
-    Source_read_dim( dname, dim_type, span);
+    Source_read_dim( dname, dim_type, span, &scale, &offset);
     switch (dim_type) {
     case NC_DOUBLE:
         tstart = span.doubleSpec.first;
@@ -3914,14 +4303,17 @@ void MetMyGEOS::Source_read_all_dims()
        std::cerr << "MetMyGEOS::Source_read_all_dims: Unimplemented format for dim " << dname << ": " << dim_type << std::endl;
        throw(badDimsForm());
     }
-    url_tgrid.set( tstart, tstart + tn*tdelta/24.0, tdelta/24.0 );
+    tstart = tstart*scale + offset;
+    tend = tend*scale + offset;
+    tdelta = tdelta*scale;
+    url_tgrid.set( tstart, tstart + tn*tdelta, tdelta );
     if ( ! tgrid.test( url_tgrid ) ) {
        std::cerr << "MetMyGEOS::Source_read_all_dims: The file's time gridding is incompatible with its specifications. " << dname << ": " << dim_type << std::endl;
        throw(badDimsForm()); 
     }
        
     dname = legalDims[0]; // longitude
-    Source_read_dim( dname, dim_type, span);
+    Source_read_dim( dname, dim_type, span, &scale, &offset);
     switch (dim_type) {
     case NC_DOUBLE:
         xstart = span.doubleSpec.first;
@@ -3936,7 +4328,7 @@ void MetMyGEOS::Source_read_all_dims()
     }
        
     dname = legalDims[1];  // latitude
-    Source_read_dim( dname, dim_type, span);
+    Source_read_dim( dname, dim_type, span, &scale, &offset);
     switch (dim_type) {
     case NC_DOUBLE:
         ystart = span.doubleSpec.first;
@@ -4220,9 +4612,8 @@ void MetMyGEOS::Source_read_dim_ints( int &first, int &last, int &delta, int var
 void MetMyGEOS::Source_read_data_floats( std::vector<real>&vals, int var_id, int ndims, size_t *starts, size_t *counts, ptrdiff_t *strides )
 {
      float *buffr;
-     float *bp;
      int totsize;
-     int nlons, nlats, nz;
+     int nlons, nlats, nz, nt;
      int err;
      int idx;
      int trial;
@@ -4233,59 +4624,110 @@ void MetMyGEOS::Source_read_data_floats( std::vector<real>&vals, int var_id, int
      int nchunks;
      ptrdiff_t chunksize;
      int toread;
+     size_t lonSkip, latSkip, vSkip, tSkip;
+     ptrdiff_t lonRes, latRes, vRes, tRes;
+     size_t lonCountMax, latCountMax, vCountMax, tCountMax;
+     size_t lonStart, latStart, vStart, tStart;
+     size_t lonEnd, latEnd, vEnd, tEnd;
+     size_t lonCount, latCount, vCount, tCount;
+     size_t maxChunk;
+     int lon_index, lat_index, v_index, t_index;
+     int total_read;
+     
+      
+     my_starts[0] = 0;
+     my_starts[1] = 0;
+     my_starts[2] = 0;
+     my_starts[3] = 0;
+     my_counts[0] = 0;
+     my_counts[1] = 0;
+     my_counts[2] = 0;
+     my_counts[3] = 0;
+     my_strides[0] = 0;
+     my_strides[1] = 0;
+     my_strides[2] = 0;
+     my_strides[3] = 0;
      
      if ( ndims == 3 ) {
-        // three-dimensional surface
-        nlons = counts[3];
-        nlats = counts[2];
-        nz = counts[1];
-        totsize = nlons*nlats*nz;
-        
-        for ( int i=0; i<4 ; i++ ) {
-            my_counts[i] = counts[i];
-            my_starts[i] = starts[i];
-            my_strides[i] = strides[i];
-        }
-        
-        /* Now this may be too big to read in all at once.
-           In that case, we will split it up and read the data in
-           layer by layer.
-        */
-        if ( totsize < 9000000 ) {
-           // larger-scale grid (fewer gridpoints) we can read in all at once
-           nchunks = 1;
-           chunksize = 0;
-           toread = totsize;
-        } else {
-           // smaller-scale grid (more gridpoints) we should read in chunks
-           nchunks = nz;
-           chunksize = nlons*nlats;
-           my_counts[1] = 1;
-           my_starts[1] = 0;
-           my_strides[1] = 1;
-           toread = chunksize;
-        }
-        
+        // three-dimensional volume
+
+       lon_index = 3;
+       lat_index = 2;
+       v_index   = 1;
+       t_index   = 0;
+
+       nz    = counts[v_index];
+       vRes  = strides[v_index];
+       vSkip = starts[v_index];
      } else {
         // two-dimensional surface
-        nlons = counts[2];
-        nlats = counts[1];
-        nz = 1;
-        totsize = nlons*nlats*nz;
         
-        for ( int i=0; i<3 ; i++ ) {
-            my_counts[i] = counts[i];
-            my_starts[i] = starts[i];
-            my_strides[i] = strides[i];
-        }
-        nchunks = 1;
-        chunksize = 0;
-        toread = totsize;
-     }   
-     
+       lon_index = 2;
+       lat_index = 1;
+       t_index   = 0;
+       
+       v_index   = -1;
+       nz = 1;
+       vRes = 1;
+       vSkip = 0;
+     }
 
+     nlons = counts[lon_index];
+     nlats = counts[lat_index];
+     nt    = counts[t_index];
+
+     lonRes = strides[lon_index];
+     latRes = strides[lat_index];
+     tRes   = strides[t_index];
+     
+     lonSkip = starts[lon_index];
+     latSkip = starts[lat_index];
+     tSkip   = starts[t_index];
+     
+     totsize = nlons*nlats*nz*nt;
+
+     
+     if ( (! is_url) || (totsize < max_data) ) {
+        // we should read it all in at once
+        tCountMax = nt;
+        vCountMax = nz;
+        latCountMax = nlats;
+        lonCountMax = nlons;
+     } else if ( (nlons*nlats*nz) < max_data ) {
+        // have to read a few timestamps at a time
+        tCountMax = max_data/(nlons*nlats*nz);
+        vCountMax = nz;
+        latCountMax = nlats;
+        lonCountMax = nlons;        
+     } else if ( (nlons*nlats) < max_data ) {
+        // have to read a few vertical levels at a time
+        // (note that for 2D surfaces, the above clause prevents
+        // us from ever getting here)
+        tCountMax = 1;
+        vCountMax = max_data/(nlons*nlats);
+        latCountMax = nlats;
+        lonCountMax = nlons;
+     } else if ( nlons < max_data ) {
+        // have to read a few latitude circles at a time
+        tCountMax = 1;
+        vCountMax = 1;
+        latCountMax = max_data/nlons;
+        lonCountMax = nlons;
+     } else {
+        // have to read a few latitude circles at a time
+        tCountMax = 1;
+        vCountMax = 1;
+        latCountMax = 1;
+        lonCountMax = max_data;        
+     }
+     
+     
+     // we will be reading a maximum of this mahy7 floats,
+     // so we need a buffer that is this big.
+     maxChunk = tCountMax*vCountMax*latCountMax*lonCountMax;
+     
      try {
-        buffr = new float[totsize];
+        buffr = new float[maxChunk];
      } catch(...) {
         throw (badNoMem());
      }
@@ -4293,74 +4735,143 @@ void MetMyGEOS::Source_read_data_floats( std::vector<real>&vals, int var_id, int
         std::cerr << "MetMyGEOS::Source_read_data: (" << ndims << "D):  about to read data! " <<  std::endl;
      }
 
+
      vals.clear();
      vals.reserve(totsize);
-     //vals.resize(totsize);
-
+     total_read = 0;
 
      err = NC_NOERR;
-     bp = buffr;
-     int isample = toread/10;
-     for ( int ichunk = 0; (ichunk < nchunks) && (err == NC_NOERR) ; ichunk++ ) {
-
-         trial = 0;
-         do {
-
-            if ( dbug > 5 ) {
-               std::cerr << "MetMyGEOS::Source_read_data: (" << ndims 
-                         << "D):  about to read data chunk " << ichunk << " of " << nchunks
-                         << " = " << toread << " floats (trial " << trial << ")" <<  std::endl;
-            }
-            err = nc_get_vars_float( ncid, var_id, my_starts, my_counts, my_strides, bp );
-
-            if ( err == NC_NOERR ) {
-
-               all_zeroes = true;
-               for ( int i=0; i<toread; i += isample ) {
-                   if ( bp[i] != 0 ) {
-                      all_zeroes = false;
-                   }                     
-               }
-
-               if ( all_zeroes ) {
-                  // sometimes we get a "successful" read, but the
-                  // values are all zeroes.
-                  // Detect this and treat it as a failure.
-                  if ( dbug > 0 ) {
-                     std::cerr << "MetMyGEOS::Source_read_data: (" << ndims << "D):  Read all zeroes! " <<  std::endl;
-                  }
-                  err = NC_ERANGE;
-               }
      
-            }
+     tStart = tSkip;
+     tEnd = tSkip + nt*tRes;
+        
+     while ( tStart < tEnd ) {
      
-         } while ( try_again( err, trial ) );       
+         tCount = tCountMax;
+         if ( ( tEnd - tStart + 1) < tCount*tRes ) {
+            tCount = (tEnd - tStart)/tRes;
+         }
+         
+         my_starts[t_index]  = tStart;
+         my_counts[t_index]  = tCount;
+         my_strides[t_index] = tRes;
+                     
+     
+         vStart = vSkip;
+         vEnd = vSkip + nz*vRes;
+         
+         while ( vStart < vEnd ) {
+         
+             vCount = vCountMax;
+             if ( ( vEnd - vStart + 1) < vCount*vRes ) {
+                vCount = (vEnd - vStart)/vRes;
+             }
+             
+             if ( ndims == 3 ) {
+                my_starts[v_index]  = vStart;
+                my_counts[v_index]  = vCount;
+                my_strides[v_index] = vRes;
+             } else {
+                // filler to make the 'toread' calculation below come out right
+                my_counts[3] = 1;
+             }
+     
+             latStart = latSkip;
+             latEnd = latSkip + nlats*latRes;
+         
+             while ( latStart < latEnd ) {
+         
+                 latCount = latCountMax;
+                 if ( ( latEnd - latStart + 1) < latCount*latRes ) {
+                    latCount = (latEnd - latStart)/latRes;
+                 }
+                 
+                 my_starts[lat_index]  = latStart;
+                 my_counts[lat_index]  = latCount;
+                 my_strides[lat_index] = latRes;
+     
+                 lonStart = lonSkip;
+                 lonEnd = lonSkip + nlons*lonRes;
+         
+                 while ( lonStart < lonEnd ) {
+                 
+                     lonCount = lonCountMax;
+                     if ( ( lonEnd - lonStart + 1) < lonCount*lonRes ) {
+                        lonCount = (lonEnd - lonStart)/lonRes;
+                     }
+                     
+                     my_starts[lon_index]  = lonStart;
+                     my_counts[lon_index]  = lonCount;
+                     my_strides[lon_index] = lonRes;
+                 
+                     toread = my_counts[0]*my_counts[1]*my_counts[2]*my_counts[3];
+                 
+                     trial = 0;
+                     do {
 
-         if ( err != NC_NOERR ) {
-            delete[] buffr;   
-            throw(badNetcdfError(err));
+                        if ( dbug > 5 ) {
+                           std::cerr << "MetMyGEOS::Source_read_data: (" << ndims 
+                                     << "D):  about to read data chunk " 
+                                     << toread << " of " << totsize
+                                     << " floats (trial " << trial << ")" <<  std::endl;
+                        }
+                        err = nc_get_vars_float( ncid, var_id, my_starts, my_counts, my_strides, buffr );
+
+                        if ( err == NC_NOERR ) {
+
+                           all_zeroes = true;
+                           for ( int i=0; i<toread; i += 1 ) {
+                               if ( buffr[i] != 0 ) {
+                                  all_zeroes = false;
+                               }                     
+                           }
+
+                           if ( all_zeroes ) {
+                              // sometimes we get a "successful" read, but the
+                              // values are all zeroes.
+                              // Detect this and treat it as a failure.
+                              if ( dbug > 0 ) {
+                                 std::cerr << "MetMyGEOS::Source_read_data: (" << ndims << "D):  Read all zeroes! " <<  std::endl;
+                              }
+                              err = NC_ERANGE;
+                           }
+     
+                        }
+     
+                     } while ( try_again( err, trial ) );       
+
+                     if ( err != NC_NOERR ) {
+                        delete[] buffr;   
+                        throw(badNetcdfError(err));
+                     }
+                     
+                     total_read += toread;
+                     
+                     for (int i=0; i<toread; i++ ) {
+                         vals.push_back( buffr[i] ); 
+                     }
+                 
+                 
+                     lonStart = lonStart + lonCount*lonRes;
+         
+                 }
+
+                 latStart = latStart + latCount*latRes;
+         
+             }
+
+             vStart = vStart + vCount*vRes;
+         
          }
 
-         //- std::cerr << " chunk " << ichunk << " [" << bp-buffr << "] (0)=" << bp[0] << ", (" << nlats*nlons-1 << ")=" << bp[nlons*nlats-1] << std::endl;     
-         // ok, we have successfully read in this chunk
-         // now set up for the next chunk
-         if ( nchunks > 0 ) {
-            my_starts[1] = my_starts[1] + strides[1];
-            bp = bp + chunksize;         
-         }
+         tStart = tStart + tCount*tRes;
          
      }
      
-     // move the data into place
-     for (int k=0; k<nz; k++) {
-         for (int j=0; j<nlats; j++ ) {
-             for (int i=0; i<nlons; i++ ) {
-                 idx = i + j*nlons + k*nlons*nlats;
-                 vals.push_back( buffr[idx] ); 
-             }
-         }
+     if ( total_read != totsize ) {
+        std::cerr << "Insufficient read: " << total_read << " vs. " << totsize << std::endl;
      }
-
+     
      delete[] buffr;   
 }
 
@@ -5387,7 +5898,13 @@ bool MetMyGEOS::VGridSpec::set( const std::string& vcode, const std::string& qua
     quant = quantity;
     units = qunits;
 
-    if ( code == "P" ) {
+    if ( code[0] == '.' ) {
+
+       code = code.substr(1);
+       levs = *levels;
+       nLevs = levs.size();
+       
+    } else if ( code == "P" ) {
        // pressure coordinates
        
        if ( scale == NULLPTR ) {
@@ -5982,8 +6499,17 @@ bool MetMyGEOS::TGridSpec::test( const TGridSpec& cmp ) const
     if ( fabs( start - cmp.start ) < threshold ) {
        if ( (delta != 0.0) && (cmp.delta != 0.0) ) {
           if ( fabs( delta - cmp.delta ) < threshold ) {
-             if ( fabs( next - cmp.next ) < threshold ) {   
-                result = true;;
+             if ( finite(next) and finite(cmp.next) ) {
+                if ( fabs( next - cmp.next ) < threshold ) {   
+                   result = true;;
+                }
+             } else {
+                // if either ofthe next fields is not finite, then
+                // it still counts as a match.
+                // This happens if all of the time snapshots are in one URL
+                // that keeps getting extemned with more data, so that the
+                // Catalog does not know when the data end.
+                result = true;
              }
           }
        } else {

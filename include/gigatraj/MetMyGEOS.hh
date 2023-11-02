@@ -260,6 +260,7 @@ class MetMyGEOS : public MetGridLatLonData {
       */
       void setOption( const std::string &name, double value );
 
+
       /// queries configuration of the met source
       /*! This method provides a means of reading options specific
           to a subclass. In this way, objects of a subclass
@@ -986,6 +987,23 @@ class MetMyGEOS : public MetGridLatLonData {
       
       /// Object for dealing with Dates
       gigatraj::CalGregorian cal;
+      
+      /// the name for the temperature quantity
+      std::string temperature_name;
+      /// the name for the temperature derivative quantity
+      std::string temperatureDot_name;
+      /// the name of the vertical wind in altitude-space
+      std::string altDot_name;
+      /// the name of the vertical wind in pressure-space
+      std::string pressureDot_name;
+      /// the name of the vertical wind in pressureAltitude-space
+      std::string paltDot_name;
+      /// the name of the vertical wind in potentialTemperature-space
+      std::string thetaDot_name;
+      /// the name of the model level coordinate (not necc. the same as levelName)
+      std::string modellevel_name;
+      /// the name of the model edge coordinate (not necc. the same as levelName)
+      std::string modeledge_name;
 
       /// describes vertical wind quantities that are available for the different vertical coordinates
       std::map<std::string, Catalog::DataSource> verticalWinds;
@@ -1021,6 +1039,8 @@ class MetMyGEOS : public MetGridLatLonData {
       int opened_dsrc;
       /// the name of the opened URL
       std::string opened_url;
+      /// maximum number of data values to be read in with a single netcdf call
+      size_t max_data; // useful when reading from a URL
 
       /// the default bad-or-missing data fill value to be used
       real fillval;
@@ -1095,6 +1115,15 @@ class MetMyGEOS : public MetGridLatLonData {
               std::string svalue;
        } SpanAttr;
        
+      /// the name of the time netcdf variable
+      std::string timeName;
+      /// the name of the longitude netcdf variable
+      std::string lonName;
+      /// the name of the latitude netcdf variable
+      std::string latName;
+      /// the name of the vertical netcdf variable
+      std::string levelName;
+      
 
       /// the specs of the horizontal grid of the data source to be read
       HGridSpec hgrid;
@@ -1131,6 +1160,14 @@ class MetMyGEOS : public MetGridLatLonData {
       std::map<std::string,real>::const_iterator gr_iter;
 
       
+      /// refreah the legal coordinates
+      void load_legalDims();
+
+      /// refreah the legal coordinates
+      void load_vertWindInfo();
+      
+      /// refresh the OTF settings
+      void refresh_OTF();
       
       /// pre-use initialization, such as loading the Catalog, 
       void init();
@@ -1562,9 +1599,11 @@ class MetMyGEOS : public MetGridLatLonData {
                        first, last, delta, and size. Thus, if the
                        return type is NC_DOUBLE, then you would
                        access the delta value using span.doubleSpec.delta.
-                       
+           
+           \param scale a pointer to a scale factor to be applied to the first, last, and delta values of the span
+           \param offset a pointer to an offset to be applied to the first and last values of the span
        */
-       void Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanTriplet &span);
+       void Source_read_dim( std::string &dim_name, nc_type &dim_type, SpanTriplet &span, double* scale, double*offset);
 
        /// reads a dimension from an open remote file
        /*! This method reads dimensional values from an open remote file.
