@@ -10,12 +10,16 @@ NPROCS=5
 # log file
 LOG=""
 
+# for use w/ valgrind
+VALGRIND=""
+
 USAGE="test_MPI.sh [-n number] [-l logfile]"
 
-while getopts n:l: ARG
+while getopts n:l:v: ARG
 do
     case "${ARG}" in
     n) NPROCS="${OPTARG}";;
+    v) VALGRIND="valgrind ${OPTARG}";;
     l) LOG="${OPTARG}";;
     \?) echo "Usage: $USAGE" >&2
         exit 1;;

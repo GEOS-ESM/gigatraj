@@ -2,6 +2,19 @@
 
 # Runs parcels forwarda and backwards for five days,
 
+VALGRIND=""
+while getopts v: ARG
+do
+    case "${ARG}" in
+    v) VALGRIND="valgrind ${OPTARG}";;
+    \?) "Bad Option ${ARG}" >&2
+        exit 1;;
+    esac
+done
+shift `expr ${OPTIND} - 1`
+
+
+
 #METSRC="MERRA"
 #METSRC="MERRA2"
 #METSRC="GEOSfp"
@@ -48,7 +61,7 @@ BDAY=`echo "${BEGDATE}" | cut -c1-10`T00:00
 EDAY=`echo "${ENDDATE}" | cut -c1-10`T21:00
 
 
-   ../src/gtmodel_s01 \
+${VALGRIND}   ../src/gtmodel_s01 \
       --begdate ${BEGDATE} \
       --enddate ${ENDDATE} \
       --zerodate "${BEGDATE}" \
