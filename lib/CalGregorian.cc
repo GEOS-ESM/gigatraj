@@ -108,9 +108,11 @@ void CalGregorian::parseDate( const std::string& date, int* year, int *month, in
        // next, the day of the month
        itmp >> myday;
      } catch (...) {
+        std::cerr << "Bad date format: " << date << std::endl;
         throw (badGregorianDateFormat());
      }   
      if ( itmp.fail() ) {
+        std::cerr << "Bad date format: " << date << std::endl;
         throw (badGregorianDateFormat());
      }
      // At this point, we should have a date.
@@ -132,9 +134,11 @@ void CalGregorian::parseDate( const std::string& date, int* year, int *month, in
             // get the hour of the day
             itmp >> myhour;
         } catch (...) {
+           std::cerr << "Bad date format: " << date << std::endl;
            throw (badGregorianDateFormat());
         }   
         if ( itmp.fail() ) {
+           std::cerr << "Bad date format: " << date << std::endl;
            throw (badGregorianDateFormat());
         }
         
@@ -154,9 +158,11 @@ void CalGregorian::parseDate( const std::string& date, int* year, int *month, in
                // get the minute of the hour
                itmp >> mymin;  
            } catch (...) {
+              std::cerr << "Bad date format: " << date << std::endl;
               throw (badGregorianDateFormat());
            }   
            if ( itmp.fail() ) {
+              std::cerr << "Bad date format: " << date << std::endl;
               throw (badGregorianDateFormat());
            }
         } else {
@@ -181,9 +187,11 @@ void CalGregorian::parseDate( const std::string& date, int* year, int *month, in
                // get the second of the minute 
                itmp >> mysecond;  
            } catch (...) {
+              std::cerr << "Bad date format: " << date << std::endl;
               throw (badGregorianDateFormat());
            }   
            if ( itmp.fail() ) {
+              std::cerr << "Bad date format: " << date << std::endl;
               throw (badGregorianDateFormat());
            }
         } else {
@@ -323,6 +331,7 @@ double CalGregorian::day1900( const std::string& date ) const
 
      // sanity-check the parts
      if ( year < 1583 || month < 1 || month > 12 ) {
+        std::cerr << "Bad date format: " << date << std::endl;
         throw (badGregorianDateFormat());
      }   
 
@@ -347,6 +356,7 @@ double CalGregorian::day1900( const std::string& date ) const
      }  
      // more sanity checking
      if ( day < 1 || day > monthlen ) {
+        std::cerr << "Bad date format: " << date << std::endl;
         throw (badGregorianDateFormat());
      }        
 
