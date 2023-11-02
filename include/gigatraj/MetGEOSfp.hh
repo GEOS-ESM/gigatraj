@@ -285,6 +285,7 @@ class MetGEOSfp : public MetGEOSPortal {
       */
       void setOption( const std::string &name, double value );
 
+
       /// queries configuration of the met source
       /*! This method provides a means of reading options specific
           to a subclass. In this way, objects of a subclass

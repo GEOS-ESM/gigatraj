@@ -33,6 +33,12 @@ MetSBRot::MetSBRot() : MetData()
    
    calsys = 0;
    basetime = 0.0;
+   
+   testInt = 123;
+   testFloat = 456.7;
+   testDouble = 981.0;
+   testBool = false;
+   testString = "test string";
 
 };
 
@@ -53,6 +59,12 @@ MetSBRot::MetSBRot(real windspeed, ProcessGrp* pg, int met) : MetData()
    my_pgroup = pg;
    my_metproc = met;
 
+   
+   testInt = 123;
+   testFloat = 456.7;
+   testDouble = 981.0;
+   testBool = false;
+   testString = "test string";
 
 };
 
@@ -75,6 +87,12 @@ MetSBRot::MetSBRot(real windspeed, real tilt, ProcessGrp* pg, int met) : MetData
    my_pgroup = pg;
    my_metproc = met;
 
+   
+   testInt = 123;
+   testFloat = 456.7;
+   testDouble = 981.0;
+   testBool = false;
+   testString = "test string";
 
 };
 
@@ -94,6 +112,12 @@ MetSBRot::MetSBRot(real windspeed, real alpha, real beta, real gamma, ProcessGrp
 
    my_pgroup = pg;
    my_metproc = met;
+   
+   testInt = 123;
+   testFloat = 456.7;
+   testDouble = 981.0;
+   testBool = false;
+   testString = "test string";
 
 };
 
@@ -121,6 +145,11 @@ void MetSBRot::assign(const MetSBRot& src)
      calsys = src.calsys;
      basetime = src.basetime;
      
+     testInt = src.testInt;
+     testFloat = src.testFloat;
+     testDouble = src.testDouble;
+     testBool = src.testBool;
+     testString = src.testString;
      
 }
 
@@ -203,46 +232,100 @@ int MetSBRot::get_cal() const
 
 void MetSBRot::setOption( const std::string &name, const std::string &value )
 {
+     if ( name == "test" ) {
+        testString = value;
+     } else {
+        MetData::setOption( name, value );
+     }
 }
 
 void MetSBRot::setOption( const std::string &name, int value )
 {
+     if ( name == "test" ) {
+        testInt = value;
+     } else {
+        MetData::setOption( name, value );
+     }
 }
 
 void MetSBRot::setOption( const std::string &name, float value )
 {
+     if ( name == "test" ) {
+        testFloat = value;
+     } else {
+        MetData::setOption( name, value );
+     }
 }
 
 void MetSBRot::setOption( const std::string &name, double value )
 {
+     if ( name == "test" ) {
+        testDouble = value;
+     } else {
+        MetData::setOption( name, value );
+     }
 }
+
 
 bool MetSBRot::getOption( const std::string &name, std::string &value )
 {
-   value = "";
-   return false;
+     bool result;
+     
+     if ( name == "test" ) {
+        value = testString;
+        result = true;
+     } else {
+        result = MetData::getOption( name, value );
+     }
+     
+     return result;
 }
 
 
 bool MetSBRot::getOption( const std::string &name, int &value )
 {
-   value = 0;
-   return false;
+     bool result;
+     
+     if ( name == "test" ) {
+        value = testInt;
+        result = true;
+     } else {
+        result = MetData::getOption( name, value );
+     }
+     
+     return result;
 }
 
 
 bool MetSBRot::getOption( const std::string &name, float &value )
 {
-   value = 0.0;
-   return false;
+     bool result;
+     
+     if ( name == "test" ) {
+        value = testFloat;
+        result = true;
+     } else {
+        result = MetData::getOption( name, value );
+     }
+     
+     return result;
 }
 
 
 bool MetSBRot::getOption( const std::string &name, double &value )
 {
-   value = 0.0;
-   return false;
+     bool result;
+     
+     if ( name == "test" ) {
+        value = testDouble;
+        result = true;
+     } else {
+        result = MetData::getOption( name, value );
+     }
+     
+     return result;
 }
+
 
 string MetSBRot::time2Cal( const double time, int format )
 {

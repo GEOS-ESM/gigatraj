@@ -145,6 +145,146 @@ class MetGridData : public MetData {
       /// assignment operator
       virtual MetGridData& operator=(const MetGridData& src) = 0;
 
+      /// configures the met source
+      /*! This method provides a means of setting options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be configured.
+                      Names that are not recognized by a specific subclass are
+                      silently ignored.
+                      
+          \param value the value to be applied to the named configuration option
+      
+      */
+      virtual void setOption( const std::string &name, const std::string &value );
+
+      /// configures the met source
+      /*! This method provides a means of setting options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be configured.
+                      Names that are not recognized by a specific subclass are
+                      silently ignored.
+                      
+          \param value the value to be applied to the named configuration option
+      
+      */
+      virtual void setOption( const std::string &name, int value );
+
+      /// configures the met source
+      /*! This method provides a means of setting options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be configured.
+                      Names that are not recognized by a specific subclass are
+                      silently ignored.
+                      
+          \param value the value to be applied to the named configuration option
+      
+      */
+      virtual void setOption( const std::string &name, float value );
+
+      /// configures the met source
+      /*! This method provides a means of setting options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be configured.
+                      Names that are not recognized by a specific subclass are
+                      silently ignored.
+                      
+          \param value the value to be applied to the named configuration option
+      
+      */
+      virtual void setOption( const std::string &name, double value );
+
+
+      /// queries configuration of the met source
+      /*! This method provides a means of reading options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be obtained.
+                      Names that are not recognized by a specific subclass 
+                      will return an empty string.
+                      
+          \param value (output) the value to be obtained from the named configuration option
+      
+      */
+      virtual bool getOption( const std::string &name, std::string &value );
+
+
+      /// queries configuration of the met source
+      /*! This method provides a means of reading options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be obtained.
+                      Names that are not recognized by a specific subclass 
+                      will return 0.
+                      
+          \param value (output) the value to be obtained from the named configuration option
+      
+      */
+      virtual bool getOption( const std::string &name, int &value );
+
+
+      /// queries configuration of the met source
+      /*! This method provides a means of reading options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be obtained.
+                      Names that are not recognized by a specific subclass 
+                      will return 0.
+                      
+          \param value (output) the value to be obtained from the named configuration option
+      
+      */
+      virtual bool getOption( const std::string &name, float &value );
+
+      /// queries configuration of the met source
+      /*! This method provides a means of reading options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be obtained.
+                      Names that are not recognized by a specific subclass 
+                      will return 0.
+                      
+          \param value (output) the value to be obtained from the named configuration option
+      
+          \return true if the option was valid; false if the value returned is meaningless
+      */
+      virtual bool getOption( const std::string &name, double &value );
+
 
       /// returns a copy of the object, cast to the MetGridData class
       /*!
@@ -1003,7 +1143,6 @@ class MetGridData : public MetData {
       };
 
 
-      
       /// zonal winds
       MetCache3D *us;
       /// meridional winds

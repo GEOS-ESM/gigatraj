@@ -291,7 +291,6 @@ class MetMERRA : public MetGEOSPortal {
       */
       bool getOption( const std::string &name, double &value );
 
-
       /// waits a certain time
       /*! This method waits for a time, to avoid have a large number of processors
           running in parallel, all attempting to access the same network resource at the

@@ -21,7 +21,7 @@ using namespace gigatraj;
 MetGridData::MetGridData() : MetData() 
 {
       vWindStuff vw;
-      
+            
       vquant = "none";
       vuu = "N/A";
       vMKSscale = 1.0;
@@ -176,6 +176,66 @@ void MetGridData::assign( const MetGridData& src )
 
 
 }
+
+
+void MetGridData::setOption( const std::string &name, const std::string &value )
+{    
+     MetData::setOption( name, value ); 
+}
+
+void MetGridData::setOption( const std::string &name, int value )
+{
+     MetData::setOption( name, value ); 
+}
+
+void MetGridData::setOption( const std::string &name, float value )
+{
+     MetData::setOption( name, value ); 
+}
+
+void MetGridData::setOption( const std::string &name, double value )
+{
+     MetData::setOption( name, value ); 
+}
+
+bool MetGridData::getOption( const std::string &name, std::string &value )
+{
+    bool result;
+    
+    result = MetData::getOption( name, value ); 
+    
+    return result;
+}
+
+bool MetGridData::getOption( const std::string &name, int &value )
+{
+    bool result;
+    
+    result = MetData::getOption( name, value ); 
+
+    return result;
+}
+
+
+bool MetGridData::getOption( const std::string &name, float &value )
+{
+    bool result;
+    
+    result = MetData::getOption( name, value ); 
+
+    return result;
+}
+
+
+bool MetGridData::getOption( const std::string &name, double &value )
+{
+    bool result;
+    
+    result = MetData::getOption( name, value ); 
+
+    return result;
+}
+
 
 void MetGridData::set_vinterp( Vinterp* vinterp, bool okToDelete  )
 {

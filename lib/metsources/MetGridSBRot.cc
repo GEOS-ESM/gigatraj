@@ -366,46 +366,95 @@ int MetGridSBRot::get_cal() const
 
 void MetGridSBRot::setOption( const std::string &name, const std::string &value )
 {
+     if ( name == "test" ) {
+        metfcn->setOption( name, value);
+     } else {
+        MetGridLatLonData::setOption( name, value );
+     }
 }
 
 void MetGridSBRot::setOption( const std::string &name, int value )
 {
+     if ( name == "test" ) {
+        metfcn->setOption( name, value);
+     } else {
+        MetGridLatLonData::setOption( name, value );
+     }
 }
 
 void MetGridSBRot::setOption( const std::string &name, float value )
 {
+     if ( name == "test" ) {
+        metfcn->setOption( name, value);
+     } else {
+        MetGridLatLonData::setOption( name, value );
+     }
 }
 
 void MetGridSBRot::setOption( const std::string &name, double value )
 {
+     if ( name == "test" ) {
+        metfcn->setOption( name, value);
+     } else {
+        MetGridLatLonData::setOption( name, value );
+     }
 }
 
 bool MetGridSBRot::getOption( const std::string &name, std::string &value )
 {
-   value = "";
-   return false;
+     bool result;
+     
+     if ( name == "test" ) {
+        result = metfcn->getOption( name, value );
+     } else {
+        result = MetGridLatLonData::getOption( name, value );
+     }
+     
+     return result;
 }
 
 
 bool MetGridSBRot::getOption( const std::string &name, int &value )
 {
-   value = 0;
-   return false;
+     bool result;
+     
+     if ( name == "test" ) {
+        result = metfcn->getOption( name, value );
+     } else {
+        result = MetGridLatLonData::getOption( name, value );
+     }
+     
+     return result;
 }
 
 
 bool MetGridSBRot::getOption( const std::string &name, float &value )
 {
-   value = 0.0;
-   return false;
+     bool result;
+     
+     if ( name == "test" ) {
+        result = metfcn->getOption( name, value );
+     } else {
+        result = MetGridLatLonData::getOption( name, value );
+     }
+     
+     return result;
 }
 
 
 bool MetGridSBRot::getOption( const std::string &name, double &value )
 {
-   value = 0.0;
-   return false;
+     bool result;
+     
+     if ( name == "test" ) {
+        result = metfcn->getOption( name, value );
+     } else {
+        result = MetGridLatLonData::getOption( name, value );
+     }
+     
+     return result;
 }
+
 
 
 

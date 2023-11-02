@@ -122,6 +122,64 @@ MetGridData& MetGridLatLonData::operator=(const MetGridData& src)
 }
 
 
+void MetGridLatLonData::setOption( const std::string &name, const std::string &value )
+{    
+     MetGridData::setOption( name, value ); 
+}
+void MetGridLatLonData::setOption( const std::string &name, int value )
+{
+     MetGridData::setOption( name, value ); 
+}
+
+void MetGridLatLonData::setOption( const std::string &name, float value )
+{
+     MetGridData::setOption( name, value ); 
+}
+
+void MetGridLatLonData::setOption( const std::string &name, double value )
+{
+     MetGridData::setOption( name, value ); 
+}
+
+bool MetGridLatLonData::getOption( const std::string &name, std::string &value )
+{
+    bool result;
+    
+    result = MetGridData::getOption( name, value ); 
+    
+    return result;
+}
+
+bool MetGridLatLonData::getOption( const std::string &name, int &value )
+{
+    bool result;
+    
+    result = MetGridData::getOption( name, value ); 
+
+    return result;
+}
+
+
+bool MetGridLatLonData::getOption( const std::string &name, float &value )
+{
+    bool result;
+    
+    result = MetGridData::getOption( name, value ); 
+
+    return result;
+}
+
+
+bool MetGridLatLonData::getOption( const std::string &name, double &value )
+{
+    bool result;
+    
+    result = MetGridData::getOption( name, value ); 
+
+    return result;
+}
+
+
 
 
 

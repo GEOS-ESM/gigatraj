@@ -114,6 +114,7 @@ void MetGEOSfpAssim::setOption( const std::string &name, double value )
 {
 }
 
+
 bool MetGEOSfpAssim::getOption( const std::string &name, std::string &value )
 {
    value = "";
@@ -153,6 +154,7 @@ bool MetGEOSfpAssim::getOption( const std::string &name, double &value )
     value = 0.0;
     return result;
 }
+
 
 
 

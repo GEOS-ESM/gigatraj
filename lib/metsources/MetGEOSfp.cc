@@ -530,6 +530,7 @@ void MetGEOSfp::setOption( const std::string &name, double value )
 {
 }
 
+
 bool MetGEOSfp::getOption( const std::string &name, std::string &value )
 {
    value = "";

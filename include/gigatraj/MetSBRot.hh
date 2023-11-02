@@ -579,6 +579,19 @@ class MetSBRot : public MetData {
       */   
       real usta76( string quantity, string vertical, real z );
 
+  protected:
+      
+      /// unusad integer for testing getOption() and setOption()
+      int   testInt;
+      /// unusad foat for testing getOption() and setOption()
+      float testFloat;
+      /// unusad double for testing getOption() and setOption()
+      double testDouble;
+      /// unusad boolean for testing getOption() and setOption()
+      bool   testBool;
+      /// unusad string for testing getOption() and setOption()
+      std::string testString;
+           
 };
 }
 
