@@ -138,5 +138,4 @@ test/valgrind*.log
 gigatraj*.tar.gz
 *.zip
 eval/testing
-
-
+changed_list.txt
