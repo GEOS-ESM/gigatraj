@@ -209,18 +209,6 @@ void Parcel :: setPos( real newlon, real newlat )
 
 };
 
-void* Parcel :: operator new[](size_t sz)
-{
-   // allocate memory for an array of Parcels.
-   // This overlaid operator function allocates
-   // RAW memory for the array--hence the void * return type.
-   // The user writes  " foo = new Parcel[20];",
-   // and this function is called with sz set
-   // to 20 * sizeof(Parcel);
-   // (See Eckel, Vol. 1, p. 573)
-   return ::new char[sz];
-};   
-
 void Parcel :: send( const ProcessGrp* pgroup, const int id) const
 {
     real loc[3];
