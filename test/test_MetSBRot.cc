@@ -38,6 +38,14 @@ int main()
     int status;
     string time1, time2;
     double time0;
+    int testInt;
+    float testFloat;
+    double testDouble;
+    std::string testString;
+    int testInt0;
+    float testFloat0;
+    double testDouble0;
+    std::string testString0;
     
     /* create an object with the default values (40 m/s, no tilt) */
     metsrc = new MetSBRot;
@@ -48,6 +56,67 @@ int main()
        exit(1);
     }
 
+    // Check configuration settings
+    if ( ! metsrc->getOption("test", testInt ) ) {
+       cerr << "Could not getOption for Int 'test' : " << endl;
+       exit(1);         
+    }
+    if ( ! metsrc->getOption("test", testFloat ) ) {
+       cerr << "Could not getOption for Float 'test' : " << endl;
+       exit(1);         
+    }
+    if ( ! metsrc->getOption("test", testDouble ) ) {
+       cerr << "Could not getOption for Double 'test' : " << endl;
+       exit(1);         
+    }
+    if ( ! metsrc->getOption("test", testString ) ) {
+       cerr << "Could not getOption for String 'test' : " << endl;
+       exit(1);         
+    }
+
+    testInt0 = -987;
+    testFloat0 = -654.3;
+    testDouble0 = -210.9;
+    testString0 = "Hello World"; 
+
+    metsrc->setOption("test", testInt0 );
+    metsrc->setOption("test", testFloat0 );
+    metsrc->setOption("test", testDouble0 );
+    metsrc->setOption("test", testString0 );
+
+    if ( ! metsrc->getOption("test", testInt ) ) {
+       cerr << "Could not getOption for Int 'test' : " << endl;
+       exit(1);         
+    }
+    if ( testInt != testInt0 ) {
+       cerr << "Bad Int option set : " << testInt << " vs " << testInt0   << endl;
+       exit(1);    
+    }
+    if ( ! metsrc->getOption("test", testFloat ) ) {
+       cerr << "Could not getOption for Float 'test' : " << endl;
+       exit(1);         
+    }
+    if ( testFloat != testFloat0 ) {
+       cerr << "Bad Float option set : " << testFloat << " vs " << testFloat0   << endl;
+       exit(1);    
+    }
+    if ( ! metsrc->getOption("test", testDouble ) ) {
+       cerr << "Could not getOption for Double 'test' : " << endl;
+       exit(1);         
+    }
+    if ( testDouble != testDouble0 ) {
+       cerr << "Bad Double option set : " << testDouble << " vs " << testDouble0   << endl;
+       exit(1);    
+    }
+    if ( ! metsrc->getOption("test", testString ) ) {
+       cerr << "Could not getOption for String 'test' : " << endl;
+       exit(1);         
+    }
+    if ( testString != testString0 ) {
+       cerr << "Bad String option set : " << testString << " vs " << testString0   << endl;
+       exit(1);    
+    }
+    
     
     // check the date conversion routines
     time1 = "3.1";

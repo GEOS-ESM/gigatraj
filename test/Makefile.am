@@ -96,7 +96,7 @@ if MPI
    check_PROGRAMS += test_MetGridSBRot_MPI
    test_MetGridSBRot_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
 endif 
-EXTRA_DIST += test_MetGridSBRot_MPI.sh 
+EXTRA_DIST += test_MetGridSBRot_MPI.sh test_MetGridSBRot.cfg
 
 if MERRA
    TESTS += test_MetMERRA
