@@ -40,6 +40,9 @@ int main(int argc, char * const argv[])
    int i;
    std::vector<Catalog::DataSource> destlist; 
    std::string datdir;
+   std::vector<float> *dvals;
+   std::string dquant;
+   std::string dunits;
    
    datdir = datadir("srcdir"); 
 
@@ -316,6 +319,126 @@ int main(int argc, char * const argv[])
       exit(1);     
    }
 
+   // dimensions
+   if ( catlog->dimensionValues( "nonexistent", dquant, dunits, &dvals ) ) {
+      cerr << "undefined dimension appears to be defined. ";
+      exit(1);
+   }
+   if ( catlog->dimensionValues( "dim01", dquant, dunits, &dvals ) ) {
+      if ( dquant != "lon" ) {
+         cerr << "dim01 quant is " << dquant<< " vs. 'lon'" << endl;
+         exit(1);
+      }
+      if ( dunits != "degrees_east" ) {
+         cerr << "dim01 units are " << dunits << " vs. 'degrees_east'" << endl;
+         exit(1);
+      }
+      if ( dvals->size() != 360 ) {
+         cerr << "dim01 values are the wrong size: " << dvals->size() << " vs " << 360 << endl;
+         exit(1);     
+      }
+      if ( mismatch( (*dvals)[0], -180.0) ) {
+         cerr << "dim01 value[0]: " << (*dvals)[0] << " vs " << -180.0 << endl;
+         exit(1);     
+      }
+      if ( mismatch( (*dvals)[1] - (*dvals)[0], 1.0) ) {
+         cerr << "dim01 delta: " << (*dvals)[1] - (*dvals)[0] << " vs " << 1.0 << endl;
+         exit(1);     
+      }
+      
+      delete dvals;
+      
+   } else {
+      cerr << "defined dimension appears to be undefined. ";
+      exit(1);
+   }
+   if ( catlog->dimensionValues( "dim02", dquant, dunits, &dvals ) ) {
+      if ( dquant != "lat" ) {
+         cerr << "dim02 quant is " << dquant<< " vs. 'lat'" << endl;
+         exit(1);
+      }
+      if ( dunits != "degrees_north" ) {
+         cerr << "dim02 units are " << dunits << " vs. 'degrees_north'" << endl;
+         exit(1);
+      }
+      if ( dvals->size() != 181 ) {
+         cerr << "dim02 values are the wrong size: " << dvals->size() << " vs " << 181 << endl;
+         exit(1);     
+      }
+      if ( mismatch( (*dvals)[0], -90.0) ) {
+         cerr << "dim02 value[0]: " << (*dvals)[0] << " vs " << -90.0 << endl;
+         exit(1);     
+      }
+      if ( mismatch( (*dvals)[dvals->size() - 1], 90.0) ) {
+         cerr << "dim02 last: " << (*dvals)[dvals->size() - 1] << " vs " << 90.0 << endl;
+         exit(1);     
+      }
+      
+      delete dvals;
+      
+   } else {
+      cerr << "defined dimension appears to be undefined. ";
+      exit(1);
+   }
+   if ( catlog->dimensionValues( "dim03", dquant, dunits, &dvals ) ) {
+      if ( dquant != "P" ) {
+         cerr << "dim03 quant is " << dquant<< " vs. 'P'" << endl;
+         exit(1);
+      }
+      if ( dunits != "hPa" ) {
+         cerr << "dim03 units are " << dunits << " vs. 'hPa'" << endl;
+         exit(1);
+      }
+      if ( dvals->size() != 4 ) {
+         cerr << "dim03 values are the wrong size: " << dvals->size() << " vs " << 4 << endl;
+         exit(1);     
+      }
+      if ( mismatch( (*dvals)[0], 1000.0) ) {
+         cerr << "dim03 value[0]: " << (*dvals)[0] << " vs " << 1000.0 << endl;
+         exit(1);     
+      }
+      if ( mismatch( (*dvals)[dvals->size() - 1], 20.0) ) {
+         cerr << "dim03 last: " << (*dvals)[dvals->size() - 1] << " vs " << 20.0 << endl;
+         exit(1);     
+      }
+      
+      delete dvals;
+      
+   } else {
+      cerr << "defined dimension appears to be undefined. ";
+      exit(1);
+   }
+   // make sure we can do this twice
+   if ( catlog->dimensionValues( "dim03", dquant, dunits, &dvals ) ) {
+      if ( dquant != "P" ) {
+         cerr << "dim03 quant is " << dquant<< " vs. 'P'" << endl;
+         exit(1);
+      }
+      if ( dunits != "hPa" ) {
+         cerr << "dim03 units are " << dunits << " vs. 'hPa'" << endl;
+         exit(1);
+      }
+      if ( dvals->size() != 4 ) {
+         cerr << "dim03 values are the wrong size: " << dvals->size() << " vs " << 4 << endl;
+         exit(1);     
+      }
+      if ( mismatch( (*dvals)[0], 1000.0) ) {
+         cerr << "dim03 value[0]: " << (*dvals)[0] << " vs " << 1000.0 << endl;
+         exit(1);     
+      }
+      if ( mismatch( (*dvals)[dvals->size() - 1], 20.0) ) {
+         cerr << "dim03 last: " << (*dvals)[dvals->size() - 1] << " vs " << 20.0 << endl;
+         exit(1);     
+      }
+      
+      delete dvals;
+      
+   } else {
+      cerr << "defined dimension appears to be undefined. ";
+      exit(1);
+   }
+   
+   
 
    /// try lookups
 //catlog->dump();

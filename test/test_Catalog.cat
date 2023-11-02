@@ -50,6 +50,11 @@ varS02/S = "wrong"
 varS03/S = ${litI01} > 6200 ? "wrong"
 varS03/S = "right"
 
+# define a dimension
+dim01 ~ lon; degrees_east ; LDN; -180 , 1, 360
+dim02 ~ lat; degrees_north; LHN; -90 , 90, 181
+dim03 ~ P; hPa; V; 1000, 500, 200, 20
+
 # define a target t01
 t01 := [${YEAR}-${MONTH}-${DOM}T00:30] ;P1D; 3; 8;at1valt01; at2valt01; at3valt01; at4valt01; pattern_for_t01
 # define a target t02
