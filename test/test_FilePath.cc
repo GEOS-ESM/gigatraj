@@ -551,7 +551,7 @@ int main()
     fp3.makedir();
     
 
-    (void) system("/bin/rm -rf test_FilePath_dir");
+    int junk = system("/bin/rm -rf test_FilePath_dir");
 
 
     exit(0);

@@ -576,7 +576,7 @@ int main()
 
     // delete the netcdf file
     cmd = "/bin/rm -f " + outfile;
-    (void) system(cmd.c_str());
+    int junkx = system(cmd.c_str());
 
     exit(0);
 }
