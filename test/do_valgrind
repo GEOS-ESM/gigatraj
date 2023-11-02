@@ -1,0 +1,248 @@
+#!/bin/sh
+#
+# runs valgrind on test programs, to look for memory leaks
+#
+
+COMPILE="Y"
+ERRHALT="N"
+PROBHALT="Y"
+RMLOG="Y"
+TESTING="N"
+
+USAGE="Usage:
+    do_valgrind [-c | -C] [-r|-R] [-e|-E] [-p|-P] [-t] [tests]
+
+     -c = compile each test program [default]
+     -C = do not compile each test program
+     -r = remove each problem-free log file [default]
+     -R = do not rmeove log files
+     -e = stop if a unit test fails
+     -E = do not stop if a unit test fails [default]
+     -p = stop if valgrid finds a problem [default]
+     -P = do not stop if valgrind finds a problem]
+     -t = do not actually perform the tests
+     -h = print this help message
+"
+
+# process command-line options
+while getopts hcCeEpPrRt OPT
+do
+   case $OPT in
+   c) COMPILE="Y";;
+   C) COMPILE="N";;
+   e) ERRHALT="Y";;
+   E) ERRHALT="N";;
+   p) PROBHALT="Y";;
+   P) PROBHALT="N";;
+   r) RMLOG="Y";;
+   R) RMLOG="N";;
+   t) TESTING="Y";;
+   h) echo "${USAGE}" >&2
+      exit 0;;
+   ?)  echo "${USAGE}" >&2
+       exit 1;;
+   esac
+done
+shift $(($OPTIND - 1))
+
+
+
+DEF_TESTS="
+test_RandomSrc
+test_Configuration
+test_Catalog
+test_FilePath
+test_FileLock
+test_CalGregorian
+test_Earth
+test_SerialGrp
+test_FileLock_Serial
+test_GridLatLonFieldSfc
+test_GridLatLonField3D
+test_GridLatLonFieldSfc_serial
+test_GridLatLonField3D_serial
+test_LinearVinterp
+test_LogLinearVinterp
+test_BilinearHinterp
+test_BilinearHinterp_serial
+test_ThetaOTF
+test_TropOTF
+test_PressOTF
+test_PAltOTF
+test_PAltDotOTF
+test_DensOTF
+test_ThetaDotOTF
+test_BalanceThetaDot1OTF
+test_MetSBRot
+test_MetSBRot_serial
+test_MetGridSBRot
+test_MetGridSBRot_serial
+test_MetMERRA
+test_MetMERRA2
+test_MetGEOSfpFcast
+test_MetGEOSfpAssim
+test_MetGEOSfp
+test_MetSelector
+test_Parcel
+test_StreamDump_Load
+test_StreamRead
+test_StreamPrint
+test_FlockSerial
+test_SwarmSerial
+test_ChangeVertical
+test_NetcdfIn
+test_NetcdfOut
+test_PGenRep
+test_PGenGrid
+test_PGenRnd
+test_PGenRndDisc
+test_PGenDisc
+test_PGenFile
+test_PGenNetcdf
+test_traj000
+test_traj001
+test_traj010
+test_gtmodel_s01.sh
+" 
+
+MPI_TESTS="
+test_MPIGrp.sh
+test_FileLock_MPI.sh
+test_GridLatLonFieldSfc_MPI.sh
+test_GridLatLonField3D_MPI.sh
+test_BilinearHinterp_MPI.sh
+test_MetSBRot_MPI.sh
+test_MetGridSBRot_MPI.sh
+test_FlockMPI.sh
+test_SwarmMPI.sh
+test_StreamPrintMPI.sh
+test_StreamReadMPI.sh
+test_NetcdfInMPI.sh
+test_NetcdfOutMPI.sh
+"
+
+TO_TEST="$*"
+if [ "x${TO_TEST}" = "x" ] ; then
+   TO_TEST="${DEF_TESTS}"
+fi
+
+#echo "${TO_TEST}"
+
+for TST in ${TO_TEST}
+do
+
+   echo -n "${TST} ... "
+   
+   if echo "${TST}" | egrep '\.sh$' > /dev/null ; then
+      TSTPROG=`echo "${TST}" | sed -e 's/\.sh$//'`
+      ISSHELL="Y"
+   else
+      TSTPROG="${TST}"
+      ISSHELL="N"
+   fi
+
+   TSTCC="${TSTPROG}.cc"
+   if [ ! -f "${TSTCC}" ] ; then
+      TSTCC="${TST}Serial.cc"
+      
+      if echo "${TSTCC}" | fgrep 'Serial.cc' > /dev/null ; then
+         # strip off the "Serial"
+         TSTCC=`echo "${TSTCC}" | sed -e 's/_\{0,1\}Serial\.cc/.cc/'`
+      fi
+      
+   fi
+   echo "=== ${TSTCC} -> ${TSTPROG}"
+
+   if [ -s "${TSTCC}" ] ; then
+      if [ "x${COMPILE}" = "xY" ] ; then
+         touch ${TSTCC} && make ${TSTPROG} >/dev/null 2>&1
+         if [ $? != 0 ] ; then
+            echo "${TST} Compile failed"
+            exit 1
+         fi
+      fi
+   else
+      echo "nothing to compile" 
+      continue
+   fi
+
+
+   LOG="valgrind_${TST}.log"
+
+   if [ "x${TESTING}" != "xY" ] ; then
+
+       /bin/rm -f "${LOG}"
+   
+       if [ "x${ISSHELL}" = "xN" ] ; then
+          valgrind \
+                --leak-check=full \
+                --show-leak-kinds=all \
+                --track-origins=yes \
+                --show-reachable=no \
+                --track-fds=yes \
+                  ./${TST}  >"${LOG}" 2>&1
+          STATUS=$?
+       else 
+           ./${TST} -v " --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=no  --track-fds=yes"   >"${LOG}" 2>&1
+          STATUS=$?
+       fi
+       if [ ${STATUS} != 0 ] ; then
+          echo -n "**FAILED**; "
+       fi
+       if [ -s "${LOG}" ] ; then
+       
+          # How many times was valgrid run from the program?
+          # This will be 1 for a single compiled executable,
+          # but it moight be more than 1 for a shell script that calls executables.
+          NR=`fgrep -c 'Memcheck, a memory error detector' "${LOG}" `
+       
+         # fgrep 'definitely lost' valgrind_*.log
+          OK1="valgrind errors;"
+          NOK1=`fgrep -c 'ERROR SUMMARY: 0 errors from 0 contexts' "${LOG}" `
+          if [ ${NOK1} -eq ${NR} ] ; then
+             OK1=""
+          fi
+          OK2="unfreed heap bocks;"
+          NOK2=`fgrep -c 'All heap blocks were freed -- no leaks are possible' "${LOG}" `
+          if [ ${NOK2} -eq ${NR} ] ; then
+             OK2=""
+          fi
+          OK3="unclosed files;"
+          NOK3=`fgrep -c 'FILE DESCRIPTORS: 3 open (3 std) at exit.' "${LOG}"`
+          if [ ${NOK3} -eq ${NR} ] ; then
+             OK3=""
+          fi
+
+
+          if [ "x${OK1}" = "x" -a "x${OK3}" = "x" ] ; then
+             if [ ${STATUS} = 0 ] ; then
+                echo "ok"
+                if [ "x${RMLOG}" = "xY" ] ; then
+                   rm "${LOG}"
+                fi
+             else
+                 echo "(sigh)"
+             fi   
+          else
+             echo "problems: ${OK1} ${OK2} ${OK3} "
+             if [ "x${PROBHALT}" = "xY" ] ; then
+                echo "check ${LOG}"
+                exit 1
+             fi
+          fi
+          
+          if [ ${STATUS} != 0 -a "x${ERRHALT}" = "xY" ] ; then
+             exit 1
+          fi
+
+          
+       else
+          echo "No ${LOG} produced" >&2
+          exit 1
+       fi
+   else
+      echo "[skipped]"
+   fi
+done
+
+
