@@ -1,3 +1,50 @@
+1) checkout out and build GEOSgcm_gigatraj
+   git clone git@github.com:GEOS-ESM/GEOSgcm.git GEOSgcm_gigatraj
+   cd GEOSgcm_gigatraj
+   git checkout geos_gigatraj
+   ./parallel_build.csh
+
+2) After building GEOSgcm successfully, users can run ./gcm_setup just as a regular GEOSgcm setup in install/bin directory. Please refer to https://github.com/GEOS-ESM/GEOSgcm/wiki  for help
+
+3) After the setup, users can find find the section GIGATRAJ CONFIG in AGCM.rc
+
+GIGATRAJ_INTERNAL_RESTART_FILE: should be commented out for the first time when there is no internal restart file. 
+GIGATRAJ_LON_START:     only two choices: 0 or -180
+GIGATRAJ_PARCELS_FILE:  the file name that contains the particals information
+GIGATRAJ_REBALANCE_MINUTES:  re-distributed the particals so each partical remains local to the data
+GIGATRAJ_OUTPUT_MINUTES:   output interval
+GIGATRAJ_EXTRA_FIELDS: extra information in the position of the particals
+
+
+ # GIGATRAJ RUN CONFIG
+# -------------------------
+#GIGATRAJ_INTERNAL_RESTART_FILE:         gigatraj_internal_rst
+GIGATRAJ_INTERNAL_CHECKPOINT_FILE:      gigatraj_internal_checkpoint
+GIGATRAJ_INTERNAL_CHECKPOINT_TYPE:      default
+GIGATRAJ_REGRID_TO_LATLON:              NO
+# 0--360 or -180--180
+GIGATRAJ_LON_START:                     -180.
+GIGATRAJ_PARCELS_FILE:                  parcels.nc4
+# time interval (minutes) to rebalance the parcels, i.e, the process keeps its own parcels
+GIGATRAJ_REBALANCE_MINUTES:             15
+# time interval (minutes) to write output
+GIGATRAJ_OUTPUT_MINUTES:                15
+
+# using ";" to separate fields
+# fields supported: CA.bcDP;CA.ocWT;CA.bcphobic;CA.ocphobic;CA.bcphilic;CA.ocphilic
+#GIGATRAJ_EXTRA_FIELDS:                  T;TH;CA.bcDP;CA.ocWT;CA.bcphobic;CA.ocphobic;CA.bcphilic;CA.ocphilic
+
+4) HISTORY collections
+   There would be a  geosgcm_gigatra collection that has some fields from GOCART
+
+
+
+
+
+
+
+It may be obsolte below this line
+##################### 
 Build in discover
 
 1) module load comp/gcc/12.1.0
