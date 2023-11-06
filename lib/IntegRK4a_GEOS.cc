@@ -515,7 +515,7 @@ void IntegRK4a_GEOS :: go( int n, real *lons, real *lats, real *zs, int *flags, 
            // update the longitude and latitude
            nav->deltapos( &(lons[ii]), &(lats[ii]), dx, dy );
            if ( debug >= 100 ) {
-              std::cerr << "     IntegRK4a_GEOS: dx, dy, lat, lon = " << dx << ", " << dy << ", " << lat << ", " << lon << std::endl;
+              std::cerr << "     IntegRK4a_GEOS: dx, dy, lat, lon = " << dx << ", " << dy << ", " << lats[ii] << ", " << lons[ii] << std::endl;
            }
            // update the vertical coordinate
            zs[ii] += dz;
