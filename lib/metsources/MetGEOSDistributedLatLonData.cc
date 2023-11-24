@@ -161,11 +161,11 @@ void MetGEOSDistributedLatLonData::get_uvw( double time, int n, float* lons, flo
   int II[n]{};
 
   for (int i=0; i<n; i++){
-    II[i] = floor((lons[i]+dlon/2.0)/dlon);
+    II[i] = floor((lons[i]+dlon/2.0 + 180.0)/dlon);
   }  
   int JJ[n]{};
   for (int i=0; i<n; i++){
-    JJ[i] = floor((lats[i]+90.0+dlat/2.0)/dlat);
+    JJ[i] = floor((lats[i]+dlat/2.0 + 90.0)/dlat);
   }  
 
   int Ranks[n] {};
@@ -296,11 +296,11 @@ void MetGEOSDistributedLatLonData::getData( string quantity, double time, int n,
   int II[n]{};
 
   for (int i=0; i<n; i++){
-    II[i] = floor((lons[i]+dlon/2.0)/dlon);
+    II[i] = floor((lons[i]+dlon/2.0 +180.0)/dlon);
   }  
   int JJ[n]{};
   for (int i=0; i<n; i++){
-    JJ[i] = floor((lats[i]+90.0+dlat/2.0)/dlat);
+    JJ[i] = floor((lats[i]+dlat/2.0 +90.0)/dlat);
   }  
 
   int Ranks[n] {};
@@ -390,11 +390,11 @@ void MetGEOSDistributedLatLonData::getData( string quantity, double time, int n,
   int II[n]{};
 
   for (int i=0; i<n; i++){
-    II[i] = floor((lons[i]+dlon/2.0)/dlon);
+    II[i] = floor((lons[i]+dlon/2.0 + 180.0)/dlon);
   }  
   int JJ[n]{};
   for (int i=0; i<n; i++){
-    JJ[i] = floor((lats[i]+90.0+dlat/2.0)/dlat);
+    JJ[i] = floor((lats[i]+dlat/2.0 + 90.0)/dlat);
   }  
 
   int Ranks[n] {};

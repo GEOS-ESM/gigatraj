@@ -900,7 +900,7 @@ void GridCubedSphereField3D::gridpoints( int n, int* is, int* js, int* ks, real*
 void GridCubedSphereField3D::latlonindex( real lat_deg, real lon_deg, int& i, int& j ) const
 {
    double shift  = 0.174532925199433;
-   double tolerance    = 10.e-7;
+   double tolerance    = 10.e-13;
 
    double pi = 3.1415926535;
    double c2r = pi/180.0;
