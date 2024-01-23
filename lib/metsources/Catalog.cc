@@ -6186,6 +6186,7 @@ Catalog::VarVal* Catalog::eval( Catalog::VarExpr* expr )
                eval( v1 );
             }
             if ( ( ! v1->hasLiteral() ) && v1->hasEval() ) {
+                // it's just a value
                 vv = lookup( v1->evalS );
                 if ( vv != NULLPTR ) {
                    vv->fmt1 = v1->fmt1;
@@ -6592,7 +6593,7 @@ std::string Catalog::interpVarRefs( const std::string refstr )
                     }
                     if ( fmt1 >= 0 ) {
                        found->fmt1 = fmt1;
-                       if ( fmt2 > 0 ) {
+                       if ( fmt2 >= 0 ) {
                           found->fmt2 = fmt2;
                        }
                     }
@@ -6657,6 +6658,10 @@ Catalog::VarVal* Catalog::lookup( const std::string& name )
      bool ok;
      
      result = NULLPTR;
+     
+if ( name == "START" ) {
+   std::cerr << "hello" << std::endl;
+}     
      
      if ( dbug > 60 ) {
         std::cerr << "Catalog::lookup begins w/ name = " << name << std::endl;

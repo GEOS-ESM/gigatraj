@@ -43,6 +43,8 @@ expF04/F = 45.02 + 34.5*0.25
 expI05/I = 60-3
 expS06/S = "foo" + "bar"
 expD07/D = ${litD01} + 5
+expS08/S = "$3.2{expS06}"
+expS09/S = "${expS08}" + "g27"
 
 varS01/S = true ? "hello"
 varS02/S = ${litI01} < 200 ? "right"

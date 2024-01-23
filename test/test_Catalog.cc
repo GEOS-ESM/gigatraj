@@ -289,6 +289,15 @@ int main(int argc, char * const argv[])
       cerr << endl;
       exit(1);     
    }
+   ok = catlog->variableValue( "expS09", teststring );
+   if ( ! ok || ( teststring != "obag27" ) ) {
+      cerr << "variableValue of expS09 failed ";
+      if ( ok ) {
+         cerr << ", returning '" << teststring << "'";
+      }
+      cerr << endl;
+      exit(1);     
+   }
    
    // multiply-defined variables
    ok = catlog->variableValue( "varS01", teststring );

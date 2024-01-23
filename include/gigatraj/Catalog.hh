@@ -190,7 +190,7 @@ The type may be "S" (for string), "B" (for boolean), "I" (for integer),
 The expressions may be simple literal values, or they may be 
 complicated arithmetic expressions. (If the type of the expression is not right, it will
 be converted to the proper type when it is evaluated.)  
-Multiple connfiguration lines may define a single variable. The definitions are evaluated
+Multiple configuration lines may define a single variable. The definitions are evaluated
 in order, and the first definition whose test expression evaluates to "true" will be used.
 Examples of variable definitions might be:
 \code
@@ -202,11 +202,49 @@ EXAMPLE02/I = 25
 
 In this example, FOO takes on the value "New" if the date of the data request is later than or equal to Jan. 1, 2000.
 (Note that a date literal is enclosed in brackets, and a string literal is enclosed in quotes.); otherwise it takes
-the value "Old". EXAMPLE01 is defined an an integer that depends on the separately-defined variable EXMAPLE02
+the value "Old". EXAMPLE01 is defined an an integer that depends on the separately-defined variable EXAMPLE02
 and the automatically-defined DOY (the day of the year of the data request).
 
 Note that circular definitions of variables is not permitted. You cannot define "FOO" with an expression involving "BAR" 
 and then define "BAR" with an expression involving "FOO".
+
+A variable reference may optionally include a format between the "$" and the opening brace before the name of the variable being referenced.
+The formatting is applied after the variable reference has been evaluated, and as it is being interpolated ("printed") 
+into a string or template. Booleans and integers take a single format code, a positive integer, which inicates the length of
+the output. For example, if variable FOO is a boolean with a value of true, then "$3{FOO}" results in "tru" (the first
+three characters of the string "true").  If Foo is an integer with the value 5, theh "$3{FOO}" results in "005"; leading
+digits are zero-filled.  Floating point valaues, strings, and dates take two format codes
+(both positive integers or zero), separated by a period (".").
+For floats, the two format codes are the width of the ouptut and the number of decimal places.
+For example, if floating variable FOO has the value 10.2375, then "$5.2{FOO}" results in "10.24".
+For strings, the first format code is the width, and the second is the starting position.
+If FOO is a string variable with value "ABCDEFG", then "$4.1{FOO}" becomes "BCDE".
+For dates, the format codes have the same meaning as for strings; the date is converted
+to an ISO 8601 format string first, and then the formatting is applied.
+
+Note that format codes are useful only when interpolating variable references into string expressions.
+Do not attempt to use them in straight variable reference, because you are unlikely to get the results
+that you want.  For example,
+\code
+FOO/S = "ABCDEFG"
+BAR/S = "$3.2{FOO}"
+\endcode
+will result in BAR evaluating to the string "CDE".
+
+But 
+\code
+FOO/S = "ABCDEFG"
+BAR/S = $3.2{FOO}
+\endcode
+will result in BAR evaluating to "ABCDEFG". The reason is that format specifiers are used
+only when interpolating into strings, not when assigning values directly to other variables.
+In this example, trying to use the BAR variable will  make the catalog look up the value of the 
+FOO variable and assign that as BAR's evaluated value. And because FOO is not being interpolated 
+into a string, the formatting codes here are ignored. The the previous example, 
+BAR was assigned a string value, and inside the string was a reference to FOO. As the value of
+FOO is interpo;lated into the string value (as opposed to merely being looked up), the
+formatting codes are applied, and we get the BAR value we intended, "CDE".
+
 
 The Catalog also permits defining Dimensions, to describe the dimensions of the data.
 A Dimension definition line begins with an identifier, followed by a tilde ("~") character.
@@ -2424,9 +2462,9 @@ class Catalog {
            and returns that value converted to a string.
            
            Note that unlike the query() method, variableValue() does not
-           define a quanbtity or a date, so the automatically-defined
+           define a quantity or a date, so the automatically-defined
            variables QUANTITY, DATETIME, and so on are undefined.
-           This inturns means that many variables cannot be evaluated,
+           This in turn means that many variables cannot be evaluated,
            and the return value will reflect this. Thus, this method is
            intended mainly for debugging. 
            
