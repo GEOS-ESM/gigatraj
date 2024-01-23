@@ -98,6 +98,14 @@ if MPI
 endif 
 EXTRA_DIST += test_MetGridSBRot_MPI.sh test_MetGridSBRot.cfg
 
+if MYGEOS
+   TESTS += test_MetMyGEOS.sh
+   check_PROGRAMS += test_MetMyGEOS
+   test_MetMyGEOS_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
+   EXTRA_DIST += test_MetMyGEOS.sh test_MetMyGEOS.cat ;
+   EXTRA_DIST += Data/gigatraj_merra2.geosgcm_prog.20000415_0300z.nc4  
+   EXTRA_DIST += Data/gigatraj_merra2.geosgcm_prog.20000415_0400z.nc4
+endif
 if MERRA
    TESTS += test_MetMERRA
    check_PROGRAMS += test_MetMERRA
@@ -114,12 +122,6 @@ if GEOSFP
    test_MetGEOSfpFcast_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
    test_MetGEOSfpAssim_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
    test_MetGEOSfp_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
-endif
-if MYGEOS
-#   TESTS += test_MetMyGEOS.sh
-   check_PROGRAMS += test_MetMyGEOS
-#   test_MetMyGEOS_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
-   EXTRA_DIST += test_MetMyGEOS.sh test_MetMyGEOS.cat;
 endif
 TESTS += test_MetSelector
 check_PROGRAMS += test_MetSelector

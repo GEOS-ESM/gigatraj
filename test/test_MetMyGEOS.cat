@@ -1,25 +1,19 @@
 
-;horizCoord; vertCoord
+;lonCoord; latCoord; vertCoord
 
-#ROOT/S = "/misc/lrl02/lait/weiyuan/"
-ROOT/S = "/discover/nobackup/wjiang/gigatraj_merra2/scratch/"
+# Dimensions
+#
+MYLON ~ lon; degrees_east ; LHN; -180.0, 108.0, 5
+MYLAT ~ lat; degrees_north; LHN; -90.0, 90.0, 6
+MYPRS ~ P; hPa; V; 350, 300, 250, 200, 150, 100, 70, 50, 40, 30, 20
+
+ROOT/S = "${GIGATRAJ_CATALOGS}/Data"
 
 datdir/S = ${ROOT} + "/"
 
-tmain := [${YEAR}-${MONTH}-${DOM}T${HOUR}:00];PT1H;0;1; 0.5x0.5; P48; ${datdir}/gigatraj_merra2.geosgcm_prog.${YEAR}${MONTH}${DOM}_${HOUR}${MINUTE}z.nc4
+tmain := [${YEAR}-${MONTH}-${DOM}T${HOUR}:00];PT1H;0;1; MYLON;MYLAT; MYPRS; ${datdir}/gigatraj_merra2.geosgcm_prog.${YEAR}${MONTH}${DOM}_${HOUR}${MINUTE}z.nc4
 
-H:     edge_heights:                        3: tmain[m]
-O3:    ozone_mass_mixing_ratio:             3: tmai[kg kg-1]
-OMEGA: vertical_pressure_velocity:          3: tmain[Pa s-1]
-PHIS:  surface geopotential height:         2: tmain[m+2 s-2]
-PL:    mid_level_pressure:                  3: tmain[Pa]
 PS:    surface_pressure:                    2: tmain[Pa]
-QI:    mass_fraction_of_cloud_ice_water:    3: tmain[kg kg-1]
-QL:    mass_fraction_of_cloud_liquid_water: 3: tmain[kg kg-1]
-QV:    specific_humidity:                   3: tmain[kg kg-1]
-RH:    relative_humidity_after_moist:       3: tmain[1]
-SLP:   sea_level_pressure:                  2: tmain[Pa]
 T:     air_temperature:                     3: tmain[K]
 U:     eastward_wind:                       3: tmain[m s-1]
-V:     northward_wind:                      3: tmain[m s-1]
 

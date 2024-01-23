@@ -13,7 +13,7 @@ shift `expr ${OPTIND} - 1`
 
 
 
-This="$0"
+THIS="$0"
 HERE=`dirname "${THIS}"`
 
 export GIGATRAJ_CATALOGS="${HERE}"

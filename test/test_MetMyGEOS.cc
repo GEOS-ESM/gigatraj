@@ -49,31 +49,31 @@ int main()
     std::string baseOffset = "2000-03-17T00:13";
    
     // the valid-at time to work with, mainly
-    std::string date0 = "2000-04-15T03:00";
+    std::string date0 = "2000-04-15T03:00:00";
     // the next timestamp after date0
-    std::string date1 = "2000-04-15T04:00";
+    std::string date1 = "2000-04-15T04:00:00";
     // a timestamp between date0 and date1
-    std::string datem = "2000-04-15T03:43";
+    std::string datem = "2000-04-15T03:52:20";
     
     // the expected number of longitudes
-    int eNlons = 720;
+    int eNlons = 5;
     // the expected number of latitudes
-    int eNlats = 361;
+    int eNlats = 6;
     // the expeted number of vertical levels fo r3D quantities
-    int eNvert = 48;
+    int eNvert = 11;
     
     // index for testing a longitude value
-    int iLon0 = 362;
+    int iLon0 = 3;
     // the longitude corresponding to that index
-    real eLon0 = 1.0;
+    real eLon0 = 36.0;
     
     // index for testig a latitude value
-    int iLat0 = 182;
+    int iLat0 = 3;
     // the latitude value corresponding to that index
-    real eLat0 = 1.0;
+    real eLat0 = 18.0;
     
     // index for texting a vertical level value
-    int iVrt0 = 21;
+    int iVrt0 = 2;
     // the vertical level value corresponding to that index
     real eVert0 = 250.0;
     
@@ -85,17 +85,17 @@ int main()
     // the units of that quantity
     std::string units2d = "Pa";
     // the 2D data value at [0,0]
-    real  eDat2dLL = 67862.34; 
+    real  eDat2dLL = 67862.344; 
     // the 2D data value at [eNlons-1, eNlats-1]
-    real  eDat2dHH = 101982.0; 
+    real  eDat2dHH = 101981.953; 
     // the 2D data value at [eNlons-1, 0]
-    real  eDat2dHL = 67862.34; 
+    real  eDat2dHL = 67862.344; 
     // the 2D data value at [0, eNlats-1]
-    real  eDat2dLH = 101982.0; 
+    real  eDat2dLH = 101981.953; 
     // the 2D data value at [eNlons/2, eNlats/2]
-    real  eDat2dMM = 100771.8; 
+    real  eDat2dMM = 101779.711; 
     // the 2D data value at (eNlons/2+1, eNLats/2+1]
-    real  eDat2dM1M1 = 100770.2; 
+    real  eDat2dM1M1 = 98591.453; 
     
     // the 3D quantity to test
     std::string quant3d = "T";
@@ -106,59 +106,59 @@ int main()
     // the vertical coord units
     std::string vunits3d = "hPa";
     // the 3D data value at [0,0,0]
-    real  eDat3dLLL = bad; 
+    real  eDat3dLLL = 213.973; 
     // the 3D data value at [eNlons-1, eNlats-1, eNvert-1]
-    real  eDat3dHHH = 218.0784; 
+    real  eDat3dHHH = 228.962; 
     // the 3D data value at [eNlons-1, 0, 0]
-    real  eDat3dHLL = bad; 
+    real  eDat3dHLL = 213.973; 
     // the 3D data value at [0, eNlats-1, 0]
-    real  eDat3dLHL = 251.0733; 
+    real  eDat3dLHL = 218.357; 
     // the 3D data value at [0, 0, eNvert-1]
-    real  eDat3dLLH = 224.9851; 
+    real  eDat3dLLH = 203.873; 
     // the 3D data value at [eNlons-1, eNlats-1, 0]
-    real  eDat3dHHL = 251.0733; 
+    real  eDat3dHHL = 218.357; 
     // the 3D data value at [eNlons-1, 0, eNvert-1]
-    real  eDat3dHLH = 224.9851; 
+    real  eDat3dHLH = 203.873; 
     // the 3D data value at [0, eNlats-1, eNvert-1]
-    real  eDat3dLHH = 218.0784; 
+    real  eDat3dLHH = 228.962; 
     // the 3D data value at [eNlons/2, eNlats/2, eNvert/2]
-    real  eDat3dMMM = 190.2171; 
+    real  eDat3dMMM = 193.682; 
 
-    // indices for OTf test
+    // indices for OTF test
     int iLon1 = eNlons/3;
     int iLat1 = eNlats/4;
     int iVrt1 = eNvert/2;
 
     // coordinates for direct access test
-    real eLon2 = 1.0;
-    real eLat2 = 0.5;
+    real eLon2 = 36.0;
+    real eLat2 = 18.0;
     real eVrt2 = 300.0;
-    real eDat3d2 = 243.6409;
+    real eDat3d2 = 239.99388;
     
     // direct access test at the next time step
     // same coords as for test2, but for date1 instead of date0
-    real eDat3d3 = 243.6399;
+    real eDat3d3 = 240.09293;
     
     // coordinates for longitudinal interp test
-    real eLon4 = eLon2 + 0.5;
-    real eLon4a = eLon2 + 0.5/2.0;
+    real eLon4 = eLon2 + 72.0;
+    real eLon4a = eLon2 + 36.0/2.0;
     real eLat4 = eLat2;
     real eVrt4 = eVrt2;
-    real eDat3d4 = 243.5765;
+    real eDat3d4 = 243.73189;
     
     // coordinates for latitudinal interp test
     real eLon5 = eLon2;
-    real eLat5 = eLat2 + 0.5;
-    real eLat5a = eLat2 + 0.5/2.0;
+    real eLat5 = eLat2 + 36.0;
+    real eLat5a = eLat2 + 36.0/2.0;
     real eVrt5 = eVrt2;
-    real eDat3d5 = 243.7912;
+    real eDat3d5 = 222.74300;
     
     // coordinates for vertical interp test
     real eLon6 = eLon2;
     real eLat6 = eLat2;
     real eVrt6 = 350.0;
     real eVrt6a = 340.0;
-    real eDat3d6 = 250.7633;
+    real eDat3d6 = 246.84937;
     
     /////////////////// Test the MyGEOS_Directory class here
 
