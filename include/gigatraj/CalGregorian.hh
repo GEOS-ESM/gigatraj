@@ -2,6 +2,7 @@
 #define GIGATRAJ_CALGREGORIAN_H
 
 #include "gigatraj/gigatraj.hh"
+#include <time.h>
 
 namespace gigatraj {
 
@@ -118,7 +119,7 @@ class CalGregorian {
       std::string date1900( double day, int format=-999 ) const;    
 
       /// returns the output format style
-      /*! Tbhis method returns a format code that determines the
+      /*! This method returns a format code that determines the
           precisions of the output from date1900().
           
           \return the format code.
@@ -144,6 +145,23 @@ class CalGregorian {
           
       */
       void format( const int fmt=2 );
+      
+      /// converts a Unix epoch time to an ISO8601 string
+      /*! this method converts a Unoix epoch time (as returned by the C time() function) 
+          to an ISO8601 string.
+          
+          \param t the Unix epoch time (seconds elapsed wince 1970-01-01T00:00:00)
+          \param format if -999, then this is ginored. Otherwise, it overrides the object's format code
+                  * -999 = use the default format set for this object
+                  * 0 = date only, with no time (yyyy-mm-dd)
+                  * 1 = date plus the hour (yyyy-mm-ddThh)
+                  * 2 = date plus the hour and minute (yyyy-mm-ddThh:mm)
+                  * 3 = date plus the hour, minute, and integer second (yyyy-mm-ddThh:mm:ss)
+                  * 4 = date plus the hour, minute, and floating second (to four decimal places) (yyyy-mm-ddThh:mm:ss.ssss) 
+          \return the ISO8601 format date string
+      
+      */
+      std::string epochDate( time_t t, int format=-999  ) const;
       
    private:
       static const int monthlengths[13];

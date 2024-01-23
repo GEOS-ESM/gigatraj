@@ -471,6 +471,29 @@ std::string CalGregorian::date1900( double day, int format ) const
      
 }
 
+std::string CalGregorian::epochDate( time_t t, int format ) const
+{
+     struct tm *tparts;
+     std::string result;
+
+     result = "invalid";
+     
+     tparts = gmtime( &t );
+     if ( tparts != NULLPTR ) {
+     
+        result = buildDate( tparts->tm_year + 1900 
+                          , tparts->tm_mon + 1
+                          , tparts->tm_mday 
+                          , tparts->tm_hour 
+                          , tparts->tm_min
+                          , tparts->tm_sec * 1.0
+                          , format );
+     
+     }
+     
+     return result;
+}
+
 int CalGregorian::format() const
 {
     return ofmt;
