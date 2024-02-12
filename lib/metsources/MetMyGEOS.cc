@@ -459,19 +459,25 @@ bool MetMyGEOS::legalQuantity( const std::string quantity )
      bool result;
      std::string dayt;
 
-     if ( quantity == pressure_name
-       || quantity == pottemp_name
-       || quantity == palt_name
-       || quantity == altitude_name 
-       || quantity == modellevel_name ) {
-       
-       // these quantities are legal by definition,
-       // since they are built-in 
-       result = true;
+     // try looking it up
+     result = dsInit( quantity );
+     if ( ! result ) {
+     
+        if ( quantity == pressure_name
+          || quantity == pressureDot_name
+          || quantity == pottemp_name
+          || quantity == thetaDot_name
+          || quantity == palt_name
+          || quantity == paltDot_name
+          || quantity == altitude_name 
+          || quantity == altDot_name
+          || quantity == modellevel_name ) {
+          
+          // these quantities are legal by definition,
+          // since they are built-in 
+          result = true;
 
-     } else {
-        // has to be looked up
-        result = dsInit( quantity );
+        }
      }
               
      return result;
@@ -596,6 +602,7 @@ GridLatLonField3D* MetMyGEOS::new_directGrid3D( const std::string quantity, cons
        component_2 = defaultThis->new_directGrid3D(pressure_name, time);
        tmp1 = dynamic_cast<GridLatLonField3D*>(gettheta.calc( *component_1, *component_2 ));
        *grid3d = *tmp1;
+       grid3d->set_quantity( quantity );
        delete tmp1;
        defaultThis->remove( component_2 ); 
        defaultThis->remove( component_1 );
@@ -620,7 +627,6 @@ GridLatLonField3D* MetMyGEOS::new_directGrid3D( const std::string quantity, cons
           if ( quantity != "PL" ) { 
              component_1 = defaultThis->new_directGrid3D("PL", time);
              *grid3d = *component_1;
-             grid3d->set_quantity(quantity);
              defaultThis->remove( component_1 );
           } else {
              readSource( quantity, time, grid3d );   
@@ -1566,10 +1572,13 @@ void MetMyGEOS::load_vertWindInfo()
 {
     // vertical wind
     Catalog::DataSource vw;
+    MetGridData::vWindStuff vw2;
+    
+    // set up vertical wind descriptions
+    // in the MetGridData vertWinds map:
     
     verticalWinds.clear();
     
-    // setup vertical wind descriptions
     vw.name = altDot_name;
     vw.units = "m/s";
     vw.scale = 1.0;
@@ -1580,6 +1589,7 @@ void MetMyGEOS::load_vertWindInfo()
     vw.units = "Pa/s";
     vw.scale = 1.0;
     vw.offset = 0.0;
+    verticalWinds[ pressure_name ] = vw;
     verticalWinds[ pressure_name ] = vw;
     
     vw.name = thetaDot_name;
@@ -1592,8 +1602,36 @@ void MetMyGEOS::load_vertWindInfo()
     vw.units = "m/s";
     vw.scale = 1.0;
     vw.offset = 0.0;
-    verticalWinds[ pottemp_name ] = vw;
+    verticalWinds[ palt_name ] = vw;
 
+    // set up vertical wind descriptions
+    // in the Catalog vertwind_quants map:
+    
+    vertwind_quants.clear();
+
+    vw2.quantity = altDot_name;
+    vw2.units = "m/s";
+    vw2.MKSscale = 1.0;
+    vw2.MKSoffset = 0.0;
+    vertwind_quants[ altitude_name ] = vw2;
+
+    vw2.quantity = pressureDot_name;
+    vw2.units = "Pa/s";
+    vw2.MKSscale = 1.0;
+    vw2.MKSoffset = 0.0;
+    vertwind_quants[ pressure_name ] = vw2;
+    
+    vw2.quantity = thetaDot_name;
+    vw2.units = "K/s";
+    vw2.MKSscale = 1.0;
+    vw2.MKSoffset = 0.0;
+    vertwind_quants[ pottemp_name ] = vw2;
+
+    vw2.quantity = paltDot_name;
+    vw2.units = "m/s";
+    vw2.MKSscale = 1.0;
+    vw2.MKSoffset = 0.0;
+    vertwind_quants[ palt_name ] = vw2;
 }
 
 void MetMyGEOS::refresh_OTF()
