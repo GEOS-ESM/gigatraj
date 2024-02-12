@@ -1148,8 +1148,8 @@ int main( int argc, char * argv[] )
            
            if ( verbose ) {
               cerr << "Time = " << metsource->time2Cal(time) << " : ";
-              //cerr << " = " << time << " : " << ", delta=" << tdelta;
-              //cerr << endl;
+              //cerr << " = " << time << " : " << ", delta=" << tdelta << " : ";
+              //cerr << endl;              
            }
 
            // save the current model state?
