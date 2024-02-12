@@ -401,7 +401,7 @@ std::string CalGregorian::date1900( double day, int format ) const
      }
 
  
-     day2 = day + 693900.0;
+     day2 = trunc(day) + 693900.0;
      y = floor( (day2 + 1.478)/365.2425 );
      if ( day2 < (365*y+y/4-y/100+y/400) ) {
         y--;
