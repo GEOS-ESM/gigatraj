@@ -713,7 +713,7 @@ GridField3D* MetGridData::new_mgmtGrid3D( const std::string& quantity, const std
                 std::cerr << "MetGridData::new_mgmtGrid3D:  request fulfilled from disk cache" << std::endl;
              }  
              
-             // need to set the PGrp stuff befiore we use this grid.
+             // need to set the PGrp stuff before we use this grid.
              grid->setPgroup( my_pgroup, my_metproc );  
              
           }
