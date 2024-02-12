@@ -514,6 +514,28 @@ int main(int argc, char * const argv[])
       exit(1);        
    }
 
+
+   // check the weird quantity name
+   ok = catlog->query( "stuff$7(93)5m@_+-&^end", "2021-07-15T10:34", destlist, "20210714_00" );
+   if ( ok  && destlist.size() != 1 ) {
+      cerr << "lookup of s returned " << destlist.size() << " items" << std::endl;
+      exit(1);     
+   }
+   if ( destlist[0].pre != "pattern_for_t02" ) {
+      cerr << "lookup of stuff$7(93)5m@_+-&^end returned " << destlist[0].pre  << " as its first 'pre'" << std::endl;
+      exit(1);        
+   }
+   if ( destlist[0].dims != 2 ) {
+      cerr << "lookup of stuff$7(93)5m@_+-&^end dest # 0 dimensionality = " << destlist[0].dims  << std::endl;
+      exit(1);                 
+   }
+   teststring = catlog->getAttr( destlist[0], "attr2" );
+   if ( teststring != "at2valt02" ) {
+      cerr << "lookup of stuff$7(93)5m@_+-&^end dest # 0 attribute 'attr2' = " << teststring  << std::endl;
+      exit(1);           
+   }
+
+
 catlog->debug( 100 );
    exit(0);
 

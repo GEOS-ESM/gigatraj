@@ -3026,6 +3026,59 @@ std::string Catalog::getIdentifier(  const char* str, size_t& idx )
 }
 
 
+std::string Catalog::getWeirdIdentifier(  const char* str, size_t& idx )
+{
+    char cc;
+    std::string ident;
+    int nOpenParens;
+    
+    ident = "";
+    if ( str[idx] == '(' ) {
+       idx++;
+       
+       nOpenParens= 1;
+       
+       while ( str[idx] != 0 ) {
+          // the string is not ended yet
+          
+          // count any open parens
+          if ( str[idx] == '(' ) {
+             nOpenParens++;
+          }
+          // and close any parens we encounter as well.
+          if ( str[idx] == ')' ) {
+             nOpenParens--;
+          }
+          
+          if ( nOpenParens > 0 ) {
+             // so long as we have an open parenthesis,
+             // we add this character to the weird identifier 
+             ident.push_back( str[idx] );
+             
+             // next char
+             idx++;
+             
+          } else {
+             // we close our opening parenthesis, so
+             // the identifier must be complete
+             
+             // advance beyond the closing parenthesis
+             idx++;
+             break;
+          }
+          
+       }
+    
+       if ( nOpenParens > 0 ) {
+          std::cerr << "Error in weird identifier: " << str << std::endl;
+          throw (badConfigSyntax());
+       }
+    
+    }
+    
+    return ident;
+}
+
 void Catalog::timeSpacing( double tinc, double toff )
 {
      des_tinc = tinc;
@@ -5088,6 +5141,7 @@ void Catalog::parse( const std::string& conf )
      Target* tgt;
      Quantity* quant;
      Dimension *dim;
+     bool mustBeQuantity;
      
      // initialize
      str = conf.c_str();
@@ -5100,12 +5154,24 @@ void Catalog::parse( const std::string& conf )
      // starts w/ '<'? it's the upper time limit line
      if ( str[idx] != ';' && str[idx] != '>' && str[idx] != '<' ) {
      
-        // this line starts with some kind of identifier
-        name = getIdentifier( str, idx );
-        if ( name == ""  ) {
-           std::cerr << "No identifier in line " << conf << std::endl;
-           throw (badConfigSyntax());
+        // If the line starts with "(", then what follows is
+        // a quantity name, possibly with weird characters.
+        // Otherwise, it's a regular identifier (which makes life simpler).
+
+        mustBeQuantity = false;
+             
+        name = getWeirdIdentifier( str, idx );
+        if ( name == "" ) {
+           // this line starts with some kind of identifier
+           name = getIdentifier( str, idx );
+           if ( name == ""  ) {
+              std::cerr << "No identifier in line " << conf << std::endl;
+              throw (badConfigSyntax());
+           }
+        } else {
+           mustBeQuantity = true;
         }
+        
         skipwhite( str, idx );
         if ( str[idx] == 0 ) {
            std::cerr << "Identifier is alone in line " << conf << std::endl;
@@ -5119,6 +5185,11 @@ void Catalog::parse( const std::string& conf )
            idx++;
            if ( str[idx] == '=' ) {
               // target definition
+              if ( mustBeQuantity ) {
+                 std::cerr << "Parenthesized identifier was used for a target definition: "
+                 << str << std::endl;
+                 throw (badConfigSyntax());
+              }
               if ( dbug > 5 ) {
                  std::cerr << "defining target " << name << std::endl;
               }
@@ -5183,7 +5254,7 @@ void Catalog::parse( const std::string& conf )
           }
              
           if ( str[idx] == '=' ) {
-             // definiitely a variable definition
+             // definitely a variable definition
              if ( dbug > 5 ) {
                 std::cerr << "defining variable " << name << std::endl;
              }
@@ -6929,6 +7000,97 @@ double Catalog::advanceTime( double base, TimeInterval& tinc )
      return result;
 }
 
+
+double Catalog::retreatTime( double base, TimeInterval& tinc )
+{
+     int year;
+     int month;
+     int dayofmonth;
+     int dayofyear;
+     int hours;
+     int minutes;
+     float seconds; 
+     double ydays;
+     double mdays;
+     double add_days;
+     double add_time;
+     double result;
+
+     if ( tinc.allHere ) {
+        result = base;
+     }
+
+     // break the base time into year, month, day, etc.
+     d2parts( base, year, month, dayofmonth, dayofyear, hours, minutes, seconds ); 
+     
+     // We start by finding the number of days to advance for the years separation
+     ydays = 0.0;
+     for ( int i=1; i<=tinc.years; i++ ) {
+     
+         ydays = ydays + 365.0;
+         // If this is a leap year, and a 1-year jump includes the leap day...
+         if ( isLeap( year ) && ( month > 2 ) ) {
+            ydays = ydays + 1.0;
+         }
+         // If we are jumping into a leap year, past its leap day...
+         if ( isLeap( year - 1 ) && ( month <= 2 ) ) {
+            ydays = ydays + 1.0;
+         }
+     
+         // on to the next 1-year jump
+         year--;
+         
+     }
+     
+     // Now find the number of days to advance for the months separation
+     // (note that we start after advancing any years)
+     mdays = 0.0;
+     for ( int i=1; i<=tinc.months; i++ ) {
+         
+         int monlen = monthlengths[ month ];
+         if ( isLeap(year) && (month == 2) ) {
+            monlen++;
+         } 
+         
+         mdays = mdays + static_cast<double>(monlen);
+         
+         // on to the next month
+         month--;
+         // but take care of retreatinging into the previous year
+         if ( month < 1 ) {
+            year--;
+            month = 12;
+         }
+         
+     }
+     
+     // retreating days behind is easy
+     add_days = static_cast<double>( tinc.days );
+     
+     // retreating the time interval (in seconds), converted to hours for now
+     add_time = tinc.secs/3600.0;
+     
+     // do we need to impose an external desired time spacing?
+     if ( des_tinc > add_time ) {
+      
+        // check that an integral number of urlSep periods fits 
+        // within the desired time spacing
+        int des_n = round( des_tinc / add_time );
+        if ( abs( (des_n*add_time) - des_tinc ) < 1e-12 ) {
+           add_time = des_tinc;
+        }
+     
+     
+     }
+     add_time = add_time/24.0; // convert hours->days
+     
+     
+     // advance the base date by our interval
+     result = base - ydays - mdays - add_days - add_time;
+
+     return result;
+}
+
 void Catalog::bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n, double& post_t, double& post_url_t, int& post_n, int& ntot )
 {
      VarVal* tmpVal;
@@ -6976,19 +7138,45 @@ void Catalog::bracket( double tyme, double& pre_t, double& pre_url_t, int& pre_n
      
      // Now we advance the base time until we pass the desired time     
      if ( ! currentTarget->urlSep.allHere ) {
-        while ( based <= tyme ) {
-     
-            /* The spacing between successive URLs is held in currentTarget.urlSep.
-               This is broken into parts: year, month, day, seconds.
-               This is necessary because years and months have varying durations.
-            */
-                 
-            // save the current base date (it may become our preceeding time)
-            prev_based = based;
-            
-            // advance the base date by our interval
-            based = advanceTime( prev_based, currentTarget->urlSep );
 
+        if ( based <= tyme ) {
+           while ( based <= tyme ) {
+     
+               /* The spacing between successive URLs is held in currentTarget.urlSep.
+                  This is broken into parts: year, month, day, seconds.
+                  This is necessary because years and months have varying durations.
+               */
+                    
+               // save the current base date (it may become our preceeding time)
+               prev_based = based;
+               
+               // advance the base date by our interval
+               based = advanceTime( prev_based, currentTarget->urlSep );
+
+           }
+        } else {
+           
+           prev_based = based;
+           
+           while ( prev_based > tyme ) {
+     
+               /* The spacing between successive URLs is held in currentTarget.urlSep.
+                  This is broken into parts: year, month, day, seconds.
+                  This is necessary because years and months have varying durations.
+               */
+                    
+               // retreat the base date by our interval
+               prev_based = retreatTime( based, currentTarget->urlSep );
+
+               if ( prev_based > tyme ) {
+                  // (note: this should never be necessary, since we get here
+                  // only if the desired tyme is earlier than the base time,
+                  // which should only happen if the desired time is less
+                  // than one time step before the base time)
+                  // save the current base date to become our following time, if necessary
+                  based = prev_based;
+               }         
+           }
         }
      } else {
         // all the timestamps are in one URL

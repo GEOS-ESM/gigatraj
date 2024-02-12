@@ -141,10 +141,21 @@ handles the syntax.
 
 For each physical quantity that gigatraj should be able to read,  there must be a line
 of the form "quantity : standard_name : target1 | target2 | target3 | ..."; this lines tells the Catalog which
-Targets can supply the desired quantity. (The standard_name is a standardized name for people who are unfamiliar with
-the data set's own naming convention; UCAR's "CF" naming convention is a good one to use here.)
-Each Target in the "|"-separated list may be prceeded
-by one or two clauses enclosed in pairs of brackets ("[" and "]"). The first (or onlyu) such
+Targets can supply the desired quantity. 
+
+Normally, "quantity" here has the form of a valid identifier: a leading uppercase or lowercase letter, followed
+by zero or more letters, digits, or underscore ("_") characters.
+Some data sets, however, may choose to use quantity identifiers that are not valid identifiers;
+in that case, enclose the unusual identifier in parentheses. For example, "foo" can be used
+as a quantity name without parentheses, but "cm.bar@q-10(m)" must be enclosed by parentheses:
+"(cm.bar@q-10(m))". (Note that if the quantity name contains its own parentheses as it does here,
+those parentheses must be balanced: for every "(" there must be a following ")".)
+
+The standard_name is a standardized name for people who are unfamiliar with
+the data set's own naming convention; UCAR's "CF" naming convention is a good one to use here.
+
+Each Target in the "|"-separated list may be preceded
+by one or two clauses enclosed in pairs of brackets ("[" and "]"). The first (or only) such
 clause specifies information about units. Ideally, this information is read from the file,
 but that is not always possible. The units information consists of a string giving the units
 of the quantity, optionaly collowed by a ":" and a scale factor that can convert the quantity
@@ -331,10 +342,11 @@ for a configuration line is given by:
        
        <identifier> = <letter> | ( <letter>, {<idChar>} );
 
+       <weirdIdentifier> = <anyChar>, {<anyChar>} ;
        
        <quantityDef> = <quantityID>, [ <whitespace> ], ":", [ <whitespace> ], <stdname>, [<whitespace> ], [ <whitespace> ], <dims>, [<whitespace> ]  , ':', [ <whitespace> ], <targetList>;
        
-       <quantityID> = <identifier>;
+       <quantityID> = <identifier> | ( "(", <weirdIdentifier>, ")" );
        
        <stdname> = <noColonChar>, { <noColonChar> };
        
@@ -2048,6 +2060,27 @@ class Catalog {
       */
       static std::string getIdentifier( const char* str, size_t& idx );   
 
+      /// \brief get a weird identifier
+      /*! This method advances through a character array,
+          constructing an string that contains a non-conforming identifier
+          enclosed in parentheses. 
+          
+          This is used for finding quantity names. In most cases, the quantity name
+          is a legitimate Catalog identifier, and the getIdentifier() methos is used.
+          But some data sets may have some quantoities whose names are not 
+          legal Catalog identifiers. In those cases, enclosing the quantity
+          name in parentheses lets the Catalog parser know to take everything
+          from the opening parenthesis up to the matching closing parentheses,
+          and use that as the quantity name.
+          
+          \param str the character array being scanned.
+          \param idx the index into the character array. On return, this
+                     is the index of the next character beyond the identifier,
+                     or the terminating null.
+          \return a string containing the identifier name
+      */
+      static std::string getWeirdIdentifier( const char* str, size_t& idx );   
+
 
       
    public:
@@ -3073,7 +3106,7 @@ class Catalog {
      */     
      bool reconcileVals( VarVal* v1, VarVal* v2 ); 
      
-     /// find the time after an base time is advance by a TimeInterval
+     /// find the time after a base time is advanced by a TimeInterval
      /*! This method uses a TimeInterval object to advance a base time
          to determine a future time.
          
@@ -3083,6 +3116,16 @@ class Catalog {
      */    
      double advanceTime( double base, TimeInterval& tinc );
      
+     
+     /// find the time after a base time is retreated by a TimeInterval
+     /*! This method uses a TimeInterval object to move backwards from a base time
+         to determine a past time.
+         
+         \param base the starting time
+         \param tinc a reference to the TimeInterval object that specifes how far in the past to retreat
+         \return the new time
+     */    
+     double retreatTime( double base, TimeInterval& tinc );
              
      /// \brief finds two times that bracket a given time
      /*! This method finds two dsta snapshot times that bracket a given time

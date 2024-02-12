@@ -76,6 +76,9 @@ PHASE = "Old"
 t03 := [${YEAR}-${MONTH}-${DOM}T10];PT1H;0;11;at1valt03; at2valt03; at3valt03; at4valt03; ${QUANTITY}_${YEAR}${MONTH}${DOM}${HOUR}_${PHASE}_${FREM}_${TAG}.data
 t04 := [${YEAR}-${MONTH}-${DOM}T00];PT6H;0;4;at1valt04; at2valt04; at3valt04; at4valt04; ${QUANTITY}_${YEAR}${MONTH}${DOM}${HOUR}_${PHASE}_${FREM}.data
 
-stuff3:std_stuff3:2: t03 | t04
+(stuff3):std_stuff3:2: t03 | t04
+
+# tests arbitrary quantity names
+(stuff$7(93)5m@_+-&^end):anything goes:2: t02 
 
 
