@@ -164,6 +164,9 @@ std::ofstream* FileLock::openw( const std::string filename, int flag )
       } else {
          // the open was successful
          ok= 1;
+         // now change permissions to none
+         // so that no one else can open this lock file.
+         fchmod( lockid, 0 );
       }
    }
 #endif
@@ -252,11 +255,10 @@ std::ifstream* FileLock::openr( const std::string filename, int flag )
             std::cerr << id << ": trying read-lock, attempt " 
             << trynumber << " of " << maxtries << std::endl;
          }
-         // try to open the lock file with a Unix-supplied
-         // exclusive lock
+         // try to open the lock file with an exclusive lock.
          lockid=open(lockname.c_str()
-                    , O_WRONLY | O_CREAT | O_EXCL
-                    , S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);  
+                 , O_WRONLY | O_CREAT | O_EXCL
+                 , S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);  
          if ( lockid < 0 && errno == EEXIST ) {
             // lock exists.
             
@@ -268,13 +270,22 @@ std::ifstream* FileLock::openr( const std::string filename, int flag )
                trynumber ++;
             } else {
                // no more tries; we give up
+               if ( debug ) {
+                   std::cerr << ": lock file failed for already exiting. Giving up " << std::endl; 
+               }
                ok = -1;
             }
          } else if ( lockid < 0 ) {
             // open failed for some other reason
             ok = 0;
+               if ( debug ) {
+                  std::cerr << ": lock file failed to be created for some weird reason  " << errno << std::endl; 
+               }
          } else {
             // lock formed OK
+               if ( debug ) {
+                  std::cerr << ": lock file was created OK " << std::endl; 
+               }
             ok= 1;
          }
       }
@@ -295,12 +306,13 @@ std::ifstream* FileLock::openr( const std::string filename, int flag )
       // open the input file
       fine = true;
       if ( debug ) {
-         std::cerr << id << ": attempting to open the file " << std::endl; 
+         std::cerr << id << ": attempting to open the data file " << std::endl; 
       }
       try {
          fyle = new std::ifstream(filename.c_str(), std::ios::in | std::ios::binary );
       } catch (...) {
          fine = false;
+         std::cerr << id << ": FAILED to open the data file " << std::endl; 
       }      
       
       // Did the open fail?
@@ -323,12 +335,21 @@ std::ifstream* FileLock::openr( const std::string filename, int flag )
       }
    } else if ( ok == -1 ) {    
       // file is already locked
+      if ( debug ) {
+         std::cerr << "FileLock::openr: file is already locked" << std::endl;
+      }
       throw (badLockExists());
    } else if ( ok == -2 ) {    
-      // file is already locked
+      // file is not readable
+      if ( debug ) {
+         std::cerr << "FileLock::openr: file is not readable" << std::endl;
+      }
       throw (badNotReadable());
    } else { 
       // some other error
+      if ( debug ) {
+         std::cerr << "FileLock::openr: file is has some weird error" << std::endl;
+      }
       throw (badLockFailed_B());
    }
 
@@ -337,9 +358,15 @@ std::ifstream* FileLock::openr( const std::string filename, int flag )
          std::cerr << id << ": file open for reading; removing the lock " << std::endl; 
       }
       if ( remove(lockname.c_str()) != 0 ) {
+         if ( debug ) {
+            std::cerr << "FileLock::openr: Could not remove lock on file " << std::endl;
+         }
          throw (badLockRmFailed());
       }
       if (close(lockid)) {
+         if ( debug ) {
+            std::cerr << "FileLock::openr: Could not close lock on file " << std::endl;
+         }
          throw (badLockIOErr());
       }
       lockid = -1;

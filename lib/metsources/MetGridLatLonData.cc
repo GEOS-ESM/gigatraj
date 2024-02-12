@@ -1713,7 +1713,7 @@ GridField3D* MetGridLatLonData::readCache3D( const std::string quantity, const s
     grid3d = NULLPTR;
 
     if ( diskcaching ) {
-    
+
        // create a grid and set up quantities that
        // are needed for creating the cache file name
        grid3d = new GridLatLonField3D;
@@ -1736,9 +1736,9 @@ GridField3D* MetGridLatLonData::readCache3D( const std::string quantity, const s
              }
              int num_procs = 1;
              if ( my_pgroup != NULLPTR ) {
-                my_pgroup->numberOfProcessors();
+                num_procs = my_pgroup->numberOfProcessors();
              }
-             incache = cachelock->openr( cachepath->fullpath(), - num_procs );
+             incache = cachelock->openr( cachepath->fullpath(), - num_procs*2 );
              try {
                 if ( dbug >= 2 ) {
                    std::cerr << "MetGridLatLonData::readCache3D:   reading cached data from " << grid3d->id() << std::endl;
