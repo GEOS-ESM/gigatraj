@@ -1,0 +1,680 @@
+#
+# This Catalog file has been generated automatically from the script ctg_2_cat.py.
+#
+
+;lonCoord;latCoord; vertCoord
+
+>1980-01-01T00:00
+
+# Dimensions
+#
+MRLON ~ lon; degrees_east ; LHN; -180.0, 179.375, 576
+MRLAT ~ lat; degrees_north; LHN; -90.0, 90.0, 361
+MRPRS ~ P; hPa; V; 1000, 975, 950, 925, 900, 875, 850, 825, 800, 775, 750, 725, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100, 70, 50, 40, 30, 20, 10, 7, 5, 4, 3, 2, 1, 0.699999988079071, 0.5, 0.400000005960464, 0.300000011920929, 0.100000001490116
+MRLEV ~ Model-Levels;; LHN; 0, 71, 72
+MREDG ~ Model-Edges;; LHN; 0, 72, 73
+
+
+# Variables
+#
+BASEURL0/S = "https://goldsmr4.gesdisc.eosdis.nasa.gov/opendap/MERRA2/"
+BASEURL1/S = "https://goldsmr5.gesdisc.eosdis.nasa.gov/opendap/MERRA2/"
+#
+RUNSET/S = ( ${YEAR} == 2020 ) && ( ${MONTH} == 9 ) ? "MERRA2_401"
+RUNSET/S = ( ${YEAR} == 2021 ) && ( ${MONTH} >= 6 ) && ( ${MONTH} <= 9 ) ? "MERRA2_401"
+RUNSET/S = [${DATE}] < [1992-01-01] ? "MERRA2_100"
+RUNSET/S = [${DATE}] < [2001-01-01] ? "MERRA2_200"
+RUNSET/S = [${DATE}] < [2011-01-01] ? "MERRA2_300"
+RUNSET/S = "MERRA2_400"
+
+
+# Targets
+target0:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2T1NXINT.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg1_2d_int_Nx.${YEAR}${MONTH}${DOM}.nc4
+target1:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2T1NXLND.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg1_2d_lnd_Nx.${YEAR}${MONTH}${DOM}.nc4
+target2:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MREDG;${BASEURL1}/M2T3NETRB.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_trb_Ne.${YEAR}${MONTH}${DOM}.nc4
+target3:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/M2T3NPTRB.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_trb_Np.${YEAR}${MONTH}${DOM}.nc4
+target4:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2T1NXRAD.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg1_2d_rad_Nx.${YEAR}${MONTH}${DOM}.nc4
+target5:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;0;0;MRLON;MRLAT;2;${BASEURL0}/M2SDNXSLV.5.12.4/${YEAR}/${MONTH}/${RUNSET}.statD_2d_slv_Nx.${YEAR}${MONTH}${DOM}.nc4
+target6:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2I1NXINT.5.12.4/${YEAR}/${MONTH}/${RUNSET}.inst1_2d_int_Nx.${YEAR}${MONTH}${DOM}.nc4
+target7:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/M2T3NPODT.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_odt_Np.${YEAR}${MONTH}${DOM}.nc4
+target8:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2T1NXOCN.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg1_2d_ocn_Nx.${YEAR}${MONTH}${DOM}.nc4
+target9:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/M2T3NPQDT.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_qdt_Np.${YEAR}${MONTH}${DOM}.nc4
+target10:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2T1NXCSP.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg1_2d_csp_Nx.${YEAR}${MONTH}${DOM}.nc4
+target11:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2T1NXAER.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg1_2d_aer_Nx.${YEAR}${MONTH}${DOM}.nc4
+target12:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2T1NXFLX.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg1_2d_flx_Nx.${YEAR}${MONTH}${DOM}.nc4
+target13:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;3;0;MRLON;MRLAT;MRLEV;${BASEURL1}/M2I3NVGAS.5.12.4/${YEAR}/${MONTH}/${RUNSET}.inst3_3d_gas_Nv.${YEAR}${MONTH}${DOM}.nc4
+target14:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2T1NXSLV.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg1_2d_slv_Nx.${YEAR}${MONTH}${DOM}.nc4
+target15:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2T1NXADG.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg1_2d_adg_Nx.${YEAR}${MONTH}${DOM}.nc4
+target16:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2I1NXASM.5.12.4/${YEAR}/${MONTH}/${RUNSET}.inst1_2d_asm_Nx.${YEAR}${MONTH}${DOM}.nc4
+target17:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/M2T3NPRAD.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_rad_Np.${YEAR}${MONTH}${DOM}.nc4
+target18:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRLEV;${BASEURL1}/M2T3NVRAD.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_rad_Nv.${YEAR}${MONTH}${DOM}.nc4
+target19:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/M2T3NPMST.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_mst_Np.${YEAR}${MONTH}${DOM}.nc4
+target20:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRLEV;${BASEURL1}/M2T3NVMST.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_mst_Nv.${YEAR}${MONTH}${DOM}.nc4
+target21:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2T1NXCHM.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg1_2d_chm_Nx.${YEAR}${MONTH}${DOM}.nc4
+target22:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MREDG;${BASEURL1}/M2T3NEMST.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_mst_Ne.${YEAR}${MONTH}${DOM}.nc4
+target23:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2T1NXLFO.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg1_2d_lfo_Nx.${YEAR}${MONTH}${DOM}.nc4
+target24:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/M2I3NPASM.5.12.4/${YEAR}/${MONTH}/${RUNSET}.inst3_3d_asm_Np.${YEAR}${MONTH}${DOM}.nc4
+target25:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;3;0;MRLON;MRLAT;MRLEV;${BASEURL1}/M2I3NVASM.5.12.4/${YEAR}/${MONTH}/${RUNSET}.inst3_3d_asm_Nv.${YEAR}${MONTH}${DOM}.nc4
+target26:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRLEV;${BASEURL1}/M2T3NVASM.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_asm_Nv.${YEAR}${MONTH}${DOM}.nc4
+target27:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;3;0;MRLON;MRLAT;MRLEV;${BASEURL1}/M2I3NVAER.5.12.4/${YEAR}/${MONTH}/${RUNSET}.inst3_3d_aer_Nv.${YEAR}${MONTH}${DOM}.nc4
+target28:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;6;0;MRLON;MRLAT;MRPRS;${BASEURL1}/M2I6NPANA.5.12.4/${YEAR}/${MONTH}/${RUNSET}.inst6_3d_ana_Np.${YEAR}${MONTH}${DOM}.nc4
+target29:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;6;0;MRLON;MRLAT;MRLEV;${BASEURL1}/M2I6NVANA.5.12.4/${YEAR}/${MONTH}/${RUNSET}.inst6_3d_ana_Nv.${YEAR}${MONTH}${DOM}.nc4
+target30:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/M2T3NPTDT.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_tdt_Np.${YEAR}${MONTH}${DOM}.nc4
+target31:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/M2I1NXLFO.5.12.4/${YEAR}/${MONTH}/${RUNSET}.inst1_2d_lfo_Nx.${YEAR}${MONTH}${DOM}.nc4
+target32:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/M2T3NPUDT.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_udt_Np.${YEAR}${MONTH}${DOM}.nc4
+target33:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/M2T3NPCLD.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_cld_Np.${YEAR}${MONTH}${DOM}.nc4
+target34:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRLEV;${BASEURL1}/M2T3NVCLD.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_cld_Nv.${YEAR}${MONTH}${DOM}.nc4
+target35:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;2;${BASEURL0}/M2T3NXGLC.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_2d_glc_Nx.${YEAR}${MONTH}${DOM}.nc4
+target36:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;3;0;MRLON;MRLAT;2;${BASEURL0}/M2I3NXGAS.5.12.4/${YEAR}/${MONTH}/${RUNSET}.inst3_2d_gas_Nx.${YEAR}${MONTH}${DOM}.nc4
+target37:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;3;0;MRLON;MRLAT;MRLEV;${BASEURL1}/M2I3NVCHM.5.12.4/${YEAR}/${MONTH}/${RUNSET}.inst3_3d_chm_Nv.${YEAR}${MONTH}${DOM}.nc4
+target38:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MREDG;${BASEURL1}/M2T3NENAV.5.12.4/${YEAR}/${MONTH}/${RUNSET}.tavg3_3d_nav_Ne.${YEAR}${MONTH}${DOM}.nc4
+
+
+# Quantities
+AIRDENS: air_density: 3: target27|target37|target13
+ALBEDO: surface_albedo: 2: target4
+ALBNIRDF: surface_albedo_for_near_infrared_diffuse: 2: target4
+ALBNIRDR: surface_albedo_for_near_infrared_beam: 2: target4
+ALBVISDF: surface_albedo_for_visible_diffuse: 2: target4
+ALBVISDR: surface_albedo_for_visible_beam: 2: target4
+AODANA: Aerosol Optical Depth Analysis: 2: target36
+AODINC: Aerosol Optical Depth Analysis Increment: 2: target36
+ASNOW_GL: fractional_area_of_glaciated_surface_snowcover: 2: target35
+AUTCNVRN: autoconversion_loss_of_cloud_water: 2: target0
+Attributes: : -1: target24|target28|target33|target19|target7|target9|target17|target30|target3|target32|target27|target25|target37|target13|target29|target22|target38|target2|target26|target34|target20|target18|target16|target6|target31|target36|target5|target15|target11|target21|target10|target12|target0|target23|target1|target8|target4|target14|target35
+BASEFLOW: baseflow_flux: 2: target1
+BCANGSTR: Black Carbon Angstrom parameter [470-870 nm]: 2: target11
+BCCMASS: Black Carbon Column Mass Density: 2: target11
+BCDP001: Black Carbon Dry Deposition Bin 001: 2: target15
+BCDP002: Black Carbon Dry Deposition Bin 002: 2: target15
+BCEM001: Black Carbon Emission Bin 001: 2: target15
+BCEM002: Black Carbon Emission Bin 002: 2: target15
+BCEMAN: Black Carbon Anthropogenic Emissions: 2: target15
+BCEMBB: Black Carbon Biomass Burning Emissions: 2: target15
+BCEMBF: Black Carbon Biofuel Emissions: 2: target15
+BCEXTTAU: Black Carbon Extinction AOT [550 nm]: 2: target11
+BCFLUXU: Black Carbon column u-wind mass flux: 2: target11
+BCFLUXV: Black Carbon column v-wind mass flux: 2: target11
+BCHYPHIL: Black Carbon Hydrophobic to Hydrophilic: 2: target15
+BCINC: Black Carbon Mixing Ratio Analysis Increments: 3: target13
+BCPHILIC: Hydrophilic Black Carbon: 3: target27
+BCPHOBIC: Hydrophobic Black Carbon: 3: target27
+BCSCATAU: Black Carbon Scattering AOT [550 nm]: 2: target11
+BCSD001: Black Carbon Sedimentation Bin 001: 2: target15
+BCSD002: Black Carbon Sedimentation Bin 002: 2: target15
+BCSMASS: Black Carbon Surface Mass Concentration: 2: target11
+BCSV001: Black Carbon Convective Scavenging Bin 001: 2: target15
+BCSV002: Black Carbon Convective Scavenging Bin 002: 2: target15
+BCWT001: Black Carbon Wet Deposition Bin 001: 2: target15
+BCWT002: Black Carbon Wet Deposition Bin 002: 2: target15
+BKGERR: vertically_integrated_kinetic_energy_residual_for_BKG_energy_conservation: 2: target0
+BSTAR: surface_bouyancy_scale: 2: target12
+CDH: surface_exchange_coefficient_for_heat: 2: target12
+CDM: surface_exchange_coefficient_for_momentum: 2: target12
+CDQ: surface_exchange_coefficient_for_moisture: 2: target12
+CFCU: updraft_areal_fraction: 3: target33|target34
+CLDHGH: cloud_area_fraction_for_high_clouds: 2: target4
+CLDLOW: cloud_area_fraction_for_low_clouds: 2: target4
+CLDMID: cloud_area_fraction_for_middle_clouds: 2: target4
+CLDPRS: cloud_top_pressure: 2: target14
+CLDTMP: cloud_top_temperature: 2: target14
+CLDTOT: total_cloud_area_fraction: 2: target4
+CLOUD: cloud_fraction_for_radiation: 3: target33|target17|target25|target26|target34|target18
+CMFMC: cumulative_mass_flux: 3: target22|target19
+CN: surface_neutral_drag_coefficient: 2: target12
+CO: Carbon Monoxide (All Sources): 3: target37
+COCL: CO Column Burden __ENSEMBLE__: 2: target21
+COEM: CO Emission __ENSEMBLE__: 2: target21
+COLCNVRN: accretion_loss_of_cloud_water_to_rain: 2: target0
+COLCNVSN: accretion_loss_of_cloud_water_to_snow: 2: target0
+COLS: CO Chemical Loss __ENSEMBLE__: 2: target21
+COPD: CO Chemical Production __ENSEMBLE__: 2: target21
+COSC: CO Surface Concentration in ppbv __ENSEMBLE__: 2: target21
+CPT: vertically_integrated_enthalpy: 2: target6
+CUCNVCI: convective_source_of_cloud_ice: 2: target0
+CUCNVCL: convective_source_of_cloud_water: 2: target0
+CUCNVRN: convective_production_of_rain_water: 2: target0
+DELP: pressure_thickness: 3: target27|target25|target37|target29|target26|target34|target20|target18
+DHDT_ANA: total_potential_energy_tendency_due_to_analysis: 2: target0
+DHDT_BKG: vertically_integrated_potential_energy_tendency_due_to_gravity_wave_background: 2: target0
+DHDT_CUF: vertically_integrated_potential_energy_tendency_due_to_cumulus_friction: 2: target0
+DHDT_DYN: vertically_integrated_potential_energy_tendency_due_to_dynamics: 2: target0
+DHDT_FRI: vertically_integrated_potential_energy_tendency_due_to_friction: 2: target0
+DHDT_GWD: vertically_integrated_potential_energy_tendency_across_gwd: 2: target0
+DHDT_MST: vertically_integrated_potential_energy_tendency_across_moist: 2: target0
+DHDT_ORO: vertically_integrated_potential_energy_tendency_due_to_orographic_gravity_waves: 2: target0
+DHDT_PHY: total_potential_energy_tendency_due_to_physics: 2: target0
+DHDT_RAD: vertically_integrated_potential_energy_tendency_across_radiation: 2: target0
+DHDT_RAY: vertically_integrated_potential_energy_tendency_due_to_Rayleigh_friction: 2: target0
+DHDT_RES: vertically_integrated_cpt_tendency_residual: 2: target0
+DHDT_TRB: vertically_integrated_potential_energy_tendency_across_turbulence: 2: target0
+DISPH: zero_plane_displacement_height: 2: target16|target12|target14
+DKDT_ANA: total_kinetic_energy_tendency_due_to_analysis: 2: target0
+DKDT_BKG: vertically_integrated_kinetic_energy_dissipation_due_to_gravity_wave_background: 2: target0
+DKDT_DYN: vertically_integrated_kinetic_energy_tendency_due_to_dynamics: 2: target0
+DKDT_GWD: vertically_integrated_kinetic_energy_tendency_across_gwd: 2: target0
+DKDT_GWDRES: vertically_integrated_kinetic_energy_residual_for_total_energy_conservation: 2: target0
+DKDT_INT: vertically_integrated_kinetic_energy_dissipation_due_to_diffusion: 2: target0
+DKDT_MST: vertically_integrated_kinetic_energy_tendency_across_moist: 2: target0
+DKDT_ORO: vertically_integrated_kinetic_energy_dissipation_due_to_orographic_gravity_waves: 2: target0
+DKDT_PHY: vertically_integrated_kinetic_energy_tendency_due_to_physics: 2: target0
+DKDT_PHYPHY: vertically_integrated_kinetic_energy_tendency_across_physics: 2: target0
+DKDT_RAY: vertically_integrated_kinetic_energy_dissipation_due_to_Rayleigh_friction: 2: target0
+DKDT_SRF: vertically_integrated_kinetic_energy_dissipation_due_to_surface_friction: 2: target0
+DKDT_TOP: vertically_integrated_kinetic_energy_dissipation_due_to_topographic_friction: 2: target0
+DKDT_TRB: vertically_integrated_kinetic_energy_tendency_across_turbulence: 2: target0
+DMDT_ANA: vertically_integrated_mass_tendency_due_to_analysis: 2: target0
+DMDT_DYN: vertically_integrated_mass_tendency_due_to_dynamics: 2: target0
+DMDT_PHY: vertically_integrated_mass_tendency_due_to_physics: 2: target0
+DMS: Dimethylsulphide: 3: target27
+DMSCMASS: DMS Column Mass Density __ENSEMBLE__: 2: target11
+DMSSMASS: DMS Surface Mass Concentration __ENSEMBLE__: 2: target11
+DOXDTANA: total_ozone_analysis_tendency: 3: target7
+DOXDTCHM: tendency_of_odd_oxygen_mixing_ratio_due_to_chemistry: 3: target7
+DOXDTDYN: tendency_of_ozone_due_to_dynamics: 3: target7
+DOXDTMST: tendency_of_odd_oxygen_due_to_moist_processes: 3: target7
+DOXDTTRB: tendency_of_odd_oxygen_due_to_turbulence: 3: target7
+DOXDT_ANA: vertically_integrated_ozone_tendency_due_to_analysis: 2: target0
+DOXDT_CHM: vertically_integrated_odd_oxygen_tendency_due_to_chemistry: 2: target0
+DOXDT_DYN: vertically_integrated_ozone_tendency_due_to_dynamics: 2: target0
+DOXDT_FIL: vertically_integrated_ox_adjustment_from_filling: 2: target0
+DOXDT_PHY: vertically_integrated_odd_oxygen_tendency_due_to_physics: 2: target0
+DPDT_ANA: mountain_work_tendency_due_to_analysis: 2: target0
+DPDT_DYN: mountain_work_tendency_due_to_dynamics: 2: target0
+DPDT_PHY: mountain_work_tendency_due_to_physics: 2: target0
+DQIDTDYN: tendency_of_ice_water_due_to_dynamics: 3: target9
+DQIDTMST: total_ice_water_tendency_due_to_moist: 3: target9
+DQIDTTRB: tendency_of_frozen_condensate_due_to_turbulence: 3: target9
+DQIDT_ANA: vertically_integrated_ice_water_tendency_due_to_analysis: 2: target0
+DQIDT_DYN: vertically_integrated_ice_water_tendency_due_to_dynamics: 2: target0
+DQIDT_FIL: vertically_integrated_qi_adjustment_from_filling: 2: target0
+DQIDT_MST: vertically_integrated_ice_tendency_due_to_moist_processes: 2: target0
+DQIDT_PHY: vertically_integrated_ice_tendency_due_to_physics: 2: target0
+DQLDTDYN: tendency_of_liquid_water_due_to_dynamics: 3: target9
+DQLDTMST: total_liq_water_tendency_due_to_moist: 3: target9
+DQLDTTRB: tendency_of_liquid_condensate_due_to_turbulence: 3: target9
+DQLDT_ANA: vertically_integrated_liquid_water_tendency_due_to_analysis: 2: target0
+DQLDT_DYN: vertically_integrated_liquid_water_tendency_due_to_dynamics: 2: target0
+DQLDT_FIL: vertically_integrated_ql_adjustment_from_filling: 2: target0
+DQLDT_MST: vertically_integrated_liquid_water_tendency_due_to_moist_processes: 2: target0
+DQLDT_PHY: vertically_integrated_liquid_water_tendency_due_to_physics: 2: target0
+DQRCU: convective_rainwater_source: 3: target19|target20
+DQRLSAN: large_scale_rainwater_source: 3: target19|target20
+DQVDTANA: total_specific_humidity_analysis_tendency: 3: target9
+DQVDTCHM: tendency_of_water_vapor_mixing_ratio_due_to_chemistry: 3: target9
+DQVDTDYN: tendency_of_specific_humidity_due_to_dynamics: 3: target9
+DQVDTMST: specific_humidity_tendency_due_to_moist: 3: target9
+DQVDTTRB: tendency_of_specific_humidity_due_to_turbulence: 3: target9
+DQVDT_ANA: vertically_integrated_water_vapor_tendency_due_to_analysis: 2: target0
+DQVDT_CHM: vertically_integrated_water_vapor_tendency_due_to_chemistry: 2: target0
+DQVDT_DYN: vertically_integrated_water_vapor_tendency_due_to_dynamics: 2: target0
+DQVDT_FIL: vertically_integrated_qv_adjustment_from_filling: 2: target0
+DQVDT_MST: vertically_integrated_water_vapor_tendency_due_to_moist_processes: 2: target0
+DQVDT_PHY: vertically_integrated_water_vapor_tendency_due_to_physics: 2: target0
+DQVDT_TRB: vertically_integrated_water_vapor_tendency_due_to_turbulence: 2: target0
+DTDTANA: total_temperature_analysis_tendency: 3: target30
+DTDTDYN: tendency_of_air_temperature_due_to_dynamics: 3: target30
+DTDTFRI: tendency_of_air_temperature_due_to_friction: 3: target30
+DTDTGWD: air_temperature_tendency_due_to_GWD: 3: target30
+DTDTLWR: air_temperature_tendency_due_to_longwave: 3: target17|target18
+DTDTLWRCLR: air_temperature_tendency_due_to_longwave_for_clear_skies: 3: target17|target18
+DTDTMST: tendency_of_air_temperature_due_to_moist_processes: 3: target30
+DTDTRAD: tendency_of_air_temperature_due_to_radiation: 3: target30
+DTDTSWR: air_temperature_tendency_due_to_shortwave: 3: target17|target18
+DTDTSWRCLR: air_temperature_tendency_due_to_shortwave_for_clear_skies: 3: target17|target18
+DTDTTOT: tendency_of_air_temperature_due_to_physics: 3: target30
+DTDTTRB: tendency_of_air_temperature_due_to_turbulence: 3: target30
+DTHDT_ANA: vertically_integrated_THV_tendency_due_to_analysis: 2: target0
+DTHDT_DYN: vertically_integrated_THV_tendency_due_to_dynamics: 2: target0
+DTHDT_PHY: vertically_integrated_THV_tendency_due_to_physics: 2: target0
+DTRAIN: detraining_mass_flux: 3: target33|target34
+DU001: Dust Mixing Ratio (bin 001): 3: target27
+DU002: Dust Mixing Ratio (bin 002): 3: target27
+DU003: Dust Mixing Ratio (bin 003): 3: target27
+DU004: Dust Mixing Ratio (bin 004): 3: target27
+DU005: Dust Mixing Ratio (bin 005): 3: target27
+DUAERIDX: Dust TOMS UV Aerosol Index: 2: target15
+DUANGSTR: Dust Angstrom parameter [470-870 nm]: 2: target11
+DUCMASS: Dust Column Mass Density: 2: target11
+DUCMASS25: Dust Column Mass Density - PM 2.5: 2: target11
+DUDP001: Dust Dry Deposition Bin 001: 2: target15
+DUDP002: Dust Dry Deposition Bin 002: 2: target15
+DUDP003: Dust Dry Deposition Bin 003: 2: target15
+DUDP004: Dust Dry Deposition Bin 004: 2: target15
+DUDP005: Dust Dry Deposition Bin 005: 2: target15
+DUDTANA: total_eastward_wind_analysis_tendency: 3: target32
+DUDTDYN: tendency_of_eastward_wind_due_to_dynamics: 3: target32
+DUDTGWD: tendency_of_eastward_wind_due_to_GWD: 3: target32
+DUDTMST: zonal_wind_tendency_due_to_moist: 3: target32
+DUDTTRB: tendency_of_eastward_wind_due_to_turbulence: 3: target32
+DUEM001: Dust Emission Bin 001: 2: target15
+DUEM002: Dust Emission Bin 002: 2: target15
+DUEM003: Dust Emission Bin 003: 2: target15
+DUEM004: Dust Emission Bin 004: 2: target15
+DUEM005: Dust Emission Bin 005: 2: target15
+DUEXTT25: Dust Extinction AOT [550 nm] - PM 2.5: 2: target11
+DUEXTTAU: Dust Extinction AOT [550 nm]: 2: target11
+DUEXTTFM: Dust Extinction AOT [550 nm] - PM 1.0 um: 2: target15
+DUFLUXU: Dust column u-wind mass flux: 2: target11
+DUFLUXV: Dust column v-wind mass flux: 2: target11
+DUINC: Dust Mixing Ratio Analysis Increments: 3: target13
+DUSCAT25: Dust Scattering AOT [550 nm] - PM 2.5: 2: target11
+DUSCATAU: Dust Scattering AOT [550 nm]: 2: target11
+DUSCATFM: Dust Scattering AOT [550 nm] - PM 1.0 um: 2: target15
+DUSD001: Dust Sedimentation Bin 001: 2: target15
+DUSD002: Dust Sedimentation Bin 002: 2: target15
+DUSD003: Dust Sedimentation Bin 003: 2: target15
+DUSD004: Dust Sedimentation Bin 004: 2: target15
+DUSD005: Dust Sedimentation Bin 005: 2: target15
+DUSMASS: Dust Surface Mass Concentration: 2: target11
+DUSMASS25: Dust Surface Mass Concentration - PM 2.5: 2: target11
+DUSV001: Dust Convective Scavenging Bin 001: 2: target15
+DUSV002: Dust Convective Scavenging Bin 002: 2: target15
+DUSV003: Dust Convective Scavenging Bin 003: 2: target15
+DUSV004: Dust Convective Scavenging Bin 004: 2: target15
+DUSV005: Dust Convective Scavenging Bin 005: 2: target15
+DUWT001: Dust Wet Deposition Bin 001: 2: target15
+DUWT002: Dust Wet Deposition Bin 002: 2: target15
+DUWT003: Dust Wet Deposition Bin 003: 2: target15
+DUWT004: Dust Wet Deposition Bin 004: 2: target15
+DUWT005: Dust Wet Deposition Bin 005: 2: target15
+DVDTANA: total_northward_wind_analysis_tendency: 3: target32
+DVDTDYN: tendency_of_northward_wind_due_to_dynamics: 3: target32
+DVDTGWD: tendency_of_northward_wind_due_to_GWD: 3: target32
+DVDTMST: meridional_wind_tendency_due_to_moist: 3: target32
+DVDTTRB: tendency_of_northward_wind_due_to_turbulence: 3: target32
+ECHANGE: rate_of_change_of_total_land_energy: 2: target1
+EFLUX: total_latent_energy_flux: 2: target12
+EFLUXICE: sea_ice_latent_energy_flux: 2: target8
+EFLUXWTR: open_water_latent_energy_flux: 2: target8
+EMIS: surface_emissivity: 2: target4
+EPV: ertels_potential_vorticity: 3: target24|target25|target26
+EVAP: evaporation_from_turbulence: 2: target12|target0
+EVLAND: Evaporation_land: 2: target1
+EVPCL: evaporation_loss_of_cloud_water: 2: target0
+EVPINTR: interception_loss_energy_flux: 2: target1
+EVPRN: evaporation_loss_of_precip_water: 2: target0
+EVPSBLN: snow_ice_evaporation_energy_flux: 2: target1
+EVPSOIL: baresoil_evap_energy_flux: 2: target1
+EVPTRNS: transpiration_energy_flux: 2: target1
+FRCAN: areal_fraction_of_anvil_showers: 2: target12
+FRCCN: areal_fraction_of_convective_showers: 2: target12
+FRCLS: areal_fraction_of_nonanvil_large_scale_showers: 2: target12
+FRSAT: fractional_area_of_saturated_zone: 2: target1
+FRSEAICE: ice_covered_fraction_of_tile: 2: target12|target8
+FRSNO: fractional_area_of_land_snowcover: 2: target1
+FRUNST: fractional_area_of_unsaturated_zone: 2: target1
+FRWLT: fractional_area_of_wilting_zone: 2: target1
+FRZCL: net_freezing_of_cloud_condensate: 2: target0
+FRZRN: net_freezing_of_precip_condensate: 2: target0
+GHLAND: Ground_heating_land: 2: target1
+GHTSKIN: Ground_heating_for_skin_temp: 2: target12
+GRN: greeness_fraction: 2: target1
+GWETPROF: ave_prof_soil_moisture: 2: target1
+GWETROOT: root_zone_soil_wetness: 2: target1
+GWETTOP: surface_soil_wetness: 2: target1
+H: edge_heights: 3: target24|target28|target25|target26
+H1000: height_at_1000_mb: 2: target14
+H250: height_at_250_hPa: 2: target14
+H500: height_at_500_hPa: 2: target14
+H850: height_at_850_hPa: 2: target14
+HFLUX: sensible_heat_flux_from_turbulence: 2: target12|target0
+HFLUXICE: sea_ice_upward_sensible_heat_flux: 2: target8
+HFLUXWTR: open_water_upward_sensible_heat_flux: 2: target8
+HLML: surface_layer_height: 2: target31|target12
+HOURNORAIN: time-during_an_hour_with_no_precipitation: 2: target5
+INCLOUDQI: in_cloud_cloud_ice_for_radiation: 3: target33|target34
+INCLOUDQL: in_cloud_cloud_liquid_for_radiation: 3: target33|target34
+ISCCPALB: isccp_cloud_albedo: 2: target10
+ISCCPCLDFRC: isccp_total _cloud_area_fraction: 2: target10
+KE: vertically_integrated_kinetic_energy: 2: target6
+KH: total_scalar_diffusivity: 3: target2|target3
+KHLK: entrainment_heat_diffusivity_from_Lock: 3: target2|target3
+KHLS: scalar_diffusivity_from_Louis: 3: target2|target3
+KHRAD: radiation_driven_scalar_diffusivity_from_Lock_scheme: 3: target2|target3
+KHSFC: surface_driven_scalar_diffusivity_from_Lock_scheme: 3: target2|target3
+KM: total_momentum_diffusivity: 3: target2|target3
+KMLK: entrainment_momentum_diffusivity_from_Lock: 3: target2|target3
+KMLS: momentum_diffusivity_from_Louis: 3: target2|target3
+LAI: leaf_area_index: 2: target1
+LHLAND: Latent_heat_flux_land: 2: target1
+LSCNVCI: statistical_source_of_cloud_ice: 2: target0
+LSCNVCL: statistical_source_of_cloud_water: 2: target0
+LSCNVRN: spurious_rain_from_RH_cleanup: 2: target0
+LWGAB: surface_absorbed_longwave_radiation: 2: target23|target4
+LWGABCLR: surface_absorbed_longwave_radiation_assuming_clear_sky: 2: target4
+LWGABCLRCLN: surface_absorbed_longwave_radiation_assuming_clear_sky_and_no_aerosol: 2: target4
+LWGEM: longwave_flux_emitted_from_surface: 2: target4
+LWGNET: surface_net_downward_longwave_flux: 2: target0
+LWGNT: surface_net_downward_longwave_flux: 2: target4
+LWGNTCLR: surface_net_downward_longwave_flux_assuming_clear_sky: 2: target4
+LWGNTCLRCLN: surface_net_downward_longwave_flux_assuming_clear_sky_and_no_aerosol: 2: target4
+LWGNTICE: sea_ice_net_downward_longwave_flux: 2: target8
+LWGNTWTR: open_water_net_downward_longwave_flux: 2: target8
+LWI: land(1)_water(0)_ice(2)_flag: 2: target27|target21
+LWLAND: Net_longwave_land: 2: target1
+LWTNET: upwelling_longwave_flux_at_toa: 2: target0
+LWTUP: upwelling_longwave_flux_at_toa: 2: target4
+LWTUPCLR: upwelling_longwave_flux_at_toa_assuming_clear_sky: 2: target4
+LWTUPCLRCLN: upwelling_longwave_flux_at_toa_assuming_clear_sky_and_no_aerosol: 2: target4
+MASS: atmospheric_mass: 2: target6
+MDSCLDFRCH2O: modis_cloud_fraction_water_mean: 2: target10
+MDSCLDFRCHI: modis_cloud_fraction_high_mean: 2: target10
+MDSCLDFRCICE: modis_cloud_fraction_ice_mean: 2: target10
+MDSCLDFRCLO: modis_cloud_fraction_low_mean: 2: target10
+MDSCLDFRCMID: modis_cloud_fraction_mid_mean: 2: target10
+MDSCLDFRCTTL: modis_cloud_fraction_total_mean: 2: target10
+MDSCLDSZH20: modis_cloud_particle_size_water_mean: 2: target10
+MDSCLDSZICE: modis_cloud_particle_size_ice_mean: 2: target10
+MDSCLDTOPPS: modis_cloud_top_pressure_total_mean: 2: target10
+MDSH2OPATH: modis_liquid_water_path_mean: 2: target10
+MDSICEPATH: modis_ice_water_path_mean: 2: target10
+MDSOPTHCKH2O: modis_optical_thickness_water_mean: 2: target10
+MDSOPTHCKH2OLG: modis_optical_thickness_water_logmean: 2: target10
+MDSOPTHCKICE: modis_optical_thickness_ice_mean: 2: target10
+MDSOPTHCKICELG: modis_optical_thickness_ice_logmean: 2: target10
+MDSOPTHCKTTL: modis_optical_thickness_total_mean: 2: target10
+MDSOPTHCKTTLLG: modis_optical_thickness_total_logmean: 2: target10
+MSA: Methanesulphonic acid: 3: target27
+NIRDF: surface_downwelling_nearinfrared_diffuse_flux: 2: target12
+NIRDR: surface_downwelling_nearinfrared_beam_flux: 2: target12
+O3: ozone_mass_mixing_ratio: 3: target24|target28|target25|target37|target29|target26
+OCANGSTR: Organic Carbon Angstrom parameter [470-870 nm] __ENSEMBLE__: 2: target11
+OCCMASS: Organic Carbon Column Mass Density __ENSEMBLE__: 2: target11
+OCDP001: Organic Carbon Dry Deposition Bin 001 __ENSEMBLE__: 2: target15
+OCDP002: Organic Carbon Dry Deposition Bin 002 __ENSEMBLE__: 2: target15
+OCEM001: Organic Carbon Emission Bin 001 __ENSEMBLE__: 2: target15
+OCEM002: Organic Carbon Emission Bin 002 __ENSEMBLE__: 2: target15
+OCEMAN: Organic Carbon Anthropogenic Emissions __ENSEMBLE__: 2: target15
+OCEMBB: Organic Carbon Biomass Burning Emissions __ENSEMBLE__: 2: target15
+OCEMBF: Organic Carbon Biofuel Emissions __ENSEMBLE__: 2: target15
+OCEMBG: Organic Carbon Biogenic Emissions __ENSEMBLE__: 2: target15
+OCEXTTAU: Organic Carbon Extinction AOT [550 nm] __ENSEMBLE__: 2: target11
+OCFLUXU: Organic Carbon column u-wind mass flux __ENSEMBLE__: 2: target11
+OCFLUXV: Organic Carbon column v-wind mass flux __ENSEMBLE__: 2: target11
+OCHYPHIL: Organic Carbon Hydrophobic to Hydrophilic __ENSEMBLE__: 2: target15
+OCINC: Organic Carbon Mixing Ratio Analysis Increments: 3: target13
+OCPHILIC: Hydrophilic Organic Carbon (Particulate Matter): 3: target27
+OCPHOBIC: Hydrophobic Organic Carbon (Particulate Matter): 3: target27
+OCSCATAU: Organic Carbon Scattering AOT [550 nm] __ENSEMBLE__: 2: target11
+OCSD001: Organic Carbon Sedimentation Bin 001 __ENSEMBLE__: 2: target15
+OCSD002: Organic Carbon Sedimentation Bin 002 __ENSEMBLE__: 2: target15
+OCSMASS: Organic Carbon Surface Mass Concentration __ENSEMBLE__: 2: target11
+OCSV001: Organic Carbon Convective Scavenging Bin 001 __ENSEMBLE__: 2: target15
+OCSV002: Organic Carbon Convective Scavenging Bin 002 __ENSEMBLE__: 2: target15
+OCWT001: Organic Carbon Wet Deposition Bin 001 __ENSEMBLE__: 2: target15
+OCWT002: Organic Carbon Wet Deposition Bin 002 __ENSEMBLE__: 2: target15
+OMEGA: vertical_pressure_velocity: 3: target24|target25|target26
+OMEGA500: omega_at_500_hPa: 2: target14
+PARDF: surface_downwelling_par_diffuse_flux: 2: target23
+PARDFLAND: surface_downwelling_par_diffuse_flux: 2: target1
+PARDR: surface_downwelling_par_beam_flux: 2: target23
+PARDRLAND: surface_downwelling_par_beam_flux: 2: target1
+PBLH: planetary_boundary_layer_height: 2: target12
+PBLTOP: pbltop_pressure: 2: target14
+PFICU: 3D_flux_of_ice_convective_precipitation: 3: target22|target19
+PFILSAN: 3D_flux_of_ice_nonconvective_precipitation: 3: target22|target19
+PFLCU: 3D_flux_of_liquid_convective_precipitation: 3: target22|target19
+PFLLSAN: 3D_flux_of_liquid_nonconvective_precipitation: 3: target22|target19
+PGENTOT: Total_column_production_of_precipitation: 2: target12
+PHIS: surface geopotential height: 2: target24|target25|target26
+PL: mid_level_pressure: 3: target25|target26
+PLE: edge_pressure: 3: target22|target38|target2
+PRECANV: anvil_precipitation: 2: target12
+PRECCON: convective_precipitation: 2: target12
+PRECCU: convective_rainfall: 2: target0
+PRECCUCORR: liquid_water_convective_precipitation: 2: target23
+PRECLS: large_scale_rainfall: 2: target0
+PRECLSC: nonanvil_large_scale_precipitation: 2: target12
+PRECLSCORR: liquid_water_large_scale_precipitation: 2: target23
+PRECSN: snowfall: 2: target0
+PRECSNO: snowfall: 2: target12
+PRECSNOCORR: snowfall: 2: target23
+PRECSNOLAND: snowfall_land: 2: target1
+PRECSNOOCN: ocean_snowfall: 2: target8
+PRECTOT: total_precipitation: 2: target12
+PRECTOTCORR: total_precipitation: 2: target12
+PRECTOTLAND: Total_precipitation_land: 2: target1
+PREVTOT: Total_column_re-evap/subl_of_precipitation: 2: target12
+PRMC: water_profile: 2: target1
+PS: surface_pressure: 2: target24|target28|target27|target25|target37|target29|target26|target34|target20|target18|target16|target31|target14
+Q250: specific_humidity_at_250_hPa: 2: target14
+Q500: specific_humidity_at_500_hPa: 2: target14
+Q850: specific_humidity_at_850_hPa: 2: target14
+QI: mass_fraction_of_cloud_ice_water: 3: target24|target33|target25|target26|target34
+QINFIL: Soil_water_infiltration_rate: 2: target1
+QL: mass_fraction_of_cloud_liquid_water: 3: target24|target33|target25|target26|target34
+QLML: surface_specific_humidity: 2: target31|target12
+QSH: effective_surface_specific_humidity: 2: target12
+QSTAR: surface_moisture_scale: 2: target12
+QTFILL: vertically_integrated_total_water_adjustment_from_filling: 2: target0
+QV: specific_humidity: 3: target24|target28|target25|target29|target26
+QV10M: 10-meter_specific_humidity: 2: target16|target8|target14
+QV2M: 2-meter_specific_humidity: 2: target16|target14
+RAINOCN: ocean_rainfall: 2: target8
+REEVAPCN: evap_subl_of_convective_precipitation: 3: target19|target20
+REEVAPLSAN: evap_subl_of_non_convective_precipitation: 3: target19|target20
+RH: relative_humidity_after_moist: 3: target24|target33|target27|target25|target26|target34
+RHOA: air_density_at_surface: 2: target12
+RI: Richardson_number_from_Louis: 3: target2|target3
+RISFC: surface_bulk_richardson_number: 2: target12
+RUNOFF: overland_runoff_including_throughflow: 2: target1|target35
+RZMC: water_root_zone: 2: target1
+SDMCI: sedimentation_loss_of_cloud_ice: 2: target0
+SFMC: water_surface_layer: 2: target1
+SHLAND: Sensible_heat_flux_land: 2: target1
+SLP: sea_level_pressure: 2: target24|target28|target25|target26|target16|target14
+SMLAND: Snowmelt_flux_land: 2: target1
+SNICEALB: aggregated_snow_ice_broadband_albedo: 2: target35
+SNODP: snow_depth: 2: target1
+SNOMAS: Total_snow_storage_land: 2: target1
+SNOMAS_GL: snow_mass_over_glaciated_surface: 2: target35
+SNOWDP_GL: snow_depth_over_glaciated_surface: 2: target35
+SO2: Sulphur dioxide: 3: target27
+SO2CMASS: SO2 Column Mass Density __ENSEMBLE__: 2: target11
+SO2EMAN: SO2 Anthropogenic Emissions __ENSEMBLE__: 2: target15
+SO2EMBB: SO2 Biomass Burning Emissions __ENSEMBLE__: 2: target15
+SO2EMVE: SO2 Volcanic (explosive) Emissions __ENSEMBLE__: 2: target15
+SO2EMVN: SO2 Volcanic (non-explosive) Emissions __ENSEMBLE__: 2: target15
+SO2SMASS: SO2 Surface Mass Concentration __ENSEMBLE__: 2: target11
+SO4: Sulphate aerosol: 3: target27
+SO4CMASS: SO4 Column Mass Density __ENSEMBLE__: 2: target11
+SO4EMAN: SO4 Anthropogenic Emissions __ENSEMBLE__: 2: target15
+SO4SMASS: SO4 Surface Mass Concentration __ENSEMBLE__: 2: target11
+SPEED: surface_wind_speed: 2: target12
+SPEEDLML: surface_wind_speed: 2: target31
+SPEEDMAX: surface_wind_speed: 2: target12
+SPLAND: rate_of_spurious_land_energy_source: 2: target1
+SPSNOW: rate_of_spurious_snow_energy: 2: target1
+SPWATR: rate_of_spurious_land_water_source: 2: target1
+SS001: Sea Salt Mixing Ratio (bin 001): 3: target27
+SS002: Sea Salt Mixing Ratio (bin 002): 3: target27
+SS003: Sea Salt Mixing Ratio (bin 003): 3: target27
+SS004: Sea Salt Mixing Ratio (bin 004): 3: target27
+SS005: Sea Salt Mixing Ratio (bin 005): 3: target27
+SSAERIDX: Sea Salt TOMS UV Aerosol Index: 2: target15
+SSANGSTR: Sea Salt Angstrom parameter [470-870 nm]: 2: target11
+SSCMASS: Sea Salt Column Mass Density: 2: target11
+SSCMASS25: Sea Salt Column Mass Density - PM 2.5: 2: target11
+SSDP001: Sea Salt Dry Deposition Bin 001: 2: target15
+SSDP002: Sea Salt Dry Deposition Bin 002: 2: target15
+SSDP003: Sea Salt Dry Deposition Bin 003: 2: target15
+SSDP004: Sea Salt Dry Deposition Bin 004: 2: target15
+SSDP005: Sea Salt Dry Deposition Bin 005: 2: target15
+SSEM001: Sea Salt Emission Bin 001: 2: target15
+SSEM002: Sea Salt Emission Bin 002: 2: target15
+SSEM003: Sea Salt Emission Bin 003: 2: target15
+SSEM004: Sea Salt Emission Bin 004: 2: target15
+SSEM005: Sea Salt Emission Bin 005: 2: target15
+SSEXTT25: Sea Salt Extinction AOT [550 nm] - PM 2.5: 2: target11
+SSEXTTAU: Sea Salt Extinction AOT [550 nm]: 2: target11
+SSEXTTFM: Sea Salt Extinction AOT [550 nm] - PM 1.0 um: 2: target15
+SSFLUXU: Sea Salt column u-wind mass flux: 2: target11
+SSFLUXV: Sea Salt column v-wind mass flux: 2: target11
+SSINC: Sea-salt Mixing Ratio Analysis Increments: 3: target13
+SSSCAT25: Sea Salt Scattering AOT [550 nm] - PM 2.5: 2: target11
+SSSCATAU: Sea Salt Scattering AOT [550 nm]: 2: target11
+SSSCATFM: Sea Salt Scattering AOT [550 nm] - PM 1.0 um: 2: target15
+SSSD001: Sea Salt Sedimentation Bin 001: 2: target15
+SSSD002: Sea Salt Sedimentation Bin 002: 2: target15
+SSSD003: Sea Salt Sedimentation Bin 003: 2: target15
+SSSD004: Sea Salt Sedimentation Bin 004: 2: target15
+SSSD005: Sea Salt Sedimentation Bin 005: 2: target15
+SSSMASS: Sea Salt Surface Mass Concentration: 2: target11
+SSSMASS25: Sea Salt Surface Mass Concentration - PM 2.5: 2: target11
+SSSV001: Sea Salt Convective Scavenging Bin 001: 2: target15
+SSSV002: Sea Salt Convective Scavenging Bin 002: 2: target15
+SSSV003: Sea Salt Convective Scavenging Bin 003: 2: target15
+SSSV004: Sea Salt Convective Scavenging Bin 004: 2: target15
+SSSV005: Sea Salt Convective Scavenging Bin 005: 2: target15
+SSWT001: Sea Salt Wet Deposition Bin 001: 2: target15
+SSWT002: Sea Salt Wet Deposition Bin 002: 2: target15
+SSWT003: Sea Salt Wet Deposition Bin 003: 2: target15
+SSWT004: Sea Salt Wet Deposition Bin 004: 2: target15
+SSWT005: Sea Salt Wet Deposition Bin 005: 2: target15
+SUANGSTR: SO4 Angstrom parameter [470-870 nm] __ENSEMBLE__: 2: target11
+SUBCI: sumblimation_loss_of_cloud_ice: 2: target0
+SUBSN: sumblimation_loss_of_precip_ice: 2: target0
+SUDP001: Sulfate Dry Deposition Bin 001 __ENSEMBLE__: 2: target15
+SUDP002: Sulfate Dry Deposition Bin 002 __ENSEMBLE__: 2: target15
+SUDP003: Sulfate Dry Deposition Bin 003 __ENSEMBLE__: 2: target15
+SUDP004: Sulfate Dry Deposition Bin 004 __ENSEMBLE__: 2: target15
+SUEM001: Sulfate Emission Bin 001 __ENSEMBLE__: 2: target15
+SUEM002: Sulfate Emission Bin 002 __ENSEMBLE__: 2: target15
+SUEM003: Sulfate Emission Bin 003 __ENSEMBLE__: 2: target15
+SUEM004: Sulfate Emission Bin 004 __ENSEMBLE__: 2: target15
+SUEXTTAU: SO4 Extinction AOT [550 nm] __ENSEMBLE__: 2: target11
+SUFLUXU: SO4 column u-wind mass flux __ENSEMBLE__: 2: target11
+SUFLUXV: SO4 column v-wind mass flux __ENSEMBLE__: 2: target11
+SUINC: Sulfate Mixing Ratio Analysis Increments: 3: target13
+SUPMSA: MSA Prod from DMS Oxidation [column] __ENSEMBLE__: 2: target15
+SUPSO2: SO2 Prod from DMS Oxidation [column] __ENSEMBLE__: 2: target15
+SUPSO4AQ: SO4 Prod from Aqueous SO2 Oxidation [column] __ENSEMBLE__: 2: target15
+SUPSO4G: SO4 Prod from Gaseous SO2 Oxidation [column] __ENSEMBLE__: 2: target15
+SUPSO4WT: SO4 Prod from Aqueous SO2 Oxidation (wet dep) [column] __ENSEMBLE__: 2: target15
+SUSCATAU: SO4 Scattering AOT [550 nm] __ENSEMBLE__: 2: target11
+SUSD001: Sulfate Settling Bin 001 __ENSEMBLE__: 2: target15
+SUSD002: Sulfate Settling Bin 002 __ENSEMBLE__: 2: target15
+SUSD003: Sulfate Settling Bin 003 __ENSEMBLE__: 2: target15
+SUSD004: Sulfate Settling Bin 004 __ENSEMBLE__: 2: target15
+SUSV001: Sulfate Convective Scavenging Bin 001 __ENSEMBLE__: 2: target15
+SUSV002: Sulfate Convective Scavenging Bin 002 __ENSEMBLE__: 2: target15
+SUSV003: Sulfate Convective Scavenging Bin 003 __ENSEMBLE__: 2: target15
+SUSV004: Sulfate Convective Scavenging Bin 004 __ENSEMBLE__: 2: target15
+SUWT001: Sulfate Wet Deposition Bin 001 __ENSEMBLE__: 2: target15
+SUWT002: Sulfate Wet Deposition Bin 002 __ENSEMBLE__: 2: target15
+SUWT003: Sulfate Wet Deposition Bin 003 __ENSEMBLE__: 2: target15
+SUWT004: Sulfate Wet Deposition Bin 004 __ENSEMBLE__: 2: target15
+SWGDN: Incident_shortwave_land: 2: target23|target4
+SWGDNCLR: surface_incoming_shortwave_flux_assuming_clear_sky: 2: target4
+SWGNT: surface_net_downward_shortwave_flux: 2: target4
+SWGNTCLN: surface_net_downward_shortwave_flux_assuming_no_aerosol: 2: target4
+SWGNTCLR: surface_net_downward_shortwave_flux_assuming_clear_sky: 2: target4
+SWGNTCLRCLN: surface_net_downward_shortwave_flux_assuming_clear_sky_and_no_aerosol: 2: target4
+SWGNTICE: sea_ice_net_downward_shortwave_flux: 2: target8
+SWGNTWTR: open_water_net_downward_shortwave_flux: 2: target8
+SWLAND: Net_shortwave_land: 2: target23|target1
+SWNETSRF: surface_net_downward_shortwave_flux: 2: target0
+SWNETTOA: toa_net_downward_shortwave_flux: 2: target0
+SWTDN: toa_incoming_shortwave_flux: 2: target4
+SWTNT: toa_net_downward_shortwave_flux: 2: target4
+SWTNTCLN: toa_net_downward_shortwave_flux_assuming_no_aerosol: 2: target4
+SWTNTCLR: toa_net_downward_shortwave_flux_assuming_clear_sky: 2: target4
+SWTNTCLRCLN: toa_net_downward_shortwave_flux_assuming_clear_sky_and_no_aerosol: 2: target4
+T: air_temperature: 3: target24|target28|target25|target29|target26
+T10M: 10-meter_air_temperature: 2: target16|target8|target14
+T250: air_temperature_at_250_hPa: 2: target14
+T2M: 2-meter_air_temperature: 2: target16|target14
+T2MDEW: dew_point_temperature_at_2_m: 2: target14
+T2MMAX: 2-meter_air_temperature: 2: target5
+T2MMEAN: 2-meter_air_temperature: 2: target5
+T2MMIN: 2-meter_air_temperature: 2: target5
+T2MWET: wet_bulb_temperature_at_2_m: 2: target14
+T500: air_temperature_at_500_hPa: 2: target14
+T850: air_temperature_at_850_hPa: 2: target14
+TAUCLI: in_cloud_optical_thickness_for_ice_clouds: 3: target33|target34
+TAUCLW: in_cloud_optical_thickness_for_liquid_clouds: 3: target33|target34
+TAUGWX: surface_eastward_gravity_wave_stress: 2: target12
+TAUGWY: surface_northward_gravity_wave_stress: 2: target12
+TAUHGH: in_cloud_optical_thickness_of_high_clouds(EXPORT): 2: target4
+TAULOW: in_cloud_optical_thickness_of_low_clouds: 2: target4
+TAUMID: in_cloud_optical_thickness_of_middle_clouds: 2: target4
+TAUTOT: in_cloud_optical_thickness_of_all_clouds: 2: target4
+TAUX: eastward_surface_stress: 2: target12
+TAUXICE: eastward_stress_over_ice: 2: target8
+TAUXWTR: eastward_stress_over_water: 2: target8
+TAUY: northward_surface_stress: 2: target12
+TAUYICE: northward_stress_over_ice: 2: target8
+TAUYWTR: northward_stress_over_water: 2: target8
+TCZPBL: transcom_planetary_boundary_layer_height: 2: target12
+TELAND: Total_energy_storage_land: 2: target1
+THV: vertically_integrated_virtual_potential_temperature: 2: target6
+TLML: surface_air_temperature: 2: target31|target12
+TO3: total_column_ozone: 2: target16|target21|target14
+TOTANGSTR: Total Aerosol Angstrom parameter [470-870 nm]: 2: target11
+TOTEXTTAU: Total Aerosol Extinction AOT [550 nm]: 2: target11
+TOTSCATAU: Total Aerosol Scattering AOT [550 nm]: 2: target11
+TOX: total_column_odd_oxygen: 2: target16|target6|target14
+TPRECMAX: total_precipitation: 2: target5
+TPSNOW: surface_temperature_of_snow: 2: target1
+TQI: total_precipitable_ice_water: 2: target16|target6|target14
+TQL: total_precipitable_liquid_water: 2: target16|target6|target14
+TQV: total_precipitable_water_vapor: 2: target16|target6|target14
+TROPPB: tropopause_pressure_based_on_blended_estimate: 2: target16|target14
+TROPPT: tropopause_pressure_based_on_thermal_estimate: 2: target16|target14
+TROPPV: tropopause_pressure_based_on_EPV_estimate: 2: target16|target14
+TROPQ: tropopause_specific_humidity_using_blended_TROPP_estimate: 2: target16|target14
+TROPT: tropopause_temperature_using_blended_TROPP_estimate: 2: target16|target14
+TS: surface_skin_temperature: 2: target16|target4|target14
+TSAT: surface_temperature_of_saturated_zone: 2: target1
+TSH: effective_surface_skin_temperature: 2: target12
+TSKINICE: sea_ice_skin_temperature: 2: target8
+TSKINWTR: open_water_skin_temperature: 2: target8
+TSOIL1: soil_temperatures_layer_1: 2: target1
+TSOIL2: soil_temperatures_layer_2: 2: target1
+TSOIL3: soil_temperatures_layer_3: 2: target1
+TSOIL4: soil_temperatures_layer_4: 2: target1
+TSOIL5: soil_temperatures_layer_5: 2: target1
+TSOIL6: soil_temperatures_layer_6: 2: target1
+TSTAR: surface_temperature_scale: 2: target12
+TSURF: surface_temperature_of_land_incl_snow: 2: target1
+TUNST: surface_temperature_of_unsaturated_zone: 2: target1
+TWLAND: Avail_water_storage_land: 2: target1
+TWLT: surface_temperature_of_wilted_zone: 2: target1
+U: eastward_wind: 3: target24|target28|target25|target29|target26
+U10M: 10-meter_eastward_wind: 2: target16|target8|target14
+U250: eastward_wind_at_250_hPa: 2: target14
+U2M: 2-meter_eastward_wind: 2: target16|target14
+U500: eastward_wind_at_500_hPa: 2: target14
+U50M: eastward_wind_at_50_meters: 2: target16|target14
+U850: eastward_wind_at_850_hPa: 2: target14
+UFLXCPT: eastward_flux_of_atmospheric_enthalpy: 2: target0
+UFLXKE: eastward_flux_of_atmospheric_kinetic_energy: 2: target0
+UFLXPHI: eastward_flux_of_atmospheric_potential_energy: 2: target0
+UFLXQI: eastward_flux_of_atmospheric_ice: 2: target0
+UFLXQL: eastward_flux_of_atmospheric_liquid_water: 2: target0
+UFLXQV: eastward_flux_of_atmospheric_water_vapor: 2: target0
+ULML: surface_eastward_wind: 2: target12
+USTAR: surface_velocity_scale: 2: target12
+V: northward_wind: 3: target24|target28|target25|target29|target26
+V10M: 10-meter_northward_wind: 2: target16|target8|target14
+V250: northward_wind_at_250_hPa: 2: target14
+V2M: 2-meter_northward_wind: 2: target16|target14
+V500: northward_wind_at_500_hPa: 2: target14
+V50M: northward_wind_at_50_meters: 2: target16|target14
+V850: northward_wind_at_850_hPa: 2: target14
+VFLXCPT: northward_flux_of_atmospheric_enthalpy: 2: target0
+VFLXKE: northward_flux_of_atmospheric_kinetic_energy: 2: target0
+VFLXPHI: northward_flux_of_atmospheric_potential_energy: 2: target0
+VFLXQI: northward_flux_of_atmospheric_ice: 2: target0
+VFLXQL: northward_flux_of_atmospheric_liquid_water: 2: target0
+VFLXQV: northward_flux_of_atmospheric_water_vapor: 2: target0
+VLML: surface_northward_wind: 2: target12
+WCHANGE: rate_of_change_of_total_land_water: 2: target1
+WESNEXT: total_snow_mass_residual_due_to_densification: 2: target35
+WESNSC: top_snow_layer_mass_change_due_to_sub_con: 2: target35
+Z0H: surface_roughness_for_heat: 2: target12
+Z0M: surface_roughness: 2: target12
+ZLCL: lifting_condensation_level: 2: target14
+ZLE: edge_heights: 3: target38
+delp: pressure_thickness: 3: target13

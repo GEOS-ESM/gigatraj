@@ -298,6 +298,7 @@ AC_CONFIG_FILES([Makefile
                  lib/filters/Makefile
                  lib/metsources/Makefile
                  src/Makefile
+                 confiles/Makefile
                  test/Makefile
                  doc/gigatraj_base.dconf:doc/gigatraj_base.dconf.in
                  doc/latex_yes.dconf:doc/latex_yes.dconf.in

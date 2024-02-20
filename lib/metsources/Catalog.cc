@@ -3240,7 +3240,8 @@ std::string Catalog::findConfig() const
                  result = dir + result;
               } else {
                  // try the prefix data location
-                 dir = GTCONFIGDIR; 
+                 dir = GTCONFIGDIR;
+                 dir = dir + "/cat"; 
                  if ( fileExists( dir + result ) ) {
                       result = dir + result;
                  }

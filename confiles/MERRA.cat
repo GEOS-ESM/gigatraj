@@ -1,0 +1,442 @@
+#
+# This Catalog file has been generated automatically from the script ctg_2_cat.py.
+#
+
+;lonCoord;latCoord; vertCoord
+
+>1980-01-01T00:00
+
+
+# Dimensions
+#
+MRLON ~ XDim; degrees_east ; LHN; -180.0, 179.333333333333, 540
+MRLAT ~ YDim; degrees_north; LHN; -90.0, 90.0, 361
+MRPRS ~ P; hPa; V; 1000, 975, 950, 925, 900, 875, 850, 825, 800, 775, 750, 725, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100, 70, 50, 40, 30, 20, 10, 7, 5, 4, 3, 2, 1, 0.7, 0.5, 0.4, 0.3, 0.1
+MRLEV ~ Model-Levels;; LHN; 0, 71, 72
+MREDG ~ Model-Levels;; LHN; 0, 72, 73
+
+
+
+# Variables
+#
+name_of_longitude/S = "XDim"
+name_of_latitude/S = "YDim"
+name_of_time/S = "TIME"
+name_of_vertical/S = "Height"
+#
+BASEURL0/S = "https://goldsmr2.gesdisc.eosdis.nasa.gov/opendap/MERRA/"
+BASEURL1/S = "https://goldsmr3.gesdisc.eosdis.nasa.gov/opendap/MERRA/"
+BASEURL2/S = "https://goldsmr1.gesdisc.eosdis.nasa.gov/opendap/MERRA/"
+#
+RUNSET/S = [${DATE}] < [1993-01-01] ? "MERRA100"
+RUNSET/S = [${DATE}] < [2001-01-01] ? "MERRA200"
+RUNSET/S = "MERRA300"
+RUNSETX/S = [${DATE}] < [1993-01-01] ? "MERRA101"
+RUNSETX/S = "${RUNSET}"
+
+
+# Targets
+target0:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAT1NXINT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_int_Nx.${YEAR}${MONTH}${DOM}.hdf
+target1:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAT1NXLND.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_lnd_Nx.${YEAR}${MONTH}${DOM}.hdf
+target2:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;6;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAI6NPANA.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst6_3d_ana_Np.${YEAR}${MONTH}${DOM}.hdf
+target3:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAI3CPASM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst3_3d_asm_Cp.${YEAR}${MONTH}${DOM}.hdf
+target4:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;6;0;MRLON;MRLAT;MRLEV;${BASEURL1}/MAI6NVANA.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst6_3d_ana_Nv.${YEAR}${MONTH}${DOM}.hdf
+target5:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRLEV;${BASEURL2}/MAT3FVCHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_chm_Fv.${YEAR}${MONTH}${DOM}.hdf
+target6:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAT1NXRAD.5.2.0/${YEAR}/${MONTH}/${RUNSETX}.prod.assim.tavg1_2d_rad_Nx.${YEAR}${MONTH}${DOM}.hdf
+target7:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAI1NXINT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst1_2d_int_Nx.${YEAR}${MONTH}${DOM}.hdf
+target8:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPODT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_odt_Cp.${YEAR}${MONTH}${DOM}.hdf
+target9:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPQDT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_qdt_Cp.${YEAR}${MONTH}${DOM}.hdf
+target10:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAT1NXFLX.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_flx_Nx.${YEAR}${MONTH}${DOM}.hdf
+target11:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;2;${BASEURL2}/MAT3FXCHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_2d_chm_Fx.${YEAR}${MONTH}${DOM}.hdf
+target12:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAT1NXSLV.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_slv_Nx.${YEAR}${MONTH}${DOM}.hdf
+target13:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPTRB.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_trb_Cp.${YEAR}${MONTH}${DOM}.hdf
+target14:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPCLD.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_cld_Cp.${YEAR}${MONTH}${DOM}.hdf
+target15:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPMST.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_mst_Cp.${YEAR}${MONTH}${DOM}.hdf
+target16:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPRAD.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_rad_Cp.${YEAR}${MONTH}${DOM}.hdf
+target17:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPTDT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_tdt_Cp.${YEAR}${MONTH}${DOM}.hdf
+target18:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPUDT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_udt_Cp.${YEAR}${MONTH}${DOM}.hdf
+target19:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRLEV;${BASEURL2}/MAT3NVCHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_chm_Nv.${YEAR}${MONTH}${DOM}.hdf
+target20:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAT1NXOCN.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_ocn_Nx.${YEAR}${MONTH}${DOM}.hdf
+target21:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;3;0;MRLON;MRLAT;MREDG;${BASEURL2}/MAI3NECHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst3_3d_chm_Ne.${YEAR}${MONTH}${DOM}.hdf
+target22:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MREDG;${BASEURL2}/MAT3FECHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_chm_Fe.${YEAR}${MONTH}${DOM}.hdf
+target23:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MREDG;${BASEURL2}/MAT3NECHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_chm_Ne.${YEAR}${MONTH}${DOM}.hdf
+
+
+# Quantities
+ALBEDO: Surface albedo: 2: target6
+ALBNIRDF: Diffuse beam NIR surface albedo: 2: target6
+ALBNIRDR: Direct beam NIR surface albedo: 2: target6
+ALBVISDF: Diffuse beam VIS-UV surface albedo: 2: target6
+ALBVISDR: Direct beam VIS-UV surface albedo: 2: target6
+AUTCNVRN: Autoconversion loss of cloud water: 2: target0
+BASEFLOW: Baseflow: 2: target1
+BKGERR: Vertically integrated kinetic energy residual for BKG energy conservation: 2: target0
+BSTAR: Surface buoyancy scale: 2: target10
+CDH: Surface exchange coefficient for heat: 2: target10
+CDM: Surface exchange coefficient for momentum: 2: target10
+CDQ: Surface exchange coefficient for moisture: 2: target10
+CFAN: 3-D Cloud fraction - anvils: 3: target14|target5
+CFCU: 3-D Cloud fraction - convective: 3: target14|target5
+CFLS: 3-D Cloud fraction - large-scale: 3: target14|target5
+CLDHGH: High-level (above 400 hPa) cloud fraction: 2: target6|target11
+CLDLOW: Low-level (1000-700 hPa) cloud fraction: 2: target6|target11
+CLDMID: Mid-level (700-400 hPa) cloud fraction: 2: target6|target11
+CLDPRS: Cloud-top pressure: 2: target12
+CLDTMP: Cloud-top temperature: 2: target12
+CLDTOT: Total cloud fraction: 2: target6|target11
+CLOUD: 3-D Cloud fraction: 3: target16
+CMFMC: Upward moist convective mass flux: 3: target15|target22|target23
+CN: Surface neutral drag coefficient: 2: target10
+COLCNVRN: Accretion loss of cloud water to rain: 2: target0
+COLCNVSN: Accretion loss of cloud water to snow: 2: target0
+CONVCPT: Vertically integrated enthalpy convergence: 2: target0
+CONVKE: Vertically integrated kinetic energy convergence: 2: target0
+CONVPHI: Vertically integrated geopotential convergence: 2: target0
+CONVTHV: Vertically integrated thetav convergence: 2: target0
+CPT: Dry enthalpy: 2: target7
+CUCNVCI: Convective source of cloud ice: 2: target0
+CUCNVCL: Convective source of cloud water: 2: target0
+CUCNVRN: Convective production of rain water: 2: target0
+DELP: Layer pressure thickness: 3: target4|target5
+DHDT_ANA: Total potential energy tendency due to analysis: 2: target0
+DHDT_BKG: Vertically integrated potential energy tendency due to gravity wave background: 2: target0
+DHDT_CUF: Vertically integrated potential energy tendency due to cumulus friction: 2: target0
+DHDT_DYN: Vertically integrated potential energy tendency due to dynamics: 2: target0
+DHDT_FRI: Vertically integrated potential energy tendency due to friction: 2: target0
+DHDT_GWD: Vertically integrated potential energy tendency across GWD: 2: target0
+DHDT_MST: Vertically integrated potential energy tendency across moist: 2: target0
+DHDT_ORO: Vertically integrated potential energy tendency due to orographic gravity waves: 2: target0
+DHDT_PHY: Total potential energy tendency due to physics: 2: target0
+DHDT_RAD: Vertically integrated potential energy tendency across radiation: 2: target0
+DHDT_RAY: Vertically integrated potential energy tendency due to Rayleigh friction: 2: target0
+DHDT_REMAP: Vertically integrated potential energy tendency due to remap: 2: target0
+DHDT_RES: Vertically integrated cpt tendency residual: 2: target0
+DHDT_TRB: Vertically integrated potential energy tendency across turbulence: 2: target0
+DISPH: Displacement Height: 2: target10|target12
+DKDT_ANA: Total kinetic energy tendency due to analysis: 2: target0
+DKDT_BKG: Vertically integrated kinetic energy dissipation due to gravity wave background: 2: target0
+DKDT_DYN: Vertically integrated kinetic energy tendency due to dynamics: 2: target0
+DKDT_GEN: Vertically integrated generation of kinetic energy: 2: target0
+DKDT_GWD: Vertically integrated kinetic energy tendency across GWD: 2: target0
+DKDT_GWDRES: Vertically integrated kinetic energy residual for total energy conservation: 2: target0
+DKDT_INRES: Vertically integrated kinetic energy residual from inertial terms: 2: target0
+DKDT_INT: Vertically integrated kinetic energy dissipation due to diffusion: 2: target0
+DKDT_MST: Vertically integrated kinetic energy tendency across moist: 2: target0
+DKDT_ORO: Vertically integrated kinetic energy dissipation due to orographic gravity waves: 2: target0
+DKDT_PG: Vertically integrated kinetic energy tendency due to pressure gradient: 2: target0
+DKDT_PGRES: Vertically integrated kinetic energy residual from PG terms: 2: target0
+DKDT_PHY: Vertically integrated kinetic energy tendency due to physics: 2: target0
+DKDT_PHYPHY: Vertically integrated kinetic energy tendency across physics: 2: target0
+DKDT_RAY: Vertically integrated kinetic energy dissipation due to Rayleigh friction: 2: target0
+DKDT_REMAP: Vertically integrated kinetic energy tendency due to remap: 2: target0
+DKDT_SRF: Vertically integrated kinetic energy dissipation due to surface friction: 2: target0
+DKDT_TOP: Vertically integrated kinetic energy dissipation due to topographic friction: 2: target0
+DKDT_TRB: Vertically integrated kinetic energy tendency across turbulence: 2: target0
+DMDT_ANA: Vertically integrated mass tendency due to analysis: 2: target0
+DMDT_DYN: Vertically integrated mass tendency due to dynamics: 2: target0
+DOXDTANA: Ozone tendency from analysis: 3: target8
+DOXDTCHM: Ozone tendency from chemistry: 3: target8
+DOXDTDYN: Ozone tendency from dynamics: 3: target8
+DOXDTMST: Ozone tendency from moist physics: 3: target8
+DOXDTTRB: Ozone tendency from turbulence: 3: target8
+DOXDT_ANA: Vertically integrated ozone tendency due to analysis: 2: target0
+DOXDT_CHM: Vertically integrated odd oxygen tendency due to chemistry: 2: target0
+DOXDT_DYN: Vertically integrated ozone tendency due to dynamics: 2: target0
+DOXDT_FIL: Vertically integrated ox adjustment from filling: 2: target0
+DOXDT_PHY: Vertically integrated odd oxygen tendency due to physics: 2: target0
+DPDT_ANA: Mountain work tendency due to analysis: 2: target0
+DPDT_DYN: Mountain work tendency due to dynamics: 2: target0
+DPDT_PHY: Mountain work tendency due to physics: 2: target0
+DPDT_REMAP: Mountain work tendency due to remap: 2: target0
+DQIDTDYN: Ice tendency from dynamics: 3: target9
+DQIDTMST: Ice tendency from moist physics: 3: target9
+DQIDTTRB: Ice tendency from turbulence: 3: target9
+DQIDT_ANA: Vertically integrated ice water tendency due to analysis: 2: target0
+DQIDT_DYN: Vertically integrated ice water tendency due to dynamics: 2: target0
+DQIDT_FIL: Vertically integrated qi adjustment from filling: 2: target0
+DQIDT_MST: Vertically integrated ice tendency due to moist processes: 2: target0
+DQIDT_PHY: Vertically integrated ice tendency due to physics: 2: target0
+DQLDTDYN: Liquid water tendency from dynamics: 3: target9
+DQLDTMST: Liquid water tendency from moist physics: 3: target9
+DQLDTTRB: Liquid water tendency from turbulence: 3: target9
+DQLDT_ANA: Vertically integrated liquid water tendency due to analysis: 2: target0
+DQLDT_DYN: Vertically integrated liquid water tendency due to dynamics: 2: target0
+DQLDT_FIL: Vertically integrated ql adjustment from filling: 2: target0
+DQLDT_MST: Vertically integrated liquid water tendency due to moist processes: 2: target0
+DQLDT_PHY: Vertically integrated liquid water tendency due to physics: 2: target0
+DQRANV: Precipitation production rate - anvils: 2: target5
+DQRCON: Precipitation production rate - convective: 2: target5
+DQRCU: Precipitation production rate - convective: 3: target15
+DQRLSAN: Precipitation production rate - large-scale+anvil: 3: target15
+DQRLSC: Precipitation production rate - large-scale: 2: target5
+DQVDTANA: Water vapor tendency from analysis: 3: target9
+DQVDTCHM: Water vapor tendency from chemistry: 3: target9
+DQVDTDYN: Water vapor tendency from dynamics: 3: target9
+DQVDTMST: Water vapor tendency from moist physics: 3: target9
+DQVDTTRB: Water vapor tendency from turbulence: 3: target9
+DQVDT_ANA: Vertically integrated water vapor tendency due to analysis: 2: target0
+DQVDT_CHM: Vertically integrated water vapor tendency due to chemistry: 2: target0
+DQVDT_DYN: Vertically integrated water vapor tendency due to dynamics: 2: target0
+DQVDT_FIL: Vertically integrated qv adjustment from filling: 2: target0
+DQVDT_MST: Vertically integrated water vapor tendency due to moist processes: 2: target0
+DQVDT_PHY: Vertically integrated water vapor tendency due to physics: 2: target0
+DQVDT_TRB: Vertically integrated water vapor tendency due to turbulence: 2: target0
+DTDTANA: Temperature tendency from analysis: 3: target17
+DTDTDYN: Temperature tendency from dynamics: 3: target17
+DTDTFRI: Temperature tendency from frictional heating: 3: target17
+DTDTGWD: Temperature tendency from gravity wave drag: 3: target17
+DTDTLWR: T tendency from terrestrial radiation: 3: target16
+DTDTLWRCLR: T tendency from terrestrial radiation (clear sky): 3: target16
+DTDTMST: Temperature tendency from moist physics: 3: target17
+DTDTRAD: Temperature tendency from radiation: 3: target17
+DTDTSWR: T tendency from solar radiation: 3: target16
+DTDTSWRCLR: T tendency from solar radiation (clear sky): 3: target16
+DTDTTOT: Temperature tendency from physics: 3: target17
+DTDTTRB: Temperature tendency from turbulence: 3: target17
+DTHDT_ANA: Vertically integrated THV tendency due to analysis: 2: target0
+DTHDT_CONSV: Vertically integrated THV tendency due to TE conservation: 2: target0
+DTHDT_DYN: Vertically integrated THV tendency due to dynamics: 2: target0
+DTHDT_FIL: Vertically integrated thv adjustment from filling: 2: target0
+DTHDT_PHY: Vertically integrated THV tendency due to physics: 2: target0
+DTHDT_REMAP: Vertically integrated THV tendency due to vertical remapping: 2: target0
+DTRAIN: Detraining cloud mass flux: 3: target19|target5
+DUDTANA: U-wind tendency from analysis: 3: target18
+DUDTDYN: U-wind tendency from dynamics: 3: target18
+DUDTGWD: U-wind tendency from gravity wave drag: 3: target18
+DUDTMST: U-wind tendency from moist physics: 3: target18
+DUDTTRB: U-wind tendency from turbulence: 3: target18
+DVDTANA: V-wind tendency from analysis: 3: target18
+DVDTDYN: V-wind tendency from dynamics: 3: target18
+DVDTGWD: V-wind tendency from gravity wave drag: 3: target18
+DVDTMST: V-wind tendency from moist physics: 3: target18
+DVDTTRB: V-wind tendency from turbulence: 3: target18
+ECHANGE: Total land energy change per unit time: 2: target1
+EFLUX: Latent heat flux (positive upward): 2: target10
+EFLUXICE: Sea ice latent energy flux: 2: target20
+EFLUXWTR: Open water latent energy flux: 2: target20
+EMIS: Surface emissivity: 2: target6
+EPV: Ertel potential vorticity: 3: target3
+EVAP: Surface evaporation: 2: target10|target0|target11
+EVLAND: Evaporation from land: 2: target1
+EVPCL: Evaporation loss of cloud water: 2: target0
+EVPINTR: Interception loss: 2: target1
+EVPRN: Evaporation loss of precip water: 2: target0
+EVPSBLN: Sublimation: 2: target1
+EVPSOIL: Bare soil evaporation: 2: target1
+EVPTRNS: Transpiration: 2: target1
+FRCAN: Fractional area of anvil precipitation: 2: target11
+FRCCN: Fractional area of convective precipitation: 2: target11
+FRCLS: Fractional area of large-scale precipitation: 2: target11
+FRSAT: Fractional saturated area: 2: target1
+FRSEAICE: Ice covered fraction of tile: 2: target10|target20
+FRSNO: Fractional snow-covered area: 2: target1
+FRUNST: Fractional unsaturated area: 2: target1
+FRWLT: Fractional wilting area: 2: target1
+FRZCL: Net freezing of cloud condensate: 2: target0
+FRZRN: Net freezing of precip condensate: 2: target0
+GHLAND: Downward heat flux at base of top soil layer: 2: target1
+GRN: Vegetation greeness fraction: 2: target1
+GWETROOT: Root zone soil wetness: 2: target1|target11
+GWETTOP: Top soil layer wetness: 2: target1|target11
+H: Geopotential height: 3: target2|target3
+H1000: Height at 1000 hPa: 2: target12
+H250: Height at 250 hPa: 2: target12
+H500: Height at 500 hPa: 2: target12
+H850: Height at 850 hPa: 2: target12
+HFLUX: Sensible heat flux (positive upward): 2: target10|target0|target11
+HFLUXICE: Sea ice upward sensible heat flux: 2: target20
+HFLUXWTR: Open water upward sensible heat flux: 2: target20
+HLML: Height of center of lowest model layer: 2: target10
+Height_EOS: Height: 0: target2|target3|target14|target15|target8|target9|target16|target17|target13|target18|target4|target21|target22|target19|target5|target23
+KE: Kinetic energy: 2: target7
+KH: Heat (scalar) diffusivity: 3: target13|target22|target23
+KHLK: Heat (scalar) diffusivity from Lock: 3: target13
+KHLS: Heat (scalar) diffusivity from Louis: 3: target13
+KHRAD: Heat (scalar) diffusivity Lock radiative contribution: 3: target13
+KHSFC: Heat (scalar) diffusivity Lock surface contribution: 3: target13
+KM: Momentum diffusivity: 3: target13
+KMLK: Momentum diffusivity from Lock: 3: target13
+KMLS: Momentum diffusivity from Louis: 3: target13
+LAI: Leaf area index: 2: target1
+LHLAND: Latent heat flux from land: 2: target1
+LSCNVCI: Statistical source of cloud ice: 2: target0
+LSCNVCL: Statistical source of cloud water: 2: target0
+LSCNVRN: Spurious rain from RH cleanup: 2: target0
+LWGAB: Absorbed longwave at the surface: 2: target6
+LWGABCLR: Absorbed longwave at the surface with no cloud: 2: target6
+LWGABCLRCLN: Absorbed longwave at the surface with no cloud or aerosol: 2: target6
+LWGDWN: Surface downward longwave flux: 2: target11
+LWGEM: Emitted longwave at the surface: 2: target6
+LWGNET: Surface net downward longwave flux: 2: target0|target11
+LWGNT: Net downward longwave flux at the surface: 2: target6
+LWGNTCLR: Net downward longwave flux at the surface for cloud-free sky: 2: target6
+LWGNTCLRCLN: Net downward longwave flux at the surface for clear sky: 2: target6
+LWGNTICE: Sea ice net downward longwave flux: 2: target20
+LWGNTWTR: Open water net downward longwave flux: 2: target20
+LWLAND: Net downward longwave flux over land: 2: target1
+LWTNET: Upwelling longwave flux at TOA: 2: target0
+LWTUP: Upward longwave flux at top of atmosphere (TOA): 2: target6
+LWTUPCLR: Upward longwave flux at TOA assuming clear sky: 2: target6
+LWTUPCLRCLN: Upward longwave flux at TOA assuming clear clean sky: 2: target6
+MASS: Atmospheric mass: 2: target7
+MFXC: Eastward mass flux on C-Grid: 3: target19
+MFYC: Northward mass flux on C-Grid: 3: target19
+MFZ: Upward resolved mass flux: 3: target22|target23
+NIRDF: Surface downward NIR diffuse flux: 2: target11
+NIRDR: Surface downward NIR beam flux: 2: target11
+O3: Ozone Mixing Ratio: 3: target2|target3|target4
+OMEGA: Vertical pressure velocity: 3: target3
+OMEGA500: Vertical pressure velocity at 500 hPa: 2: target12
+PARDF: Surface downward PAR diffuse flux: 2: target1|target11
+PARDR: Surface downward PAR beam flux: 2: target1|target11
+PBLH: Planetary boundary layer height: 2: target10|target11
+PBLTOP: Pressure at PBL top: 2: target11
+PFICU: Downward flux of ice precipitation - convective: 3: target15|target22
+PFILSAN: Downward flux of ice precip - large-scale+anvil: 3: target15|target22
+PFLCU: Downward flux of liquid precipitation - convective: 3: target15|target22
+PFLLSAN: Downward flux of liquid precip - large-scale+anvil: 3: target15|target22
+PGENTOT: Total generation of precipitation: 2: target10
+PHIS: Surface Geopotential: 2: target3
+PLE: Edge pressures: 3: target21
+PRECANV: Surface precipitation flux from anvils: 2: target10|target11
+PRECCON: Surface precipitation flux from convection: 2: target10|target11
+PRECCU: Liquid water convective precipitation: 2: target0
+PRECLS: Liquid water large scale precipitation: 2: target0
+PRECLSC: Surface precipitation flux from large-scale: 2: target10|target11
+PRECSN: Snowfall: 2: target0
+PRECSNO: Surface snowfall flux: 2: target10|target1|target11
+PRECSNOOCN: Ocean snowfall: 2: target20
+PRECTOT: Total surface precipitation flux: 2: target10|target1
+PS: Surface pressure: 2: target2|target3|target4|target12|target11
+Q250: Specific humidity at 250 hPa: 2: target12
+Q500: Specific humidity at 500 hPa: 2: target12
+Q850: Specific humidity at 850 hPa: 2: target12
+QCCU: Cloud condensate mixing ratio - convective updraft: 3: target14
+QI: Cloud ice mixing ratio: 3: target3|target5
+QIAN: Cloud ice mixing ratio - anvils: 3: target14
+QILS: Cloud ice mixing ratio - large-scale: 3: target14
+QL: Cloud liquid water mixing ratio: 3: target3|target5
+QLAN: Cloud liquid water mixing ratio - anvils: 3: target14
+QLLS: Cloud liquid water mixing ratio - large-scale: 3: target14
+QLML: Specific Humidity of lowest model layer: 2: target10
+QSH: Effective turbulence skin humidity: 2: target10
+QSTAR: Surface humidity scale: 2: target10
+QTFILL: Vertically integrated total water adjustment from filling: 2: target0
+QV: Specific humidity: 3: target2|target3|target4|target5
+QV10M: Specific humidity at 10 m above displacement height: 2: target20|target12
+QV2M: Specific humidity at 2 m above the displacement height: 2: target12|target11
+RAINOCN: Ocean rainfall: 2: target20
+REEVAPCN: Evaporation of precipitating convective condensate: 3: target15
+REEVAPLSAN: Evaporation of precipitating LS and anvil condensate: 3: target15
+RH: Relative humidity: 3: target3|target14
+RHOA: Surface air density: 2: target10
+RI: Richardson Number: 3: target13|target10
+RUNOFF: Overland runoff: 2: target1
+SDMCI: Sedimentation loss of cloud ice: 2: target0
+SHLAND: Sensible heat flux from land: 2: target1
+SLP: Sea-level pressure: 2: target2|target3|target12
+SMLAND: Snowmelt: 2: target1
+SNODP: Snow depth: 2: target1
+SNOMAS: Snow mass: 2: target1
+SPEED: Effective surface wind speed: 2: target10
+SPLAND: Spurious land energy source: 2: target1
+SPSNOW: Spurious snow energy: 2: target1
+SPWATR: Spurious land water source: 2: target1
+SUBCI: Sumblimation loss of cloud ice: 2: target0
+SUBSN: Sumblimation loss of precip ice: 2: target0
+SWGDN: Surface incident shortwave flux: 2: target6
+SWGDNCLR: Surface incident shortwave flux assuming clear sky: 2: target6
+SWGDWN: Surface downward shortwave flux: 2: target11
+SWGNET: Net surface downward shortwave flux: 2: target11
+SWGNT: Surface net downward shortwave flux: 2: target6
+SWGNTCLN: Surface net downward shortwave flux assuming clean sky: 2: target6
+SWGNTCLR: Surface net downward shortwave flux assuming clear sky: 2: target6
+SWGNTCLRCLN: Surface net downward shortwave flux assuming clear clean sky: 2: target6
+SWGNTICE: Sea ice net downward shortwave flux: 2: target20
+SWGNTWTR: Open water net downward shortwave flux: 2: target20
+SWLAND: Net downward shortwave flux over land: 2: target1
+SWNETSRF: Surface net downward shortwave flux: 2: target0
+SWNETTOA: TOA net downward shortwave flux: 2: target0
+SWTDN: TOA incident shortwave flux: 2: target6
+SWTNT: TOA net downward shortwave flux: 2: target6
+SWTNTCLN: TOA net downward shortwave flux assuming clean sky: 2: target6
+SWTNTCLR: TOA net downward shortwave flux assuming clear sky: 2: target6
+SWTNTCLRCLN: TOA net downward shortwave flux assuming clear clean sky: 2: target6
+T: Air Temperature: 3: target2|target3|target4|target5
+T10M: Temperature at 10 m above displacement height: 2: target20|target12
+T250: Temperature at 250 hPa: 2: target12
+T2M: Temperature at 2 m above the displacement height: 2: target12|target11
+T500: Temperature at 500 hPa: 2: target12
+T850: Temperature at 850 hPa: 2: target12
+TAUCLI: Layer ice cloud optical thickness: 3: target5
+TAUCLW: Layer liquid cloud optical thickness: 3: target5
+TAUGWX: Eastward gravity wave surface stress: 2: target10
+TAUGWY: Northward gravity wave surface stress: 2: target10
+TAUHGH: Optical thickness of high clouds: 2: target6
+TAULOW: Optical thickness of low clouds: 2: target6
+TAUMID: Optical thickness of mid-level clouds: 2: target6
+TAUTOT: Optical thickness of all clouds: 2: target6
+TAUX: Eastward surface wind stress: 2: target10
+TAUXICE: Eastward stress over ice: 2: target20
+TAUXWTR: Eastward stress over water: 2: target20
+TAUY: Northward surface wind stress: 2: target10
+TAUYICE: Northward stress over ice: 2: target20
+TAUYWTR: Northward stress over water: 2: target20
+TEFIXER: Vertically integrated potential energy tendency due to CONSV: 2: target0
+TELAND: Energy store in land reservoirs: 2: target1
+THV: Vertically integrated virtual potential temperature: 2: target7
+TLML: Temperature of lowest model layer: 2: target10
+TOX: Total column odd oxygen: 2: target7
+TPSNOW: Top snow layer temperature: 2: target1
+TQI: Total cloud ice water: 2: target7
+TQL: Total cloud liquid water: 2: target7
+TQV: Total Q vapor (Total precipitable water): 2: target7
+TROPPB: Blended tropopause pressure: 2: target12
+TROPPT: T based tropopause pressure: 2: target12
+TROPPV: PV based tropopause pressure: 2: target12
+TROPQ: Tropopause specific humidity: 2: target12
+TROPT: Tropopause temperature: 2: target12
+TS: Surface skin temperature: 2: target6|target12|target11
+TSAT: Surface temperature of saturated zone: 2: target1
+TSH: Effective turbulence skin temperature: 2: target10
+TSTAR: Surface temperature scale: 2: target10
+TUNST: Surface temperature of unsaturated zone: 2: target1
+TWLAND: Total water store in land reservoirs: 2: target1
+TWLT: Surface temperature of wilted zone: 2: target1
+Time: Time: 0: target2|target3|target14|target15|target8|target9|target16|target17|target13|target18|target4|target19|target5|target7|target10|target0|target1|target20|target6|target12|target21|target22|target11|target23
+U: Eastward wind component: 3: target2|target3|target4|target5
+U10M: Eastward wind at 10 m above displacement height: 2: target20|target12|target11
+U250: Eastward wind at 250 hPa: 2: target12
+U2M: Eastward wind at 2 m above the displacement height: 2: target12
+U500: Eastward wind at 500 hPa: 2: target12
+U50M: Eastward wind at 50 m above surface: 2: target12
+U850: Eastward wind at 850 hPa: 2: target12
+UC: Eastward component of wind on C-Grid: 3: target19
+UFLXCPT: Eastward flux of atmospheric enthalpy: 2: target0
+UFLXKE: Eastward flux of atmospheric kinetic energy: 2: target0
+UFLXPHI: Eastward flux of atmospheric potential energy: 2: target0
+UFLXQI: Eastward flux of atmospheric ice: 2: target0
+UFLXQL: Eastward flux of atmospheric liquid water: 2: target0
+UFLXQV: Eastward flux of atmospheric water vapor: 2: target0
+ULML: Eastward Wind of lowest model layer: 2: target10
+USTAR: Surface velocity scale: 2: target10
+V: Northward wind component: 3: target2|target3|target4|target5
+V10M: Northward wind at 10 m above the displacement height: 2: target20|target12|target11
+V250: Northward wind at 250 hPa: 2: target12
+V2M: Northward wind at 2 m above the displacement height: 2: target12
+V500: Northward wind at 500 hPa: 2: target12
+V50M: Northward wind at 50 m above: 2: target12
+V850: Northward wind at 850 hPa: 2: target12
+VC: Northward component of wind on C-Grid: 3: target19
+VFLXCPT: Northward flux of atmospheric enthalpy: 2: target0
+VFLXKE: Northward flux of atmospheric kinetic energy: 2: target0
+VFLXPHI: Northward flux of atmospheric potential energy: 2: target0
+VFLXQI: Northward flux of atmospheric ice: 2: target0
+VFLXQL: Northward flux of atmospheric liquid water: 2: target0
+VFLXQV: Northward flux of atmospheric water vapor: 2: target0
+VLML: Northward Wind of lowest model layer: 2: target10
+WCHANGE: Total land water change per unit time: 2: target1
+XDim_EOS: XDim: 0: target2|target3|target14|target15|target8|target9|target16|target17|target13|target18|target4|target19|target5|target7|target10|target0|target1|target20|target6|target12|target21|target22|target11|target23
+YDim_EOS: YDim: 0: target2|target3|target14|target15|target8|target9|target16|target17|target13|target18|target4|target19|target5|target7|target10|target0|target1|target20|target6|target12|target21|target22|target11|target23
+Z0H: Roughness length, sensible heat: 2: target10
+Z0M: Roughness length, momentum: 2: target10
