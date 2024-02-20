@@ -365,7 +365,7 @@ doc: $(docarchive) $(manpages)
 
 # Let's not make anything
 nodoc:
-	echo "Did not make thew documentation"
+	echo "Did not make the documentation"
 
 
 # How do we install the doc tarball?
