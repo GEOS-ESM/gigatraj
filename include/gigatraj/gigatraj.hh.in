@@ -356,7 +356,7 @@ namespace gigatraj {
 */
 
 
-// where any comfiguration files may be found
+// where any configuration files may be found
 #define GTCONFIGDIR "@prefix@/share/@PACKAGE@"
 
 //     use double-precision instead of regular floats
