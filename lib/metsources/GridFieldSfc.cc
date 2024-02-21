@@ -295,6 +295,7 @@ real& GridFieldSfc::iterator::operator*() const
    if ( my_index >= 0 && my_index < my_grid->data.size() ) {
       return (my_grid->data).at(my_index);
    } else {
+      std::cout<<"GridFieldSfc::iterator::operator*()"<<std::endl;
       throw (baddataindex());
    }
 }
@@ -385,6 +386,7 @@ real GridFieldSfc::const_iterator::operator*() const
    if ( my_index >= 0 && my_index < my_grid->data.size() ) {
       return (my_grid->data)[my_index];
    } else {
+      std::cout << "GridFieldSfc::const_iterator::operator*()" << std::endl;
       throw (baddataindex());
    }
 }

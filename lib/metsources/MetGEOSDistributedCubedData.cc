@@ -598,7 +598,3 @@ void MetGEOSDistributedCubedData::setSfcData(char* ctime, char* quantity, float*
    gridSfc->load(data);
 
 }
-
-
-
-

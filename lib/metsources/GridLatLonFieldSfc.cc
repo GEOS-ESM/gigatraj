@@ -250,6 +250,7 @@ real GridLatLonFieldSfc::wrap( real lon ) const
      real extlon;
      
      if ( nlons <= 1 ) {
+        std::cout << " wrap nlons <=1" << std::endl;
         throw (baddataindex());
      }
      
@@ -293,6 +294,7 @@ int GridLatLonFieldSfc::iwrap( int i ) const
 {
      
      if ( nlons <= 1 ) {
+        std::cout << " iwrap nlons <=1" << std::endl;
         throw (baddataindex());
      }
      
@@ -305,6 +307,7 @@ int GridLatLonFieldSfc::iwrap( int i ) const
         } 
      } else {
         if ( i < 0 || i >= nlons ) {
+           std::cout << "iwrap not found" << std::endl;
            throw (baddataindex());
         }
      }
@@ -320,6 +323,7 @@ void GridLatLonFieldSfc::lonindex( real lon, int* i1, int* i2 ) const
      lon = wrap(lon);
      
      if ( nlons <= 1 ) {
+        std::cout << "lonindex nlons <=1" << std::endl;
         throw (baddataindex());
      }
 
@@ -346,7 +350,8 @@ void GridLatLonFieldSfc::lonindex( real lon, int* i1, int* i2 ) const
               if ( wraps ) {
                  *i2 = nlons;
               } else {
-                 // test val lies above range of lons
+                 // test  val lies above range of lons
+                 std::cout << "lonindex above range" << std::endl;
                  throw (baddataindex());
               }           
            }   
@@ -356,6 +361,7 @@ void GridLatLonFieldSfc::lonindex( real lon, int* i1, int* i2 ) const
                  *i2 =  0;
               } else {
                  // test lon lies below the range of lons
+                 std::cout << "lonindex below" << std::endl;
                  throw (baddataindex());
               }   
         }
@@ -385,6 +391,7 @@ void GridLatLonFieldSfc::lonindex( real lon, int* i1, int* i2 ) const
                  *i2 = nlons;
               } else {
                  // test val lies above range of lons
+                 std::cout << "lonindex above range" << std::endl;
                  throw (baddataindex());
               }           
            }   
@@ -394,6 +401,7 @@ void GridLatLonFieldSfc::lonindex( real lon, int* i1, int* i2 ) const
                  *i2 = -1;
               } else {
                  // test lon lies below the range of lons
+                 std::cout << "lonindex below range" << std::endl;
                  throw (baddataindex());
               }   
         }
@@ -408,6 +416,7 @@ void GridLatLonFieldSfc::latindex( real lat, int* i1, int* i2 ) const
      int i;
      
      if ( nlats <= 1 ) {
+        std::cout << "latindex nlats <=1" << std::endl;
         throw (baddataindex());
      }
 
@@ -434,6 +443,7 @@ void GridLatLonFieldSfc::latindex( real lat, int* i1, int* i2 ) const
            } else {
               if ( ABS( lats[nlats-1] - lat ) > 0.0001 ) {
                  // test val lies above range of lats
+                 std::cout << "latindex above range" << std::endl;
                  throw (baddataindex());
               } else {
                  // close enough
@@ -444,6 +454,7 @@ void GridLatLonFieldSfc::latindex( real lat, int* i1, int* i2 ) const
         } else {
               if ( ABS( lats[0] - lat ) > 0.0001 ) {
                  // test lat lies below the range of lats
+                 std::cout << "latindex below" << std::endl;
                  throw (baddataindex());
               } else {
                  *i1 = 0;
@@ -473,6 +484,7 @@ void GridLatLonFieldSfc::latindex( real lat, int* i1, int* i2 ) const
            } else {
               if ( ABS( lats[0] - lat ) > 0.0001 ) {
                  // test val lies above range of lats
+                 std::cout << "latindex above range2" << std::endl;
                  throw (baddataindex());
               } else {
                  // close enough
@@ -483,6 +495,7 @@ void GridLatLonFieldSfc::latindex( real lat, int* i1, int* i2 ) const
         } else {
               if ( ABS( lats[nlats-1] - lat ) > 0.0001 ) {
                  // test lat lies below the range of lats
+                 std::cout << "latindex below range2" << std::endl;
                  throw (baddataindex());
               } else {
                  *i1 = nlats-2;

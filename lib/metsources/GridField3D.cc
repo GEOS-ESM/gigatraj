@@ -147,7 +147,7 @@ std::vector<real> GridField3D::levels() const
 void GridField3D::levels( const std::vector<real> &newvert )
 {
    if ( nzs > 0 && nzs != newvert.size() ) {
-      std::cerr << "New vertical cooridnate vector doe snot match the old in size." << std::endl;
+      std::cout << "New vertical cooridnate vector doe snot match the old in size." << std::endl;
       throw (badDimensionMismatch());
    }
 
@@ -158,7 +158,7 @@ void GridField3D::levels( const std::vector<real> &newvert )
 real GridField3D::level( const int k ) const
 {
    if ( k < 0 || k >= nzs ) {
-       std::cerr << "GridField3D: Bad vertical index k=" << k << std::endl;
+       std::cout << "GridField3D: Bad vertical index k=" << k << std::endl;
        throw (baddatareq());
    }    
    return zs[k];
@@ -170,6 +170,8 @@ void GridField3D::zindex( real z, int* i1, int* i2 ) const
      int i;
      
      if ( nzs <= 1 ) {
+       
+        std::cout << "GridField3D: zindex " << std::endl;
         throw (baddataindex());
      }
 
@@ -195,6 +197,7 @@ void GridField3D::zindex( real z, int* i1, int* i2 ) const
            } else {
               if ( ABS( zs[nzs-1] - z ) > 0.0001 ) {
                  // test val lies above range of zs
+                 std::cout << "GridField3D: zindex above range" << std::endl;
                  throw (baddataindex());
               } else {
                  // close enough
@@ -205,6 +208,7 @@ void GridField3D::zindex( real z, int* i1, int* i2 ) const
         } else {
               if ( ABS( zs[0] - z ) > 0.0001 ) {
                  // test z lies below the range of zs
+                 std::cout << "GridField3D: zindex below range" << std::endl;
                  throw (baddataindex());
               } else {
                  *i1 = 0;
@@ -234,6 +238,7 @@ void GridField3D::zindex( real z, int* i1, int* i2 ) const
            } else {
               if ( ABS( zs[0] - z ) > 0.0001 ) {
                  // test val lies above range of zs
+                 std::cout << "GridField3D: zindex above range" << std::endl;
                  throw (baddataindex());
               } else {
                  // close enough
@@ -244,6 +249,7 @@ void GridField3D::zindex( real z, int* i1, int* i2 ) const
         } else {
               if ( ABS( zs[nzs-1] - z ) > 0.0001 ) {
                  // test z lies below the range of zs
+                 std::cout << "GridField3D: zindex below range" << std::endl;
                  throw (baddataindex());
               } else {
                  *i1 = nzs-2;
@@ -552,6 +558,7 @@ GridField3D::iterator::iterator( GridField3D* grid, int n, int beg, int fin )
    last = fin;
    my_grid = grid;
    if ( last < first || first < 0 || last > grid->data.size() ) {
+      std::cout << "GridField3D: iterrator" << std::endl;
       throw (baddataindex());
    }
 }
@@ -574,7 +581,8 @@ real& GridField3D::iterator::operator*() const
    
    if ( my_index >= first && my_index <= last ) {
       return (my_grid->data).at( my_index );
-   } else {
+   } else {  
+      std::cout << "GridField3D: operator" << std::endl;
       throw (baddataindex());
    }
 }
@@ -641,6 +649,7 @@ GridField3D::const_iterator::const_iterator( const GridField3D* grid, int n, int
    last = fin;
    my_grid = grid;
    if ( last < first || first < 0 || last > grid->data.size() ) {
+      std::cout << "GridField3D: const_iterrator" << std::endl;
       throw (baddataindex());
    }
 }
@@ -664,6 +673,7 @@ real GridField3D::const_iterator::operator*() const
    if ( my_index >= first && my_index <= last ) {
       return (my_grid->data)[my_index];
    } else {
+      std::cout << "GridField3D: const operator" << std::endl;
       throw (baddataindex());
    }
 }
@@ -724,6 +734,7 @@ GridField3D::profileIterator::profileIterator( GridField3D* grid, int n, int len
     last = fin;
     skip = skp;
     if ( last < first || first < 0 || last > (grid->data).size() || skp <= 0 ) {
+       std::cout << "GridField3D::profileIterator::profileIterator" << std::endl;
        throw (baddataindex()); 
     }
     my_index = n;
@@ -759,6 +770,7 @@ std::vector<real>* GridField3D::profileIterator::operator*() const
       }
       return profile;
    } else {
+      std::cout <<"GridField3D::profileIterator::operator*()" << std::endl;
       throw (baddataindex());
    }
 }
@@ -771,6 +783,7 @@ void GridField3D::profileIterator::assign( const std::vector<real>& src )
           (my_grid->data)[my_index + k*skip] = src[k];
       }
    } else {
+      std::cout <<"GridField3D::profileIterator::assign" << std::endl;
       throw (baddataindex());
    }
 
@@ -836,6 +849,7 @@ GridField3D::const_profileIterator::const_profileIterator( const GridField3D* gr
     last = fin;
     skip = skp;
     if ( last < first || first < 0 || last > (grid->data).size() || skp <= 0 ) {
+       std::cout << "GridField3D::const_profileIterator::const_profileIterator" << std::endl;
        throw (baddataindex()); 
     }
     my_index = n;
@@ -871,6 +885,7 @@ std::vector<real>* GridField3D::const_profileIterator::operator*() const
       }
       return profile;
    } else {
+      std::cout << "GridField3D::const_profileIterator::operator*()" << std::endl;
       throw (baddataindex());
    }
 }

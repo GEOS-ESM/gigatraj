@@ -118,7 +118,7 @@ real GridLatLonField3D::value( int i, int j, int k )  const
      real result;
    
      if ( ! hasdata() ) {
-         std::cerr << "GridLatLonField3D: has no data in value() call" << std::endl;
+         std::cout << "GridLatLonField3D: has no data in value() call" << std::endl;
          throw (baddatareq());
      }    
      
@@ -127,14 +127,14 @@ real GridLatLonField3D::value( int i, int j, int k )  const
         i = iwrap( i );
      } else {
         if ( i < 0 || i >= nlons  ) {
-            std::cerr << "GridLatLonField3D: out-of-range longitude index " << i << " in value() call" << std::endl;
+            std::cout << "GridLatLonField3D: out-of-range longitude index " << i << " in value() call" << std::endl;
             throw (baddatareq());
         }    
      }   
     // ensure that the latitude and vertical indices are legal
      if ( j < 0 || j >= nlats 
        || k < 0 || k >= nzs ) {
-         std::cerr << "GridLatLonField3D: Quant=" << quant << " out-of-range latitude or vertical index "  << j << ", " << k << " of " << nlats << ", " << nzs << " in value() call" << std::endl;
+         std::cout << "GridLatLonField3D: Quant=" << quant << " out-of-range latitude or vertical index "  << j << ", " << k << " of " << nlats << ", " << nzs << " in value() call" << std::endl;
          throw (baddatareq());
      }    
      
@@ -150,7 +150,7 @@ real GridLatLonField3D::value( int indx )  const
      real result;
    
      if ( ! hasdata() ) {
-         std::cerr << "GridLatLonField3D: has no data in value() call" << std::endl;
+         std::cout << "GridLatLonField3D: has no data in value() call" << std::endl;
          throw (baddatareq());
      }    
      
@@ -165,7 +165,7 @@ real* GridLatLonField3D::values( int n, real* vals, int *indices ) const
      int ref;
 
      if ( ! hasdata() ) {
-         std::cerr << "GridLatLonField3D: has no data in values() call" << std::endl;
+         std::cout << "GridLatLonField3D: has no data in values() call" << std::endl;
          throw (baddatareq());
      }    
      
@@ -189,7 +189,7 @@ real& GridLatLonField3D::valueref( int i, int j, int k )
      int indx;
 
      if ( ! hasdata() ) {
-         std::cerr << "GridLatLonField3D: has no data in valueref() call" << std::endl;
+         std::cout << "GridLatLonField3D: has no data in valueref() call" << std::endl;
          throw (baddatareq());
      }    
      
@@ -198,14 +198,14 @@ real& GridLatLonField3D::valueref( int i, int j, int k )
         i = iwrap( i );
      } else {
         if ( i < 0 || i >= nlons  ) {
-            std::cerr << "GridLatLonField3D: out-of-range longitude index " << i << " in valueref() call" << std::endl;
+            std::cout << "GridLatLonField3D: out-of-range longitude index " << i << " in valueref() call" << std::endl;
             throw (baddatareq());
         }    
      }   
     // ensure that the latitude nad vertical indices are legal
      if ( j < 0 || j >= nlats 
        || k < 0 || k >= nzs ) {
-         std::cerr << "GridLatLonField3D: out-of-range latitude or vertical index " << j << ", " << k << " in valueref() call" << std::endl;
+         std::cout << "GridLatLonField3D: out-of-range latitude or vertical index " << j << ", " << k << " in valueref() call" << std::endl;
          throw (baddatareq());
      }    
      
@@ -235,7 +235,7 @@ real GridLatLonField3D::longitude( int i )  const
       i = iwrap( i );
    } else {
       if ( i < 0 || i >= nlons ) {
-          std::cerr << "GridLatLonField3D: out-of-range longitude index " << i << " in longitude() call" << std::endl;
+          std::cout << "GridLatLonField3D: out-of-range longitude index " << i << " in longitude() call" << std::endl;
           throw (baddatareq());
       }
    }
@@ -246,7 +246,7 @@ real GridLatLonField3D::longitude( int i )  const
 real GridLatLonField3D::latitude( const int j ) const
 {
    if ( j < 0 || j >= nlats ) {
-       std::cerr << "GridLatLonField3D: out-of-range latitude index " << j << " in latitude() call" << std::endl;
+       std::cout << "GridLatLonField3D: out-of-range latitude index " << j << " in latitude() call" << std::endl;
        throw (baddatareq());
    }    
    return lats[j];
@@ -257,7 +257,7 @@ real GridLatLonField3D::wrap( real lon ) const
      real extlon;
      
      if ( nlons <= 1 ) {
-        std::cerr << "GridLatLonField3D: nlons<=1" << std::endl;
+        std::cout << "GridLatLonField3D: nlons<=1" << std::endl;
         throw (baddataindex());
      }
      
@@ -301,7 +301,7 @@ int GridLatLonField3D::iwrap( int i ) const
 {
      
      if ( nlons <= 1 ) {
-        std::cerr << "GridLatLonField3D: nlons<=1: iwrap" << std::endl;
+        std::cout << "GridLatLonField3D: nlons<=1: iwrap" << std::endl;
         throw (baddataindex());
      }
      
@@ -314,7 +314,7 @@ int GridLatLonField3D::iwrap( int i ) const
         } 
      } else {
         if ( i < 0 || i >= nlons ) {
-           std::cerr << "bigger than nlons" << std::endl;
+           std::cout << "bigger than nlons" << std::endl;
            throw (baddataindex());
         }
      }
@@ -330,7 +330,7 @@ void GridLatLonField3D::lonindex( real lon, int* i1, int* i2 ) const
      lon = wrap(lon);
      
      if ( nlons <= 1 ) {
-        std::cerr << "lonindex nlons<=1" << std::endl;
+        std::cout << "lonindex nlons<=1" << std::endl;
         throw (baddataindex());
      }
 
@@ -357,7 +357,7 @@ void GridLatLonField3D::lonindex( real lon, int* i1, int* i2 ) const
                  *i2 = nlons;
               } else {
                  // test val lies above range of lons
-                 std::cerr << "lonindex above range1" << std::endl;
+                 std::cout << "lonindex above range1" <<  std::endl;
                  throw (baddataindex());
               }           
            }   
@@ -367,7 +367,7 @@ void GridLatLonField3D::lonindex( real lon, int* i1, int* i2 ) const
                  *i2 =  0;
               } else {
                  // test lon lies below the range of lons
-                 std::cerr << "lonindex below range " << std::endl;
+                 std::cout << "lonindex below range1 " << std::endl;
                  throw (baddataindex());
               }   
         }
@@ -397,7 +397,7 @@ void GridLatLonField3D::lonindex( real lon, int* i1, int* i2 ) const
                  *i2 = nlons;
               } else {
                  // test val lies above range of lons
-                 std::cerr << "lonindex above range2" << std::endl;
+                 std::cout << "lonindex above range2" << std::endl;
                  throw (baddataindex());
               }           
            }   
@@ -407,7 +407,7 @@ void GridLatLonField3D::lonindex( real lon, int* i1, int* i2 ) const
                  *i2 = -1;
               } else {
                  // test lon lies below the range of lons
-                 std::cerr << "lonindex below range" << std::endl;
+                 std::cout << "lonindex below range2" << std::endl;
                  throw (baddataindex());
               }   
         }
@@ -421,7 +421,7 @@ void GridLatLonField3D::latindex( real lat, int* i1, int* i2 ) const
      int i;
 
      if ( nlats <= 1 ) {
-        std::cerr << "latindex nlats<=1 " << std::endl;
+        std::cout << "latindex nlats<=1 " << std::endl;
         throw (baddataindex());
      }
 
@@ -447,7 +447,7 @@ void GridLatLonField3D::latindex( real lat, int* i1, int* i2 ) const
            } else {
               if ( ABS( lats[nlats-1] - lat ) > 0.0001 ) {
                  // test val lies above range of lats
-                 std::cerr << "latindex above range " << std::endl;
+                 std::cout << "latindex above range " << std::endl;
                  throw (baddataindex());
               } else {
                  // close enough
@@ -458,7 +458,7 @@ void GridLatLonField3D::latindex( real lat, int* i1, int* i2 ) const
         } else {
               if ( ABS( lats[0] - lat ) > 0.0001 ) {
                  // test lat lies below the range of lats
-                 std::cerr << "latindex below range " << std::endl;
+                 std::cout << "latindex below range " << std::endl;
                  throw (baddataindex());
               } else {
                  *i1 = 0;
@@ -488,7 +488,7 @@ void GridLatLonField3D::latindex( real lat, int* i1, int* i2 ) const
            } else {
               if ( ABS( lats[0] - lat ) > 0.0001 ) {
                  // test val lies above range of lats
-                 std::cerr << "latindex above range " << std::endl;
+                 std::cout << "latindex above range " << std::endl;
                  throw (baddataindex());
               } else {
                  // close enough
@@ -499,7 +499,7 @@ void GridLatLonField3D::latindex( real lat, int* i1, int* i2 ) const
         } else {
               if ( ABS( lats[nlats-1] - lat ) > 0.0001 ) {
                  // test lat lies below the range of lats
-                 std::cerr << "latindex below range " << std::endl;
+                 std::cout << "latindex below range " << std::endl;
                  throw (baddataindex());
               } else {
                  *i1 = nlats-2;
@@ -584,7 +584,7 @@ void GridLatLonField3D::load( const realvec& inlons, const realvec& inlats
    nlats = inlats.size();
    nzs = inlevels.size();
    lons = inlons;
-   for ( i=1; i<inlons.size(); i++ ) {
+   for ( i=0; i<inlons.size(); i++ ) {
        lons[i] = wrap(inlons[i]);
    }
    lats = inlats;
@@ -607,8 +607,6 @@ void GridLatLonField3D::load( const realvec& inlons, const realvec& inlats
    setLonDir( loadFlags );
    setLatDir( loadFlags );
    setZDir( loadFlags );
-
-
 }
 
 
@@ -624,12 +622,12 @@ void GridLatLonField3D::load( const realvec& inlons, const realvec& inlats
    
    nlons = inlons.size();
    nlats = inlats.size();
-   nzs = inlevels.size();
-   
+   nzs   = inlevels.size();
    lons = inlons;
-   for ( i=1; i<inlons.size(); i++ ) {
+   for ( i=0; i<inlons.size(); i++ ) {
        lons[i] = wrap(inlons[i]);
    }
+
    lats = inlats;
    zs = inlevels;
    
@@ -736,7 +734,7 @@ bool GridLatLonField3D::compatible( const GridFieldSfc& obj, int compatFlags ) c
     
        result = GridField3D::compatible( obj, compatFlags );
        //if ( ! result ) {
-       //    std::cerr << " GridField3D returns incompat!" << std::endl;
+       //    std::cout << " GridField3D returns incompat!" << std::endl;
        //}
     
        trueobj = dynamic_cast<const GridLatLonFieldSfc*>( &obj );
@@ -749,13 +747,13 @@ bool GridLatLonField3D::compatible( const GridFieldSfc& obj, int compatFlags ) c
                 // longitudes must be within 0.001 degrees
                 if ( ABS( dim[i] - lons[i] ) > 0.001 ) {
                    //if ( result ) {
-                   //    std::cerr << " incompatible grid: lon value " << dim[i] << "vs. " << lons[i] << std::endl;
+                   //    std::cout << " incompatible grid: lon value " << dim[i] << "vs. " << lons[i] << std::endl;
                    //}
                    result = false;
                 }   
              }
           } else { 
-             //std::cerr << " incompatible grid: nlons " << nlons << " vs. " << dim.size() << std::endl;
+             //std::cout << " incompatible grid: nlons " << nlons << " vs. " << dim.size() << std::endl;
              result = false;
           }   
           // check that the latitudes match in number and values
@@ -765,13 +763,13 @@ bool GridLatLonField3D::compatible( const GridFieldSfc& obj, int compatFlags ) c
                 // latitudes must be within 0.001 degrees
                 if ( ABS( dim[i] - lats[i] ) > 0.001 ) {
                    //if ( result ) {
-                   //    std::cerr << " incompatible grid: lat values " << dim[i] << "vs. " << lats[i]  << std::endl;
+                   //    std::cout << " incompatible grid: lat values " << dim[i] << "vs. " << lats[i]  << std::endl;
                    //}
                    result = false;
                 }   
              }
           } else {
-             //std::cerr << " incompatible grid: nlats " << nlats << " vs. " << dim.size() << std::endl;
+             //std::cout << " incompatible grid: nlats " << nlats << " vs. " << dim.size() << std::endl;
              result = false;
           }             
     
@@ -779,7 +777,7 @@ bool GridLatLonField3D::compatible( const GridFieldSfc& obj, int compatFlags ) c
     } else {
        // objects of different grid types are by definition
        // incompatible
-       //std::cerr << " incompatible grid: type " << obj.id() << std::endl;
+       //std::cout << " incompatible grid: type " << obj.id() << std::endl;
        result = false;
     }   
 
@@ -822,7 +820,7 @@ GridLatLonFieldSfc* GridLatLonField3D::extractSfc( int k ) const
     int indx;
     
     if ( k < 0 || k >= nzs ) {
-       std::cerr << "bad vertical index " << k << " in extractSfc() call" << std::endl;
+       std::cout << "bad vertical index " << k << " in extractSfc() call" << std::endl;
        throw (baddatareq());
     }
     
@@ -1001,7 +999,7 @@ void GridLatLonField3D::gridpoints( int n, int* is, int* js, int* ks, real* vals
      local = flags & 0x01;
      done = flags * 0x02;
 
-     //- std::cerr << " parallel gridpoints" << std::endl;
+     //- std::cout << " parallel gridpoints" << std::endl;
      // get the data from a central met processors    
      try {
         coords = new int[n];
@@ -1012,7 +1010,7 @@ void GridLatLonField3D::gridpoints( int n, int* is, int* js, int* ks, real* vals
      joinIndex( n, coords, is, js, ks );
      
      if ( pgroup == NULLPTR || metproc < 0 || local != 0 ) {
-         //- std::cerr << " serial gridpoints" << std::endl;
+         //- std::cout << " serial gridpoints" << std::endl;
          // serial processing.  Access the data locally
          this->values( n, vals, coords );
          //for ( int i=0; i<n; i++ ) {
@@ -1023,19 +1021,19 @@ void GridLatLonField3D::gridpoints( int n, int* is, int* js, int* ks, real* vals
          // send "get data" command to central met reader process
          //cmd = PGR_CMD_GDATA;
          // pgroup->send_ints( metproc, 1, &cmd, PGR_TAG_GREQ );
-         //- std::cerr << "  about to send N to " << metproc << std::endl;
+         //- std::cout << "  about to send N to " << metproc << std::endl;
          // send request for n points 
          pgroup->send_ints( metproc, 1, &n, PGR_TAG_GNUM );
-         //- std::cerr << "  sent N=" << n << " to " << metproc << std::endl;
+         //- std::cout << "  sent N=" << n << " to " << metproc << std::endl;
          // send the coordinates
          pgroup->send_ints( metproc, n, coords, PGR_TAG_GCOORDS );
-         //- std::cerr << "  sent pnt indices to " << metproc << std::endl;
+         //- std::cout << "  sent pnt indices to " << metproc << std::endl;
          // receive the values
          pgroup->receive_reals( metproc, n, vals, PGR_TAG_GVALS );
-         //- std::cerr << " yyyyyyyyyyyy: got " << n << " values " << std::endl;
+         //- std::cout << " yyyyyyyyyyyy: got " << n << " values " << std::endl;
      
          if ( done ) {
-            //- std::cerr << " sending GDONE " << std::endl;
+            //- std::cout << " sending GDONE " << std::endl;
             svr_done();
          }
          
@@ -1055,7 +1053,7 @@ void GridLatLonField3D::gridpoints( int n, int* indices, real* vals, int flags) 
      done = flags * 0x02;
 
      if ( pgroup == NULLPTR || metproc < 0 || local != 0 ) {
-         //- std::cerr << " serial gridpoints" << std::endl;
+         //- std::cout << " serial gridpoints" << std::endl;
          // serial processing.  Access the data locally
          this->values( n, vals, indices );
 
@@ -1065,19 +1063,19 @@ void GridLatLonField3D::gridpoints( int n, int* indices, real* vals, int flags) 
          // send "get data" command to central met reader process
          //cmd = PGR_CMD_GDATA;
          // pgroup->send_ints( metproc, 1, &cmd, PGR_TAG_GREQ );
-         //- std::cerr << "  about to send N to " << metproc << std::endl;
+         //- std::cout << "  about to send N to " << metproc << std::endl;
          // send request for n points 
          pgroup->send_ints( metproc, 1, &n, PGR_TAG_GNUM );
-         //- std::cerr << "  sent N=" << n << " to " << metproc << std::endl;
+         //- std::cout << "  sent N=" << n << " to " << metproc << std::endl;
          // send the coordinates
          pgroup->send_ints( metproc, n, indices, PGR_TAG_GCOORDS );
-         //- std::cerr << "  sent pnt indices to " << metproc << std::endl;
+         //- std::cout << "  sent pnt indices to " << metproc << std::endl;
          // receive the values
          pgroup->receive_reals( metproc, n, vals, PGR_TAG_GVALS );
-         //- std::cerr << " yyyyyyyyyyyy: got " << n << " values " << std::endl;
+         //- std::cout << " yyyyyyyyyyyy: got " << n << " values " << std::endl;
      
          if ( done ) {
-            //- std::cerr << " sending GDONE " << std::endl;
+            //- std::cout << " sending GDONE " << std::endl;
             svr_done();
          }
          
@@ -1107,31 +1105,31 @@ void GridLatLonField3D::receive_meta()
          }
      
          // receive the metadata
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-100 with " << metproc << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-100 with " << metproc << std::endl;
          pgroup->receive_string( metproc, &quant, PGR_TAG_GMETA ); // quantity
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-110 from " << metproc  << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-110 from " << metproc  << std::endl;
          pgroup->receive_string( metproc, &uu, PGR_TAG_GMETA );  // units
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-120 from " << metproc  << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-120 from " << metproc  << std::endl;
          pgroup->receive_string( metproc, &ctime, PGR_TAG_GMETA );  // met time stamp
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-130 from " << metproc  << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-130 from " << metproc  << std::endl;
          pgroup->receive_doubles( metproc, 1, &mtime, PGR_TAG_GMETA );  // met time 
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-140 from " << metproc  << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-140 from " << metproc  << std::endl;
          pgroup->receive_reals( metproc, 1, &fill_value, PGR_TAG_GMETA );  // fill value
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-150 from " << metproc  << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-150 from " << metproc  << std::endl;
          pgroup->receive_ints( metproc, 1, &wraps, PGR_TAG_GMETA );  // longitude wrapping flag
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-160 from " << metproc  << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-160 from " << metproc  << std::endl;
          pgroup->receive_ints( metproc, 1, &nlons, PGR_TAG_GMETA );  // number of lons
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-170 from " << metproc  << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-170 from " << metproc  << std::endl;
          pgroup->receive_ints( metproc, 1, &nlats, PGR_TAG_GMETA );  // number of lats
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-180 from " << metproc  << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-180 from " << metproc  << std::endl;
          pgroup->receive_ints( metproc, 1, &nzs, PGR_TAG_GMETA );  // number of vertical coordinate values
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-190 from " << metproc  << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-190 from " << metproc  << std::endl;
          pgroup->receive_string( metproc, &vquant, PGR_TAG_GMETA );  // vertical coordinate quantity
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-200 from " << metproc  << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-200 from " << metproc  << std::endl;
          pgroup->receive_string( metproc, &vuu, PGR_TAG_GMETA );  // vertical coordinate units
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-210 from " << metproc << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-210 from " << metproc << std::endl;
          pgroup->receive_ints( metproc, 1, &wraps, PGR_TAG_GMETA );  // do lons wrap?
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-220 from " << metproc << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-220 from " << metproc << std::endl;
 
          set_nodata();  // there are no data
    
@@ -1142,7 +1140,7 @@ void GridLatLonField3D::receive_meta()
             throw (badmemreq());
          }
          pgroup->receive_reals( metproc, nlons, dimvals, PGR_TAG_GDIMS ); 
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-230: " << nlons << " from " << metproc << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-230: " << nlons << " from " << metproc << std::endl;
          lons.clear();
          for ( i=0; i<nlons; i++ ) {
              lons.push_back(dimvals[i]);
@@ -1164,7 +1162,7 @@ void GridLatLonField3D::receive_meta()
             throw (badmemreq());
          }
          pgroup->receive_reals( metproc, nlats, dimvals, PGR_TAG_GDIMS ); 
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-240: " << nlats << " from " << metproc << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-240: " << nlats << " from " << metproc << std::endl;
          lats.clear();
          for ( i=0; i<nlats; i++ ) {
              lats.push_back(dimvals[i]);
@@ -1186,7 +1184,7 @@ void GridLatLonField3D::receive_meta()
             throw (badmemreq());
          }
          pgroup->receive_reals( metproc, nzs, dimvals, PGR_TAG_GDIMS ); 
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-250: " << nzs << " from " << metproc << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-250: " << nzs << " from " << metproc << std::endl;
          zs.clear();
          for ( i=0; i<nzs; i++ ) {
              zs.push_back(dimvals[i]);
@@ -1200,7 +1198,7 @@ void GridLatLonField3D::receive_meta()
                 zdir = -1;
              }
          }
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-260" << std::endl;
+         //- std::cout << "   GridLatLonField3D::receive_meta: r-260" << std::endl;
 
          metaID = 0;
    
@@ -1216,9 +1214,9 @@ void GridLatLonField3D::svr_send_meta(int id) const
      int cmd;
      int i;
 
-     //- std::cerr << "   GridLatLonField3D::svr_send_meta: entry" << std::endl;
+     //- std::cout << "   GridLatLonField3D::svr_send_meta: entry" << std::endl;
      if (  pgroup == NULLPTR || metproc < 0 ) {
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: 490 metproc = " << metproc << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: 490 metproc = " << metproc << std::endl;
          // serial processing.  Send nothing, but
          // check that the object has valid metadata
          if ( this->status() & (~0x10) ) {
@@ -1238,31 +1236,31 @@ void GridLatLonField3D::svr_send_meta(int id) const
          // and called this method.
 
          // receive the metadata
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-100 with " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-100 with " << id << std::endl;
          pgroup->send_string( id, quant, PGR_TAG_GMETA ); // quantity
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-110 to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-110 to " << id << std::endl;
          pgroup->send_string( id, uu, PGR_TAG_GMETA );  // units
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-120 to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-120 to " << id << std::endl;
          pgroup->send_string( id, ctime, PGR_TAG_GMETA );  // met time stamp
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-130 to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-130 to " << id << std::endl;
          pgroup->send_doubles( id, 1, &mtime, PGR_TAG_GMETA );  // met time 
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-140 to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-140 to " << id << std::endl;
          pgroup->send_reals( id, 1, &fill_value, PGR_TAG_GMETA );  // fill value
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-150 to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-150 to " << id << std::endl;
          pgroup->send_ints( id, 1, &wraps, PGR_TAG_GMETA );  // longitude wrapping flag
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-160 to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-160 to " << id << std::endl;
          pgroup->send_ints( id, 1, &nlons, PGR_TAG_GMETA );  // number of lons
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-170 to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-170 to " << id << std::endl;
          pgroup->send_ints( id, 1, &nlats, PGR_TAG_GMETA );  // number of lats
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-180 to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-180 to " << id << std::endl;
          pgroup->send_ints( id, 1, &nzs, PGR_TAG_GMETA );  // number of vertical coordinate values
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-190 to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-190 to " << id << std::endl;
          pgroup->send_string( id, vquant, PGR_TAG_GMETA ); // vertical coordinate quantity
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-200 to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-200 to " << id << std::endl;
          pgroup->send_string( id, vuu, PGR_TAG_GMETA ); // vertical coordinate units
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-210 to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-210 to " << id << std::endl;
          pgroup->send_ints( id, 1, &wraps, PGR_TAG_GMETA );  // do lons wrap?
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-220 to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-220 to " << id << std::endl;
 
          // send the longitudes
          try {
@@ -1274,7 +1272,7 @@ void GridLatLonField3D::svr_send_meta(int id) const
              dimvals[i] = lons[i];
          }    
          pgroup->send_reals( id, nlons, dimvals, PGR_TAG_GDIMS ); 
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-230: " << nlons << " to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-230: " << nlons << " to " << id << std::endl;
          delete dimvals;
 
          // send the latitudes
@@ -1287,7 +1285,7 @@ void GridLatLonField3D::svr_send_meta(int id) const
              dimvals[i] = lats[i];
          }    
          pgroup->send_reals( id, nlats, dimvals, PGR_TAG_GDIMS ); 
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-240:" << nlats << " to " << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-240:" << nlats << " to " << id << std::endl;
          delete dimvals;
    
          // send the vertical coordinate values
@@ -1300,10 +1298,10 @@ void GridLatLonField3D::svr_send_meta(int id) const
              dimvals[i] = zs[i];
          }    
          pgroup->send_reals( id, nzs, dimvals, PGR_TAG_GDIMS ); 
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-250: " << nzs << " to" << id << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-250: " << nzs << " to" << id << std::endl;
          delete dimvals;
    
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-260" << std::endl;
+         //- std::cout << "   GridLatLonField3D::svr_send_meta: s-260" << std::endl;
      }
 
 }
@@ -1605,14 +1603,14 @@ int GridLatLonField3D::joinIndex( int i, int j, int k ) const
         i = iwrap( i );
      } else {
         if ( i < 0 || i >= nlons  ) {
-            std::cerr << "GridLatLonField3D: out-of-range longitude index " << i << " in joinIndex() call" << std::endl;
+            std::cout << "GridLatLonField3D: out-of-range longitude index " << i << " in joinIndex() call" << std::endl;
             throw (baddatareq());
         }    
      }   
      // ensure that the latitude and vertical indices are legal
      if ( j < 0 || j >= nlats 
        || k < 0 || k >= nzs ) {
-         std::cerr << "GridLatLonField3D: out-of-range latitude or vertical index "  << j << ", " << k << " of " << nlats << ", " << nzs << " in joinIndex() call" << std::endl;
+         std::cout << "GridLatLonField3D: out-of-range latitude or vertical index "  << j << ", " << k << " of " << nlats << ", " << nzs << " in joinIndex() call" << std::endl;
          throw (baddatareq());
      }    
 
@@ -1634,14 +1632,14 @@ int* GridLatLonField3D::joinIndex( int n, int *index, int* i, int* j, int* k ) c
                i[m] = iwrap( i[m] );
             } else {
                if ( i[m] < 0 || i[m] >= nlons  ) {
-                   std::cerr << "GridLatLonField3D: out-of-range longitude index " << i[m] << " in joinIndex() call" << std::endl;
+                   std::cout << "GridLatLonField3D: out-of-range longitude index " << i[m] << " in joinIndex() call" << std::endl;
                    throw (baddatareq());
                }    
             }   
             // ensure that the latitude and vertical indices are legal                                                   
             if ( j[m] < 0 || j[m] >= nlats                                                                                     
               || k[m] < 0 || k[m] >= nzs ) {                                                                                   
-                std::cerr << "GridLatLonField3D:  out-of-range latitude or vertical index "  << j[m]   
+                std::cout << "GridLatLonField3D:  out-of-range latitude or vertical index "  << j[m]   
                 << ", " << k[m] << " of " << nlats << ", " << nzs << " in joinIndex() call" << std::endl;                       
                 throw (baddatareq());                                                                                    
             }

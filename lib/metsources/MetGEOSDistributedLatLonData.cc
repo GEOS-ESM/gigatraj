@@ -159,13 +159,16 @@ void MetGEOSDistributedLatLonData::get_uvw( double time, int n, float* lons, flo
   float dlon = 360.0 /nlons_global;
   float dlat = 180.0 /(nlats_global-1);
   int II[n]{};
-
+  int i_;
   for (int i=0; i<n; i++){
-    II[i] = floor((lons[i]+dlon/2.0 + 180.0)/dlon);
+    i_ = floor((lons[i]+dlon/2.0 + 180.0)/dlon);
+    II[i] = std::min(std::max(i_ ,0), nlons_global-1);
   }  
   int JJ[n]{};
+  int j_;
   for (int i=0; i<n; i++){
-    JJ[i] = floor((lats[i]+dlat/2.0 + 90.0)/dlat);
+    j_ = floor((lats[i]+dlat/2.0 + 90.0)/dlat);
+    JJ[i] = std::min(std::max(j_,0),  nlats_global-1);
   }  
 
   int Ranks[n] {};
@@ -294,14 +297,18 @@ void MetGEOSDistributedLatLonData::getData( string quantity, double time, int n,
   float dlon = 360.0 /nlons_global;
   float dlat = 180.0 /(nlats_global-1.0);
   int II[n]{};
+  int i_;
+  for (int i=0; i<n; i++){
+    i_ = floor((lons[i]+dlon/2.0 + 180.0)/dlon);
+    II[i] = std::min(std::max(i_ ,0), nlons_global-1);
+  }
 
-  for (int i=0; i<n; i++){
-    II[i] = floor((lons[i]+dlon/2.0 +180.0)/dlon);
-  }  
   int JJ[n]{};
+  int j_;
   for (int i=0; i<n; i++){
-    JJ[i] = floor((lats[i]+dlat/2.0 +90.0)/dlat);
-  }  
+    j_ = floor((lats[i]+dlat/2.0 + 90.0)/dlat);
+    JJ[i] = std::min(std::max(j_,0),  nlats_global-1);
+  }
 
   int Ranks[n] {};
   for (int i=0; i<n; i++){
@@ -387,15 +394,20 @@ void MetGEOSDistributedLatLonData::getData( string quantity, double time, int n,
 
   float dlon = 360.0 /nlons_global;
   float dlat = 180.0 /(nlats_global-1);
+ 
   int II[n]{};
+  int i_;
+  for (int i=0; i<n; i++){
+    i_ = floor((lons[i]+dlon/2.0 + 180.0)/dlon);
+    II[i] = std::min(std::max(i_ ,0), nlons_global-1);
+  }
 
-  for (int i=0; i<n; i++){
-    II[i] = floor((lons[i]+dlon/2.0 + 180.0)/dlon);
-  }  
   int JJ[n]{};
+  int j_;
   for (int i=0; i<n; i++){
-    JJ[i] = floor((lats[i]+dlat/2.0 + 90.0)/dlat);
-  }  
+    j_ = floor((lats[i]+dlat/2.0 + 90.0)/dlat);
+    JJ[i] = std::min(std::max(j_,0),  nlats_global-1);
+  }
 
   int Ranks[n] {};
   for (int i=0; i<n; i++){
