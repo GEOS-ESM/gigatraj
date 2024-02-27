@@ -329,8 +329,8 @@ void GridLatLonField3D::lonindex( real lon, int* i1, int* i2 ) const
 
      lon = wrap(lon);
      
-     if ( nlons <= 1 ) {
-        std::cout << "lonindex nlons<=1" << std::endl;
+     if ( nlons <= 2) {
+        std::cout << "lonindex nlons<=2" << std::endl;
         throw (baddataindex());
      }
 
@@ -420,8 +420,8 @@ void GridLatLonField3D::latindex( real lat, int* i1, int* i2 ) const
 {
      int i;
 
-     if ( nlats <= 1 ) {
-        std::cout << "latindex nlats<=1 " << std::endl;
+     if ( nlats <= 2 ) {
+        std::cout << "latindex nlats<=2 " << std::endl;
         throw (baddataindex());
      }
 
@@ -447,7 +447,7 @@ void GridLatLonField3D::latindex( real lat, int* i1, int* i2 ) const
            } else {
               if ( ABS( lats[nlats-1] - lat ) > 0.0001 ) {
                  // test val lies above range of lats
-                 std::cout << "latindex above range " << std::endl;
+                 std::cout << "latindex above range " << "lat: "<< lat << " lats[nlats-1]" <<lats[nlats-1] << std::endl;
                  throw (baddataindex());
               } else {
                  // close enough
@@ -458,7 +458,7 @@ void GridLatLonField3D::latindex( real lat, int* i1, int* i2 ) const
         } else {
               if ( ABS( lats[0] - lat ) > 0.0001 ) {
                  // test lat lies below the range of lats
-                 std::cout << "latindex below range " << std::endl;
+                 std::cout << "latindex below range " <<"lat: "<< lat << "  lats[0]: " << lats[0] << std::endl;
                  throw (baddataindex());
               } else {
                  *i1 = 0;
@@ -499,7 +499,8 @@ void GridLatLonField3D::latindex( real lat, int* i1, int* i2 ) const
         } else {
               if ( ABS( lats[nlats-1] - lat ) > 0.0001 ) {
                  // test lat lies below the range of lats
-                 std::cout << "latindex below range " << std::endl;
+                 std::cout << "latindex below range " << "lat: " << lat << "lats[nlats-1]: " <<lats[nlats-1] << "lats[0]: "<< lats[0] << std::endl;
+                 std::cout << "*i1: "<<*i1 <<  " *i2: "<< *i2  << std::endl;
                  throw (baddataindex());
               } else {
                  *i1 = nlats-2;
@@ -516,7 +517,7 @@ void GridLatLonField3D::setLonDir( const int loadFlags )
 {
    londir = 0;
    if ( nlons > 1 ) {
-      londir = ( lons[1] > lons[0] ) ? 1 : -1;
+      londir = ( lons[1] > lons[0] || lons[2]> lons[1] ) ? 1 : -1;
    }
 }
 
@@ -524,7 +525,7 @@ void GridLatLonField3D::setLatDir( const int loadFlags )
 {
    latdir = 0;
    if ( nlats > 1 ) {
-      latdir = ( lats[1] > lats[0] ) ? 1 : -1;
+      latdir = ( lats[1] > lats[0] || lats[2] > lats[1] ) ? 1 : -1;
    }
 }
 
@@ -1147,7 +1148,7 @@ void GridLatLonField3D::receive_meta()
          }    
          delete dimvals;
          if ( nlons > 1 ) {
-             if ( lons[1] > lons[0] ) {
+             if ( lons[1] >= lons[0] ) {
                 londir = 1;
              }    
              if ( lons[1] < lons[0] ) {
@@ -1169,7 +1170,7 @@ void GridLatLonField3D::receive_meta()
          }    
          delete dimvals;
          if ( nlats > 1 ) {
-             if ( lats[1] > lats[0] ) {
+             if ( lats[1] >= lats[0] ) {
                 latdir = 1;
              }    
              if ( lats[1] < lats[0] ) {
