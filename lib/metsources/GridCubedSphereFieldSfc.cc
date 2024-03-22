@@ -556,23 +556,28 @@ void GridCubedSphereFieldSfc::latlonindex(real lat_deg, real lon_deg, int& i, in
   // face = 2
    else if (std::abs(y-1.0) <= tolerance) {
          angle_to_index(-x,  z, i, j);
+         j = j + 2 * IM_WORLD;
    }
 
    // face = 3
    else if (abs(z-1.0) <= tolerance) {
          angle_to_index(-x, -y, i, j);
+         j = j + 4 * IM_WORLD;
     }
    // face = 4
     else if (abs(x+1.0) <= tolerance) {
          angle_to_index(-z, -y, i, j);
+         j = j + 6 * IM_WORLD;
     }
     // face = 5
     else if (abs(y+1.0) <= tolerance) {
          angle_to_index(-z,  x, i, j);
+         j = j + 8 * IM_WORLD;
     }
     // face = 6
     else if (abs(z+1.0) <= tolerance) {
          angle_to_index(y,  x, i, j);
+         j = j + 10 * IM_WORLD;
     }
 }
 

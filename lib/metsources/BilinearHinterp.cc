@@ -11,7 +11,6 @@
 #include "config.h"
 
 #include <stdlib.h>
-
 #include "gigatraj/BilinearHinterp.hh"
 
 using namespace gigatraj;
@@ -447,7 +446,8 @@ std::vector<real>*  BilinearHinterp::calc( const std::vector<real>& lons, const 
      for ( i=0; i<n; i++ ) {
      
          // take care of any out-of-range longitude values
-         lon = grid.wrap(lons[i]);
+         //lon = grid.wrap(lons[i]);
+         lon = lons[i];
 
          // get the i and j array coordinates that
          // correspond to this longitude and latitude
@@ -455,6 +455,7 @@ std::vector<real>*  BilinearHinterp::calc( const std::vector<real>& lons, const 
          //grid.latindex(lats[i], &j1, &j2);
          grid.latlonindex(lats[i], lon, i1, j1);
          i1 = (i1+1)/2;
+         j1 = j1 % (2*grid.IM_WORLD);
          j1 = (j1+1)/2;
          // convert to relative to halo
          i1 = i1 - grid.iStart;
@@ -484,7 +485,8 @@ std::vector<real>*  BilinearHinterp::calc( const std::vector<real>& lons, const 
      // for each location...
      for ( i=0; i<n; i++ ) {
          // wrap the longitude again
-         lon = grid.wrap(lons[i]);
+         //lon = grid.wrap(lons[i]);
+         lon = lons[i];
          idx = 4*i;     
          // all four values surrounding this location must be good
          if ( vals[i*4+0] != bad && vals[i*4+1] != bad 
@@ -508,8 +510,6 @@ std::vector<real>*  BilinearHinterp::calc( const std::vector<real>& lons, const 
              //             , grid.longitude(is[i*4+0]), grid.latitude(js[i*4+0])
              //             , grid.longitude(is[i*4+3]), grid.latitude(js[i*4+3])
              //             , vals[i*4+0], vals[i*4+1], vals[i*4+2], vals[i*4+3] ) );
-
-
 
          } else {
               results->push_back( bad );
@@ -1951,10 +1951,10 @@ void BilinearHinterp::vinterpVector( int n, const real* lons, const real* lats, 
      ks = new int[4*nzs*n];
      indices = new int[4*nzs*n];
      
-     
      for ( int i=0; i<n; i++ ) {
       
-         lon = xgrid.wrap( lons[i] );
+         //lon = xgrid.wrap( lons[i] );
+         lon = lons[i];
          lat = lats[i];
          z = zs[i];
          
@@ -1966,6 +1966,7 @@ void BilinearHinterp::vinterpVector( int n, const real* lons, const real* lats, 
          xgrid.latlonindex(lat,lon, i1, j1);
          //convert to lower-left
          i1 = (i1+1)/2;
+         j1 = j1 % (2*xgrid.IM_WORLD);
          j1 = (j1+1)/2;
          // convert to relative to halo
          i1 = i1 - xgrid.iStart;
@@ -2027,7 +2028,8 @@ void BilinearHinterp::vinterpVector( int n, const real* lons, const real* lats, 
 
      for ( i=0; i<n; i++ ) {
 
-        lon = xgrid.wrap( lons[i] );
+        //lon = xgrid.wrap( lons[i] );
+        lon = lons[i];
         lat = lats[i];
         z = zs[i];
 
@@ -2108,7 +2110,6 @@ void BilinearHinterp::vinterpVector( int n, const real* lons, const real* lats, 
         // interpolate the horizontally-interplated profile vertically
         xvals[i] = vin.profile( xgrid.levels(), xprofile, z, xbad, flags );
         yvals[i] = vin.profile( ygrid.levels(), yprofile, z, ybad, flags );
-
      }
      
      // drop all the temporary variables
@@ -2651,7 +2652,8 @@ void BilinearHinterp::vinterp( const int n, const real* lons, const real* lats, 
      // for each input lat/lon location...     
      for ( i=0; i<n; i++ ) {
          // take care of any out-of-range longitude values
-         lon = grid.wrap(lons[i]);
+         //lon = grid.wrap(lons[i]);
+         lon = lons[i];
          
          // get the i and j array coordinates that
          // correspond to this longitude and latitude
@@ -2661,11 +2663,12 @@ void BilinearHinterp::vinterp( const int n, const real* lons, const real* lats, 
          grid.latlonindex(lats[i], lon, i1, j1);
          //convert to lower-left
          i1 = (i1+1)/2;
+         j1 = j1 % (2*grid.IM_WORLD);
          j1 = (j1+1)/2;
          // convert to relative to halo
          i1 = i1 - grid.iStart;
          j1 = j1 - grid.jStart;
-         
+        
          i2 = i1+1;    
          j2 = j1+1; 
 
@@ -2708,7 +2711,8 @@ void BilinearHinterp::vinterp( const int n, const real* lons, const real* lats, 
      for ( i=0; i<n; i++ ) {
          
          // take care of any out-of-range longitude values
-         lon = grid.wrap(lons[i]);
+         //lon = grid.wrap(lons[i]);
+         lon = lons[i];
          
          // empty out the vertical profile
          profile.clear();
@@ -2749,10 +2753,8 @@ void BilinearHinterp::vinterp( const int n, const real* lons, const real* lats, 
 
          // interpolate the horizontally-interplated profile vertically,
          results[i] = vin.profile( grid.levels(), profile, zs[i], bad, flags );
-
      }
      
-
      // drop all the temporary variables
      // before we leave
      delete indices;
@@ -2857,17 +2859,21 @@ real BilinearHinterp::gcdist( real lat1,real long1,real lat2,real long2) const
   //real long2; // !! longitude of the second site [rad]
   //real lat2;  //  !! latitude of the second site [rad]
 
-  real clat1,clat2,slat1,slat2,dlon,cdlon;
+  real clat1,clat2,slat1,slat2,dlon,cdlon, sdlon, a,b;
   double pi = 3.1415926535;
   double c2r = pi/180.0;
   clat1 = std::cos(lat1*c2r);
   clat2 = std::cos(lat2*c2r);
   slat1 = std::sin(lat1*c2r);
   slat2 = std::sin(lat2*c2r);
-  dlon = long1-long2;
-  cdlon = std::cos(dlon*c2r);
+  dlon = (long1-long2)*c2r;
+  cdlon = std::cos(dlon);
+  sdlon = std::sin(dlon);
 
-  d = acos(slat1*slat2+clat1*clat2*cdlon);
+  a = SQRT( (clat2*sdlon)*(clat2*sdlon)
+            + (clat1*slat2-slat1*clat2*cdlon)*(clat1*slat2-slat1*clat2*cdlon)  );
+  b = slat1*slat2 + clat1*clat2*cdlon;
+  d = ATAN2( a, b );
   return d;
 }
 

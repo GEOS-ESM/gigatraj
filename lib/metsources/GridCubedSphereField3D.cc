@@ -925,24 +925,29 @@ void GridCubedSphereField3D::latlonindex( real lat_deg, real lon_deg, int& i, in
    }
   // face = 2
    else if (std::abs(y-1.0) <= tolerance) {
-         angle_to_index(-x,  z, i, j);
+       angle_to_index(-x,  z, i, j);
+       j = j+2*IM_WORLD;
    }
 
    // face = 3
    else if (abs(z-1.0) <= tolerance) {
-         angle_to_index(-x, -y, i, j);
+       angle_to_index(-x, -y, i, j);
+       j = j+4*IM_WORLD;
     }
    // face = 4
     else if (abs(x+1.0) <= tolerance) {
-         angle_to_index(-z, -y, i, j);
+       angle_to_index(-z, -y, i, j);
+       j = j+6*IM_WORLD;
     }
     // face = 5
     else if (abs(y+1.0) <= tolerance) {
-         angle_to_index(-z,  x, i, j);
+       angle_to_index(-z,  x, i, j);
+       j = j+8*IM_WORLD;
     }
     // face = 6
     else if (abs(z+1.0) <= tolerance) {
-         angle_to_index(y,  x, i, j);
+       angle_to_index(y,  x, i, j);
+       j = j+10*IM_WORLD;
     }
 
 }
@@ -1564,14 +1569,14 @@ int GridCubedSphereField3D::joinIndex( int i, int j, int k ) const
         i = iwrap( i );
      } else {
         if ( i < 0 || i >= nlons  ) {
-            std::cerr << "GridCubedSphereField3D: out-of-range longitude index " << i << " in joinIndex() call" << std::endl;
+            std::cerr << "GridCubedSphereField3D: out-of-range longitude index " << i << " in joinIndex(i,j,k) call" << std::endl;
             throw (baddatareq());
         }    
      }   
      // ensure that the latitude and vertical indices are legal
      if ( j < 0 || j >= nlats 
        || k < 0 || k >= nzs ) {
-         std::cerr << "GridCubedSphereField3D: out-of-range latitude or vertical index "  << j << ", " << k << " of " << nlats << ", " << nzs << " in joinIndex() call" << std::endl;
+         std::cerr << "GridCubedSphereField3D: out-of-range latitude or vertical index "  << j << ", " << k << " of " << nlats << ", " << nzs << " in joinIndex(i,j,k) call" << std::endl;
          throw (baddatareq());
      }    
 
@@ -1593,7 +1598,7 @@ int* GridCubedSphereField3D::joinIndex( int n, int *index, int* i, int* j, int* 
                i[m] = iwrap( i[m] );
             } else {
                if ( i[m] < 0 || i[m] >= nlons  ) {
-                   std::cerr << "GridCubedSphereField3D: out-of-range longitude index " << i[m] << " in joinIndex() call" << std::endl;
+                   std::cerr << "GridCubedSphereField3D: out-of-range longitude index " << i[m] << " in joinIndex(*) call" << std::endl;
                    throw (baddatareq());
                }    
             }   
@@ -1601,7 +1606,7 @@ int* GridCubedSphereField3D::joinIndex( int n, int *index, int* i, int* j, int* 
             if ( j[m] < 0 || j[m] >= nlats                                                                                     
               || k[m] < 0 || k[m] >= nzs ) {                                                                                   
                 std::cerr << "GridCubedSphereField3D:  out-of-range latitude or vertical index "  << j[m]   
-                << ", " << k[m] << " of " << nlats << ", " << nzs << " in joinIndex() call" << std::endl;                       
+                << ", " << k[m] << " of " << nlats << ", " << nzs << " in joinIndex(*) call" << std::endl;                       
                 throw (baddatareq());                                                                                    
             }
                                                                                                                  

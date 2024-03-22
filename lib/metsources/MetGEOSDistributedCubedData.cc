@@ -164,9 +164,9 @@ void MetGEOSDistributedCubedData::get_uvw( double time, int n, float* lons, floa
   int JJ[n]{};
   int i0,j0;
   for (int i=0; i<n; i++){
-    u0->latlonindex(lats[i], lons[i], i0,j0);
+    u0->latlonindex(lats[i], lons[i], i0, j0);
     i0 = i0/2; 
-    j0 = j0/2 + (nthFace-1)*nlons_global;
+    j0 = j0/2; // + (nthFace-1)*nlons_global;
     II[i] = i0;
     JJ[i] = j0;
   }  
@@ -230,8 +230,8 @@ void MetGEOSDistributedCubedData::get_uvw( double time, int n, float* lons, floa
   double t1 = u0->time();
   double t2 = u1->time();
   if( new_num >=1){
-    std::cerr << "t1: " << t1 << "time :" << time << " t2: " << t2 << std::endl;
-    std::cerr << "lon lat P: " << new_lons[0]<< ":" << new_lats[0] << ": " << new_levs[0] << std::endl;
+    std::cerr << "time t1: " << t1 << "time: " << time << " time t2: " << t2 << std::endl;
+    std::cerr << "lon:lat:P: " << new_lons[0]<< ": " << new_lats[0] << ": " << new_levs[0] << std::endl;
   }
   real lonvals [new_num] = {0.0};
   real latvals [new_num] = {0.0};
@@ -245,7 +245,7 @@ void MetGEOSDistributedCubedData::get_uvw( double time, int n, float* lons, floa
   hin->vinterpVector( new_num, new_lons, new_lats, new_levs, lonvals1, latvals1, *u0, *v0, *vin );
   hin->vinterp      ( new_num, new_lons, new_lats, new_levs, wvals1, *w0, *vin );
   if( new_num >=1){
-    std::cerr << "get u0: " << lonvals1[0] << "v0 :" << latvals1[0] << std::endl;
+    std::cerr << "get u0: " << lonvals1[0] << " v0:" << latvals1[0] << std::endl;
     std::cerr << "get P0: " << wvals1[0]<< std::endl;
   }
   if (t1 < time) {
@@ -300,7 +300,7 @@ void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, 
   for (int i=0; i<n; i++){
     u0->latlonindex(lats[i], lons[i], i0,j0);
     i0 = i0/2; 
-    j0 = j0/2 + (nthFace-1)*nlons_global;
+    j0 = j0/2; //+ (nthFace-1)*nlons_global;
     II[i] = i0;
     JJ[i] = j0;
   }  
@@ -395,7 +395,7 @@ void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, 
   for (int i=0; i<n; i++){
     gridSfc->latlonindex(lats[i], lons[i], i0,j0);
     i0 = i0/2;
-    j0 = j0/2 + (nthFace-1)*nlons_global;
+    j0 = j0/2;// + (nthFace-1)*nlons_global;
     II[i] = i0;
     JJ[i] = j0;
   }
