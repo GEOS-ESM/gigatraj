@@ -19,7 +19,7 @@ const real gigatraj::BilinearHinterp::NEARPOLE = 88.0;
 
 BilinearHinterp::BilinearHinterp()
 {
-    confml = 0;
+    confml = 1;
 };
 
 
