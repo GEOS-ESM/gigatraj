@@ -107,8 +107,25 @@ class PlanetNav {
 
          \return the wrapped longitude value
          \param longitude the input longitude whose value to be be wrapped
+         \param wraplimit a value for the start of the desired longitude range. 
+                          If < -900.0, then the object's wrappingLongitude will be used as the default. (
       */
-      real wrap( real longitude );
+      real wrap( real longitude, real wraplimit=-999.0 );
+
+      /// wraps an array of longitude values
+      /*! This function wraps each longitude in an array by adding 
+          and subtracting 360 degrees until it falls within the
+          standard longitude range.   For example, if the 
+          range is [0, 360), then a value of -155 would be 
+          wrapped to 205 ( -155 + 360).
+
+         \param *longitudes a pointer to the input longitudes whose value to be be wrapped.
+                            The values in the array will be altered.
+         \param n the number of longitudes to wrap
+         \param wraplimit a value for the start of the desired longitude range. 
+                          If < -900.0, then the object's wrappingLongitude will be used as the default. (
+      */
+      void wrap( real* longitudes, int n, real wraplimit=-999.0 );
    
       /// verifies a longitude/latitude pair
       /*! This function tests a given latitude and longitude for legality.
@@ -156,8 +173,10 @@ class PlanetNav {
           \param latitude the input and output latitude
           \param deltax the change in longitudinal position, in km
           \param deltay the change in meridional position, in km
+          \param factor an optional multiplicatove factor to be applied to deltax and deltay
+          \param approx if != -999, override the appriximate() setting this with value
       */
-      virtual void deltaxy( real *longitude, real *latitude, real deltax, real deltay) = 0;
+      virtual void deltaxy( real *longitude, real *latitude, real deltax, real deltay, real factor=1.0, int approx=-999 ) = 0;
 
       /// applies longitudinal and latitudinal distance displacements to multiple locations
       /*! This function adds an array of longitudinal distances and a latitudinal distances to a 
@@ -170,8 +189,9 @@ class PlanetNav {
           \param deltax a pointer to an array of the change in longitudinal position, in km
           \param deltay a pointer to an array of the change in meridional position, in km
           \param factor an optional multiplicatove factor to be applied to deltax and deltay
+          \param approx if != -999, override the appriximate() setting this with value
       */
-      virtual void deltaxy( int n, real *longitude, real *latitude, const real *deltax, const real *deltay, real factor=0.0) = 0;
+      virtual void deltaxy( int n, real *longitude, real *latitude, const real *deltax, const real *deltay, real factor=1.0, int approx=-999 ) = 0;
 
       /// calculates a great-circle distance between two locations.
       /*! This function calculates the great-circle distance between two locations.
@@ -291,8 +311,35 @@ class PlanetNav {
                     A value of 1 means that a polar stereographic rotaton is applied near the poles
 
     */
-    int conformal(); 
+    int conformal() const; 
+    
+    
+    /// sets the degree to which calculations are performed exactly
+    /*! This method sets the degree to which certain calculations
+        are to be performed exactly.
+        
+        The interpretation of this number is left up to the routine
+        that is actually doing the calculations.
+        
+        \param value determeind the exactitude. A valu eless than 0 means "do the calculations exactly, everywhere".
+                     Zero means, "use reasonable approximatins where appropriate."
+                     Higher values mean "apply approximations to improve speed". The higher
+                     the number, the more approximate the calculation will be, but the 
+                     faster it will be as well.
+      */
+      void approximate( int value );
 
+      /// returns the degree to which calculations are performed exactly
+      /*! This method returns the current exactitude setting.
+      
+          \return the current setting. -1 means that everything is done exactly, everywhere.
+          0 means that appropriate approximatins are applied.
+          Higher numbers impoly a higher degree of approximations but higher speed as well.
+           
+      
+      */
+      int approximate() const;
+      
       /// relocates a vector to a new location
       /*! Vectors on a quasi-spherical planet have different orientations in the planetary coordinate
           system, depending on where they are located. Consequently, to 
@@ -312,9 +359,10 @@ class PlanetNav {
          \param lat0 the latitude of the input vector
          \param u a pointer to the east-west vector component, which will be replaced by the relocated value
          \param v a pointer to the north-south vector component, which will be replaced by the relocated value
+         \param approx if != -999, override the appriximate() setting this with value
       
       */
-      virtual void vRelocate( real newlon, real newlat, real lon0, real lat0, real *u, real *v ) = 0; 
+      virtual void vRelocate( real newlon, real newlat, real lon0, real lat0, real *u, real *v, int approx=-999 ) = 0; 
      
       /// relocates an array of vectors to an array of new locations
       /*! Vectors on a sphere have different orientations in the spherical coordinate
@@ -345,9 +393,10 @@ class PlanetNav {
          \param lat0 a pointer to and array of the latitudes of the input vectors
          \param u a pointer to and array of the east-west vector components, which will be replaced by the relocated values
          \param v a pointer to and array of the north-south vector components, which will be replaced by the relocated values
+         \param approx if != -999, override the appriximate() setting this with value
       
       */
-      virtual void vRelocate( int n, const real *newlon, const real *newlat, const real *lon0, const real *lat0, real *u, real *v ) = 0; 
+      virtual void vRelocate( int n, const real *newlon, const real *newlat, const real *lon0, const real *lat0, real *u, real *v, int approx=-999 ) = 0; 
           
       /*! the number of degrees of longitude around a latitude circle
       */
@@ -371,6 +420,14 @@ class PlanetNav {
       the polar regions.
       */
       int confml;
+
+      /*! quality
+      
+      The quality determines how certain calculations are performed.
+      If set to 0, then the calculations are to be done exactly.
+      As the number increases, the calculations become cruder but (hopefully) faster
+      */
+      int quality;
 
    private:
 
