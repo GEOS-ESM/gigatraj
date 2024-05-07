@@ -6186,7 +6186,7 @@ _ACEOF
 fi
 
 
-ac_config_files="$ac_config_files Makefile include/gigatraj/Makefile include/gigatraj/gigatraj.hh lib/Makefile lib/filters/Makefile lib/metsources/Makefile src/Makefile test/Makefile doc/gigatraj_base.dconf:doc/gigatraj_base.dconf.in doc/latex_yes.dconf:doc/latex_yes.dconf.in doc/Makefile"
+ac_config_files="$ac_config_files Makefile include/gigatraj/Makefile include/gigatraj/gigatraj.hh lib/Makefile lib/filters/Makefile lib/metsources/Makefile src/Makefile confiles/Makefile test/Makefile doc/gigatraj_base.dconf:doc/gigatraj_base.dconf.in doc/latex_yes.dconf:doc/latex_yes.dconf.in doc/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6998,6 +6998,7 @@ do
     "lib/filters/Makefile") CONFIG_FILES="$CONFIG_FILES lib/filters/Makefile" ;;
     "lib/metsources/Makefile") CONFIG_FILES="$CONFIG_FILES lib/metsources/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "confiles/Makefile") CONFIG_FILES="$CONFIG_FILES confiles/Makefile" ;;
     "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
     "doc/gigatraj_base.dconf") CONFIG_FILES="$CONFIG_FILES doc/gigatraj_base.dconf:doc/gigatraj_base.dconf.in" ;;
     "doc/latex_yes.dconf") CONFIG_FILES="$CONFIG_FILES doc/latex_yes.dconf:doc/latex_yes.dconf.in" ;;
