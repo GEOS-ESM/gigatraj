@@ -314,7 +314,25 @@ class MetSBRot : public MetData {
          \param w the returned vertical wind value
      
       */
-      void get_uvw( double time, real lon, real lat, real z
+      void get_uvw( double time, real lon, real lat, real z, real *u, real *v, real *w);
+
+     /// obtain the values of all three wind components for arrays of given points, in m/s
+     /*! This method obtains the values of the zonal, meridional, and vertical 
+         wind component at set of given points.
+         The return values are guaranteed to be in meters per second, regardless of 
+         the units used in the original data. Invalid (bad or missing data) values are set to Not-a-Number (NaN).
+
+         \param time the model time for which data is to be returned  
+         \param n the number of elements in the lons, lats, and zs arrays.
+         \param lons a pointer to an array of longitudes at which data are to be returned
+         \param lats a pointer to an array of latitudes at which data is are be returned
+         \param zs a pointer to an array of vertical coordinate values at which the data are to be returned.
+         \param u a pointer to an array for the returned zonal wind values
+         \param v a pointer to an array for the returned meridional wind values
+         \param w a pointer to an array for the returned vertical wind values
+     
+      */
+      void get_uvw( double time, int n, real* lons, real* lats, real* zs
       , real *u, real *v, real *w);
 
       /// obtain the value of a meteorological field at a given point 

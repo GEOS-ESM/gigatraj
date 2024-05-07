@@ -527,6 +527,16 @@ void MetSBRot::get_uvw( double time, real lon, real lat, real z
 
 };
 
+void MetSBRot::get_uvw( double time, int n, real* lons, real* lats, real* zs
+, real *u, real *v, real *w)
+{
+     for (int i=0; i<n; i++ ) {
+         
+          get_uvw( time, lons[i], lats[i], zs[i], &(u[i]), &(v[i]), &(w[i]) );
+      
+     } 
+}
+
 real MetSBRot::get_u( double time, real lon, real lat, real z)
 {
      real u,v,w;
