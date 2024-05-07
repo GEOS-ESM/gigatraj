@@ -95,6 +95,7 @@ libgigatraj_a_SOURCES += ../include/gigatraj/Parcel.hh           Parcel.cc \
                          ../include/gigatraj/Swarm.hh            Swarm.cc \
                          ../include/gigatraj/trace.hh            trace.cc \
                          ../include/gigatraj/Integrator.hh       Integrator.cc \
+                         ../include/gigatraj/IntegRK4.hh         IntegRK4.cc \
                          ../include/gigatraj/IntegRK4a.hh        IntegRK4a.cc \
                          ../include/gigatraj/ParcelGenerator.hh  ParcelGenerator.cc \
                          ../include/gigatraj/PGenRep.hh          PGenRep.cc \

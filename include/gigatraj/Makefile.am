@@ -26,6 +26,7 @@ pkginclude_HEADERS = gigatraj.hh \
                      HLatLonInterp.hh \
                       BilinearHinterp.hh \
                    Integrator.hh \
+                    IntegRK4.hh \
                     IntegRK4a.hh \
                    Catalog.hh \
                    MetData.hh \
