@@ -529,18 +529,19 @@ void IntegRK4a :: go( int n, real *lons, real *lats, real *zs, int *flags, doubl
 
     }
     
-    delete zhold;
-    delete yhold;
-    delete xhold;
-    delete tmpzs;
-    delete tmplats;
-    delete tmplons;
-    delete kws;
-    delete kvs;
-    delete kus;
-    delete pzs;
-    delete plats;
-    delete plons;
+    delete []zhold;
+    delete []yhold;
+    delete []xhold;
+    delete []tmpzs;
+    delete []tmplats;
+    delete []tmplons;
+    delete []kws;
+    delete []kvs;
+    delete []kus;
+    delete []pzs;
+    delete []plats;
+    delete []plons;
+    delete []iused;
 
 
     // advance the time
