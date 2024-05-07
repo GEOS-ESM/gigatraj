@@ -690,13 +690,13 @@ void NetcdfIn::open( std::string file )
         std::cerr << "NetcdfIn::open: Got the id for the 'lon' coordinate." <<  std::endl;
      }
      // get the bad-value flag for longitudes
-#ifdef USING_DOUBLE
+#ifdef USE_DOUBLE
      err = nc_get_att_double( ncid, vid_lon, "missing_value", &badlon);
 #else
      err = nc_get_att_float( ncid, vid_lon, "missing_value", &badlon);
 #endif 
      if ( err != NC_NOERR ) {
-#ifdef USING_DOUBLE
+#ifdef USE_DOUBLE
         err = nc_get_att_double( ncid, vid_lon, "_FillValue", &badlon);
 #else
         err = nc_get_att_float( ncid, vid_lon, "_FillValue", &badlon);
@@ -711,13 +711,13 @@ void NetcdfIn::open( std::string file )
         std::cerr << "NetcdfIn::open: Got the id for the 'lat' coordinate." <<  std::endl;
      }
      // get the bad-value flag for latitudes
-#ifdef USING_DOUBLE
+#ifdef USE_DOUBLE
      err = nc_get_att_double( ncid, vid_lat, "missing_value", &badlat);
 #else
      err = nc_get_att_float( ncid, vid_lat, "missing_value", &badlat);
 #endif 
      if ( err != NC_NOERR ) {
-#ifdef USING_DOUBLE
+#ifdef USE_DOUBLE
         err = nc_get_att_double( ncid, vid_lat, "_FillValue", &badlat);
 #else
         err = nc_get_att_float( ncid, vid_lat, "_FillValue", &badlat);
@@ -756,13 +756,13 @@ void NetcdfIn::open( std::string file )
            throw (badFileConventions());
         }
      }
-#ifdef USING_DOUBLE
+#ifdef USE_DOUBLE
      err = nc_get_att_double( ncid, vid_z, "missing_value", &badvert);
 #else
      err = nc_get_att_float( ncid, vid_z, "missing_value", &badvert);
 #endif 
      if ( err != NC_NOERR ) {
-#ifdef USING_DOUBLE
+#ifdef USE_DOUBLE
         err = nc_get_att_double( ncid, vid_z, "_FillValue", &badvert);
 #else
         err = nc_get_att_float( ncid, vid_z, "_FillValue", &badvert);
