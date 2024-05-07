@@ -34,6 +34,9 @@ int main()
     real time;
     real dt;
     real flon;
+    real flat;
+    real olon;
+    real olat;
     real duration;
     double tt;
     int status;
@@ -44,11 +47,14 @@ int main()
     // set the meteorological data source
     // (setting this for one parcel sets it for all parcels)
     p.setMet( metsrc );
+    
 
     ////////////  first trial: plain untilted solid-body rotation
     
     // set starting position of sample parcel
-    p.setPos( 0.0, 0.0 );
+    olon = 0.0;
+    olat = 0.0;
+    p.setPos( olon, olat );
     
     // We start with a simple solid-body rotation, withOUT any tilted axis
     metsrc.set( 40.0, 0.0 );
@@ -65,14 +71,17 @@ int main()
     lat = p.getLat();
     tt = p.getTime();
     // compute the final longitude
+    //flon = olon;
+    //flat = olat;
+    //e.deltaxy( &flon, &flat, 40.0, 0.0, duration/1000.0, -1 );
     flon = 40.0 * ( time*86400.0) /1000.0 /(2.0*PI*e.radius())*360.0;
     while ( flon > 180.0 ) 
     {
        flon -= 360.0;
     }   
-    if ( mismatch( lon, flon, 0.01 ) || mismatch(lat, 0.0, 0.01 ) ) 
+    if ( mismatch( lon, flon, 0.01 ) || mismatch(lat, flat, 0.01 ) ) 
     {
-       cerr << "Bad ending lon,lat: ( " << flon << ", " << 0.0 << " )" <<  
+       std::cout << "Bad ending lon,lat: ( " << flon << ", " << 0.0 << " )" <<  
            " ) --> ( " << lon << ", " << lat << " )" <<endl;
        exit(1);
     }  
