@@ -503,7 +503,7 @@ int main( int argc, char * const argv[] )
           begtime = metsource->cal2Time(begdate);
           endtime = metsource->cal2Time(enddate);
               
-          metsource->debug = debug;
+          metsource->dbug = debug;
           
           // Loop over all the times
           for ( time=begtime; time<=endtime; time += tdelta/24.0 ) {

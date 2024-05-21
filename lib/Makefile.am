@@ -2,7 +2,7 @@
 
 lib_LIBRARIES = libgigatraj.a
 
-GIGATRAJ_INCLUDE = -I$(top_srcdir)/include/
+GIGATRAJ_INCLUDE = -I$(top_srcdir)/include/ -I${top_builddir}/include
 
 # We create this file when the library is made.
 # Another makefile in the doc subdirectory uses
@@ -18,6 +18,7 @@ $(TRIGGER_DOCS_REMAKE): libgigatraj.a
 ## Everything needs the gigatraj library includes
 AM_CPPFLAGS  = $(GIGATRAJ_INCLUDE)
 
+GTCONFIGDIR = @datadir@/@PACKAGE@/
 
 ## add stuff for MPI as well
 
@@ -35,6 +36,7 @@ libgigatraj_a_SOURCES = ../include/gigatraj/RandomSrc.hh        RandomSrc.cc \
                         ../include/gigatraj/Earth.hh            Earth.cc \
                         ../include/gigatraj/ProcessGrp.hh       ProcessGrp.cc \
                         ../include/gigatraj/SerialGrp.hh        SerialGrp.cc \
+                        ../include/gigatraj/Catalog.hh          metsources/Catalog.cc \
                         ../include/gigatraj/GridField.hh        metsources/GridField.cc \
                         ../include/gigatraj/GridFieldSfc.hh     metsources/GridFieldSfc.cc \
                         ../include/gigatraj/GridLatLonFieldSfc.hh   metsources/GridLatLonFieldSfc.cc \
@@ -65,21 +67,26 @@ if MPI
 endif
 
 if MERRA
+   libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSPortal.hh     metsources/MetGEOSPortal.cc
    libgigatraj_a_SOURCES += ../include/gigatraj/MERRA_Directory.hh  metsources/MERRA_Directory_Data.hh metsources/MERRA_Directory.cc
    metsources_MERRA_Directory_cc_CFLAGS = $(MDIRFLAG)
    libgigatraj_a_SOURCES += ../include/gigatraj/MetMERRA.hh     metsources/MetMERRA.cc
 endif
 if MERRA2
+   libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSPortal.hh     metsources/MetGEOSPortal.cc
    libgigatraj_a_SOURCES += ../include/gigatraj/MERRA2_Directory.hh  metsources/MERRA2_Directory_Data.hh metsources/MERRA2_Directory.cc
    libgigatraj_a_SOURCES += ../include/gigatraj/MetMERRA2.hh     metsources/MetMERRA2.cc
 endif
 if GEOSFP
+   libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSPortal.hh     metsources/MetGEOSPortal.cc
    libgigatraj_a_SOURCES += ../include/gigatraj/GEOSfpFcast_Directory.hh  metsources/GEOSfpFcast_Directory_Data.hh metsources/GEOSfpFcast_Directory.cc
    libgigatraj_a_SOURCES += ../include/gigatraj/GEOSfpAssim_Directory.hh  metsources/GEOSfpAssim_Directory_Data.hh metsources/GEOSfpAssim_Directory.cc
-   libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSPortal.hh     metsources/MetGEOSPortal.cc
    libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSfpFcast.hh     metsources/MetGEOSfpFcast.cc
    libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSfpAssim.hh     metsources/MetGEOSfpAssim.cc
    libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSfp.hh     metsources/MetGEOSfp.cc
+endif
+if MYGEOS
+   libgigatraj_a_SOURCES += ../include/gigatraj/MetMyGEOS.hh     metsources/MetMyGEOS.cc
 endif
 libgigatraj_a_SOURCES += ../include/gigatraj/MetSelector.hh     metsources/MetSelector.cc
 
@@ -88,6 +95,7 @@ libgigatraj_a_SOURCES += ../include/gigatraj/Parcel.hh           Parcel.cc \
                          ../include/gigatraj/Swarm.hh            Swarm.cc \
                          ../include/gigatraj/trace.hh            trace.cc \
                          ../include/gigatraj/Integrator.hh       Integrator.cc \
+                         ../include/gigatraj/IntegRK4.hh         IntegRK4.cc \
                          ../include/gigatraj/IntegRK4a.hh        IntegRK4a.cc \
                          ../include/gigatraj/ParcelGenerator.hh  ParcelGenerator.cc \
                          ../include/gigatraj/PGenRep.hh          PGenRep.cc \
@@ -96,6 +104,8 @@ libgigatraj_a_SOURCES += ../include/gigatraj/Parcel.hh           Parcel.cc \
                          ../include/gigatraj/PGenRnd.hh          PGenRnd.cc \
                          ../include/gigatraj/PGenRndDisc.hh      PGenRndDisc.cc \
                          ../include/gigatraj/PGenDisc.hh         PGenDisc.cc \
+                         ../include/gigatraj/PGenLine.hh         PGenLine.cc \
+                         ../include/gigatraj/PGenRndLine.hh      PGenRndLine.cc \
                          ../include/gigatraj/ParcelFilter.hh \
                          ../include/gigatraj/ParcelInitializer.hh \
                          ../include/gigatraj/ParcelReporter.hh \
@@ -104,5 +114,11 @@ libgigatraj_a_SOURCES += ../include/gigatraj/Parcel.hh           Parcel.cc \
                          ../include/gigatraj/StreamPrint.hh      filters/StreamPrint.cc \
                          ../include/gigatraj/StreamRead.hh       filters/StreamRead.cc \
                          ../include/gigatraj/ChangeVertical.hh   filters/ChangeVertical.cc
+
+if NETCDF
+   libgigatraj_a_SOURCES += ../include/gigatraj/NetcdfIn.hh     filters/NetcdfIn.cc 
+   libgigatraj_a_SOURCES += ../include/gigatraj/NetcdfOut.hh     filters/NetcdfOut.cc 
+   libgigatraj_a_SOURCES += ../include/gigatraj/PGenNetcdf.hh   PGenNetcdf.cc 
+endif
 
 

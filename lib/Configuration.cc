@@ -62,6 +62,7 @@ Configuration::Configuration(const std::vector<std::string> &cfgs)
 
 Configuration::~Configuration()
 {
+    clear();
 }
 
 Configuration::Configuration(const Configuration& src)
@@ -170,6 +171,7 @@ void Configuration::set(const std::string &name, const std::string &value)
      
      // depending on the parameter type and the cMustBeValid flag, check the value syntax here
      if ( ! this->check( &p ) ) {
+        std::cerr << "Error if configuration parameter " << name << std::endl;
         throw(Configuration::badcfgformat());
      }
      
@@ -196,6 +198,7 @@ void Configuration::set(const std::string &name, const int &value)
      
         p.status = p.status | ParamWasSet;  
      } else {
+        std::cerr << "Configuration error on " << name << " is not integer" << std::endl;
         throw(Configuration::badcfgformat());     
      }
      
@@ -222,6 +225,7 @@ void Configuration::set(const std::string &name, const float &value)
      
         p.status = p.status | ParamWasSet;  
      } else {
+        std::cerr << "Configuration error on " << name << " is not float" << std::endl;
         throw(Configuration::badcfgformat());     
      }
      
@@ -247,6 +251,7 @@ void Configuration::set(const std::string &name, const double &value)
      
         p.status = p.status | ParamWasSet;  
      } else {
+        std::cerr << "Configuration error on " << name << " is not double" << std::endl;
         throw(Configuration::badcfgformat());     
      }
      
@@ -273,6 +278,7 @@ void Configuration::set(const std::string &name, const bool &value)
      
         p.status = p.status | ParamWasSet;  
      } else {
+        std::cerr << "Configuration error on " << name << " is not bool" << std::endl;
         throw(Configuration::badcfgformat());     
      }
      
@@ -288,7 +294,7 @@ void Configuration::add( const std::string &name, const ConfigType type, const s
 {
     // holds the new parameter specs
     struct param p;
-    
+
     // copy the specs into place
     p.name = name;
     p.type = type;
@@ -363,7 +369,49 @@ char *Configuration::cstring( std::string s ) {
 
 }
 
-void Configuration::setupGetopts( struct gostuff &go ) {
+Configuration::GoInfo::GoInfo() 
+{
+
+    names = NULLPTR;
+    shortopts = NULLPTR;
+#ifdef USE_LONGARGS
+    longopts = NULLPTR;
+#endif
+
+}
+
+Configuration::GoInfo::~GoInfo() 
+{
+    clear();
+}
+
+void Configuration::GoInfo::clear() 
+{
+    if ( names != NULLPTR ) {
+       for (int i=0; i<n; i++ ) {
+           if ( names[i] != NULLPTR ) {
+              delete[] names[i];
+           }
+       }
+       delete[] names;
+       names = NULLPTR;
+    }
+    if ( shortopts != NULLPTR ) {
+       delete[] shortopts;
+       shortopts = NULLPTR;
+    }   
+#ifdef USE_LONGARGS
+    if ( longopts != NULLPTR ) {
+       delete[] longopts;
+       longopts = NULLPTR;
+    }
+#endif
+}
+
+
+
+
+void Configuration::setupGetopts( GoInfo &go ) {
 
     // short options string
     std::string shortopts;
@@ -377,9 +425,12 @@ void Configuration::setupGetopts( struct gostuff &go ) {
     struct param p;
     // jholding string
     char *cstr;
+    char *tttt;
 #ifdef USE_LONGARGS
     struct option *longopts;
 #endif
+    
+    go.clear();
     
     // how many parameters are defined in this object?
     go.n = params.size();
@@ -409,6 +460,9 @@ void Configuration::setupGetopts( struct gostuff &go ) {
        go.names = new char*[go.n];
     } catch(...) {
        throw(badmemerr());
+    }
+    for ( int i=0; i<go.n; i++ ) {
+       go.names[i] = NULLPTR;
     }
     
     
@@ -477,22 +531,14 @@ void Configuration::setupGetopts( struct gostuff &go ) {
 
 }
 
-void Configuration::takedownGetopts( struct gostuff &go ) {
+void Configuration::takedownGetopts( GoInfo &go ) 
+{
     
     int i;
-    
-#ifdef USE_LONGARGS
-    for (i=0; i<go.n; i++ ) {
-        delete go.names[i];
-    }
-    delete go.names;
-    delete go.longopts;
-#endif
-    delete go.shortopts;
+
+    go.clear();    
 
 }
-
-
 
 void Configuration::cmdLineConfigs(int argc, char * const argv[] )
 {
@@ -519,7 +565,7 @@ void Configuration::cmdLineConfigs(int argc, char * const argv[] )
     // 
     char *cstr;
     // getopts stuff
-    struct gostuff go;
+    GoInfo go;
     
     
     // how many parameters are defined in this object?
@@ -728,6 +774,7 @@ void Configuration::loadfile( const std::string &filename, const std::string cfg
                     
                     // depending on the parameter type and the cMustBeValid flag, check the value syntax here
                     if ( ! this->check( &p ) ) {
+                       std::cerr << "Configuration error on " << keyword << " is has value" << value << std::endl;
                        throw(Configuration::badcfgformat());
                     }
 
@@ -780,7 +827,7 @@ int Configuration::loadCmdLine(int argc, char * const argv[] )
     // counter
     int i;  
     // getopts stuff
-    struct gostuff go;
+    GoInfo go;
     // argv index of first non-option argument 
     int pcount = 0;
     
@@ -789,6 +836,7 @@ int Configuration::loadCmdLine(int argc, char * const argv[] )
     n = params.size();
 
     setupGetopts( go );
+    
     shortopts = go.shortopts;
     longopts = static_cast< struct option *>(go.longopts);
 
@@ -951,6 +999,15 @@ int Configuration::load(int argc, char * const argv[] )
      return first;
 }
 
+void Configuration::clear()
+{
+     configs.clear();
+     cfgnames.clear();
+     paramNames.clear();
+     params.clear();
+     
+     status = 0;
+}
 
 std::string Configuration::get(const std::string &name)
 {
@@ -971,6 +1028,7 @@ int Configuration::str2int(const std::string &value)
     try {
        *numstr >> result;
     } catch (...) {
+       std::cerr << "Configuration error on integer value " << value << std::endl;
        throw (Configuration::badcfgformat());
     }
     delete numstr;
@@ -987,6 +1045,7 @@ float Configuration::str2float(const std::string &value)
     try {
        *numstr >> result;
     } catch (...) {
+       std::cerr << "Configuration error on float value " << value << std::endl;
        throw (Configuration::badcfgformat());
     }
     delete numstr;
@@ -1003,6 +1062,7 @@ double Configuration::str2dbl(const std::string &value)
     try {
        *numstr >> result;
     } catch (...) {
+       std::cerr << "Configuration error on double value " << value << std::endl;
        throw (Configuration::badcfgformat());
     }
     delete numstr;
@@ -1025,6 +1085,7 @@ bool Configuration::str2bool(const std::string &value)
        if ( cc == "N" || cc == "n" || cc == "F" || cc == "f" ) {
           result = false;
        } else {
+       std::cerr << "Configuration error on bool value " << value << std::endl;
           throw(Configuration::badcfgformat());               
        }
     }

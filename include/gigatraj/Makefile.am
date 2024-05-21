@@ -26,7 +26,9 @@ pkginclude_HEADERS = gigatraj.hh \
                      HLatLonInterp.hh \
                       BilinearHinterp.hh \
                    Integrator.hh \
+                    IntegRK4.hh \
                     IntegRK4a.hh \
+                   Catalog.hh \
                    MetData.hh \
                     MetSBRot.hh \
                     MetOnTheFly.hh \
@@ -71,6 +73,9 @@ if GEOSFP
    pkginclude_HEADERS +=  MetGEOSfpFcast.hh
    pkginclude_HEADERS +=  MetGEOSfpAssim.hh
 endif
+if MYGEOS
+   pkginclude_HEADERS +=  MetMyGEOS.hh 
+endif
    pkginclude_HEADERS +=  MetSelector.hh 
 
 pkginclude_HEADERS += \
@@ -84,6 +89,8 @@ pkginclude_HEADERS += \
                     PGenRndDisc.hh \
                     PGenDisc.hh \
                     PGenGrid.hh \
+                    PGenLine.hh \
+                    PGenRndLine.hh \
                     PGenFile.hh \
                    ParcelFilter.hh \
                     ParcelInitializer.hh \

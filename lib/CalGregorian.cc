@@ -108,9 +108,11 @@ void CalGregorian::parseDate( const std::string& date, int* year, int *month, in
        // next, the day of the month
        itmp >> myday;
      } catch (...) {
+        std::cerr << "Bad date format: " << date << std::endl;
         throw (badGregorianDateFormat());
      }   
      if ( itmp.fail() ) {
+        std::cerr << "Bad date format: " << date << std::endl;
         throw (badGregorianDateFormat());
      }
      // At this point, we should have a date.
@@ -132,9 +134,11 @@ void CalGregorian::parseDate( const std::string& date, int* year, int *month, in
             // get the hour of the day
             itmp >> myhour;
         } catch (...) {
+           std::cerr << "Bad date format: " << date << std::endl;
            throw (badGregorianDateFormat());
         }   
         if ( itmp.fail() ) {
+           std::cerr << "Bad date format: " << date << std::endl;
            throw (badGregorianDateFormat());
         }
         
@@ -154,9 +158,11 @@ void CalGregorian::parseDate( const std::string& date, int* year, int *month, in
                // get the minute of the hour
                itmp >> mymin;  
            } catch (...) {
+              std::cerr << "Bad date format: " << date << std::endl;
               throw (badGregorianDateFormat());
            }   
            if ( itmp.fail() ) {
+              std::cerr << "Bad date format: " << date << std::endl;
               throw (badGregorianDateFormat());
            }
         } else {
@@ -181,9 +187,11 @@ void CalGregorian::parseDate( const std::string& date, int* year, int *month, in
                // get the second of the minute 
                itmp >> mysecond;  
            } catch (...) {
+              std::cerr << "Bad date format: " << date << std::endl;
               throw (badGregorianDateFormat());
            }   
            if ( itmp.fail() ) {
+              std::cerr << "Bad date format: " << date << std::endl;
               throw (badGregorianDateFormat());
            }
         } else {
@@ -229,7 +237,7 @@ void CalGregorian::parseDate( const std::string& date, int* year, int *month, in
 
 std::string CalGregorian::buildDate( int year, int month, int day, int hour, int minute, float second, int format ) const
 {
-     // the output datae string
+     // the output date string
      std::string date;
      // a string output stream for integer->string conversions
      std::ostringstream otmp;
@@ -323,6 +331,7 @@ double CalGregorian::day1900( const std::string& date ) const
 
      // sanity-check the parts
      if ( year < 1583 || month < 1 || month > 12 ) {
+        std::cerr << "Bad date format: " << date << std::endl;
         throw (badGregorianDateFormat());
      }   
 
@@ -347,6 +356,7 @@ double CalGregorian::day1900( const std::string& date ) const
      }  
      // more sanity checking
      if ( day < 1 || day > monthlen ) {
+        std::cerr << "Bad date format: " << date << std::endl;
         throw (badGregorianDateFormat());
      }        
 
@@ -391,7 +401,7 @@ std::string CalGregorian::date1900( double day, int format ) const
      }
 
  
-     day2 = day + 693900.0;
+     day2 = trunc(day) + 693900.0;
      y = floor( (day2 + 1.478)/365.2425 );
      if ( day2 < (365*y+y/4-y/100+y/400) ) {
         y--;
@@ -459,6 +469,29 @@ std::string CalGregorian::date1900( double day, int format ) const
      
      return buildDate( year, month, dayofmonth, hours, minutes, seconds, format );
      
+}
+
+std::string CalGregorian::epochDate( time_t t, int format ) const
+{
+     struct tm *tparts;
+     std::string result;
+
+     result = "invalid";
+     
+     tparts = gmtime( &t );
+     if ( tparts != NULLPTR ) {
+     
+        result = buildDate( tparts->tm_year + 1900 
+                          , tparts->tm_mon + 1
+                          , tparts->tm_mday 
+                          , tparts->tm_hour 
+                          , tparts->tm_min
+                          , tparts->tm_sec * 1.0
+                          , format );
+     
+     }
+     
+     return result;
 }
 
 int CalGregorian::format() const

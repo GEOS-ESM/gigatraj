@@ -298,6 +298,19 @@ class Flock {
            */    
            int index() const;
      
+        protected:
+           friend class Flock;
+           
+           /// initializes the iterator
+           /*! This allows the Flock to initialize an existing 
+               Flock::Iter object
+
+               \param init which of the local processor's parcels to point to
+               \param flk the Flock for which this is an iterator
+           */
+           void set(int init, Flock *flk);
+           
+     
         private:
            // which parcel on this processor is the currently-indexed?
            int my_parcel;

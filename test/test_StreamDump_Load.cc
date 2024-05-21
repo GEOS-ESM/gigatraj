@@ -57,7 +57,7 @@ int main()
     p.setTime(234550.0);
     p.setZ(12.3457869);
     
-    output = new ofstream("parcels_out.dat");
+    output = new ofstream( "parcels_out.dat");
     sd = new StreamDump(*output);
     *(output) << "This is a dump of parcel states" << endl;
     try {
@@ -70,7 +70,7 @@ int main()
     output->close();
     delete output;
     
-    input = new ifstream("parcels_test00.dat");
+    input = new ifstream(datadir("srcdir") + "parcels_test00.dat");
     si = new StreamLoad(*input);
     input->getline(junk, SZ);
     try {
@@ -122,7 +122,7 @@ int main()
     output->close();
     delete output;
     
-    input = new ifstream("parcels_out2.dat");
+    input = new ifstream(datadir("srcdir") + "parcels_out2.dat");
     si = new StreamLoad( *input, 1);
     try {
        //si->apply(q);
@@ -140,5 +140,6 @@ int main()
        exit(1);
     }
     delete si;
+    delete input;
 
 }

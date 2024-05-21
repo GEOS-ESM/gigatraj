@@ -87,7 +87,7 @@ void MetGEOSPortal::TGridSpec::clear()
 {
    tave = -1;
    tbase = 0;
-   tspace = 1;
+   tspace = -1;
    start = 0.0;
    end = 0.0;
    delta = 1.0;
@@ -137,10 +137,11 @@ MetGEOSPortal::~MetGEOSPortal()
 // copy constructor
 MetGEOSPortal::MetGEOSPortal( const MetGEOSPortal&  src) : MetGridLatLonData(src)
 {
-     hgrid = src.hgrid;
-     pgrid = src.pgrid;
-     tspace = src.tspace;
-     tave = src.tave;
+     desired_hgrid_id = src.desired_hgrid_id;
+     desired_vgrid_id = src.desired_vgrid_id;
+     desired_tspace = src.desired_tspace;
+     desired_tave = src.desired_tave;
+     desired_tbase = src.desired_tbase;
      strict = src.strict;
      skip = src.skip;
      skoff = src.skoff;
@@ -237,13 +238,13 @@ void MetGEOSPortal::set_BaseTime( std::string& date )
 }        
 std::string MetGEOSPortal::BaseTime( ) const
 {
-    std::string *result;
+    //std::string *result;
+    std::string result;
+   // result = new std::string;
     
-    result = new std::string;
+    result = cal.date1900( basetime );
     
-    *result = cal.date1900( basetime );
-    
-    return *result;
+    return result;
 }           
 
 
@@ -307,10 +308,11 @@ void MetGEOSPortal::assign(const MetGEOSPortal& src)
 {
     MetGridLatLonData::assign(src);
 
-     hgrid = src.hgrid;
-     pgrid = src.pgrid;
-     tspace = src.tspace;
-     tave = src.tave;
+     desired_hgrid_id = src.desired_hgrid_id;
+     desired_vgrid_id = src.desired_vgrid_id;
+     desired_tspace = src.desired_tspace;
+     desired_tave = src.desired_tave;
+     desired_tbase = src.desired_tbase;
      strict = src.strict;
      skip = src.skip;
      ntries = src.ntries;
@@ -323,8 +325,7 @@ void MetGEOSPortal::assign(const MetGEOSPortal& src)
 void MetGEOSPortal::reset()
 {
    
-   tave = 0;
-   strict = 0;
+   strict = StrictAboutNothing;
    skip = 0;
    skoff = 0;
    basetime = 0.0;
@@ -333,6 +334,20 @@ void MetGEOSPortal::reset()
    openwait = 1;
    isOpen = 0;
    cur_url = "";
+   
+   desired_hgrid_id = -1;
+   desired_vgrid_id = -1;
+   desired_tspace = -1;
+   desired_tave = -1;
+   desired_tbase = -1;
+   
+   test_vgrid = -1;
+   test_ndims = -1;
+   test_hgrid = -1;
+   test_vgrid = -1;
+   test_tspace = -1;
+   test_tave = -1;
+   test_tbase = -1;
    
    override_tbase = -1;
    override_tspace = -1;
@@ -575,24 +590,28 @@ std::vector<real>* MetGEOSPortal::vcoords( const std::string *coordSys ) const
 }
 
 
-void MetGEOSPortal::set_hgrid( const int hgrid, std::vector<real>& lons, std::vector<real>& lats ) 
+void MetGEOSPortal::query_hgrid( int qhgrid, std::vector<real>& lons, std::vector<real>& lats ) 
 {
    int nlons, nlats;
    real delta;
    real begval;
    
-   nlons = hspecs[hgrid].nLons;
-   begval =  hspecs[hgrid].startLon;
-   delta = hspecs[hgrid].deltaLon;
+   if ( qhgrid < 0 ) {
+      qhgrid = desired_hgrid_id;
+   }
+   
+   nlons = hspecs[qhgrid].nLons;
+   begval =  hspecs[qhgrid].startLon;
+   delta = hspecs[qhgrid].deltaLon;
    lons.clear();
    lons.reserve(nlons);
    for (int i=0; i<nlons; i++ ) {
        lons.push_back( i*delta +  begval );
    }
 
-   nlats = hspecs[hgrid].nLats;
-   begval =  hspecs[hgrid].startLat;
-   delta = hspecs[hgrid].deltaLat;
+   nlats = hspecs[qhgrid].nLats;
+   begval =  hspecs[qhgrid].startLat;
+   delta = hspecs[qhgrid].deltaLat;
    lats.clear();
    lats.reserve(nlats);
    for (int i=0; i<nlats; i++ ) {
@@ -600,18 +619,38 @@ void MetGEOSPortal::set_hgrid( const int hgrid, std::vector<real>& lons, std::ve
    }
    
 }
+void MetGEOSPortal::set_hgrid( const int hgrid0 ) 
+{
+   int nlons, nlats;
+   real delta;
+   real begval;
+   
+   if ( hgrid0 >= 0 && hgrid0 <= 2 ) {
+      desired_hgrid_id = hgrid0;
+   
+      query_hgrid( desired_hgrid_id, lons, lats ); 
+      nlons = lons.size();
+      nlats = lats.size();
+   
+   }      
+   
+}
 
 
-void MetGEOSPortal::set_vgrid( const int vgrid, std::vector<real>& zs, std::string& vquant, std::string& vunits ) 
+void MetGEOSPortal::query_vgrid( int qvgrid, std::vector<real>& zs, std::string& vquant, std::string& vunits ) 
 {
    int nzs;
    
+   if ( qvgrid < 0 ) {
+      qvgrid = desired_vgrid_id;
+   }   
+   
+   
    for ( int i=0; i < vspecs.size(); i++ ) {
-      if ( vspecs[i].id == vgrid ) {
+      if ( vspecs[i].id == qvgrid ) {
           vquant = vspecs[i].quant;
           vunits = vspecs[i].units;
           zs = vspecs[i].levs;
-          nzs = zs.size();
           return;
       }      
    }
@@ -620,49 +659,64 @@ void MetGEOSPortal::set_vgrid( const int vgrid, std::vector<real>& zs, std::stri
 }
 
 
+void MetGEOSPortal::set_vgrid( const int vgrid0 ) 
+{
+   int nzs;
+   
+   if ( vgrid0 >= 0 && vgrid0 <= 2 ) {
+      
+      desired_vgrid_id = vgrid0;
+      query_vgrid( desired_vgrid_id, native_zs, native_vquant, native_vuu );
+      native_nzs = native_zs.size();
+      
+   } else {  
+      throw(badVerticalCoord());
+   }
+}
+
 void MetGEOSPortal::setStrictness( const bool horiz, const bool vert, const bool tspace, const bool tavg )
 {
     if ( horiz ) { 
-       strict = strict | 0x01 ;
+       strict = strict | StrictAboutHgrid ;
     } else {
-       strict = strict & ( ~ 0x01) ;  
+       strict = strict & ( ~ StrictAboutHgrid) ;  
     }
     if ( vert ) { 
-       strict = strict | 0x02 ;
+       strict = strict | StrictAboutVgrid ;
     } else {
-       strict = strict & ( ~ 0x02) ;  
+       strict = strict & ( ~ StrictAboutVgrid) ;  
     }
     if ( tspace ) { 
-       strict = strict | 0x04 ;
+       strict = strict | StrictAboutTgrid ;
     } else {
-       strict = strict & ( ~ 0x04) ;  
+       strict = strict & ( ~ StrictAboutTgrid) ;  
     }
     if ( tavg ) { 
-       strict = strict | 0x08 ;
+       strict = strict | StrictAboutTavg ;
     } else {
-       strict = strict & ( ~ 0x08) ;  
+       strict = strict & ( ~ StrictAboutTavg) ;  
     }
     
 }
 
 bool MetGEOSPortal::horizStrictness()     
 {
-    return (( strict & 0x01) != 0 );
+    return (( strict & StrictAboutHgrid) != 0 );
 }
 
 bool MetGEOSPortal::vertStrictness()      
 {
-    return (( strict & 0x02) != 0 );
+    return (( strict & StrictAboutVgrid) != 0 );
 }
 
 bool MetGEOSPortal::tspaceStrictness()
 {
-    return (( strict & 0x04) != 0 );
+    return (( strict & StrictAboutTgrid) != 0 );
 }
 
 bool MetGEOSPortal::tavgStrictness()     
 {
-    return (( strict & 0x08) != 0 );
+    return (( strict & StrictAboutTavg) != 0 );
 }
 
 void  MetGEOSPortal::setNTries( const int n)
@@ -716,7 +770,7 @@ bool MetGEOSPortal::try_again( const int error, int &trial ) const
       if ( trial < ntries ) {
          // yes. But wait first.
          // The waiting period grows as the number of trials.
-//         if ( debug > 1 ) {
+//         if ( dbug > 1 ) {
             std::cerr << " --- netcdf failure (" << error << "), trial " << trial 
                       << " of " << ntries << "; waiting " <<  waittry*trial << " seconds"
                       << std::endl;
@@ -725,7 +779,7 @@ bool MetGEOSPortal::try_again( const int error, int &trial ) const
          result = true;
       } else {
          // No more trials.
-//       if ( debug > 1 ) {
+//       if ( dbug > 1 ) {
           std::cerr << " --- netcdf failure (" << error << "), trial " << trial 
                     << " of " << ntries << "; giving up now."
                     << std::endl;
@@ -745,7 +799,7 @@ int MetGEOSPortal::prep(  const std::string quantity, const double time )
   
 int MetGEOSPortal::prep(  const std::string quantity, const std::string &time )
 {
-    // the generic verison is to just call setup()
+    // the generic version is to just call setup()
     return setup( quantity, time );
 }   
 
@@ -768,15 +822,18 @@ void MetGEOSPortal::Portal_open(const std::string& url )
      int waittime;
      
      // now open the new
-     if ( debug > 2 ) {
+     if ( dbug > 2 ) {
         std::cerr << "MetGEOSPortal::Portal_open: attempting nc_open of: <<" << url  << ">>" << std::endl;
      }
 
      // but first, sleep some time between opens, to avoid being obnoxious to the server
      if ( openwait > 0 ) {
-        if ( debug > 2 ) {
-           std::cerr << "************* About to wait " << waittime << " seconds on proc " 
-                     << my_pgroup->id() << " group " << my_pgroup->group_id() << std::endl;
+        if ( dbug > 2 ) {
+           std::cerr << "************* About to wait " << openwait << " seconds on proc ";
+           if ( my_pgroup != NULLPTR ) {
+              std::cerr << my_pgroup->id() << " group " << my_pgroup->group_id();
+           }
+           std::cerr << std::endl;
         }
         (void) sleep( openwait ); // sleep this time between opens, to avoid being obnoxious to the server
      }
@@ -793,10 +850,10 @@ void MetGEOSPortal::Portal_open(const std::string& url )
      }
      isOpen = 1;
      cur_url = url;                                
-     if ( debug >= 2 ) {
+     if ( dbug >= 2 ) {
         std::cerr << "MetGEOSPortal::Portal_open: ----- opened " << url << std::endl;         
      }  
-     if ( debug > 2 ) {
+     if ( dbug > 2 ) {
         std::cerr << "MetGEOSPortal::Portal_open: nc_open success!" << std::endl;
      }
 
@@ -809,7 +866,7 @@ void MetGEOSPortal::Portal_open(const std::string& url )
         throw(badNetcdfError(err));
      }
      
-     if ( debug > 2 ) {
+     if ( dbug > 2 ) {
         std::cerr << "MetGEOSPortal::Portal_open: initial inq: " << ndimens << ", " << nvars << ", " << ngatts << ", " << unlimdim_idx << std::endl;
      }
          
@@ -833,7 +890,7 @@ void MetGEOSPortal::Portal_open(const std::string& url )
             throw(badNetcdfError(err));
          }
          
-         if ( debug > 4 ) {
+         if ( dbug > 4 ) {
             std::cerr << "MetGEOSPortal::Portal_open: reading global attr " << i << ": " << name 
             << "(" << attr_type << " x " << attr_size << ") ";
          }
@@ -848,7 +905,7 @@ void MetGEOSPortal::Portal_open(const std::string& url )
              if ( name != "ArchivedMetadata.0" ) {
              
                 Portal_read_attr( attr_val_str, attr_name, NC_GLOBAL, attr_size );
-                if ( debug > 4  ) {
+                if ( dbug > 4  ) {
                    std::cerr << "= " << gattr_strings[name];
                 }
                 gattr_strings[name] = attr_val_str;
@@ -859,7 +916,7 @@ void MetGEOSPortal::Portal_open(const std::string& url )
              //- std::cerr << " [NC_FLOAT] ";
              // a float attribute may be an array of floats.
              Portal_read_attr( attr_val_f, attr_name, NC_GLOBAL, attr_size );
-             if ( debug > 4  ) {
+             if ( dbug > 4  ) {
                 std::cerr << "= " << gattr_reals[name];
              }
              // use only the first value; toss the rest
@@ -871,7 +928,7 @@ void MetGEOSPortal::Portal_open(const std::string& url )
              //- std::cerr << " [NC_DOUBLE] ";
              // a double attribute may be an array of doubles.
              Portal_read_attr( attr_val_d, attr_name, NC_GLOBAL, attr_size );
-             if ( debug > 4  ) {
+             if ( dbug > 4  ) {
                 std::cerr << "= " << gattr_reals[name];
              }
              gattr_reals[name] = attr_val_d[0];
@@ -881,7 +938,7 @@ void MetGEOSPortal::Portal_open(const std::string& url )
              break;    
          }
           
-         if ( debug > 4  ) {
+         if ( dbug > 4  ) {
             std::cerr << std::endl;
          }
 
@@ -907,7 +964,7 @@ void MetGEOSPortal::Portal_close()
           throw(badNetcdfError(err));
        } 
        isOpen = 0; 
-       if ( debug > 2 ) {
+       if ( dbug > 2 ) {
           std::cerr << "MetGEOSPortal::Portal_close: nc_close success!" << std::endl;        
        }
     }
@@ -949,7 +1006,7 @@ void MetGEOSPortal::Portal_checkdims(const int nvdims, const int*dimids )
             
          name.assign(dim_name);
                      
-         if ( debug > 5 ) {
+         if ( dbug > 5 ) {
             std::cerr << "MetGEOSPortal::Portal_checkdims:     dim " << i << " is " << name << " of size " << dim_size << std::endl;
          }
                        
@@ -989,13 +1046,13 @@ int MetGEOSPortal::Portal_findtime( const double desired_time ) const
     
     nt = cur_tgrid.n;
     
-    if ( debug > 4 ) {
+    if ( dbug > 4 ) {
        std::cerr << "MetGEOSPortal::Portal_findtime: Looking for time " << desired_time << " among " << nt << " times " << std::endl;
     }
     
     if ( nt > 0 ) {
     
-       if ( debug > 4 ) {
+       if ( dbug > 4 ) {
           std::cerr << "MetGEOSPortal::Portal_findtime:  time range is " << cur_tgrid.start << " to " << cur_tgrid.end << std::endl;
           std::cerr << "MetGEOSPortal::Portal_findtime:  base time is " << basetime << std::endl;
        }    
@@ -1008,7 +1065,7 @@ int MetGEOSPortal::Portal_findtime( const double desired_time ) const
        }
 
        xtime = cur_tgrid.start + idx*cur_tgrid.delta - basetime;
-       if ( debug > 4 ) {
+       if ( dbug > 4 ) {
           std::cerr << "MetGEOSPortal::Portal_findtime:  determined index " << idx << " for " << xtime << std::endl;
        }    
        
@@ -1017,7 +1074,7 @@ int MetGEOSPortal::Portal_findtime( const double desired_time ) const
           if ( ABS(xtime - desired_time) < (2.0/60.0/24.0) ) {
              result = idx;
           } else {
-            if ( debug > 5 ) {
+            if ( dbug > 5 ) {
                double xt2 = desired_time;
                double xt1 = xtime;
                std::string st1 =  cal.date1900( basetime + xt1 );
@@ -1033,7 +1090,7 @@ int MetGEOSPortal::Portal_findtime( const double desired_time ) const
        }    
     }
     
-    if ( debug > 4 ) {
+    if ( dbug > 4 ) {
        std::cerr << "MetGEOSPortal::Portal_findtime:  Returning result " << result << std::endl;
     }    
     return result;
@@ -1062,7 +1119,7 @@ void MetGEOSPortal::Portal_dim_attrs(const std::string &dname, const int var_id,
     std::string outval;
     int trial;
     
-    if ( debug > 4 ) {
+    if ( dbug > 4 ) {
        std::cerr << "MetGEOSPortal::Portal_get_attrs: " << nattrs << " Attributes:" << std::endl;
     }
     
@@ -1070,7 +1127,7 @@ void MetGEOSPortal::Portal_dim_attrs(const std::string &dname, const int var_id,
     // for each attribute of this variable...
     for ( int ia=0; ia<nattrs; ia++ ) {
     
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetGEOSPortal::Portal_get_attrs:      Attribute " << ia << " of " << nattrs << ":" << std::endl;
         } 
         
@@ -1092,7 +1149,7 @@ void MetGEOSPortal::Portal_dim_attrs(const std::string &dname, const int var_id,
         }
         
         aname.assign(attrname);
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetGEOSPortal::Portal_get_attrs:          attribute name is  " << aname <<  std::endl;
         }   
         
@@ -1102,7 +1159,7 @@ void MetGEOSPortal::Portal_dim_attrs(const std::string &dname, const int var_id,
         // how we read in the attribute value depends on the value type
         switch (attr_type) {
         case NC_CHAR:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_get_attrs:          Reading " << attr_size << " characters for attribute " << aname << std::endl;
              }   
 
@@ -1114,7 +1171,7 @@ void MetGEOSPortal::Portal_dim_attrs(const std::string &dname, const int var_id,
              
            break;
         case NC_BYTE:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_get_attrs:          Reading " << attr_size << " bytes for attribute " << aname << std::endl;
              }   
 
@@ -1124,7 +1181,7 @@ void MetGEOSPortal::Portal_dim_attrs(const std::string &dname, const int var_id,
 
            break;
         case NC_SHORT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_get_attrs:          Reading " << attr_size << " shorts for attribute " << aname << std::endl;
              }   
 
@@ -1134,7 +1191,7 @@ void MetGEOSPortal::Portal_dim_attrs(const std::string &dname, const int var_id,
                 
            break;
         case NC_INT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_get_attrs:          Reading " << attr_size << " ints for attribute " << aname << std::endl;
              }   
 
@@ -1143,7 +1200,7 @@ void MetGEOSPortal::Portal_dim_attrs(const std::string &dname, const int var_id,
              attr_val_i.clear();    
            break;
         case NC_FLOAT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_get_attrs:          Reading " << attr_size << " floats for attribute " << aname << std::endl;
              }   
 
@@ -1154,7 +1211,7 @@ void MetGEOSPortal::Portal_dim_attrs(const std::string &dname, const int var_id,
 
            break;
         case NC_DOUBLE:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_get_attrs:          Reading " << attr_size << " doubles for attribute " << aname << std::endl;
              }   
 
@@ -1164,7 +1221,7 @@ void MetGEOSPortal::Portal_dim_attrs(const std::string &dname, const int var_id,
              attr_val_d.clear();    
            break;
         default:
-           if (debug > 5 ) {
+           if (dbug > 5 ) {
               std::cerr << "MetGEOSPortal::Portal_get_attrs:   unknown attr data type " << attr_type << " for " << attrname << std::endl;
            }
            throw(badNetcdfError(NC_EBADTYPE));   
@@ -1206,14 +1263,14 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
     std::ostringstream sconv;
     int trial;
     
-    if ( debug > 4 ) {
+    if ( dbug > 4 ) {
        std::cerr << "MetGEOSPortal::Portal_getattrs: (3D) Attributes:" << std::endl;
     }
     
     // for each attribute of this variable...
     for ( int ia=0; ia<nattrs; ia++ ) {
     
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetGEOSPortal::Portal_getattrs: (3D)      Attribute " << ia << " of " << nattrs << ":" << std::endl;
         } 
         
@@ -1235,7 +1292,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
         }
         
         aname.assign(attrname);
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetGEOSPortal::Portal_getattrs:  (3D)        attribute name is  " << aname <<  std::endl;
         }   
         
@@ -1247,7 +1304,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
         // how we read in the attribute value depends on the value type
         switch (attr_type) {
         case NC_CHAR:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getattrs: (3D)         Reading " << attr_size << " characters for attribute " << aname << std::endl;
              }   
 
@@ -1261,7 +1318,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
              
            break;
         case NC_BYTE:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getattrs:  (3D)        Reading " << attr_size << " bytes for attribute " << aname << std::endl;
              }   
 
@@ -1278,7 +1335,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
 
            break;
         case NC_SHORT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getattrs: (3D)         Reading " << attr_size << " shorts for attribute " << aname << std::endl;
              }   
 
@@ -1295,7 +1352,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
                 
            break;
         case NC_INT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getattrs:  (3D)        Reading " << attr_size << " ints for attribute " << aname << std::endl;
              }   
 
@@ -1311,7 +1368,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
              attr_val_i.clear();    
            break;
         case NC_FLOAT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getattrs: (3D)         Reading " << attr_size << " floats for attribute " << aname << std::endl;
              }   
 
@@ -1338,7 +1395,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
 
            break;
         case NC_DOUBLE:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getattrs:  (3D)        Reading " << attr_size << " doubles for attribute " << aname << std::endl;
              }   
 
@@ -1354,7 +1411,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
              attr_val_d.clear();    
            break;
         default:
-           if (debug > 5 ) {
+           if (dbug > 5 ) {
               std::cerr << "MetGEOSPortal::Portal_getattrs: (3D)  unknown attr data type " << attr_type << " for " << attrname << std::endl;
            }
            throw(badNetcdfError(NC_EBADTYPE));   
@@ -1362,7 +1419,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
         
         
         // store the attribute
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetGEOSPortal::Portal_getattrs:  (3D)        Setting attribute " << aname << " to:<<" << sconv.str() << ">>" << std::endl;
         }   
         datagrid->set_attribute( aname, sconv.str() ); 
@@ -1372,22 +1429,22 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
     
     // set the bad-or-missing-data flag
     if ( badval_0 != 0.0 ) {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetGEOSPortal::Portal_getattrs: (3D)      Setting badval to 0: " << badval_0 << std::endl;
        }   
        datagrid->set_fillval( badval_0 );
     } else if ( badval_1 != 0.0 ) {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetGEOSPortal::Portal_getattrs: (3D)      Setting badval to 1: " << badval_1 << std::endl;
        }   
        datagrid->set_fillval( badval_1 );
     } else if ( badval_2 != 0.0 ) {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << " MetGEOSPortal::Portal_getattrs:  (3D)       Setting badval to 2: " << badval_2 << std::endl;
        }   
        datagrid->set_fillval( badval_1 );
     } else {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetGEOSPortal::Portal_getattrs:  (3D)     Setting badval to def: " << badval_def << std::endl;
        }   
        datagrid->set_fillval( badval_def );
@@ -1422,14 +1479,14 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
     std::ostringstream sconv;
     int trial;
     
-    if ( debug > 4) {
+    if ( dbug > 4) {
        std::cerr << "MetGEOSPortal::Portal_getattrs: (Sfc)  Attributes:" << std::endl;
     }
     
     // for each attribute of this variable...
     for ( int ia=0; ia<nattrs; ia++ ) {
     
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetGEOSPortal::Portal_getattrs: (Sfc)     Attribute " << ia << " of " << nattrs << ":" << std::endl;
         } 
         
@@ -1451,7 +1508,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
         }
         
         aname.assign(attrname);
-        if ( debug) {
+        if ( dbug) {
            std::cerr << "MetGEOSPortal::Portal_getattrs:  (Sfc)       attribute name is  " << aname <<  std::endl;
         }   
         
@@ -1463,7 +1520,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
         // how we read in the attribute value depends on the value type
         switch (attr_type) {
         case NC_CHAR:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getattrs: (Sfc)        Reading " << attr_size << " characters for attribute " << aname << std::endl;
              }   
 
@@ -1477,7 +1534,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
              
            break;
         case NC_BYTE:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getattrs: (Sfc)        Reading " << attr_size << " bytes for attribute " << aname << std::endl;
              }   
 
@@ -1494,7 +1551,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
 
            break;
         case NC_SHORT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getattrs:  (Sfc)       Reading " << attr_size << " shorts for attribute " << aname << std::endl;
              }   
 
@@ -1510,7 +1567,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
              attr_val_s.clear();
            break;
         case NC_INT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getattrs: (Sfc)        Reading " << attr_size << " ints for attribute " << aname << std::endl;
              }   
 
@@ -1526,7 +1583,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
              attr_val_i.clear();    
            break;
         case NC_FLOAT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getattrs:  (Sfc)       Reading " << attr_size << " floats for attribute " << aname << std::endl;
              }   
 
@@ -1553,7 +1610,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
 
            break;
         case NC_DOUBLE:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getattrs:  (Sfc)       Reading " << attr_size << " doubles for attribute " << aname << std::endl;
              }   
 
@@ -1569,7 +1626,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
              attr_val_d.clear();    
            break;
         default:
-           if (debug > 0 ) {
+           if (dbug > 0 ) {
               std::cerr << "MetGEOSPortal::Portal_getattrs:  (Sfc)unknown attr data type " << attr_type << " for " << attrname << std::endl;
            }
            throw(badNetcdfError(NC_EBADTYPE));   
@@ -1577,7 +1634,7 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
         
         
         // store the attribute
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
            std::cerr << "MetGEOSPortal::Portal_getattrs: (Sfc)        Setting attribute " << aname << " to:<<" << sconv.str() << ">>" << std::endl;
         }   
         datagrid->set_attribute( aname, sconv.str() ); 
@@ -1587,22 +1644,22 @@ void MetGEOSPortal::Portal_getattrs(const int var_id, const int nattrs, GridLatL
     
     // set the bad-or-missing-data flag
     if ( badval_0 != 0.0 ) {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetGEOSPortal::Portal_getattrs: (Sfc)     Setting badval to 0: " << badval_0 << std::endl;
        }   
        datagrid->set_fillval( badval_0 );
     } else if ( badval_1 != 0.0 ) {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetGEOSPortal::Portal_getattrs:  (Sfc)    Setting badval to 1: " << badval_1 << std::endl;
        }   
        datagrid->set_fillval( badval_1 );
     } else if ( badval_2 != 0.0 ) {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetGEOSPortal::Portal_getattrs:  (Sfc)       Setting badval to 2: " << badval_2 << std::endl;
        }   
        datagrid->set_fillval( badval_1 );
     } else {
-       if ( debug > 5 ) {
+       if ( dbug > 5 ) {
           std::cerr << "MetGEOSPortal::Portal_getattrs:  (Sfc)    Setting badval to def: " << badval_def << std::endl;
        }   
        datagrid->set_fillval( badval_def );
@@ -1642,7 +1699,7 @@ void MetGEOSPortal::Portal_read_attr( std::string &result, char *attr_name, int 
 
     s_value.assign(val, len);
 
-    delete val;
+    delete[] val;
    
 }
 
@@ -1774,7 +1831,7 @@ void MetGEOSPortal::Portal_read_attr( std::vector<float> &result, char *attr_nam
         result.push_back( val[i] );
     }    
     
-    delete val;
+    delete[] val;
 
 }
 
@@ -1805,7 +1862,7 @@ void MetGEOSPortal::Portal_read_attr( std::vector<double> &result, char *attr_na
         result.push_back( val[i] );
     }    
     
-    delete val;
+    delete[] val;
 
 }
 
@@ -1835,7 +1892,7 @@ void MetGEOSPortal::Portal_read_dim( std::string &dim_name, nc_type &dim_type, S
 
      c_dim_name = dim_name.c_str();
      
-     if ( debug >= 3 ) {
+     if ( dbug >= 3 ) {
         std::cerr << "MetGEOSPortal::Portal_read_dim: attempting to read dimension " << dim_name << std::endl;
      } 
      
@@ -1871,7 +1928,7 @@ void MetGEOSPortal::Portal_read_dim( std::string &dim_name, nc_type &dim_type, S
         std::cerr << "MetGEOSPortal::Portal_read_dim: no netdcf varianble id for dimension " << dim_name << std::endl;
         throw(badNetcdfError(err));
      }
-     if ( debug >= 5 ) {
+     if ( dbug >= 5 ) {
         std::cerr << "MetGEOSPortal::Portal_read_dim: var id =  " << dvar_id << std::endl;
      } 
 
@@ -1887,13 +1944,13 @@ void MetGEOSPortal::Portal_read_dim( std::string &dim_name, nc_type &dim_type, S
      if ( dndim != 1 ) {
         std::cerr << "MetGEOSPortal::Portal_read_dim: Bad number-of-dimensions for " << dim_name << " : " << dndim << std::endl;        
      }
-     if ( debug >= 5 ) {
+     if ( dbug >= 5 ) {
         std::cerr << "MetGEOSPortal::Portal_read_dim: dndim =  " << dndim << std::endl;
      }
      
      switch (dim_type) {
      case NC_FLOAT:
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
             std::cerr << "MetGEOSPortal::Portal_read_dim:    trying to read 2 of " << dim_size << " NC_FLOATs for dim " << dim_name << std::endl;
         }
         Portal_read_dim_floats( f_first, f_last, f_delta, dvar_id, dim_size );
@@ -1903,7 +1960,7 @@ void MetGEOSPortal::Portal_read_dim( std::string &dim_name, nc_type &dim_type, S
         span.floatSpec.size = dim_size;
         break;
      case NC_DOUBLE:
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
             std::cerr << "MetGEOSPortal::Portal_read_dim:    trying to read 2 of " << dim_size << " NC_DOUBLEs for dim " << dim_name << std::endl;
         }
         Portal_read_dim_doubles( d_first, d_last, d_delta, dvar_id, dim_size );
@@ -1913,7 +1970,7 @@ void MetGEOSPortal::Portal_read_dim( std::string &dim_name, nc_type &dim_type, S
         span.doubleSpec.size = dim_size;
         break;
      case NC_INT:
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
             std::cerr << "MetGEOSPortal::Portal_read_dim:    trying to read 2 of " << dim_size << " NC_INTs for dim " << dim_name << std::endl;
         }
         Portal_read_dim_ints( i_first, i_last, i_delta, dvar_id, dim_size );
@@ -2002,19 +2059,19 @@ void MetGEOSPortal::Portal_read_dim( std::string &dim_name, std::vector<real> &v
      
      switch (dim_type) {
      case NC_FLOAT:
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
             std::cerr << "MetGEOSPortal::Portal_read_dim:    trying to read " << dim_size << " NC_FLOATs for dim " << dim_name << std::endl;
         }
         Portal_read_dim_floats( vals, dvar_id, dim_size );
         break;
      case NC_DOUBLE:
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
             std::cerr << "MetGEOSPortal::Portal_read_dim:    trying to read " << dim_size << " NC_DOUBLEs for dim " << dim_name << std::endl;
         }
         Portal_read_dim_doubles( vals, dvar_id, dim_size );
         break;
      case NC_INT:
-        if ( debug > 5 ) {
+        if ( dbug > 5 ) {
             std::cerr << "MetGEOSPortal::Portal_read_dim:    trying to read " << dim_size << " NC_INTs for dim " << dim_name << std::endl;
         }
         Portal_read_dim_ints( vals, dvar_id, dim_size );
@@ -2099,6 +2156,7 @@ void MetGEOSPortal::update_vgrid()
     native_nzs = cur_vgrid.nLevs;
 
 }
+
 void MetGEOSPortal::update_tgrid()
 {
 
@@ -2133,6 +2191,12 @@ void MetGEOSPortal::Portal_read_all_dims()
        cur_tgrid.start = Portal_time_nativeTo1900( span.doubleSpec.first );
        cur_tgrid.end   = Portal_time_nativeTo1900( span.doubleSpec.last  );
        cur_tgrid.delta = Portal_deltime_nativeTo1900( span.doubleSpec.delta );
+       cur_tgrid.n     = span.doubleSpec.size;
+       break;
+    case NC_FLOAT:
+       cur_tgrid.start = Portal_time_nativeTo1900( static_cast<double>(span.floatSpec.first) );
+       cur_tgrid.end   = Portal_time_nativeTo1900( static_cast<double>(span.floatSpec.last)  );
+       cur_tgrid.delta = Portal_deltime_nativeTo1900( static_cast<double>(span.floatSpec.delta) );
        cur_tgrid.n     = span.doubleSpec.size;
        break;
     case NC_INT:
@@ -2207,6 +2271,51 @@ void MetGEOSPortal::Portal_read_all_dims()
 
 
 
+void MetGEOSPortal::Portal_read_dim_doubles( std::vector<real>&vals, int varid, size_t len )
+{
+    double* buffr;
+    int err;
+    size_t zero = 0;
+    size_t count;
+    ptrdiff_t stride;
+    double delta;
+    double val;
+    int trial;
+    
+    buffr = new double[len];
+    count = len;
+    stride = 1;
+
+    //- std::cerr << "reading " << len << " double dims " << std::endl;    
+    trial = 0;
+    do {
+       err = nc_get_vars_double( ncid, varid, &zero, &count, &stride, buffr );
+    } while ( try_again( err, trial ) );       
+    if ( err != NC_NOERR ) {
+       std::cerr << "MetGEOSPortal::Portal_read_dim_doubles: Failed trying to read " << len << " NC_DOUBLEs " << std::endl;
+       throw(badNetcdfError(err));
+    }
+    
+    if ( len > 1 ) {
+       delta = buffr[1] - buffr[0];
+    } else {
+       delta = 0;
+    }
+    
+    vals.clear();
+    vals.reserve(len);
+    for ( int j=0; j<len; j++ ) {
+        val = buffr[j];
+        if ( (dbug > 5) && (j < 5) ) {
+           std::cerr << "MetGEOSPortal::Portal_read_dim_doubles: dim[" << j << "] = " << val << std::endl;
+        }
+        vals.push_back( val );
+    }
+    
+    delete[] buffr;
+    
+}
+
 void MetGEOSPortal::Portal_read_dim_doubles( double &first, double &last, double &delta, int varid, size_t len )
 {
     double buffr[2];
@@ -2234,55 +2343,20 @@ void MetGEOSPortal::Portal_read_dim_doubles( double &first, double &last, double
 
 }
 
-void MetGEOSPortal::Portal_read_dim_doubles( std::vector<real>&vals, int varid, size_t len )
-{
-    double buffr[2];
-    int err;
-    size_t zero = 0;
-    size_t count = 2;
-    ptrdiff_t stride;
-    double delta;
-    double val;
-    int trial;
-    
-    stride = len - 1;
-
-    //- std::cerr << "reading " << len << " double dims " << std::endl;    
-    trial = 0;
-    do {
-       err = nc_get_vars_double( ncid, varid, &zero, &count, &stride, buffr );
-    } while ( try_again( err, trial ) );       
-    if ( err != NC_NOERR ) {
-       std::cerr << "MetGEOSPortal::Portal_read_dim_doubles: Failed trying to read " << len << " NC_DOUBLEs " << std::endl;
-       throw(badNetcdfError(err));
-    }
-    
-    delta = ( buffr[1] - buffr[0] )/(len - 1);
-    
-    vals.clear();
-    vals.reserve(len);
-    for ( int j=0; j<len; j++ ) {
-        val = buffr[0] + j*delta;
-        if ( (debug > 5) && (j < 5) ) {
-           std::cerr << "MetGEOSPortal::Portal_read_dim_doubles: dim[" << j << "] = " << val << std::endl;
-        }
-        vals.push_back( val );
-    }
-    
-}
-
 void MetGEOSPortal::Portal_read_dim_floats( std::vector<real>&vals, int varid, size_t len )
 {
-    float buffr[2];
+    float* buffr;
     int err;
     size_t zero = 0;
-    size_t count = 2;
+    size_t count;
     ptrdiff_t stride;
     float delta;
     float val;
     int trial;
     
-    stride = len - 1;
+    buffr = new float[len];
+    count = len;
+    stride = 1;
     
     trial = 0;
     do {
@@ -2293,16 +2367,23 @@ void MetGEOSPortal::Portal_read_dim_floats( std::vector<real>&vals, int varid, s
        throw(badNetcdfError(err));
     }
     
-    delta = ( buffr[1] - buffr[0] )/(len - 1);
+    if ( len > 1 ) {
+       delta = buffr[1] - buffr[0] ;
+    } else {
+       delta = 0;
+    }
+
     vals.clear();
     vals.reserve(len);
     for ( int j=0; j<len; j++ ) {
-        val = buffr[0] + j*delta;
-        if ( (debug > 5) && (j < 5) ) {
+        val = buffr[j];
+        if ( (dbug > 5) && (j < 5) ) {
            std::cerr << "MetGEOSPortal::Portal_read_dim_floats: dim[" << j << "] = " << val << std::endl;
         }
         vals.push_back( val );
     }
+    
+    delete[] buffr;
 
 }
 
@@ -2344,7 +2425,9 @@ void MetGEOSPortal::Portal_read_dim_ints( std::vector<real>&vals, int varid, siz
     int val;
     int trial;
     
-    stride = len - 1;
+    buffr = new int[len];
+    count = len;
+    stride = 1;
     
     trial = 0;
     do {
@@ -2355,17 +2438,23 @@ void MetGEOSPortal::Portal_read_dim_ints( std::vector<real>&vals, int varid, siz
        throw(badNetcdfError(err));
     }
     
-    delta = (buffr[1] - buffr[0])/stride;
+    if ( len > 1 ) {
+       delta = buffr[1] - buffr[0];
+    } else {
+       delta = 0;
+    } 
     
     vals.clear();
     vals.reserve(len);
     for ( int j=0; j<len; j++ ) {
-        val = buffr[0] + j*delta;
-        if ( (debug > 5) && (j < 5) ) {
+        val = buffr[j];
+        if ( (dbug > 5) && (j < 5) ) {
            std::cerr << "MetGEOSPortal::Portal_read_dim_ints: dim[" << j << "] = " << val << std::endl;
         }
         vals.push_back( static_cast<real>(val) );
     }
+    
+    delete[] buffr;
     
 }
 
@@ -2412,6 +2501,19 @@ void MetGEOSPortal::Portal_read_data_floats( std::vector<real>&vals, int var_id,
      int nchunks;
      ptrdiff_t chunksize;
      int toread;
+     
+     my_starts[0] = 0;
+     my_starts[1] = 0;
+     my_starts[2] = 0;
+     my_starts[3] = 0;
+     my_counts[0] = 0;
+     my_counts[1] = 0;
+     my_counts[2] = 0;
+     my_counts[3] = 0;
+     my_strides[0] = 0;
+     my_strides[1] = 0;
+     my_strides[2] = 0;
+     my_strides[3] = 0;
      
      if ( ndims == 3 ) {
         // three-dimensional surface
@@ -2468,24 +2570,23 @@ void MetGEOSPortal::Portal_read_data_floats( std::vector<real>&vals, int var_id,
      } catch(...) {
         throw (badNoMem());
      }
-     if ( debug > 5 ) {
+     if ( dbug > 5 ) {
         std::cerr << "MetGEOSPortal::Portal_read_data: (" << ndims << "D):  about to read data! " <<  std::endl;
      }
 
      vals.clear();
      vals.reserve(totsize);
-     //vals.resize(totsize);
 
 
      err = NC_NOERR;
-     bp = buffr;
+     bp = &(buffr[0]);
      int isample = toread/10;
      for ( int ichunk = 0; (ichunk < nchunks) && (err == NC_NOERR) ; ichunk++ ) {
 
          trial = 0;
          do {
 
-            if ( debug > 5 ) {
+            if ( dbug > 5 ) {
                std::cerr << "MetGEOSPortal::Portal_read_data: (" << ndims 
                          << "D):  about to read data chunk " << ichunk << " of " << nchunks
                          << " = " << toread << " floats (trial " << trial << ")" <<  std::endl;
@@ -2505,7 +2606,7 @@ void MetGEOSPortal::Portal_read_data_floats( std::vector<real>&vals, int var_id,
                   // sometimes we get a "successful" read, but the
                   // values are all zeroes.
                   // Detect this and treat it as a failure.
-                  if ( debug > 0 ) {
+                  if ( dbug > 0 ) {
                      std::cerr << "MetGEOSPortal::Portal_read_data: (" << ndims << "D):  Read all zeroes! " <<  std::endl;
                   }
                   err = NC_ERANGE;
@@ -2516,7 +2617,7 @@ void MetGEOSPortal::Portal_read_data_floats( std::vector<real>&vals, int var_id,
          } while ( try_again( err, trial ) );       
 
          if ( err != NC_NOERR ) {
-            delete buffr;   
+            delete[] buffr;   
             throw(badNetcdfError(err));
          }
 
@@ -2540,8 +2641,40 @@ void MetGEOSPortal::Portal_read_data_floats( std::vector<real>&vals, int var_id,
          }
      }
 
-     delete buffr;   
+     delete[] buffr;   
 }
+
+
+void MetGEOSPortal::set_verticalBase( const std::string quantity, const std::string units, const std::vector<real>* levels, real scale, real offset )
+{
+    std::string vunitz;
+
+    MetGridData::set_verticalBase( quantity, units, levels, scale, offset );
+    
+    if ( quantity == pressure_name || quantity == "air_pressure" ) {
+       strict = strict | StrictAboutVgrid;
+       set_vgrid(2); 
+    } else if ( quantity == "Model-Levels" ) {
+       strict = strict | StrictAboutVgrid;
+       set_vgrid(1); 
+    }
+}
+
+void MetGEOSPortal::set_verticalBase( GridField3D *grid )
+{
+    std::string vunitz;
+
+    MetGridData::set_verticalBase( grid );
+    
+    if ( vquant == pressure_name || vquant == "air_pressure" ) {
+       strict = strict | StrictAboutVgrid;
+       set_vgrid(2); 
+    } else if ( vquant == "Model-Levels" ) {
+       strict = strict | StrictAboutVgrid;
+       set_vgrid(1); 
+    }
+
+}    
 
 
 /// 3D
@@ -2589,7 +2722,7 @@ void MetGEOSPortal::Portal_getvar(const std::string quantity, const double time,
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
         }
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << "MetGEOSPortal::Portal_getvar: (3D)  variable <<" << quantity << ">> is var_id " << var_id << std::endl;
         }
         // get basic info about this variable
@@ -2600,12 +2733,12 @@ void MetGEOSPortal::Portal_getvar(const std::string quantity, const double time,
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
         }
-        if ( debug  > 4) {
+        if ( dbug  > 4) {
            std::cerr << "MetGEOSPortal::Portal_getvar: (3D)   variable id " <<  var_id << " has type=" << var_type << ", " << nvdims << " dims, " 
            << var_nattrs << " attrs" << std::endl;
         }
 
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << "MetGEOSPortal::Portal_getvar: (3D)   variable id " <<  var_id << std::endl;
         }
         
@@ -2637,12 +2770,12 @@ void MetGEOSPortal::Portal_getvar(const std::string quantity, const double time,
         // set up the grid dimensions for the data object
         xlons = new std::vector<real>;
         xlats = new std::vector<real>;
-        set_hgrid( test_hgrid, *xlons, *xlats );
+        query_hgrid( test_hgrid, *xlons, *xlats );
         xnlons = xlons->size();
         xnlats = xlats->size();
         
         xzs = new std::vector<real>;
-        set_vgrid( test_vgrid, *xzs, vq, vu );
+        query_vgrid( test_vgrid, *xzs, vq, vu );
         xnzs = xzs->size();
         grid3d->set_vertical(vq);
         if ( vu == "mb" || vu == "hPa" ) {
@@ -2655,7 +2788,7 @@ void MetGEOSPortal::Portal_getvar(const std::string quantity, const double time,
         grid3d->set_vunits(vu, vscale, voffset);
         
         if ( nlons != xnlons || nlats != xnlats || nzs != xnzs ) {
-           if ( debug > 0 ) {
+           if ( dbug > 0 ) {
               std::cerr << "MetGEOSPortal::Portal_getvar: (3D)         Dims Mismatch:  " << nlons << "/" << xnlons 
               << ", " << nlats << "/" << xnlats 
               << ", " << nzs << "/" << xnzs  << std::endl;
@@ -2707,20 +2840,20 @@ void MetGEOSPortal::Portal_getvar(const std::string quantity, const double time,
         // how we read in the attribute value depends on the value type
         switch (var_type) {
         case NC_FLOAT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getvar: (3D)         Reading " << nlons*nlats*nzs  << " floats for variable " << quantity << std::endl;
              }
           
              xdata = new std::vector<real>;
              Portal_read_data_floats( *xdata, var_id, 3, vstarts, vcounts, vstride );
            
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getvar: (3D)   finished reading data! " <<  std::endl;
              }
 
            break;
         default:
-           if (debug > 0) {
+           if (dbug > 0) {
               std::cerr << "MetGEOSPortal::Portal_getvar: (3D)  unexpected var data type " << var_type << " for " << quantity << std::endl;
            }
            throw(badNetcdfError(NC_EBADTYPE));   
@@ -2781,7 +2914,7 @@ void MetGEOSPortal::Portal_getvar(const std::string quantity, const double time,
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
         }
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << "MetGEOSPortal::Portal_getvar: (Sfc) variable <<" << quantity << ">> is var_id " << var_id << std::endl;
         }
         // get basic info about this variable
@@ -2792,12 +2925,12 @@ void MetGEOSPortal::Portal_getvar(const std::string quantity, const double time,
         if ( err != NC_NOERR ) {
            throw(badNetcdfError(err));
         }
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << "MetGEOSPortal::Portal_getvar: (Sfc) variable id " <<  var_id << " has type=" << var_type << ", " << nvdims << " dims, " 
            << var_nattrs << " attrs" << std::endl;
         }
 
-        if ( debug  > 4) {
+        if ( dbug  > 4) {
            std::cerr << "MetGEOSPortal::Portal_getvar: (Sfc) variable id " <<  var_id << std::endl;
         }
         
@@ -2829,12 +2962,12 @@ void MetGEOSPortal::Portal_getvar(const std::string quantity, const double time,
         // set up the grid dimensions for the data object
         xlons = new std::vector<real>;
         xlats = new std::vector<real>;
-        set_hgrid( test_hgrid, *xlons, *xlats );
+        query_hgrid( test_hgrid, *xlons, *xlats );
         xnlons = xlons->size();
         xnlats = xlats->size();
         
         if ( nlons != xnlons || nlats != xnlats ) {
-           if ( debug > 0 ) {
+           if ( dbug > 0 ) {
               std::cerr << "MetGEOSPortal::Portal_getvar: (Sfc)       Dims Mismatch:  " << nlons << "/" << xnlons 
               << ", " << nlats << "/" << xnlats  << std::endl;
            }   
@@ -2880,20 +3013,20 @@ void MetGEOSPortal::Portal_getvar(const std::string quantity, const double time,
         // how we read in the attribute value depends on the value type
         switch (var_type) {
         case NC_FLOAT:
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getvar: (Sfc)       Reading " << nlons*nlats*nzs  << " floats for variable " << quantity << std::endl;
              }   
              
              xdata = new std::vector<real>;
              Portal_read_data_floats( *xdata, var_id, 2, vstarts, vcounts, vstride );
              
-             if ( debug > 5 ) {
+             if ( dbug > 5 ) {
                 std::cerr << "MetGEOSPortal::Portal_getvar: (Sfc) finished reading data! " <<  std::endl;
              }
 
            break;
         default:
-           if (debug > 5) {
+           if (dbug > 5) {
               std::cerr << "MetGEOSPortal::Portal_getvar: (Sfc) unexpected var data type " << var_type << " for " << quantity << std::endl;
            }
            throw(badNetcdfError(NC_EBADTYPE));   
@@ -2947,7 +3080,7 @@ void MetGEOSPortal::readPortal( const std::string quantity, const std::string ti
         prep( quantity, time );
      
 
-        if ( debug > 3 ) {
+        if ( dbug > 3 ) {
      
            std::cerr << "MetGEOSPortal::readPortal: (3D) quantity=" << quantity << std::endl;
            std::cerr << "MetGEOSPortal::readPortal: (3D) time=" << time << std::endl;
@@ -2977,12 +3110,12 @@ void MetGEOSPortal::readPortal( const std::string quantity, const std::string ti
    } else {
        // the desired time is bracketed by two data set snapshot times
        // read in two data fields and interpolate. (Sigh)
-       if ( debug > 4 ) {
+       if ( dbug > 4 ) {
           std::cerr << "MetGEOSPortal::readPortal: (3D) bracketted time: getting " << preTime << " to " << postTime << ", or ";
        }
        preData = dynamic_cast<GridLatLonField3D*>(grid3d->duplicate());
        ctime1 =  time2Cal(preTime);
-       if ( debug > 4 ) {
+       if ( dbug > 4 ) {
           std::cerr << ctime1 << " to ";
        }
        preData->set_time( preTime, ctime1 );
@@ -2990,7 +3123,7 @@ void MetGEOSPortal::readPortal( const std::string quantity, const std::string ti
        
        postData = dynamic_cast<GridLatLonField3D*>(grid3d->duplicate());
        ctime2 =  time2Cal(postTime);
-       if ( debug > 4 ) {
+       if ( dbug > 4 ) {
           std::cerr << ctime2 << std::endl;
        }
        postData->set_time( postTime, ctime2 );
@@ -3065,7 +3198,7 @@ void MetGEOSPortal::readPortal( const std::string quantity, const std::string ti
         //- std::cerr << "done with setup for sfc read" << std::endl;
      
      
-        if ( debug > 3 ) {
+        if ( dbug > 3 ) {
            std::cerr << "MetGEOSPortal::readPortal: (Sfc) quantity=" << quantity << std::endl;
            std::cerr << "MetGEOSPortal::readPortal: (Sfc) ctime=" << time << std::endl;
            std::cerr << "MetGEOSPortal::readPortal: (Sfc) mtime=" << mtime << std::endl;
@@ -3099,12 +3232,12 @@ void MetGEOSPortal::readPortal( const std::string quantity, const std::string ti
      } else {
         // the desired time is bracketed by two data set snapshot times
         // read in two data fields and interpolate. (Sigh)
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << "MetGEOSPortal::readPortal: (Sfc) bracketted time: getting " << preTime << " to " << postTime << ", or ";
         }
         preData = dynamic_cast<GridLatLonFieldSfc*>(grid2d->duplicate());
         ctime1 =  time2Cal(preTime);
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << ctime1 << " to ";
         }
         preData->set_time( preTime, ctime1 );
@@ -3112,7 +3245,7 @@ void MetGEOSPortal::readPortal( const std::string quantity, const std::string ti
        
         postData = dynamic_cast<GridLatLonFieldSfc*>(grid2d->duplicate());
         ctime2 =  time2Cal(postTime);
-        if ( debug > 4 ) {
+        if ( dbug > 4 ) {
            std::cerr << ctime2 << std::endl;
         }
         postData->set_time( postTime, ctime2 );
@@ -3172,10 +3305,12 @@ bool MetGEOSPortal::vConvert( GridField3D *input, std::string quant, std::string
     
     input->dims( &nlons, &nlats, &nzs );
     
+    // get the current vertical quantity
     currvq = input->vertical();
+
     if ( currvq == pressure_name && quant == palt_name ) {
        vcoord = input->levels();
-       if ( debug > 1 ) {
+       if ( dbug > 1 ) {
            std::cerr << "**** converting " << currvq << " to " << quant 
                      << " for " << input->quantity() << " grid " << std::endl;
        }
@@ -3206,7 +3341,7 @@ bool MetGEOSPortal::vConvert( GridField3D *input, std::string quant, std::string
        return true;
     } else if ( currvq == palt_name && quant == pressure_name ) {
        vcoord = input->levels();
-       if ( debug > 1 ) {
+       if ( dbug > 1 ) {
            std::cerr << "**** converting " << currvq << " to " << quant 
                      << " for " << input->quantity() << " grid " << std::endl;
        }

@@ -114,6 +114,16 @@ void MetGridSBRot::assign(const MetGridSBRot& src)
     tropgen = src.tropgen;
 }    
 
+MetGridData* MetGridSBRot::MetGridCopy()
+{
+     MetGridSBRot* newthing;
+     
+     newthing = new MetGridSBRot();
+     newthing->assign( *this );
+     
+     return newthing;
+}
+
 void MetGridSBRot::setup_vars()
 {
     vWindStuff vw;
@@ -356,46 +366,95 @@ int MetGridSBRot::get_cal() const
 
 void MetGridSBRot::setOption( const std::string &name, const std::string &value )
 {
+     if ( name == "test" ) {
+        metfcn->setOption( name, value);
+     } else {
+        MetGridLatLonData::setOption( name, value );
+     }
 }
 
 void MetGridSBRot::setOption( const std::string &name, int value )
 {
+     if ( name == "test" ) {
+        metfcn->setOption( name, value);
+     } else {
+        MetGridLatLonData::setOption( name, value );
+     }
 }
 
 void MetGridSBRot::setOption( const std::string &name, float value )
 {
+     if ( name == "test" ) {
+        metfcn->setOption( name, value);
+     } else {
+        MetGridLatLonData::setOption( name, value );
+     }
 }
 
 void MetGridSBRot::setOption( const std::string &name, double value )
 {
+     if ( name == "test" ) {
+        metfcn->setOption( name, value);
+     } else {
+        MetGridLatLonData::setOption( name, value );
+     }
 }
 
 bool MetGridSBRot::getOption( const std::string &name, std::string &value )
 {
-   value = "";
-   return false;
+     bool result;
+     
+     if ( name == "test" ) {
+        result = metfcn->getOption( name, value );
+     } else {
+        result = MetGridLatLonData::getOption( name, value );
+     }
+     
+     return result;
 }
 
 
 bool MetGridSBRot::getOption( const std::string &name, int &value )
 {
-   value = 0;
-   return false;
+     bool result;
+     
+     if ( name == "test" ) {
+        result = metfcn->getOption( name, value );
+     } else {
+        result = MetGridLatLonData::getOption( name, value );
+     }
+     
+     return result;
 }
 
 
 bool MetGridSBRot::getOption( const std::string &name, float &value )
 {
-   value = 0.0;
-   return false;
+     bool result;
+     
+     if ( name == "test" ) {
+        result = metfcn->getOption( name, value );
+     } else {
+        result = MetGridLatLonData::getOption( name, value );
+     }
+     
+     return result;
 }
 
 
 bool MetGridSBRot::getOption( const std::string &name, double &value )
 {
-   value = 0.0;
-   return false;
+     bool result;
+     
+     if ( name == "test" ) {
+        result = metfcn->getOption( name, value );
+     } else {
+        result = MetGridLatLonData::getOption( name, value );
+     }
+     
+     return result;
 }
+
 
 
 
@@ -538,7 +597,7 @@ GridLatLonField3D* MetGridSBRot::new_directGrid3D( const std::string quantity, c
        throw (MetGridData::baddataload());
     }   
     
-    if ( debug > 2 ) {
+    if ( dbug > 2 ) {
        std::cerr << "MetGridSBRot::new_directGrid3D: reading " << quantity << " @ " << time << std::endl;
     }
 
@@ -627,7 +686,7 @@ GridLatLonFieldSfc* MetGridSBRot::new_directGridSfc( const std::string quantity,
        sfcname = "sfc";   // note where we are evaluating the quantity, below
     }
 
-    if ( debug > 2 ) {
+    if ( dbug > 2 ) {
        std::cerr << "MetGridSBRot::new_directGridSfc: reading " << quantity << " (" << quantname << " on " << sfcname << ") @ " << time << std::endl;
     }
 

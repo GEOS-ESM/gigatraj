@@ -316,6 +316,18 @@ class Swarm {
            */
            void stop();    
      
+        protected:
+           friend class Swarm;
+           
+           /// initializes the iterator
+           /*! This allows the Swarm to initialize an existing 
+               Swarm::Iter object
+
+               \param init which of the local processor's parcels to point to
+               \param flk the Flock for which this is an iterator
+           */
+           void set(int init, Swarm *flk);
+           
         private:
            // which parcel on this processor is the currently-indexed?
            int my_parcel;
@@ -514,11 +526,11 @@ class Swarm {
                      Regardless of mode setting, all met-reading processors
                      will throw a badparcelindex error from this method.
 
-          \return a reference to the desired Parcel. Note that this reference points to 
-                  a member of the Swarm and thus should never be deleted!.
+          \return a copy of the desired Parcel. Note that changing this Parcel
+                    does NOT affect the original that is still in the Swarm.
                            
      */
-     Parcel& get( const int n, const int mode=0 ) const;
+     Parcel get( const int n, const int mode=0 ) const;
      
      /// operator [] override
      /*! This method overrides the [] operator, providing a convenient notation
@@ -529,10 +541,11 @@ class Swarm {
           \param n the index of the parcel to be replaced.  (This is relative
                   to the entire Swarm, not just one processor's subset.)
 
-          \return a reference to the desired Parcel. Note that this reference points to 
-                  a member of the Swarm and thus should never be deleted!.
+          \return a copy of the desired Parcel. Note that changing this Parcel
+                    does NOT affect the original that is still in the Swarm.
+                           
      */
-     Parcel& operator[]( int n );
+     Parcel operator[]( int n );
      
 
      /// adds a single parcel to the Swarm

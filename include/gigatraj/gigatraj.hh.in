@@ -356,6 +356,8 @@ namespace gigatraj {
 */
 
 
+// where any configuration files may be found
+#define GTCONFIGDIR "@prefix@/share/@PACKAGE@"
 
 //     use double-precision instead of regular floats
 #define DO_DOUBLE @DO_DOUBLE@
@@ -373,6 +375,12 @@ namespace gigatraj {
 #define DO_MPI @DO_MPI@
 #if DO_MPI == 1
 #define USE_MPI
+#endif
+
+//    use the netcdf library 
+#define DO_NETCDF @DO_NETCDF@
+#if DO_NETCDF == 1
+#define USE_NETCDF
 #endif
 
 //     make longitudes run from 0 to 360
@@ -412,10 +420,16 @@ namespace gigatraj {
 #define USE_GEOSFP
 #endif
 
+// Use MyGEOS met data
+#define DO_MYGEOS @DO_MYGEOS@
+#if DO_MYGEOS == 1
+#define USE_MYGEOS
+#endif
 
 
-// In POSIX environments, the usual convetion is for
-// programs to exit eith 0 on success and some number 1-255
+
+// In POSIX environments, the usual convention is for
+// programs to exit with 0 on success and some number 1-255
 // to indicate failure.  By defining these symbolically here,
 // we can make it easier to adapt gigatraj to other environments.
 #ifndef EXIT_SUCCESS
@@ -469,6 +483,7 @@ typedef double real;
 #define EXP exp
 #define ISOK(x) (isnan(x) != 1)
 #define TRUNC trunc
+#define ROUND round
 #define RNAN nan
 #define FINITE finite
 
@@ -511,6 +526,7 @@ typedef float real;
 #define EXP expf
 #define ISOK(x) (isnan(x) != 1 )
 #define TRUNC truncf
+#define ROUND roundf
 #define RNAN nanf
 #define FINITE finitef
 

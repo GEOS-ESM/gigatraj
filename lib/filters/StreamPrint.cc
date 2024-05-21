@@ -54,6 +54,7 @@ StreamPrint :: StreamPrint( std::ostream& output, const std::string fmtstr )
 // FmtSpec constructor
 StreamPrint :: FmtSpec :: FmtSpec(const std::string type0, int start0, int len0, int fract0, std::string str0, int align0)
 {
+    align = 0;
     defaults( type0, start0, len0, fract0, str0, align0 );
 
 }
@@ -992,6 +993,8 @@ void StreamPrint :: apply( Swarm& p )
                  throw (StreamPrint::badstreamprint());
               }
            }
+           
+           delete px;
 
         }
 

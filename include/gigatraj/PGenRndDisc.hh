@@ -1,8 +1,6 @@
 #ifndef PGENRNDDISC_H
 #define PGENRNDDISC_H
 
-#include "config.h"
-
 #include <cstdlib>
 #include <deque>
 #include <list>

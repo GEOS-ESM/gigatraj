@@ -341,10 +341,18 @@ int main()
     
 
     // set up surfaces
-    omega_sfc = *(omega_grid.extractSfc(5));
-    palt_sfc = *(palt_grid.extractSfc(5));
-    paltdot_sfc = *(paltdot_grid.extractSfc(5));
-    paltdot_sfc2 = *(dynamic_cast<GridLatLonFieldSfc*>( paltdot.calc( omega_sfc, palt_sfc, OTF_MKS ) ));
+    tmp2 = omega_grid.extractSfc(5);
+    omega_sfc = *(tmp2);
+    delete tmp2;
+    tmp2 = palt_grid.extractSfc(5);
+    palt_sfc = *(tmp2);
+    delete tmp2;
+    tmp2 = paltdot_grid.extractSfc(5);
+    paltdot_sfc = *(tmp2);
+    delete tmp2;
+    tmp2 = dynamic_cast<GridLatLonFieldSfc*>( paltdot.calc( omega_sfc, palt_sfc, OTF_MKS ) );
+    paltdot_sfc2 = *(tmp2);
+    delete tmp2;
     if ( paltdot_sfc2.quantity() != paltdot_grid.quantity() ) {
        cerr << "10: paltdot_sfc and paltdot_grid quantities do not match: <<" << paltdot_grid.quantity() << ">> vs <<" <<  paltdot_sfc.quantity() << ">>" << endl;
        exit(1);

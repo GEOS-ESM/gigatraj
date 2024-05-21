@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
        metsrc->setPgroup(grp);    
     }
 
-    //metsrc->debug = 1;
+    //metsrc->dbug = 1;
     
     if ( metsrc->useMet() ) {
     
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
     
     
         /* sample the temperature */
-        //metsrc->debug = 1;
+        //metsrc->dbug = 1;
         val0 = metsrc0->getData( "t", 3.0, 0.0, 45.0, 0.0 );
         val = metsrc->getData( "t", 3.0, 0.0, 45.0, 0.0 );
         if ( mismatch(val0, val) ) {

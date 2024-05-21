@@ -48,6 +48,7 @@ int main()
     real duration;
     int status;
     static PGenFile gen;
+    std::string fname;
     
     dt = 0.01 ; // 15-minute time step
     
@@ -56,7 +57,8 @@ int main()
     p.setMet( metsrc );
 
     // read in a set of parcels for comparison with traced parcels
-    std::vector<Parcel>* vbunch0 = gen.create_vector(p, "test_traj001.dat");
+    fname = datadir("srcdir") + "test_traj001.dat";
+    std::vector<Parcel>* vbunch0 = gen.create_vector(p, fname );
 
     cout.setf(std::ios::fixed);
 
@@ -71,7 +73,7 @@ int main()
        /////////////////////////////////////////////////////////////////////////
 
        // initialize a vector container of parcels
-       std::vector<Parcel>* vbunch = gen.create_vector(p, "test_traj001.dat");
+       std::vector<Parcel>* vbunch = gen.create_vector(p, fname);
 
        // trace them forward
        for ( time=0.0; time<=duration ; time+=dt )
@@ -109,7 +111,7 @@ int main()
        /////////////////////////////////////////////////////////////////////////
        
        // initialize a list container of parcels
-       std::list<Parcel>* Lbunch = gen.create_list(p, "test_traj001.dat");
+       std::list<Parcel>* Lbunch = gen.create_list(p, fname);
        // trace them forward
        for ( time=0.0; time<=duration ; time+=dt )
        {
@@ -155,7 +157,7 @@ int main()
        /////////////////////////////////////////////////////////////////////////
        
        // initialize a deque container of parcels
-       std::deque<Parcel>* Dbunch = gen.create_deque(p, "test_traj001.dat");
+       std::deque<Parcel>* Dbunch = gen.create_deque(p, fname );
        // trace them forward
        for ( time=0.0; time<=duration ; time+=dt )
        {
@@ -202,7 +204,7 @@ int main()
        /////////////////////////////////////////////////////////////////////////
        
        // initialize a Flock container of parcels
-       Flock* Fbunch = gen.create_Flock(p, "test_traj001.dat");
+       Flock* Fbunch = gen.create_Flock(p, fname );
        // trace them forward
        for ( time=0.0; time<=duration ; time+=dt )
        {
@@ -248,7 +250,7 @@ int main()
        /////////////////////////////////////////////////////////////////////////
        
        // initialize a Swarm pseudo-container of parcels
-       Swarm* Sbunch = gen.create_Swarm(p, "test_traj001.dat");
+       Swarm* Sbunch = gen.create_Swarm(p, fname);
        // trace them forward
        for ( time=0.0; time<=duration ; time+=dt )
        {

@@ -164,7 +164,7 @@ int main()
            << ", " << "-0.386605" << " vs. " << tstvals[2] << endl;
        exit(1);
     }
-    free(tstvals);
+    delete[] tstvals;
     
     
 

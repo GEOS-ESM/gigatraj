@@ -343,6 +343,11 @@ class Configuration {
       */
       int load(int argc, char * const argv[] );
 
+      /// resets all parameter settings
+      /*! clears the Configuration object of all parameters and settings
+      
+      */
+      void clear();
        
       /// retrieves a configuration parameter setting
       /*! get retrieves a parameter setting.  It should be called after the
@@ -507,6 +512,7 @@ class Configuration {
       */
       void help(const std::string intro="", const std::string postscript="");
 
+
    private:
 
       /// delete these:
@@ -537,20 +543,32 @@ class Configuration {
 
       char *cstring( std::string s );
       
-     /*! structure for holding getopts information
+     /*! class for holding getopts information
      */
-     struct gostuff {
-         int n;
-         char **names;
-         char *shortopts;
+     class GoInfo {
+     
+         public:
+            int n;
+            char **names;
+            char *shortopts;
 #ifdef USE_LONGARGS
-         struct option *longopts;
+            struct option *longopts;
 #endif
+       
+          /// constructor
+          GoInfo();
+          
+          // destructor
+          ~GoInfo();
+          
+          void clear();
+     
      };
 
-      void setupGetopts( struct gostuff &go );
+     void setupGetopts( GoInfo &go );
 
-      void takedownGetopts( struct gostuff &go );
+     void takedownGetopts( GoInfo &go );
+     
 
       /// extracts configuration files and resource files from the command line
       /*! cmdLineConfigs goes through the command-line arguments and identifies any

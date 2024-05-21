@@ -11,13 +11,13 @@
 #include "gigatraj/MetGEOSDistributedCubedData.hh"
 #include "gigatraj/CalGregorian.hh"
 #include "gigatraj/Earth.hh"
-#include "gigatraj/IntegRK4a_GEOS.hh"
+#include "gigatraj/IntegRK4_GEOS.hh"
 
 using namespace gigatraj;
 
 static Earth e;
 const gigatraj::CalGregorian calendar;
-gigatraj::IntegRK4a_GEOS rk4a;
+gigatraj::IntegRK4_GEOS RK4;
 
 // Functions to be call by GEOS Fortran
 extern "C" {
@@ -30,7 +30,7 @@ extern "C" {
    void getData     (MetGEOSDistributedData * metSrc, char* ctime, char* quantity, int n, float* lons, float* lats, float* zs, float* values);
    void getData2d     (MetGEOSDistributedData * metSrc, char* ctime, char* quantity, int n, float* lons, float* lats, float* values);
                              
-   void rk4a_advance( MetGEOSDistributedData *metsrc, char* ctime, double dt, int n, float* lons, float* lats, float* levs);
+   void RK4_advance( MetGEOSDistributedData *metsrc, char* ctime, double dt, int n, float* lons, float* lats, float* levs);
 //   void test_Field3D(GridLatLonField3D*);
    void test_metData(MetGEOSDistributedData *, double, int, float*, float*, float*, float*, float*, float*);
 
@@ -108,11 +108,11 @@ void test_Field3D( GridLatLonField3D * field3d) {
     std::cout << field3d->time()     << std::endl;
 }
 */
-void rk4a_advance( MetGEOSDistributedData *metSrc, char* ctime, double dt, int n, float* lons, float* lats, float* levs){
+void RK4_advance( MetGEOSDistributedData *metSrc, char* ctime, double dt, int n, float* lons, float* lats, float* levs){
 
   int flags[n]={0};
   double time = metSrc->cal2Time(ctime);
-  rk4a.go(n, lons, lats, levs, flags, time, metSrc, &e, dt); 
+  RK4.go(n, lons, lats, levs, flags, time, metSrc, &e, dt); 
 
 }
 

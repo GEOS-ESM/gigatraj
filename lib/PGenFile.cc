@@ -95,16 +95,19 @@ int PGenFile :: readparcel( std::istream* input, Parcel *p )
                 status = 0;
 
             } catch (...) {
+               std::cerr << "Badly formatted line in input file" << std::endl;
                status = -2;
             }             
          }
       } else {
          // return EOF status
+         //std::cerr << "End of input file" << std::endl;
          status = -1;
       }   
       
    } catch (std::ios::failure) {
       // return error status
+      std::cerr << "Error reading input file" << std::endl;
       status = -2;
    }   
    
@@ -121,11 +124,11 @@ void PGenFile :: initbunch( Seq<Parcel>* seq, const Parcel& p, int *np, std::ist
      real lon,lat,z;
      int status = 0;
      
+     // read a parcel location from the file
+     Parcel *it = new Parcel(p); // copy the input parcel's settings
+     
      while ( status >= 0 ) {
         try {
-
-           // read a parcel location from the file
-           Parcel *it = new Parcel(p); // copy the input parcel's settings
 
            status = readparcel( input, it );
         
@@ -138,6 +141,8 @@ void PGenFile :: initbunch( Seq<Parcel>* seq, const Parcel& p, int *np, std::ist
           throw (ParcelGenerator :: badgeneration());
        }
      }
+     
+     delete it;
      
 };
 

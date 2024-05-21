@@ -63,7 +63,7 @@ class GridField3D : public GridField {
       
       /// copy constructor
       /*!
-         This is the copy contructor method for the GridField3D class.
+         This is the copy constructor method for the GridField3D class.
       */
       GridField3D(const GridField3D& src);
 

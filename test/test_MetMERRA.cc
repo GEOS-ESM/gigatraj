@@ -132,7 +132,7 @@ int main()
     
     // create a MERRA data object
     metsrc0 = new MetMERRA();
-    //metsrc0->debug = 10;
+    //metsrc0->dbug = 10;
     
     basedate = "2010-03-15T12:13";
     
@@ -178,7 +178,7 @@ int main()
 
     //*************  Sfc-reading tests *******************************
 
-    //metsrc0->debug = 10;
+    //metsrc0->dbug = 10;
 
     // test sample values for a 2D field
     grid2d = metsrc0->GetSfc( "PS", "2010-03-17T06:00" );
@@ -248,7 +248,7 @@ int main()
        exit(1);  
     }
     
-    //metsrc0->debug = 0;
+    //metsrc0->dbug = 0;
     
     // test direct access
     dd = metsrc0->getData( "PS", tyme, grid2d->longitude(nx/2), grid2d->latitude(ny/2), -999.0   );
@@ -262,7 +262,7 @@ int main()
 
     //*************  3D-reading tests *******************************
 
-    //metsrc0->debug = 1;
+    //metsrc0->dbug = 1;
     
     grid3d = metsrc0->Get3D( "T", "2010-03-17T06:00" );
 
@@ -372,7 +372,7 @@ int main()
        exit(1);  
     }
 
-    //metsrc0->debug = 0;
+    //metsrc0->dbug = 0;
     
     // test a quantity that is calculated on the fly
     d0 = (*grid3d)(nx/3,ny/4,nz/2) * POW( 1000.0/grid3d->level(nz/2), 2./7.);
@@ -483,8 +483,9 @@ int main()
        cerr << " 3: " << 340.0 << ", " << dd3 << endl;       
        exit(1);  
     }
+    
     // do pressure interpolation (log-linear)
-    metsrc0->set_vinterp( new LogLinearVinterp() );
+    metsrc0->set_vinterp( new LogLinearVinterp(), true );
     dd3 = metsrc0->getData( "T", tyme,  lon0, lat0, 340.00000   );
     d0 = (LOG(340.0) - LOG(p0))/(LOG(c0) - LOG(p0))*(dd2 - dd) + dd;
     if ( mismatch(dd3, d0) ) {

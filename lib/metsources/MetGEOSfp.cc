@@ -178,7 +178,7 @@ void MetGEOSfp::setup_gridSpecs()
    
    vspec.code = 'n';
    vspec.id   = 1;
-   vspec.quant = "Model Levels";
+   vspec.quant = "Model-Levels";
    vspec.units = "";
    vspec.nLevs = 72;
    vspec.levs.clear();
@@ -272,10 +272,7 @@ void MetGEOSfp::reset()
    whichSrc = 0;
    forceSrc = 0;
 
-   hgrid = 0;
-   set_hgrid(hgrid, lons, lats);
-   nlons = lons.size();
-   nlats = lats.size();
+   set_hgrid( 0 );
 
    // Native GEOSfp variable names
    //  zonal wind
@@ -285,10 +282,8 @@ void MetGEOSfp::reset()
    // vertical "wind" will depend on the vertical coordinate system
    // and is set by set_vertical()
 
-   pgrid = 2;
-   set_vgrid(pgrid, native_zs, native_vquant, vunits); 
-   native_nzs = native_zs.size();
-   set_vertical(native_vquant, vunits, &native_zs );   
+   set_vgrid(2); 
+   set_vertical(native_vquant, native_vuu, &native_zs );   
 
 }
 
@@ -319,6 +314,16 @@ MetData *MetGEOSfp::genericCopy()
     result->assign(*this);
     
     return dynamic_cast<MetData*>( result );
+}
+
+MetGridData* MetGEOSfp::MetGridCopy()
+{
+     MetGEOSfp* newthing;
+     
+     newthing = new MetGEOSfp();
+     newthing->assign( *this );
+     
+     return dynamic_cast<MetGridData*> (newthing);
 }
 
 /// assignment operator
@@ -399,23 +404,23 @@ int MetGEOSfp::queryQuantity( const std::string quantity
 
     // now be as strict as required    
     if ( horizStrictness() ) {
-       use_hgrid = hgrid;
+       use_hgrid = desired_hgrid_id;
     }   
     if ( vertStrictness() ) {
-       use_vgrid = pgrid;
+       use_vgrid = desired_vgrid_id;
     }   
     if ( tspaceStrictness() ) {
-       use_tspace = tspace;
+       use_tspace = desired_tspace;
     }   
     if ( tavgStrictness() ) {
-       use_tavg = tave;
+       use_tavg = desired_tave;
     }   
     
 
     if ( forceSrc <= 0 ) {
        // try assimilation first
        try {
-           status = adir.LookUp( quantity, use_hgrid, use_vgrid, use_tspace, use_tavg
+           status = adir.LookUp( quantity, use_vgrid, use_hgrid, use_tspace, use_tavg
                 , longName, units
                 , ndims, actualVertGrid, actualHorizGrid, actualTimeSpace, actualTimeAvg, actualBaseTime
                 , url );
@@ -431,7 +436,7 @@ int MetGEOSfp::queryQuantity( const std::string quantity
     if ( status == 1 && forceSrc >= 0 ) {
        // try the forecast  
        try {
-           status = fdir.LookUp( quantity, use_hgrid, use_vgrid, use_tspace, use_tavg
+           status = fdir.LookUp( quantity, use_vgrid, use_hgrid, use_tspace, use_tavg
                 , longName, units
                 , ndims, actualVertGrid, actualHorizGrid, actualTimeSpace, actualTimeAvg, actualBaseTime
                 , url, modelRun );    
@@ -471,6 +476,7 @@ bool MetGEOSfp::legalQuantity( const std::string quantity )
         if ( quantity == altitude_name 
           || quantity == pressure_name
           || quantity == palt_name  
+          || quantity == "Model-Levels"
         ) {                   
            result = true;     
         }                     
@@ -523,6 +529,7 @@ void MetGEOSfp::setOption( const std::string &name, float value )
 void MetGEOSfp::setOption( const std::string &name, double value )
 {
 }
+
 
 bool MetGEOSfp::getOption( const std::string &name, std::string &value )
 {
@@ -818,7 +825,7 @@ int MetGEOSfp::setup(  const std::string quantity, const std::string &time )
     // do we need to find the basic attributes of this quantity?
     if ( quantity != test_quant || caltime != test_date ) {
 
-       if ( debug >= 3 ) {
+       if ( dbug >= 3 ) {
          std::cerr << "MetGEOSfp::setup: testing for " << quantity << " @ " << caltime << std::endl;
          std::cerr << "MetGEOSfp::setup: the model run is <<" << modelRun << ">>" << std::endl; 
        }
@@ -832,7 +839,7 @@ int MetGEOSfp::setup(  const std::string quantity, const std::string &time )
        if ( status == 0 ) {
           
           test_url = "";
-          if ( debug >= 3 ) {
+          if ( dbug >= 3 ) {
              std::cerr << "MetGEOSfp::setup:  testing was successful.  ndims is " << test_ndims << std::endl;
           }
           
@@ -1001,7 +1008,7 @@ MetGEOSfp* MetGEOSfp::myNew()
    
    dup = new MetGEOSfp;
    
-   dup->debug = debug;
+   dup->dbug = dbug;
    dup->setPgroup(my_pgroup, my_metproc);
    dup->defineCal( time2Cal(0), 0.0 );
    dup->maxsnaps = this->maxsnaps;
@@ -1019,7 +1026,7 @@ bool MetGEOSfp::bracket( const std::string &quantity, const std::string &time, s
 
     wanted = cal2Time(time);
     
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfp::bracket*: Bracketing cal time " << time << std::endl;
     }
     result = bracket( quantity, wanted, &prev, &next );
@@ -1038,11 +1045,11 @@ bool MetGEOSfp::bracket( const std::string &quantity, double time, double *t1, d
     int status;
     double xtime, ytime, ptime, ztime;
     double tbase=0.0;
-    double tspace=24;
+    double tspace = 24;
     std::vector<std::string> *testquants;
     bool sametime;
     
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfp::bracket: Bracketing time " << time << " against base " << basetime 
        << ": " << time2Cal(time, 4) << std::endl;
     }
@@ -1078,7 +1085,7 @@ bool MetGEOSfp::bracket( const std::string &quantity, double time, double *t1, d
        // use the user-imposed time spacing
        tspace = override_tspace;
     }
-    if ( debug > 50 ) {
+    if ( dbug > 50 ) {
        std::cerr << "MetGEOSfp::bracket: tbase = " << tbase << " tspace = " << tspace << std::endl;
     }
     
@@ -1088,7 +1095,7 @@ bool MetGEOSfp::bracket( const std::string &quantity, double time, double *t1, d
     xtime = floor( ztime );
     // convert the time part to intervals/indices
     ytime = (( ztime - xtime )*24.0 - tbase)/tspace; 
-    if ( debug > 50 ) {
+    if ( dbug > 50 ) {
        std::cerr << "MetGEOSfp::bracket:  ztime = " << ztime << ", xtime= " << xtime << " , ytime=" << ytime  << std::endl;
     }
     
@@ -1111,14 +1118,14 @@ bool MetGEOSfp::bracket( const std::string &quantity, double time, double *t1, d
        next = prev;
     }
 
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfp::bracket:   Found times " << prev << " and " << next << " using interval " << tspace << std::endl;
     }
    
     *t1 = prev - basetime;
     *t2 = next - basetime;
 
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfp::bracket:   Translated bracket times to  " << *t1 << " (" << time2Cal(*t1)
        << ") and " << *t2  << " (" << time2Cal(*t2) << ")" << std::endl;
     }
@@ -1207,7 +1214,7 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
     // do we need to find the basic attributes of this quantity?
     if ( test_url == "" || quantity != test_quant || caltime != test_date ) {
 
-       if ( debug >= 3 ) {
+       if ( dbug >= 3 ) {
          std::cerr << "MetGEOSfp::prep: testing for " << quantity << " @ " << caltime << std::endl;
          std::cerr << "MetGEOSfp::prep: the model run is <<" << modelRun << ">>" << std::endl; 
        }
@@ -1223,30 +1230,30 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
           // try assimilation
           
           // find the variable we are looking for
-          status = adir.LookUp( test_quant, hgrid, pgrid, tspace, tave
+          status = adir.LookUp( test_quant, desired_vgrid_id, desired_hgrid_id, desired_tspace, desired_tave
                , NULL, NULL, &test_ndims
                , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl );
-          if ( status && (strict != 0x07) ) {
+          if ( status && (strict != StrictAboutGridding) ) {
              if ( horizStrictness() ) {
-                use_hgrid = hgrid;
+                use_hgrid = desired_hgrid_id;
              }   
              if ( vertStrictness() ) {
-                use_vgrid = pgrid;
+                use_vgrid = desired_vgrid_id;
              }   
              if ( tspaceStrictness() ) {
-                use_tspace = tspace;
+                use_tspace = desired_tspace;
              }   
              if ( tavgStrictness() ) {
-                use_tavg = tave;
+                use_tavg = desired_tave;
              }   
-             status = adir.LookUp( test_quant, use_hgrid, use_vgrid, use_tspace, use_tavg
+             status = adir.LookUp( test_quant, use_vgrid, use_hgrid, use_tspace, use_tavg
                , NULL, NULL, &test_ndims
                , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl );
           }
           if ( status == 0 ) {
              // got assimilation specs.
              
-             if ( debug >= 3 ) {
+             if ( dbug >= 3 ) {
                 std::cerr << "MetGEOSfp::prep:  Examining Assim URL <<"  << *newUrl << ">>" << std::endl;
              }
              
@@ -1256,7 +1263,7 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
              final_assim_day = get_last_time1900( *newUrl );
              
              
-             if ( debug >= 3 ) {
+             if ( dbug >= 3 ) {
                 std::cerr << "MetGEOSfp::prep:  final time in that URL is "  << final_assim_day << std::endl;
              }
              
@@ -1286,26 +1293,26 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
                 
                 // Construct a URL for the ".latest" forecast file (since modelRun is "")
 
-                if ( debug >= 3 ) {
+                if ( dbug >= 3 ) {
                    std::cerr << "MetGEOSfp::prep: Trying to get URL for '.latest' forecast " << std::endl;
                 }
-                status = fdir.LookUp( test_quant, hgrid, pgrid, tspace, tave
+                status = fdir.LookUp( test_quant, desired_vgrid_id, desired_hgrid_id, desired_tspace, desired_tave
                      , NULL, NULL, &test_ndims
                      , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, modelRun );
-                if ( status && (strict != 0x07) ) {
+                if ( status && (strict != StrictAboutGridding) ) {
                    if ( horizStrictness() ) {
-                      use_hgrid = hgrid;
+                      use_hgrid = desired_hgrid_id;
                    }   
                    if ( vertStrictness() ) {
-                      use_vgrid = pgrid;
+                      use_vgrid = desired_vgrid_id;
                    }   
                    if ( tspaceStrictness() ) {
-                      use_tspace = tspace;
+                      use_tspace = desired_tspace;
                    }   
                    if ( tavgStrictness() ) {
-                      use_tavg = tave;
+                      use_tavg = desired_tave;
                    }   
-                   status = fdir.LookUp( test_quant, use_hgrid, use_vgrid, use_tspace, use_tavg
+                   status = fdir.LookUp( test_quant, use_vgrid, use_hgrid, use_tspace, use_tavg
                      , NULL, NULL, &test_ndims
                      , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, modelRun );
                 }
@@ -1313,11 +1320,11 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
                 if ( status == 0 ) {
                    // Now use this ".latest" URL to open forecast file and get the
                    // first (initialization) time from that.
-                   if ( debug >= 3 ) {
+                   if ( dbug >= 3 ) {
                       std::cerr << "MetGEOSfp::prep:  Examining Forecast URL <<"  << *newUrl << ">>" << std::endl;
                    }
                    final_assim_day = get_first_time1900( *newUrl );      
-                   if ( debug >= 3 ) {
+                   if ( dbug >= 3 ) {
                       std::cerr << "MetGEOSfp::prep:  final time in that URL is "  << final_assim_day << std::endl;
                    }
                 }
@@ -1355,28 +1362,28 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
                  
                  // tmp_modelrun = tmp_modelrun + ".test.nonexistent";
                  
-                 if ( debug >= 3 ) {
+                 if ( dbug >= 3 ) {
                     std::cerr << "MetGEOSfp::prep:  Testing leadtime " << leadtime << " yielding model run " << tmp_modelrun << std::endl;
                  }
                  
                  // construct the URL for the forecast file
-                 status = fdir.LookUp( test_quant, hgrid, pgrid, tspace, tave
+                 status = fdir.LookUp( test_quant, desired_vgrid_id, desired_hgrid_id, desired_tspace, desired_tave
                       , NULL, NULL, &test_ndims
                       , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, tmp_modelrun );
-                 if ( status && (strict != 0x07) ) {
+                 if ( status && (strict != StrictAboutGridding) ) {
                     if ( horizStrictness() ) {
-                       use_hgrid = hgrid;
+                       use_hgrid = desired_hgrid_id;
                     }   
                     if ( vertStrictness() ) {
-                       use_vgrid = pgrid;
+                       use_vgrid = desired_vgrid_id;
                     }   
                     if ( tspaceStrictness() ) {
-                       use_tspace = tspace;
+                       use_tspace = desired_tspace;
                     }   
                     if ( tavgStrictness() ) {
-                       use_tavg = tave;
+                       use_tavg = desired_tave;
                     }   
-                    status = fdir.LookUp( test_quant, use_hgrid, use_vgrid, use_tspace, use_tavg
+                    status = fdir.LookUp( test_quant, use_vgrid, use_hgrid, use_tspace, use_tavg
                       , NULL, NULL, &test_ndims
                       , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, tmp_modelrun );
                  }
@@ -1392,14 +1399,14 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
                     // But this forecast file might not be there, so we need to trap the error it might throw.
                     try {
                         
-                        if ( debug >= 3 ) {
+                        if ( dbug >= 3 ) {
                            std::cerr << "MetGEOSfp::prep:  Examining forecast URL <<"  << *newUrl << ">>" << std::endl;
                         }
                         junktime = get_first_time1900( *newUrl );
                         
                         if ( junktime > 0.0 ) {
                            // leave the dayOffset loop--we have our URL
-                           if ( debug >= 3 ) {
+                           if ( dbug >= 3 ) {
                               std::cerr << "MetGEOSfp::prep:  Success!" << std::endl;
                            }
                            dayOffset = -999;
@@ -1417,23 +1424,23 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
           } else {
              // a model run was specified, so use that             
 
-            status = fdir.LookUp( test_quant, hgrid, pgrid, tspace, tave
+            status = fdir.LookUp( test_quant, desired_vgrid_id, desired_hgrid_id, desired_tspace, desired_tave
                  , NULL, NULL, &test_ndims
                  , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, modelRun );
-            if ( status && (strict != 0x07) ) {
+            if ( status && (strict != StrictAboutGridding) ) {
                if ( horizStrictness() ) {
-                  use_hgrid = hgrid;
+                  use_hgrid = desired_hgrid_id;
                }   
                if ( vertStrictness() ) {
-                  use_vgrid = pgrid;
+                  use_vgrid = desired_vgrid_id;
                }   
                if ( tspaceStrictness() ) {
-                  use_tspace = tspace;
+                  use_tspace = desired_tspace;
                }   
                if ( tavgStrictness() ) {
-                  use_tavg = tave;
+                  use_tavg = desired_tave;
                }   
-               status = fdir.LookUp( test_quant, use_hgrid, use_vgrid, use_tspace, use_tavg
+               status = fdir.LookUp( test_quant, use_vgrid, use_hgrid, use_tspace, use_tavg
                  , NULL, NULL, &test_ndims
                  , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, modelRun );
             }
@@ -1449,7 +1456,7 @@ int MetGEOSfp::prep(  const std::string quantity, const std::string &time )
        if ( status == 0 ) {
           
           test_url = *newUrl;
-          if ( debug >= 3 ) {
+          if ( dbug >= 3 ) {
              std::cerr << "MetGEOSfp::prep:  testing was successful.  ndims is " << test_ndims << ", url=<<" << test_url << ">>" << std::endl;
           }
           
@@ -1641,14 +1648,19 @@ GridLatLonField3D* MetGEOSfp::new_directGrid3D( const std::string quantity, cons
        } else if ( test_vgrid == 1 ) {
           // data are on model levels--read the layer thicknesses
           // and calculate pressure from them
+          /*
           component_1 = defaultThis->Get3D("delp", time);
           // the "1.0" is the pressure (in Pa) imposed at the top GMAO model level
           tmp1 = dynamic_cast<GridLatLonField3D*>(getpress.calc( *component_1, 1.0 ));
           *grid3d = *tmp1;
           delete tmp1;
           defaultThis->remove( component_1 );
+          */
+          component_1 = defaultThis->Get3D("PL", time);
+          *grid3d = *component_1;
+          defaultThis->remove( component_1 );
           // Note: pressure data are in Pa; convert to hPa (mb)
-          grid3d->transform("hPa", 0.01);
+          grid3d->transform("hPa", 100.0, 0.0);
        } else {
           throw (badDataNotFound());
        }   
@@ -1825,7 +1837,7 @@ void MetGEOSfp::delay()
        
           w = ( my_pgroup->random()*wayt + 0.5);
           
-          if ( debug > 5 ) {
+          if ( dbug > 5 ) {
              std::cerr << "MetMERRA2::delay: sleeping for " << w 
                        << " sec from a max of " << wayt 
                        << " w/ " << c1 <<  " processors"

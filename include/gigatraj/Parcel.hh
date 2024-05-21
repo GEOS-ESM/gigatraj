@@ -101,6 +101,10 @@ const ParcelStatus HitBad = 0x0002;
   \ingroup parcelstatusvals
 */
 const ParcelStatus NonVert = 0x0004;      
+/*! \brief  ParcelStatus value:  Inert = parcel is not being traced for some reason
+  \ingroup parcelstatusvals
+*/
+const ParcelStatus Inert = 0x0008;      
  
  
       
@@ -221,34 +225,7 @@ class Parcel {
           \return a pointer to the newly-created Parcel object
       */
       Parcel* copy() const;
-
-      /// \brief create an array of new Parcel objects
-      /*! This overlay operator permits easy creation of an array of new Parcel
-          objects, as in " a = new Parcel[45];"
-          
-          It is recommended that users not call this method directly in their code, 
-          but instead use or implement a ParcelGenerator class.  Nevertheless, this
-          method is available if needed.
-
-          \return a pointer to storage that has been allocated for the Parcel objects.
-          \param sz the storage required for the Parcel object
-      */     
-      void* operator new[](size_t sz);
       
-      /// \brief delete an array of Parcel objects 
-      /*! This overlay operator poermits destruction of an array of Parcel objects
-          that was created with the new[] method.
-          
-          As with the new[] method, tt is recommended that users not call this 
-          method directly in their code, 
-          but instead use or implement a ParcelGenerator class.  Nevertheless, this
-          method is available if needed.
-          
-          \param p pointer to storage allocated for Parcel objects
-      */    
-      void operator delete[](void* p);
-      
-
       /// \brief changes the planetary navigation used by Parcels
       /*!
           This method changes which planetary navigation object to be used
@@ -279,7 +256,7 @@ class Parcel {
           
           \return a pointer to the PlanetNav object that is being used
       */
-      PlanetNav* getNav();
+      PlanetNav* getNav() const;
 
 
       /// \brief changes the meteorological data source used by Parcels

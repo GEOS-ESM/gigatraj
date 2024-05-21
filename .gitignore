@@ -36,6 +36,7 @@ doc/.doc_stamp
 doc/.remake_trigger
 doc/gigatraj_docs.tgz
 doc/Makefile.in
+doc/gigatraj_intro.pdf
 eval/cfc11/
 eval/raikoke/
 eval/qbo/
@@ -66,6 +67,7 @@ test/comms_notes
 test/test_BilinearHinterp
 test/test_BilinearHinterp_MPI
 test/test_BilinearHinterp_serial
+test/test_Catalog
 test/test_Configuration
 test/test_Earth
 test/test_FilePath
@@ -95,6 +97,7 @@ test/test_PGenRep
 test/test_PGenRnd
 test/test_PGenRndDisc
 test/test_PGenDisc
+test/test_PGenNetcdf
 test/test_Parcel
 test/test_RandomSrc
 test/test_SerialGrp
@@ -118,6 +121,7 @@ test/test_MetMERRA2
 test/test_MetGEOSfpAssim
 test/test_MetGEOSfpFcast
 test/test_MetGEOSfp
+test/test_MetMyGEOS
 test/test_MetSelector
 test/test_PressOTF
 test/test_ThetaDotOTF
@@ -125,6 +129,12 @@ test/test_BalanceThetaDot1OTF
 test/test_StreamPrintMPI
 test/test_StreamReadMPI
 test/test_ChangeVertical
+test/test_NetcdfIn
+test/test_NetcdfOutMPI
+test/test_NetcdfInMPI
+test/test_NetcdfOut
 test/valgrind*.log
 gigatraj*.tar.gz
-
+*.zip
+eval/testing
+changed_list.txt

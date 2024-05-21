@@ -145,6 +145,162 @@ class MetGridData : public MetData {
       /// assignment operator
       virtual MetGridData& operator=(const MetGridData& src) = 0;
 
+      /// configures the met source
+      /*! This method provides a means of setting options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be configured.
+                      Names that are not recognized by a specific subclass are
+                      silently ignored.
+                      
+          \param value the value to be applied to the named configuration option
+      
+      */
+      virtual void setOption( const std::string &name, const std::string &value );
+
+      /// configures the met source
+      /*! This method provides a means of setting options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be configured.
+                      Names that are not recognized by a specific subclass are
+                      silently ignored.
+                      
+          \param value the value to be applied to the named configuration option
+      
+      */
+      virtual void setOption( const std::string &name, int value );
+
+      /// configures the met source
+      /*! This method provides a means of setting options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be configured.
+                      Names that are not recognized by a specific subclass are
+                      silently ignored.
+                      
+          \param value the value to be applied to the named configuration option
+      
+      */
+      virtual void setOption( const std::string &name, float value );
+
+      /// configures the met source
+      /*! This method provides a means of setting options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be configured.
+                      Names that are not recognized by a specific subclass are
+                      silently ignored.
+                      
+          \param value the value to be applied to the named configuration option
+      
+      */
+      virtual void setOption( const std::string &name, double value );
+
+
+      /// queries configuration of the met source
+      /*! This method provides a means of reading options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be obtained.
+                      Names that are not recognized by a specific subclass 
+                      will return an empty string.
+                      
+          \param value (output) the value to be obtained from the named configuration option
+      
+      */
+      virtual bool getOption( const std::string &name, std::string &value );
+
+
+      /// queries configuration of the met source
+      /*! This method provides a means of reading options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be obtained.
+                      Names that are not recognized by a specific subclass 
+                      will return 0.
+                      
+          \param value (output) the value to be obtained from the named configuration option
+      
+      */
+      virtual bool getOption( const std::string &name, int &value );
+
+
+      /// queries configuration of the met source
+      /*! This method provides a means of reading options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be obtained.
+                      Names that are not recognized by a specific subclass 
+                      will return 0.
+                      
+          \param value (output) the value to be obtained from the named configuration option
+      
+      */
+      virtual bool getOption( const std::string &name, float &value );
+
+      /// queries configuration of the met source
+      /*! This method provides a means of reading options specific
+          to a subclass. In this way, objects of a subclass
+          that has special capabilities may be upcast to MetData
+          in a program that can use any of several met data sources,
+          and yet still be able to configure those special options
+          that apply to the subclass.
+
+          \param name the name of the option that is to be obtained.
+                      Names that are not recognized by a specific subclass 
+                      will return 0.
+                      
+          \param value (output) the value to be obtained from the named configuration option
+      
+          \return true if the option was valid; false if the value returned is meaningless
+      */
+      virtual bool getOption( const std::string &name, double &value );
+
+
+      /// returns a copy of the object, cast to the MetGridData class
+      /*!
+           Sometimes a routine that deals with objects of a MetGridData subclass
+           needs to make a copy of the object, but needs to do so in a way
+           that allows the copy to be made with no information about
+           the exact subclass being used.
+           
+           This method, implemented by hte various subclasses, will create
+           a copy of the object, cast the new object to the MetData class,
+           and then return the result.
+           
+           \return a pointer to a new MetData object. The calling routine is repsonsible for delteing the
+                   object when it is no longer needed 
+      */
+      virtual MetGridData* MetGridCopy() = 0;
 
       /// sets the name of the vertical coordinate used in the data source
       /*! This method forces the meteorological data source object to use a specific vertical coordinate.
@@ -232,8 +388,10 @@ class MetGridData : public MetData {
                           pointer is stored as-is, so the calling routine must not delete it
                           until this MetGridData object is deleted or a new Vinterp object is assigned.
       
+           \param okToDelete if true, then this MetGridData object can delete the Vinterp object when 
+                             it is done using it. 
       */
-      void set_vinterp( Vinterp* vinterp );
+      void set_vinterp( Vinterp* vinterp, bool okToDelete=false );
       
       /// gets the vertical interpolator
       /*! This method retrieves the vertical interpolator object. It can then be used to obtain data values on isosurfaces 
@@ -250,9 +408,11 @@ class MetGridData : public MetData {
           obtain data values at point locations.
            
           \param hinterp a pointer to the HLatLonInterp object to be the new interpolator
+          \param okToDelete if true, then this MetGridData object can delete the Hinterp object when 
+                             it is done using it. 
      
       */
-      void set_hinterp( HLatLonInterp* hinterp );
+      void set_hinterp( HLatLonInterp* hinterp, bool okToDelete=false );
       
       /// gets the horizontal interpolator
       /*! This method retrieves the horizontal interpolator object. It can then be used to regrid data surfaces and
@@ -399,7 +559,7 @@ class MetGridData : public MetData {
                          that the default will be used.              
       
       */
-      void impose_times( double otbase, double otspace );
+      virtual void impose_times( double otbase, double otspace );
       
       /// get the time base/offset
       /*! This method returns the current user-imposed time base hour offset from 0Z of the first data snapshot to be used.
@@ -570,9 +730,16 @@ class MetGridData : public MetData {
           \param units the units of the desired vertical coordinate
           \param levels a pointer to a vector of values of the new vertical coordinate
           \param scale a scale factor to be applied to this quantity that would convert it to MKS units
-          \param offset an offset to be applied ot this quanity (after the scale factor) that would convert it to MKS units
+          \param offset an offset to be applied to this quantity (after the scale factor) that would convert it to MKS units
       */
-      void set_verticalBase( const std::string quantity, const std::string units, const std::vector<real>* levels=NULLPTR, real scale=1.0, real offset=0.0 );
+      virtual void set_verticalBase( const std::string quantity, const std::string units, const std::vector<real>* levels=NULLPTR, real scale=1.0, real offset=0.0 );
+
+      /// sets the vertical coordinates from a GridField3D object
+      /*! This method forces the meteorological data source object to use vertical coordinates taken form a GridField3D object.
+      
+          \param grid the grid whose vertical coordinates are to be used.
+      */
+      virtual void set_verticalBase( GridField3D *grid );    
 
       /// determines scaling factors for vertical coordinate
       /*! Given units for a vertical coordinate, this method determines the
@@ -587,9 +754,9 @@ class MetGridData : public MetData {
       void vMKS( const std::string quantity, const std::string units, real* scale, real* offset) const; 
 
       /// returns a default set of vertical coordinate values
-      /*! This method returns a vector of vertical coordinate values, depedning onthe coordinate system desired.
+      /*! This method returns a vector of vertical coordinate values, depending on the coordinate system desired.
       
-          \param coordSys a pointer ot a string giving the name of the vertical coordinate. If NULLPTR, the 
+          \param coordSys a pointer to a string giving the name of the vertical coordinate. If NULLPTR, the 
                         meteorological source's current vertical coordinate is used.
            \return a pointer to a vector of coordinate values corresponding to the usual or default values
                         for this data souirce on the desired coordinates.              
@@ -679,7 +846,7 @@ class MetGridData : public MetData {
           instead of reading the data itself. 
           
           To conserve memory, the GridField object produced by this method
-          will contain only the metadtaa, including dimensional values, but no actual
+          will contain only the metadata, including dimensional values, but no actual
           data values. Thus the value() method and related methods will not work with the
           resulting object. Instead, the met source's request_data3D() method should be called
           to alert the met server that data will soon be required, and then the 
@@ -703,7 +870,7 @@ class MetGridData : public MetData {
           instead of reading the data itself. 
           
           To conserve memory, the GridField object produced by this method
-          will contain only the metadtaa, including dimensional values, but no actual
+          will contain only the metadata, including dimensional values, but no actual
           data values. Thus the value() method and related methods will not work with the
           resulting object. Instead, the met source's request_dataSfc() method should be called
           to alert the met server that data will soon be required, and then the 
@@ -728,7 +895,7 @@ class MetGridData : public MetData {
        /// override value for data temporal spacing
        double override_tspace;
 
-       /// override value for data temporal offset (base time withn a day)
+       /// override value for data temporal offset (base time within a day)
        double override_tbase;
 
 
@@ -976,7 +1143,6 @@ class MetGridData : public MetData {
       };
 
 
-      
       /// zonal winds
       MetCache3D *us;
       /// meridional winds
@@ -1053,16 +1219,16 @@ class MetGridData : public MetData {
       
       /// pointer to the vertical interpolator used
       Vinterp *vin;
-      /// indicates whether vin has been supplied externally
+      /// indicates whether vin has been supplied externally (true = No) (I.e., do we need to delete the interpolator when we are done with it?)
       bool myVin;
       
       /// pointer to the horizontal interpolator used
       HLatLonInterp *hin;
-      /// indicates whether hin has been supplied externally
+      /// indicates whether hin has been supplied externally (true = No) (I.e., do we need to delete the interpolator when we are done with it?)
       bool myHin;
       
       /// copy an object into this one
-      /*! Tis method is used for copying objects
+      /*! This method is used for copying objects
 
           \param src the object to be copied
       */    
@@ -1072,7 +1238,7 @@ class MetGridData : public MetData {
       int maxsnaps;
       
       /// set the number of grid snapshots to hold in memory.
-      /*! This method sets the number of grid snapshots to hold in memory (a sopposed to disk caching).
+      /*! This method sets the number of grid snapshots to hold in memory (a supposed to disk caching).
 
            \param n the maximum number of time snapshots to keep in memory
       

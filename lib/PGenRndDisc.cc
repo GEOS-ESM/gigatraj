@@ -8,8 +8,6 @@
 ***  (Please see the COPYING file for more information.) 
 ********************************************************************************/
 
-#include "config.h"
-
 
 #include "gigatraj/PGenRndDisc.hh"
 

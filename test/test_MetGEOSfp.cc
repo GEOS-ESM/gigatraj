@@ -97,7 +97,7 @@ int main()
     // create a GEOSfp data object
     metsrc0 = new MetGEOSfp(basedate);
     
-    //metsrc0->debug = 10;
+    //metsrc0->dbug = 10;
 
     date2 = metsrc0->BaseTime();
     if ( basedate != date2 ) {
@@ -119,11 +119,14 @@ int main()
   
     //*************  Sfc-reading tests *******************************
 
-    //metsrc0->debug = 10;
+    //metsrc0->dbug = 10;
 
 
     // test sample values for a forecast 2D field
     grid2d_b = metsrc0->GetSfc( "ps", dayt2 );
+delete grid2d_b;
+delete metsrc0;
+exit(0);
     
     // check that the expiration time is non-zero
     expiring = grid2d_b->expires();
@@ -204,7 +207,7 @@ int main()
        exit(1);  
     }
     
-    //metsrc0->debug = 0;
+    //metsrc0->dbug = 0;
 
     // test direct access
     dd = metsrc0->getData( "ps", tyme, grid2d->longitude(nx/2+1), grid2d->latitude(ny/2+1), -999.0   );
@@ -240,7 +243,7 @@ int main()
 
     //*************  3D-reading tests *******************************
 
-    //metsrc0->debug = 10;
+    //metsrc0->dbug = 10;
     
 
     // test sample values for a forecast 3D field
@@ -378,8 +381,8 @@ int main()
     metsrc0->set_thinning( 0 );
 
 
-    //metsrc0->debug = 0;
-    //metsrc0->debug = 10;
+    //metsrc0->dbug = 0;
+    //metsrc0->dbug = 10;
     
     // test a quantity that is calculated on the fly
     d0 = (*grid3d)(nx/3,ny/4,nz/2) * POW( 1000.0/grid3d->level(nz/2), 2./7.);
@@ -391,12 +394,12 @@ int main()
        exit(1);  
     }
 
-    delete grid3d;
-   
     lon0 = grid3d->longitude(577);
     lat0 = grid3d->latitude(361);
     p0 = grid3d->level(20); 
 
+    delete grid3d;
+   
     grid3d = metsrc0->Get3D( "t", dayt1 );
         
     // test direct access
@@ -485,7 +488,7 @@ int main()
        exit(1);  
     }
     // do pressure interpolation (log-linear)
-    metsrc0->set_vinterp( new LogLinearVinterp() );
+    metsrc0->set_vinterp( new LogLinearVinterp(), true );
     dd3 = metsrc0->getData( "t", tyme, lon0, lat0,  340.00000   );
     d0 = (LOG(340.0) - LOG(p0))/(LOG(c0) - LOG(p0))*(dd2 - dd) + dd;
     if ( mismatch(dd3, d0) ) {

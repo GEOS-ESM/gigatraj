@@ -33,7 +33,9 @@ PlanetNav :: PlanetNav()
    wraplon = -180.0;
 #endif
 
-   confml = 0;
+   confml = 1;
+   
+   quality = 0;
 
 }
 
@@ -44,24 +46,53 @@ PlanetNav :: ~PlanetNav()
 }
 
 
-
-
-real PlanetNav :: wrap( real longitude ) 
+void PlanetNav :: wrappingLongitude( real limit )
 {
-   while ( longitude < wraplon ) {
-       longitude += fullcircle;
-   }
-   while ( longitude >= (wraplon + fullcircle) ) {    
-       longitude -= fullcircle;
-   }    
+     wraplon = limit;
+}
 
+real PlanetNav :: wrappingLongitude() const
+{
+     return wraplon;
+}
+
+
+real PlanetNav :: wrap( real longitude, real wraplimit ) 
+{
+
+   if ( wraplimit < -900 ) {
+      wraplimit = wraplon;
+   }
+   
+   wrap( &longitude, 1, wraplimit );
+   
    return longitude;
+}
+
+
+void PlanetNav :: wrap( real* longitudes, int n, real wraplimit )
+{
+     if ( wraplimit < -900 ) {
+        wraplimit = wraplon;
+     }
+     if ( longitudes != NULLPTR && n > 0 ) {
+        for (int i=0; i<n; i++ ) {
+          if ( FINITE(longitudes[i]) ) {
+             while ( longitudes[i] < wraplimit ) {
+                 longitudes[i] += fullcircle;
+             }
+             while ( longitudes[i] >= (wraplimit + fullcircle) ) {   
+                 longitudes[i] -= fullcircle;
+             }    
+          }
+        }
+     }
 }
 
 
 void PlanetNav :: checkpos( real longitude, real latitude )
 {
-    if ( ! isfinite(latitude) || ! isfinite(longitude) ) {
+    if ( ! FINITE(latitude) || ! FINITE(longitude) ) {
        throw badlocation();   
     }
 
@@ -75,27 +106,8 @@ void PlanetNav :: checkpos( real longitude, real latitude )
 void PlanetNav :: deltapos( real *longitude, real *latitude, real deltalon, real deltalat, real factor )
 {
 
-   try {
+   PlanetNav :: deltapos( 1, longitude, latitude, &deltalon, &deltalat, factor );
    
-      *latitude += deltalat*factor;
-      if ( *latitude > 90.0 ) {
-         // adjust for displacement over the North pole
-         *latitude = 90.0 - (*latitude - 90.0);
-         *longitude += 180.0;   
-      } else {
-         if ( *latitude < -90.0 ) {
-         // adjust for displacement over the South pole
-            *latitude = -90.0 - (*latitude + 90.0);
-            *longitude += 180.0;   
-         }
-      }
-      checkpos(*longitude, *latitude);
-
-      *longitude = PlanetNav::wrap( *longitude + deltalon*factor );
-
-   } catch ( badlocation badloc ) {
-       throw badincrement();
-   }
 }
 
 void PlanetNav :: deltapos( int n, real *longitude, real *latitude, const real *deltalon, const real *deltalat, real factor)
@@ -120,7 +132,7 @@ void PlanetNav :: deltapos( int n, real *longitude, real *latitude, const real *
              checkpos(longitude[i], latitude[i]);
 
              longitude[i] = PlanetNav::wrap( longitude[i] + deltalon[i]*factor );
-             }
+          }
 
        } catch ( badlocation badloc ) {
            throw badincrement();
@@ -134,8 +146,19 @@ void PlanetNav :: conformal( int mode )
     confml = mode;
 } 
 
-int PlanetNav :: conformal()
+int PlanetNav :: conformal() const
 {
     return confml;
+}
+
+  
+void PlanetNav :: approximate( int value )
+{
+    quality = value;
+} 
+
+int PlanetNav :: approximate() const
+{
+    return quality;
 }
 

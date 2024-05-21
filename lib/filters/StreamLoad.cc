@@ -69,7 +69,7 @@ void StreamLoad :: apply( Parcel& p )
              input = new char[ bn ];
              is->read( input, static_cast<std::streamsize>(bn*sizeof(char)) );
              p.bdeserialize( input, bn );
-             delete input;
+             delete[] input;
           } else {
              // our parcel size does not match the file's parcel size
              throw (StreamLoad::badinitstream());          
@@ -124,7 +124,7 @@ void StreamLoad :: apply( Parcel * const p, const int n )
                    throw (StreamLoad::badinitstream());
                 }   
              }   
-             delete input;
+             delete[] input;
              
           } else {
              // our parcel size does not match the file's parcel size
@@ -190,7 +190,7 @@ void StreamLoad :: apply( std::vector<Parcel>& p )
                    throw (StreamLoad::badinitstream());
                 }   
              }   
-             delete input;
+             delete[] input;
           } else {
              // our parcel size does not match the file's parcel size
              throw (StreamLoad::badinitstream());          
@@ -257,7 +257,7 @@ void StreamLoad :: apply( std::list<Parcel>& p )
                    throw (StreamLoad::badinitstream());
                 }   
              }   
-             delete input;
+             delete[] input;
           } else {
              // our parcel size does not match the file's parcel size
              throw (StreamLoad::badinitstream());          
@@ -323,7 +323,7 @@ void StreamLoad :: apply( std::deque<Parcel>& p )
                    throw (StreamLoad::badinitstream());
                 }   
              }   
-             delete input;
+             delete[] input;
           } else {
              // our parcel size does not match the file's parcel size
              throw (StreamLoad::badinitstream());          
@@ -419,7 +419,7 @@ void StreamLoad :: apply( Flock& p )
                    throw (StreamLoad::badinitstream());
                 }   
              }   
-             delete input;
+             delete[] input;
              // now mark any unfilled parcels as do-not-trace
              if ( i_am_root ) {
                 px.setNoTrace();
@@ -527,7 +527,7 @@ void StreamLoad :: apply( Swarm& p )
                    throw (StreamLoad::badinitstream());
                 }   
              }   
-             delete input;
+             delete[] input;
              // now mark any unfilled parcels as do-not-trace
              if ( i_am_root ) {
                 px.setNoTrace();

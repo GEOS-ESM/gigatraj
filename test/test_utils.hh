@@ -8,6 +8,7 @@
 #include "gigatraj/Earth.hh"
 #include "gigatraj/Parcel.hh"
 
+std::string datadir( std::string dir = "" );
 
 int mismatch( gigatraj::real a, gigatraj::real b);
 int mismatch( gigatraj::real a, gigatraj::real b, gigatraj::real tol );

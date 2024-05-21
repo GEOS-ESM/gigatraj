@@ -107,11 +107,30 @@ class MetData {
       /// An exception involving some unspecified failure to get met data
       class badmetfailure {};
 
-      /// An exception indictating that some feature has not yet been implemented
+      /// An exception indicating that some feature has not yet been implemented
       class badnotimplemented {};
 
+      /// and exception from trying to do something (like assignment) with two incompatible MetData subclasses
+      class badIncompatibleMetDataClass {};
+
+      /*! \brief flags for the MetData class
+          
+          A MetData object might need flags to control certain aspects
+          of its operation.
+         
+          MetSrcFlag bitwise values are for those. there are held in the MetData flag member.
+          
+          MetSrcFlag bitwise values within the range 1 to 128 (0x0010) are reserved for 
+          use by the (abstract) MetData class and its main subclasses (e.g., MetGridData, MetGridLatLonData).
+          The rest of the flags (0x0100 through 0x1100) may be used by the non-abstract subclasses
+          for their own purposes,
+          (and those uses may conflict between those subclasses)
+          
+      */
+      typedef int MetSrcFlag;
+      
       /// flag value: Trace Iso-surface flow (e.g., isentropic for Theta coordinates)
-      static const int MET_ISO = 1; 
+      static const MetSrcFlag MET_ISO = 1; 
 
       /// interprocess communications tag: "This is a Request"
 //      static const int PGR_TAG_REQ = 1040;
@@ -235,7 +254,7 @@ class MetData {
           \param value the value to be applied to the named configuration option
       
       */
-      virtual void setOption( const std::string &name, const std::string &value ) = 0;
+      virtual void setOption( const std::string &name, const std::string &value );
 
       /// configures the met source
       /*! This method provides a means of setting options specific
@@ -252,7 +271,7 @@ class MetData {
           \param value the value to be applied to the named configuration option
       
       */
-      virtual void setOption( const std::string &name, int value ) = 0;
+      virtual void setOption( const std::string &name, int value );
 
       /// configures the met source
       /*! This method provides a means of setting options specific
@@ -269,7 +288,7 @@ class MetData {
           \param value the value to be applied to the named configuration option
       
       */
-      virtual void setOption( const std::string &name, float value ) = 0;
+      virtual void setOption( const std::string &name, float value );
 
       /// configures the met source
       /*! This method provides a means of setting options specific
@@ -286,7 +305,8 @@ class MetData {
           \param value the value to be applied to the named configuration option
       
       */
-      virtual void setOption( const std::string &name, double value ) = 0;
+      virtual void setOption( const std::string &name, double value );
+
 
       /// queries configuration of the met source
       /*! This method provides a means of reading options specific
@@ -303,7 +323,7 @@ class MetData {
           \param value (output) the value to be obtained from the named configuration option
       
       */
-      virtual bool getOption( const std::string &name, std::string &value ) = 0;
+      virtual bool getOption( const std::string &name, std::string &value );
 
 
       /// queries configuration of the met source
@@ -321,7 +341,7 @@ class MetData {
           \param value (output) the value to be obtained from the named configuration option
       
       */
-      virtual bool getOption( const std::string &name, int &value ) = 0;
+      virtual bool getOption( const std::string &name, int &value );
 
 
       /// queries configuration of the met source
@@ -339,7 +359,7 @@ class MetData {
           \param value (output) the value to be obtained from the named configuration option
       
       */
-      virtual bool getOption( const std::string &name, float &value ) = 0;
+      virtual bool getOption( const std::string &name, float &value );
 
 
       /// queries configuration of the met source
@@ -358,7 +378,7 @@ class MetData {
       
           \return true if the option was valid; false if the value returned is meaningless
       */
-      virtual bool getOption( const std::string &name, double &value ) = 0;
+      virtual bool getOption( const std::string &name, double &value );
 
 
      /// create a copy of a MetData subclass object, as a MetData superclass object
@@ -565,6 +585,7 @@ class MetData {
           \return the value of the quantity at the given location and time
 
       */
+     // virtual real getData( string quantity, double time, real lon, real lat, real z, int flags=0) { return 0.0; };
       virtual real getData( string quantity, double time, real lon, real lat, real z, int flags=0) { return 0.0; };
 
       /// obtain the value of a meteorological field at a set of given points 
@@ -769,10 +790,74 @@ class MetData {
       int useMet();
 
 
-      /// set this to print lots of debugging/trace messages
-      int debug;
+      /// sets the configuration file name
+      /*! A MetData object may read in a configuration file that contains
+          settings. If this is the empty string, then no configuration file is read
+          in. A MetData subclass may set a default configuration file name
+          and it may call the readConfig() method in its constructor.
+          But a user may slso set the file name here, in which case it will 
+          if different from the current configuration file name will
+          trigger a readConfig() call.
+          
+          \param filename a string with the name of the configuration file
+          
+      */
+      void configFile( const std::string &filename );
+      
+      /// returns the configuration file name
+      /*! This method returns the name of the configuration file.
+      
+          \return the name of the file
+      */
+      std::string configFile() const;
+      
+      /// reads settings form a configuration file
+      /*! This method reads setting from a configuration file and applies them
+          to the MetData object.
+          
+          The format of the file is as follows:
+            
+            - lines containing only whitespace are ignored
+            - lines whos efirst non-whitespace character is '#' are ignored as comments
+            - all other lines consis of a keyword, a type, and a value, separated by ':'
+            - valid keywords consist of a leading alphabetic characterm followed by
+              zero or more alphanumeric characters and underscore characters.
+            - valid types are: 'I' (integer), 'F' (float), 'S' (string), and
+              'B' (boolean; either 'T' or 'F').  
+      
+      */    
+      void readConfig();      
+      
+      
 
-             
+
+      /*! This controls printing of lots of debugging/trace messages.
+          It is public, so that it can be set and queried directly by external routines.
+          But it is recommended that the debug() methods be used for this instead,
+          in most circumstances
+      */
+      int dbug;
+      
+      /// sets the debugging level
+      /*! This method sets the debugging level, which causes more
+          messages (hier number) or fewer messages (lower number) 
+          to be printed to stderr. A level of zero or less indicates that no
+          debugging messages are to be printed.
+          
+          \param level the desired debugging level.
+
+      */
+      virtual void debug( int level );
+      
+      
+      /// returns the current debugging level
+      /*! This method retusn the debugging level.
+      */
+      inline int debug() const
+      {
+          return dbug;
+      };
+      
    protected:
    
       /// pointer to a ProcessGrp object to which this processor belongs
@@ -792,7 +877,7 @@ class MetData {
       /// initial time string that maps to internal model time 0.0000
       std::string t0;
       
-      /// flags concernign this data source
+      /// flags concerning this data source (the tne MetSrcFlag values)
       int flags;
       
       /// copy a given object into this object
@@ -805,11 +890,11 @@ class MetData {
       
       /// the current time
       /*! The data obtained through this object may have an expiration
-         date. We need a time stamp agaist which to compare the expiration
+         date. We need a time stamp against which to compare the expiration
          date. Doing this dynamically, calling time() whenever we need
          to do the comparison, is likely to introduce issues in
          reproducability. So we take a single time reading when
-         the met source object is created, and we use that value througout
+         the met source object is created, and we use that value throughout
          a model run.
       */   
       time_t now;
@@ -818,7 +903,103 @@ class MetData {
       /// match the vertical coordinates
       real wfctr;
 
+      /// holds the name of a config file with settings that vcan be read in
+      std::string cfgFile;
 
+
+      /// trims whitespace from a string (used for reading configs)
+      /*! This method removes leading and trailing whitepsace from an input string
+          It is used in processing lines read from a comnfiguration file.
+      
+          \param line a reference to the input string. The string is trimmed in place.
+          
+      */
+      void trimString( std::string& line ) const;
+  
+      /// extracts a keyword from a config line
+      /*! This method extracts a keyword from a configuration line.
+          A keyword must begin with an alphabetic character (upper
+          or lower case), followed by zero or more alphabetic or
+          numeric characters, or an underscore character.
+          It is terminated by the separator character. Any leading or
+          trailing whitespace is removed..
+          
+          \param line a reference to the input configuration string
+          \param pos a reference to the character position in the string at which
+                     scanning is to begin. If a syntax error is found, then pos
+                     remains unchanged. Otherwise, it is set to one character past 
+                     the separator.
+          \param sep the separator character
+          \return a string containing the keyword           
+      */
+      std::string get_cfg_keyword( std::string& line, int* pos, char sep ); 
+
+      /// extracts a type from a config line
+      /*! This method extracts a type from a configuration line.
+          A type must be one of 'I' (integer), 'F' (float),
+          'D' (double), 'S' (string), or B (boolean).
+
+          It must be terminated by the separator character. Any leading or
+          trailing whitespace is removed..
+          
+          \param line a reference to the input configuration string
+          \param pos a reference to the character position in the string at which
+                     scanning is to begin. If a syntax error is found, then pos
+                     remains unchanged. Otherwise, it is set to one character past 
+                     the separator.
+          \param sep the separator character
+          \return a string containing the type           
+      */
+      std::string get_cfg_type( std::string& line, int* pos, char sep ); 
+
+      /// extracts a value from a config line
+      /*! This method extracts a value from a configuration line.
+          A value may contain any characters, but it should conform
+          to the specified type. All characters form the
+          startig position to the end of the string are used.
+          Any leading or trailing whitespace is removed.
+
+          \param line a reference to the input configuration string
+          \param pos a reference to the character position in the string at which
+                     scanning is to begin. If a syntax error is found, then pos
+                     remains unchanged. Otherwise, it is set to one character past 
+                     the separator.
+          \return a string containing the value           
+      */
+      std::string get_cfg_value( std::string& line, int* pos ); 
+
+      /// converts a string to an integer
+      /*! This method converts a string to an integer
+      
+            \param value a referecne to the string to be converted
+            \param result a pointer to the output converted value
+            \return true if the conversion was successful, false otherwise
+      */
+      bool str2int(const std::string &value, int* result  );
+      /// converts a string to a float
+      /*! This method converts a string to a float
+      
+            \param value a referecne to the string to be converted
+            \param result a pointer to the output converted value
+            \return true if the conversion was successful, false otherwise
+      */
+      bool str2float(const std::string &value, float* result);
+      /// converts a string to a double
+      /*! This method converts a string to a double
+      
+            \param value a referecne to the string to be converted
+            \param result a pointer to the output converted value
+            \return true if the conversion was successful, false otherwise
+      */
+      bool str2dbl(const std::string &value, double* result);
+      /// converts a string to a boolean
+      /*! This method converts a string to a boolean
+      
+            \param value a referecne to the string to be converted
+            \param result a pointer to the output converted value
+            \return true if the conversion was successful, false otherwise
+      */
+      bool str2bool(const std::string &value, bool* result);
 };
 }
 

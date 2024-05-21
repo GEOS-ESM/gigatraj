@@ -256,7 +256,7 @@ class GridField {
          return quant;
       }   
 
-      /// sets the quabntity name
+      /// sets the quantity name
       /*! This method sets the quantity name.  As a side effect, it also resets 
           the MKS-transform variables mksScale and mksOffset to 1.0 and 0.0, respectively.
           

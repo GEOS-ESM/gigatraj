@@ -11,7 +11,7 @@ Earth.cc          MPIGrp.cc           PGenRep.cc      RandomSrc.cc
 FileLock.cc       Parcel.cc           PGenRnd.cc      SerialGrp.cc
 FilePath.cc       ParcelGenerator.cc  PGenRndDisc.cc  Swarm.cc
 Flock.cc          PGenDisc.cc         PlanetNav.cc    trace.cc
-IntegRK4a_GEOS.cc 
+IntegRK4_GEOS.cc 
 )
 esma_add_subdirectories(filters metsources)
 

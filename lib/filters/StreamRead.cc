@@ -1557,6 +1557,9 @@ std::string StreamRead :: format() const
 // FmtSpec constructor
 StreamRead :: FmtSpec :: FmtSpec(const std::string type0, int start0, int len0, int fract0, std::string str0, int align0)
 {
+
+    align = 0;
+    
     defaults( type0, start0, len0, fract0, str0, align0 );
 
 }

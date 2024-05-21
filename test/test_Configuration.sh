@@ -6,6 +6,19 @@ function cleanup {
 
 }
 
+VALGRIND=""
+while getopts v: ARG
+do
+    case "${ARG}" in
+    v) VALGRIND="valgrind ${OPTARG}";;
+    \?) "Bad Option ${ARG}" >&2
+        exit 1;;
+    esac
+done
+shift `expr ${OPTIND} - 1`
+
+
+
 TMPFILE="./_test_Configuration_$$"
 
 CFG1="test_config_01.cfg"
@@ -33,7 +46,7 @@ EOF2
 
 
 # all defaults
-./test_Configuration > "${TMPFILE}"
+${VALGRIND} ./test_Configuration > "${TMPFILE}"
 source "${TMPFILE}"
 
 if [ "x${AAA}" != "xN" -o "x${BBB}" != "xN" -o "x${CCC}" != "x99" -o "x${DDD}" != "x99.99" -o "x${EEE}" != "xgamma" ] ; then
@@ -50,7 +63,7 @@ fi
 
 # first config
 mv "${CFG1}.X" "${CFG1}"
-./test_Configuration > "${TMPFILE}"
+${VALGRIND} ./test_Configuration > "${TMPFILE}"
 source "${TMPFILE}"
 
 if [ "x${AAA}" != "xY" -o "x${BBB}" != "xN" -o "x${CCC}" != "x3" -o "x${DDD}" != "x99.99" -o "x${EEE}" != "xgamma" ] ; then
@@ -69,7 +82,7 @@ mv "${CFG2}.X" "${CFG2}"
 mv "${CFG3}.X" "${CFG3}"
 
 # first, second config
-./test_Configuration > "${TMPFILE}"
+${VALGRIND} ./test_Configuration > "${TMPFILE}"
 source "${TMPFILE}"
 
 if [ "x${AAA}" != "xY" -o "x${BBB}" != "xN" -o "x${CCC}" != "x5" -o "x${DDD}" != "x12.3" -o "x${EEE}" != "xgamma" ] ; then
@@ -84,7 +97,7 @@ if [ "x${AAA}" != "xY" -o "x${BBB}" != "xN" -o "x${CCC}" != "x5" -o "x${DDD}" !=
 fi
 
 # now override w/ short command-line options
-./test_Configuration -b -e whee > "${TMPFILE}"
+${VALGRIND} ./test_Configuration -b -e whee > "${TMPFILE}"
 source "${TMPFILE}"
 if [ "x${AAA}" != "xY" -o "x${BBB}" != "xY" -o "x${CCC}" != "x5" -o "x${DDD}" != "x12.3" -o "x${EEE}" != "xwhee" ] ; then
    echo "----------- short cmdline config test failed" >&2
@@ -98,7 +111,7 @@ if [ "x${AAA}" != "xY" -o "x${BBB}" != "xY" -o "x${CCC}" != "x5" -o "x${DDD}" !=
 fi
 
 # now override w/ long command-line options
-./test_Configuration --BBB --EEE who > "${TMPFILE}"
+${VALGRIND} ./test_Configuration --BBB --EEE who > "${TMPFILE}"
 source "${TMPFILE}"
 if [ "x${AAA}" != "xY" -o "x${BBB}" != "xY" -o "x${CCC}" != "x5" -o "x${DDD}" != "x12.3" -o "x${EEE}" != "xwho" ] ; then
    echo "----------- long cmdline config test failed" >&2
@@ -112,7 +125,7 @@ if [ "x${AAA}" != "xY" -o "x${BBB}" != "xY" -o "x${CCC}" != "x5" -o "x${DDD}" !=
 fi
 
 # now override w/ mixed short and long command-line options
-./test_Configuration -b --CCC 88 -d -32.0 --EEE who > "${TMPFILE}"
+${VALGRIND} ./test_Configuration -b --CCC 88 -d -32.0 --EEE who > "${TMPFILE}"
 source "${TMPFILE}"
 if [ "x${AAA}" != "xY" -o "x${BBB}" != "xY" -o "x${CCC}" != "x88" -o "x${DDD}" != "x-32.0" -o "x${EEE}" != "xwho" ] ; then
    echo "----------- mixed cmdline config test failed" >&2
@@ -126,7 +139,7 @@ if [ "x${AAA}" != "xY" -o "x${BBB}" != "xY" -o "x${CCC}" != "x88" -o "x${DDD}" !
 fi
 
 # now override the first config file, which will itself be overridden by the second
-./test_Configuration --conf1 ${CFG3} > "${TMPFILE}"
+${VALGRIND} ./test_Configuration --conf1 ${CFG3} > "${TMPFILE}"
 source "${TMPFILE}"
 if [ "x${AAA}" != "xN" -o "x${BBB}" != "xN" -o "x${CCC}" != "x5" -o "x${DDD}" != "x12.3" -o "x${EEE}" != "xsomething" ] ; then
    echo "----------- mixed cmdline config test failed" >&2
@@ -140,7 +153,7 @@ if [ "x${AAA}" != "xN" -o "x${BBB}" != "xN" -o "x${CCC}" != "x5" -o "x${DDD}" !=
 fi
 
 # now override the second config file
-./test_Configuration --conf2 ${CFG3} > "${TMPFILE}"
+${VALGRIND} ./test_Configuration --conf2 ${CFG3} > "${TMPFILE}"
 source "${TMPFILE}"
 if [ "x${AAA}" != "xY" -o "x${BBB}" != "xN" -o "x${CCC}" != "x7" -o "x${DDD}" != "x-45.67" -o "x${EEE}" != "xsomething" ] ; then
    echo "----------- mixed cmdline config test failed" >&2

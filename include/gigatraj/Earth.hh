@@ -1,7 +1,6 @@
 #ifndef GIGATRAJ_EARTH_H
 #define GIGATRAJ_EARTH_H
 
-#include "config.h"
 #include "gigatraj/gigatraj.hh"
 #include "gigatraj/PlanetSphereNav.hh"
 

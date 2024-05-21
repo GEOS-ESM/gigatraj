@@ -108,12 +108,12 @@ bool MetGEOSfpFcast::bracket( const std::string &quantity, double time, double *
     int status;
     double xtime, ytime, ptime;
     double tbase=0.0;
-    double tspace=24;
+    double tspace = 24;
     std::vector<std::string> *testquants;
     double mtime;
     bool sametime;
     
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfpFcast::bracket: Bracketing time " << time << " against base " << basetime << std::endl;
     }
     
@@ -128,7 +128,7 @@ bool MetGEOSfpFcast::bracket( const std::string &quantity, double time, double *
     testquants = new_testQuantity( quantity );
     
     // find the variable we are looking for
-    status = fdir.LookUp( (*testquants)[0], hgrid, pgrid, tspace, tave
+    status = fdir.LookUp( (*testquants)[0], desired_hgrid_id, desired_vgrid_id, tspace, desired_tave
          , NULL, NULL, NULL 
          , &true_vgrid, &true_hgrid, &true_tspace, &true_tave, &true_tbase, NULL, modelRun );
     if ( status && ! strict ) {
@@ -179,14 +179,14 @@ bool MetGEOSfpFcast::bracket( const std::string &quantity, double time, double *
        sametime = true;
     }
 
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfpFcast::bracket:   Found times " << prev << " and " << next << " using interval " << tspace << std::endl;
     }
    
     *t1 = prev-basetime;
     *t2 = next-basetime;
 
-    if ( debug > 5 ) {
+    if ( dbug > 5 ) {
        std::cerr << "MetGEOSfpFcast::bracket:   Translated bracket times to  " << *t1 << " and " << *t2  << std::endl;
     }
 
@@ -286,7 +286,7 @@ int MetGEOSfpFcast::setup(  const std::string quantity, const std::string &time 
     // do we need to find the basic attributes of this quantity?
     if ( quantity != test_quant || caltime != test_date ) {
 
-       if ( debug >= 3 ) {
+       if ( dbug >= 3 ) {
          std::cerr << "MetGEOSfpFcast::setup: testing for " << quantity << " @ " << caltime << std::endl;
          std::cerr << "MetGEOSfpFcast::setup: the model run is <<" << modelRun << ">>" << std::endl; 
        }
@@ -294,21 +294,21 @@ int MetGEOSfpFcast::setup(  const std::string quantity, const std::string &time 
        test_date = caltime;
        
        // find the variable we are looking for
-       status = fdir.LookUp( test_quant, hgrid, pgrid, tspace, tave
+       status = fdir.LookUp( test_quant, desired_hgrid_id, desired_vgrid_id, desired_tspace, desired_tave
             , NULL, NULL, &test_ndims
             , &test_vgrid, &test_hgrid, &test_tspace, &test_tave, &test_tbase, &newUrl, modelRun );
        if ( status && (strict != 0x07) ) {
           if ( horizStrictness() ) {
-             use_hgrid = hgrid;
+             use_hgrid = desired_hgrid_id;
           }   
           if ( vertStrictness() ) {
-             use_vgrid = pgrid;
+             use_vgrid = desired_vgrid_id;
           }   
           if ( tspaceStrictness() ) {
-             use_tspace = tspace;
+             use_tspace = desired_tspace;
           }   
           if ( tavgStrictness() ) {
-             use_tavg = tave;
+             use_tavg = desired_tave;
           }   
           status = fdir.LookUp( test_quant, use_hgrid, use_vgrid, use_tspace, use_tavg
             , NULL, NULL, &test_ndims
@@ -318,7 +318,7 @@ int MetGEOSfpFcast::setup(  const std::string quantity, const std::string &time 
        if ( status == 0 ) {
           
           test_url = *newUrl;
-          if ( debug >= 3 ) {
+          if ( dbug >= 3 ) {
              std::cerr << "MetGEOSfpFcast::setup:  testing was successful.  ndims is " << test_ndims << ", url=<<" << test_url << ">>" << std::endl;
           }
           
@@ -481,7 +481,7 @@ MetGEOSfpFcast* MetGEOSfpFcast::myNew()
    
    dup = new MetGEOSfpFcast;
    
-   dup->debug = debug;
+   dup->dbug = dbug;
    dup->setPgroup(my_pgroup, my_metproc);
    dup->defineCal( time2Cal(0), basetime );
    dup->maxsnaps = this->maxsnaps;

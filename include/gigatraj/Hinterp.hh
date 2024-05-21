@@ -89,6 +89,9 @@ are defined in the gigatraj namespace.
 class Hinterp : public Interpolator {
 
    public:
+   
+      /// \brief error in interpolation
+      class badhinterp {};
       
       // Default constructor
       Hinterp() {};

@@ -403,9 +403,9 @@ void Swarm::setup( const Parcel &p, ProcessGrp* pgrp, int n, int r)
       // but for now, we'll sonsider this a pathological case and
       // throw an exception
       if ( met_procs != NULLPTR ) {
-         delete met_procs;
+         delete[] met_procs;
       }
-      delete grp_proc_list;
+      delete[] grp_proc_list;
       std::cerr << "Too few parcels (" << n 
                 << ") to occupy the number of processors (" 
                 << num_traceprocs << ")" << std::endl;
@@ -502,7 +502,7 @@ void Swarm::setup( const Parcel &p, ProcessGrp* pgrp, int n, int r)
           //- std::cerr << "[" << my_proc << "/" << num_traceprocs << "] end split"  << std::endl;
        } catch (...) {
           // release stuff here
-          delete met_procs;
+          delete[] met_procs;
           // destroy all (sub)groups created hitherto
           for ( pi=subgroups.begin(); pi != subgroups.end(); pi++ )
           {
@@ -655,9 +655,9 @@ void Swarm::setup( const Parcel &p, ProcessGrp* pgrp, int n, int r)
 
    } // end of (sub)group creation loop
 
-   delete grp_proc_list;
+   delete[] grp_proc_list;
    if ( met_procs != NULLPTR ) {
-      delete met_procs;
+      delete[] met_procs;
    }
    //- std::cerr << "[" << my_proc << "/" << num_traceprocs << "] exiting setup" << std::endl;
 
@@ -689,28 +689,28 @@ Swarm::~Swarm()
    
    // destroy all parcels
    if ( lons != NULLPTR ) {
-      delete lons;
+      delete[] lons;
    }
    if ( lats != NULLPTR ) {
-      delete lats;
+      delete[] lats;
    }
    if ( zs != NULLPTR ) {
-      delete zs;
+      delete[] zs;
    }
    if ( ts != NULLPTR ) {
-      delete ts;
+      delete[] ts;
    }
    if ( tgs != NULLPTR ) {
-      delete tgs;
+      delete[] tgs;
    }
    if ( flagsets != NULLPTR ) {
-      delete flagsets;
+      delete[] flagsets;
    }
    if ( statuses != NULLPTR ) {
-      delete statuses;
+      delete[] statuses;
    }
    if ( ids != NULLPTR ) {
-      delete ids;
+      delete[] ids;
    }
    if ( sample_p != NULLPTR ) {
       delete sample_p;
@@ -744,34 +744,7 @@ Swarm::iterator::iterator()
 
 Swarm::iterator::iterator(int init, Swarm *swm) 
 {
-   my_parcel = -1;
-   my_swarm = swm; 
-   loaded = false;
-   int idx;
-   
-   if ( my_swarm->my_num_parcels >= 0 ) {
-      if ( init <  my_swarm->my_num_parcels ) {
-
-         my_parcel = init;
-          if ( init >= 0 ) {
-            idx = my_swarm->ids[my_parcel];
-            pcl.lon = my_swarm->lons[idx];
-            pcl.lat = my_swarm->lats[idx];
-            pcl.z   = my_swarm->zs[idx];
-            pcl.t   = my_swarm->ts[idx];
-            pcl.tg  = my_swarm->tgs[idx];
-            pcl.flagset = my_swarm->flagsets[idx];
-            pcl.statuses = my_swarm->statuses[idx];
-
-            loaded = true;
-         }
-
-      } else {
-         throw(badparcelindex());
-      }      
-   } else {
-      throw(badparcelindex());
-   }      
+    set(init,swm);
 };
 
 Parcel& Swarm::iterator::operator*()  
@@ -902,6 +875,38 @@ void Swarm::iterator::stop()
 
 }
 
+void Swarm::iterator::set(int init, Swarm *swm) 
+{
+   my_parcel = -1;
+   my_swarm = swm; 
+   loaded = false;
+   int idx;
+   
+   if ( my_swarm->my_num_parcels >= 0 ) {
+      if ( init <  my_swarm->my_num_parcels ) {
+
+         my_parcel = init;
+          if ( init >= 0 ) {
+            idx = my_swarm->ids[my_parcel];
+            pcl.lon = my_swarm->lons[idx];
+            pcl.lat = my_swarm->lats[idx];
+            pcl.z   = my_swarm->zs[idx];
+            pcl.t   = my_swarm->ts[idx];
+            pcl.tg  = my_swarm->tgs[idx];
+            pcl.flagset = my_swarm->flagsets[idx];
+            pcl.statuses = my_swarm->statuses[idx];
+
+            loaded = true;
+         }
+
+      } else {
+         throw(badparcelindex());
+      }      
+   } else {
+      throw(badparcelindex());
+   }      
+}
+
 void Swarm::debut()
 {
     int n;
@@ -985,7 +990,7 @@ void Swarm::fin()
 
 Swarm::Iter Swarm::begin() 
 {
-    Swarm::Iter *i;
+    Swarm::Iter i;
     int n;
     
     
@@ -997,19 +1002,19 @@ Swarm::Iter Swarm::begin()
        n = -1;  // unless this is a met-reading processor
     }  
      
-    i = new Swarm::Iter( n, this );
+    i.set( n, this );
     
-    return *i;
+    return i;
 
 };
 
 Swarm::Iter Swarm::end()
 {
-    Swarm::Iter *i;
+    Swarm::Iter i;
     
-    i = new Swarm::Iter( -1, this );
+    i.set( -1, this );
     
-    return *i;
+    return i;
 
 };
 
@@ -1086,14 +1091,14 @@ void Swarm::grow( int n )
                new_ids[i]  = ids[i];
            }
            
-           delete ids;
-           delete statuses;
-           delete flagsets;
-           delete tgs;
-           delete ts;
-           delete zs;
-           delete lats;
-           delete lons;
+           delete[] ids;
+           delete[] statuses;
+           delete[] flagsets;
+           delete[] tgs;
+           delete[] ts;
+           delete[] zs;
+           delete[] lats;
+           delete[] lons;
      
         }
         
@@ -1262,7 +1267,6 @@ Parcel* Swarm::parcel( int n, int flag ) const
    
       // get it
       
-      //p = parcels[  ];
       p = new Parcel;
       idx = ids[n - my_parcel_start];
       p->lon = lons[idx];
@@ -1346,19 +1350,22 @@ Parcel* Swarm::parcel( int n, int flag ) const
 
 }
 
-Parcel& Swarm::get( int n, int flag ) const
+Parcel Swarm::get( int n, int flag ) const
 {
    Parcel* p;
+   Parcel pp;
    
    p = this->parcel(n, flag);
    if ( p != NULLPTR ) {
-      return *p;
+      pp = *p;
+      delete p;
+      return pp;
    } else {
       throw (badparcelindex());
    }
 }
 
-Parcel& Swarm::operator[]( int n )
+Parcel Swarm::operator[]( int n )
 {
    
    return this->get(n);
@@ -1445,6 +1452,8 @@ void Swarm::add( const Parcel& p, const int mode )
        tgs[idx]      = parcl->tg;
        flagsets[idx] = parcl->flagset;
        statuses[idx] = parcl->statuses;
+
+       delete parcl;
 
     } else {
        // not my parcel. 

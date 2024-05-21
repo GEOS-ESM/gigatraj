@@ -34,8 +34,10 @@ int main()
     real dist;
     int status;
     int n;
-    real *lats, *lats2, *targetlats;
-    real *lons, *lons2, *targetlons;
+    real *lats, *lats2;
+    real *lons, *lons2;
+    real *targetlats, *targetlats_exact, *targetlats_apprx, *targetlats_crude;
+    real *targetlons, *targetlons_exact, *targetlons_apprx, *targetlons_crude;
     real *dists, *targetdists;
     real *dlons, *dlats;
     real *dxs, *dys;
@@ -43,6 +45,8 @@ int main()
     real *vxIn, *vxOut, *vxTarget;
     real *vyIn, *vyOut, *vyTarget;
     real vx, vy;
+    real lonlimit;
+    int quality, qual;
     
     
     if ( e.id != string("Earth") )
@@ -74,7 +78,16 @@ int main()
        cerr << "Bad wrap 360.0 -> " << lonw << endl;
        exit(1);
     }   
-#ifdef WRAP_180
+    
+    e.wrappingLongitude( -77.7 );
+    lonlimit = e.wrappingLongitude();
+    if ( mismatch( lonlimit, -77.7 ) ) { 
+       cerr << "Failed to set wrappinglongitude to -77.7. Value is " << lonlimit << endl;
+       exit(1);
+    }   
+
+    e.wrappingLongitude( -180.0 );
+    
     // should not wrap
     lonw = e.wrap(-40.0);
     if ( mismatch( lonw, -40.0)  ) 
@@ -111,7 +124,8 @@ int main()
        exit(1);
     }   
     
-#else
+    e.wrappingLongitude( 0.0 );
+
     // should wrap
     lonw = e.wrap(-40.0);
     if ( mismatch( lonw, 320.0)  ) 
@@ -147,7 +161,6 @@ int main()
        cerr << "Bad wrap 359.999 -> " << lonw << endl;
        exit(1);
     }   
-#endif
 
 
 
@@ -291,7 +304,8 @@ int main()
     targetlons[0] = 15.0;
     targetlats[0] = 30.0;
     
-#ifdef WRAP_180
+    e.wrappingLongitude( -180.0 );
+    
     // increment across longitude wrapping point
     lons[1] = 178.0;
     lats[1] = 20.0;
@@ -313,7 +327,9 @@ int main()
     dlats[3] = -3.0;
     targetlons[3] = -130.0;
     targetlats[3] = -88.0;
-#else
+
+    e.wrappingLongitude( 0.0 );
+
     // increment across longitude wrapping point
     lons[1] = 358.0;
     lats[1] = 20.0;
@@ -335,7 +351,7 @@ int main()
     dlats[3] = -3.0;
     targetlons[3] = 230.0;
     targetlats[3] = -88.0;
-#endif
+
     
     for ( int i=0; i<n; i++ ) {
         try {
@@ -370,12 +386,12 @@ int main()
           exit(1);  
        } 
     }
-    delete dlats;
-    delete dlons;
-    delete targetlats;
-    delete targetlons;
-    delete lats;
-    delete lons;
+    delete[] dlats;
+    delete[] dlons;
+    delete[] targetlats;
+    delete[] targetlons;
+    delete[] lats;
+    delete[] lons;
 
 
     // =============================   method deltaxy
@@ -406,8 +422,11 @@ int main()
     lats[2] =  -20.0;
     dxs[2] = 100.0;
     dys[2] =  0.0;
-    targetlons[2] = 40.9572;
-    targetlats[2] = -20.0;
+    //targetlons[2] = 40.9572;
+    //targetlats[2] = -20.0;
+    // note: following great circle path, not the latitude circle
+    targetlons[2] = 40.9571;
+    targetlats[2] = -19.9977;
     // typical arbitrary mid-latitude case
     lons[3] = 97.0;
     lats[3] =  -43.4;
@@ -452,14 +471,12 @@ int main()
         }
     }
     
-    delete dys;
-    delete dxs;
-    delete targetlats;
-    delete targetlons;
-    delete lats;
-    delete lons;
-
-
+    delete[] dys;
+    delete[] dxs;
+    delete[] targetlats;
+    delete[] targetlons;
+    delete[] lats;
+    delete[] lons;
 
 
     // =============================   method distance
@@ -518,12 +535,12 @@ int main()
         }    
     }
     
-    delete targetdists;
-    delete dists;
-    delete lats2;
-    delete lons2;
-    delete lats;
-    delete lons;
+    delete[] targetdists;
+    delete[] dists;
+    delete[] lats2;
+    delete[] lons2;
+    delete[] lats;
+    delete[] lons;
 
 
     // =============================   method radius
@@ -581,11 +598,11 @@ int main()
     lats[4] = 90.0;
     dists[4] = 111.0;
     bearings[4] = 0.0;
-#ifdef WRAP_180
-    targetlons[4] = -135.0;
-#else
-    targetlons[4] = 225.0;
-#endif
+    if ( e.wrappingLongitude() != 0.0 ) {
+        targetlons[4] = -135.0;
+    } else {
+        targetlons[4] = 225.0;
+    }
     targetlats[4] = 89.0018;
 
     lons[5] = 45.0;
@@ -606,11 +623,11 @@ int main()
     lats[7] = 90.0;
     dists[7] = 111.0;
     bearings[7] = -90.0;
-#ifdef WRAP_180
-    targetlons[7] = -45.0;
-#else
-    targetlons[7] = 315.0;
-#endif
+    if ( e.wrappingLongitude() != 0.0 ) {
+        targetlons[7] = -45.0;
+    } else {
+        targetlons[7] = 315.0;
+    }
     targetlats[7] = 89.0018;
     
     // from south pole, in all four directions
@@ -632,22 +649,22 @@ int main()
     lats[10] = -90.0;
     dists[10] = 111.0;
     bearings[10] = 180.0;
-#ifdef WRAP_180
-    targetlons[10] = -135.0;
-#else
-    targetlons[10] = 225.000;
-#endif
+    if ( e.wrappingLongitude() != 0.0 ) {
+        targetlons[10] = -135.0;
+    } else {
+        targetlons[10] = 225.000;
+    }
     targetlats[10] = -89.0018;
     
     lons[11] = 45.0;
     lats[11] = -90.0;
     dists[11] = 111.0;
     bearings[11] = -90.0;
-#ifdef WRAP_180
-    targetlons[11] = -45.0;
-#else
-    targetlons[11] = 315.0;
-#endif
+    if ( e.wrappingLongitude() != 0.0 ) {
+        targetlons[11] = -45.0;
+    } else {
+        targetlons[11] = 315.0;
+    }
     targetlats[11] = -89.0018;
 
     for ( int i=0; i<n; i++ ) {
@@ -679,14 +696,14 @@ int main()
         }   
     }
     
-    delete lats2;
-    delete lons2;
-    delete targetlats;
-    delete targetlons;
-    delete bearings;
-    delete dists;
-    delete lats;
-    delete lons;
+    delete[] lats2;
+    delete[] lons2;
+    delete[] targetlats;
+    delete[] targetlons;
+    delete[] bearings;
+    delete[] dists;
+    delete[] lats;
+    delete[] lons;
     
 
     // =============================   vector relocations
@@ -746,7 +763,7 @@ int main()
     vyIn[4] = 10.0;
     lons2[4] =  30.0;
     lats2[4] = lats[4];
-    vxTarget[4] = 5.0;
+    vxTarget[4] = -5.0;
     vyTarget[4] =  8.66025;
 
     lons[5] = 0.0;
@@ -756,7 +773,7 @@ int main()
     lons2[5] = 30.0;
     lats2[5] = lats[5];
     vxTarget[5] = 8.66025;
-    vyTarget[5] =  -5.0;
+    vyTarget[5] =  5.0;
 
     lons[6] = 0.0;
     lats[6] = 89.99;
@@ -764,7 +781,7 @@ int main()
     vyIn[6] = -10.0;
     lons2[6] = 30.0;
     lats2[6] = lats[6];
-    vxTarget[6] = -5.0;
+    vxTarget[6] = 5.0;
     vyTarget[6] = -8.66025;
 
     lons[7] = 0.0;
@@ -774,7 +791,7 @@ int main()
     lons2[7] = 30.0;
     lats2[7] = lats[7];
     vxTarget[7] = -8.66025;
-    vyTarget[7] =  5.0;
+    vyTarget[7] =  -5.0;
 
     // vector near south pole; four directions
     lons[8] = 0.0;
@@ -783,7 +800,7 @@ int main()
     vyIn[8] = 10.0;
     lons2[8] =  30.0;
     lats2[8] = lats[8];
-    vxTarget[8] = -5.0;
+    vxTarget[8] =  5.0;
     vyTarget[8] =  8.66025;
 
     lons[9] = 0.0;
@@ -793,7 +810,7 @@ int main()
     lons2[9] = 30.0;
     lats2[9] = lats[9];
     vxTarget[9] = 8.66025;
-    vyTarget[9] =  5.0;
+    vyTarget[9] =  -5.0;
 
     lons[10] = 0.0;
     lats[10] = -89.99;
@@ -801,7 +818,7 @@ int main()
     vyIn[10] = -10.0;
     lons2[10] = 30.0;
     lats2[10] = lats[10];
-    vxTarget[10] =  5.0;
+    vxTarget[10] =  -5.0;
     vyTarget[10] = -8.66025;
 
     lons[11] = 0.0;
@@ -811,8 +828,13 @@ int main()
     lons2[11] = 30.0;
     lats2[11] = lats[11];
     vxTarget[11] = -8.66025;
-    vyTarget[11] =  -5.0;
+    vyTarget[11] =  5.0;
 
+    e.conformal( 0 );
+    if ( e.conformal() != 0 ) {
+       cerr << "Unable to disable conformal adjustments by rotation" << endl;
+       exit(1);  
+    }
     for ( int i=0; i<n; i++ ) {
         try {
             vx = vxIn[i];
@@ -823,7 +845,7 @@ int main()
            exit(1);  
         }
         if ( mismatch( vx, vxIn[i] ) || mismatch( vy, vyIn[i] )  ) {
-           cerr << "Bad vReloate() w/o adjustment at i=" << i << ": got (" <<  vx << ", " << vy << ") "
+           cerr << "Bad vRelocate() w/o adjustment at i=" << i << ": got (" <<  vx << ", " << vy << ") "
            << " instead of (" << vxIn[i] << ", " << vyIn[i] << ")" << endl;
            exit(1);
         }   
@@ -841,7 +863,7 @@ int main()
     }
     for ( int i=0; i<n; i++ ) {
         if ( mismatch( vxOut[i], vxIn[i] ) || mismatch( vyOut[i], vyIn[i] )  ) {
-           cerr << "array: Bad vReloate() w/o adjustment at i=" << i << ": got (" 
+           cerr << "array: Bad vRelocate() w/o adjustment at i=" << i << ": got (" 
            <<  vxOut[i] << ", " << vyOut[i] << ") "
            << " instead of (" << vxIn[i] << ", " << vyIn[i] << ")" << endl;
            exit(1);
@@ -871,7 +893,7 @@ int main()
            exit(1);  
         }
         if ( mismatch( vx, vxTarget[i] ) || mismatch( vy, vyTarget[i] )  ) {
-           cerr << "Bad vReloate() at i=" << i << ": got (" <<  vx << ", " << vy << ") "
+           cerr << "Bad vRelocate() at i=" << i << ": got (" <<  vx << ", " << vy << ") "
            << " instead of (" << vxTarget[i] << ", " << vyTarget[i] << ")" << endl;
            exit(1);
         }   
@@ -889,30 +911,49 @@ int main()
     }
     for ( int i=0; i<n; i++ ) {
         if ( mismatch( vxOut[i], vxTarget[i] ) || mismatch( vyOut[i], vyTarget[i] )  ) {
-           cerr << "array: Bad vReloate() at i=" << i << ": got (" 
+           cerr << "array: Bad vRelocate() at i=" << i << ": got (" 
            <<  vxOut[i] << ", " << vyOut[i] << ") "
            << " instead of (" << vxTarget[i] << ", " << vyTarget[i] << ")" << endl;
            exit(1);
         }   
     }
 
-    delete vyTarget;
-    delete vyOut;
-    delete vyIn;
-    delete vxTarget;
-    delete vxOut;
-    delete vxIn;
-    delete lats2;
-    delete lons2;
-    delete lats;
-    delete lons; 
+    delete[] vyTarget;
+    delete[] vyOut;
+    delete[] vyIn;
+    delete[] vxTarget;
+    delete[] vxOut;
+    delete[] vxIn;
+    delete[] lats2;
+    delete[] lons2;
+    delete[] lats;
+    delete[] lons; 
 
+    // =============================   setting and querying the approximation/quality attribute
+    qual = e.approximate();
+    if ( qual != 0 ) {
+       cerr << "approximate: default value is not 0, but " << qual << endl;
+       exit(1);
+    }
+    e.approximate(-1);
+    qual = e.approximate();
+    if ( qual != -1 ) {
+       cerr << "approximate: approximate() set to -1 did not stick: " << qual << endl;
+       exit(1);
+    }
+    
     // =============================   method deltaxy (again, this time w/ conformal adjustment)
     n = 4;
     lons = new real[n];
     lats = new real[n];
-    targetlons = new real[n];
-    targetlats = new real[n];
+    targetlons_exact = new real[n];
+    targetlats_exact = new real[n];
+    targetlons_apprx = new real[n];
+    targetlats_apprx = new real[n];
+    targetlons_crude = new real[n];
+    targetlats_crude = new real[n];
+    lons2 = new real[n];
+    lats2 = new real[n];
     dxs = new real[n];
     dys = new real[n];
 
@@ -921,45 +962,63 @@ int main()
     lats[0] =  0.0;
     dxs[0] = 100.0;
     dys[0] =   0.0;
-    targetlons[0] = 10.8993;
-    targetlats[0] = 0.0;
+    targetlons_exact[0] = 10.8993;
+    targetlats_exact[0] = 0.0;
+    targetlons_apprx[0] = 10.8993;
+    targetlats_apprx[0] = 0.0;
+    targetlons_crude[0] = 10.8993;
+    targetlats_crude[0] = 0.0;
     // simple equatorial case, along latitude
     lons[1] = 10.0;
     lats[1] =  20.0;
     dxs[1] = 0.0;
     dys[1] =  100.0;
-    targetlons[1] = 10.0;
-    targetlats[1] = 20.8993;
+    targetlons_exact[1] = 10.0;
+    targetlats_exact[1] = 20.8993;
+    targetlons_apprx[1] = 10.0;
+    targetlats_apprx[1] = 20.8993;
+    targetlons_crude[1] = 10.0;
+    targetlats_crude[1] = 20.8993;
     // simple non-equatorial case, along longitude
     lons[2] = 40.0;
     lats[2] =  -20.0;
     dxs[2] = 100.0;
     dys[2] =  0.0;
-    targetlons[2] = 40.9572;
-    targetlats[2] = -20.0;
+    targetlons_exact[2] = 40.957;
+    targetlats_exact[2] = -19.9974;
+    targetlons_apprx[2] = 40.9571;
+    targetlats_apprx[2] = -19.9977;
+    targetlons_crude[2] = 40.9572;
+    targetlats_crude[2] = -20.0;
     // typical arbitrary mid-latitude case
     // (this one is a little different from last time)
     lons[3] = 97.0;
     lats[3] =  -43.4;
     dxs[3] = 56.0;
     dys[3] =  -12.3;
-    targetlons[3] = 97.6944;
-    targetlats[3] = -43.5085;
+    targetlons_exact[3] = 97.6944;
+    targetlats_exact[3] = -43.5085;
+    targetlons_apprx[3] = 97.6931;
+    targetlats_apprx[3] = -43.5106;
+    targetlons_crude[3] = 97.6938;
+    targetlats_crude[3] = -43.5106;
 
-
+    // remember: approcimate() was set to -1, exact, above
     for ( int i=0; i<n; i++ ) {
         lon = lons[i];
         lat = lats[i];
+        lons2[i] = lon;
+        lats2[i] = lat;
         try {
            e.deltaxy( &lon, &lat, dxs[i], dys[i] );
         } catch ( Earth::badincrement err) {
-           cerr << "Bad xy deltaxy() w/ cnfml adj increment at i=" << i 
-           << ": expected (" << targetlons[i] << ", " << targetlats[i] << ")"  << endl;
+           cerr << "Bad xy deltaxy() <exact> increment at i=" << i 
+           << ": expected (" << targetlons_exact[i] << ", " << targetlats_exact[i] << ")"  << endl;
            exit(1);  
         }
-        if ( mismatch(lon, targetlons[i]) || mismatch(lat,targetlats[i]) ) {
-           cerr << "Bad deltaxy() w/ cnfml adj increment check at i=" << i << " ("
-           << "expecting ( " << targetlons[i] << ", " << targetlats[i] << "), got ("
+        if ( mismatch(lon, targetlons_exact[i]) || mismatch(lat,targetlats_exact[i]) ) {
+           cerr << "Bad deltaxy() <exact> increment check at i=" << i << " ("
+           << "expecting ( " << targetlons_exact[i] << ", " << targetlats_exact[i] << "), got ("
            << lon << ", " << lat << ")" << endl;
            exit(1);  
         } 
@@ -968,26 +1027,113 @@ int main()
 
     // try the array version
     try {
-       e.deltaxy( n, lons, lats, dxs, dys );
+       e.deltaxy( n, lons2, lats2, dxs, dys );
     } catch ( Earth::badincrement err) {
-       cerr << "array: Bad xy w/ cnfml adj increment check " << endl;
+       cerr << "array: Bad xy <exact> array increment check " << endl;
        exit(1);  
     }
     for ( int i=0; i<n; i++ ) {
-        if ( mismatch(lons[i], targetlons[i]) || mismatch(lats[i],targetlats[i]) ) {
-           cerr << "array: Bad xy w/ cnfml adj increment check at i=" << i << " ("
-           << "expecting ( " << targetlons[i] << ", " << targetlats[i] << "), got ("
-           << lons[i] << ", " << lats[i] << ")" << endl;
+        if ( mismatch(lons2[i], targetlons_exact[i]) || mismatch(lats2[i],targetlats_exact[i]) ) {
+           cerr << "array: Bad xy <exact> array increment check at i=" << i << " ("
+           << "expecting ( " << targetlons_exact[i] << ", " << targetlats_exact[i] << "), got ("
+           << lons2[i] << ", " << lats2[i] << ")" << endl;
+           exit(1);  
+        }
+    }
+
+
+    // now try it again, with the approx set to 0
+    e.approximate(0);
+    // remember: approcimate() was set to -1, apprx, above
+    for ( int i=0; i<n; i++ ) {
+        lon = lons[i];
+        lat = lats[i];
+        lons2[i] = lon;
+        lats2[i] = lat;
+        try {
+           e.deltaxy( &lon, &lat, dxs[i], dys[i] );
+        } catch ( Earth::badincrement err) {
+           cerr << "Bad xy deltaxy() <apprx> increment at i=" << i 
+           << ": expected (" << targetlons_apprx[i] << ", " << targetlats_apprx[i] << ")"  << endl;
+           exit(1);  
+        }
+        if ( mismatch(lon, targetlons_apprx[i]) || mismatch(lat,targetlats_apprx[i]) ) {
+           cerr << "Bad deltaxy() <apprx> increment check at i=" << i << " ("
+           << "expecting ( " << targetlons_apprx[i] << ", " << targetlats_apprx[i] << "), got ("
+           << lon << ", " << lat << ")" << endl;
+           exit(1);  
+        } 
+        
+    }
+
+    // try the array version
+    try {
+       e.deltaxy( n, lons2, lats2, dxs, dys );
+    } catch ( Earth::badincrement err) {
+       cerr << "array: Bad xy <apprx> array increment check " << endl;
+       exit(1);  
+    }
+    for ( int i=0; i<n; i++ ) {
+        if ( mismatch(lons2[i], targetlons_apprx[i]) || mismatch(lats2[i],targetlats_apprx[i]) ) {
+           cerr << "array: Bad xy <apprx> array increment check at i=" << i << " ("
+           << "expecting ( " << targetlons_apprx[i] << ", " << targetlats_apprx[i] << "), got ("
+           << lons2[i] << ", " << lats2[i] << ")" << endl;
+           exit(1);  
+        }
+    }
+
+
+    // now try it again, with the approx set to 1
+    e.approximate(1);
+    for ( int i=0; i<n; i++ ) {
+        lon = lons[i];
+        lat = lats[i];
+        lons2[i] = lon;
+        lats2[i] = lat;
+        try {
+           e.deltaxy( &lon, &lat, dxs[i], dys[i] );
+        } catch ( Earth::badincrement err) {
+           cerr << "Bad xy deltaxy() <crude> increment at i=" << i 
+           << ": expected (" << targetlons_crude[i] << ", " << targetlats_crude[i] << ")"  << endl;
+           exit(1);  
+        }
+        if ( mismatch(lon, targetlons_crude[i]) || mismatch(lat,targetlats_crude[i]) ) {
+           cerr << "Bad deltaxy() <crude> increment check at i=" << i << " ("
+           << "expecting ( " << targetlons_crude[i] << ", " << targetlats_crude[i] << "), got ("
+           << lon << ", " << lat << ")" << endl;
+           exit(1);  
+        } 
+        
+    }
+
+    // try the array version
+    try {
+       e.deltaxy( n, lons2, lats2, dxs, dys );
+    } catch ( Earth::badincrement err) {
+       cerr << "array: Bad xy <crude> array increment check " << endl;
+       exit(1);  
+    }
+    for ( int i=0; i<n; i++ ) {
+        if ( mismatch(lons2[i], targetlons_crude[i]) || mismatch(lats2[i],targetlats_crude[i]) ) {
+           cerr << "array: Bad xy <crude> array increment check at i=" << i << " ("
+           << "expecting ( " << targetlons_crude[i] << ", " << targetlats_crude[i] << "), got ("
+           << lons2[i] << ", " << lats2[i] << ")" << endl;
            exit(1);  
         }
     }
     
-    delete dys;
-    delete dxs;
-    delete targetlats;
-    delete targetlons;
-    delete lats;
-    delete lons;
+    delete[] dys;
+    delete[] dxs;
+    delete[] lats2;
+    delete[] lons2;
+    delete[] targetlats_crude;
+    delete[] targetlons_crude;
+    delete[] targetlats_apprx;
+    delete[] targetlons_apprx;
+    delete[] targetlats_exact;
+    delete[] targetlons_exact;
+    delete[] lats;
+    delete[] lons;
 
 
     // if we got this far, everything is OK

@@ -181,5 +181,7 @@ int main()
        exit(1);  
     
     }
+    
+    delete sp;
 
 }

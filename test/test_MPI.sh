@@ -10,12 +10,16 @@ NPROCS=5
 # log file
 LOG=""
 
+# for use w/ valgrind
+VALGRIND=""
+
 USAGE="test_MPI.sh [-n number] [-l logfile]"
 
-while getopts n:l: ARG
+while getopts n:l:v: ARG
 do
     case "${ARG}" in
     n) NPROCS="${OPTARG}";;
+    v) VALGRIND="valgrind ${OPTARG}";;
     l) LOG="${OPTARG}";;
     \?) echo "Usage: $USAGE" >&2
         exit 1;;
@@ -28,7 +32,13 @@ if [ "X${LOG}" != "X" ] ; then
    LOGARG=" --output-filename ${LOG} "
 fi
 
-PROG=`echo "${ME}" | sed -e 's/\.sh$//'`
+# We strip the ".sh" off of the name we were called as,
+# and what is left is the name of the compiled executable
+# for this test. Note that the shell script wrapper is
+# in ${top_srcdir}/test/ and the compiled executable is in
+# ${top_builddir}/test/, so we use basename to strip off
+# the shell script directory before removing the ".sh".
+PROG=`basename "${ME}" | sed -e 's/\.sh$//'`
 
 mpirun -np ${NPROCS} --tag-output ${LOGARG} "${PROG}"
 

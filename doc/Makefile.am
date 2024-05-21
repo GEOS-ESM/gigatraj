@@ -363,6 +363,10 @@ TESTS = check_doxygen.sh
 doc: $(docarchive) $(manpages)
 	echo "Made the documentation"
 
+# Let's not make anything
+nodoc:
+	echo "Did not make the documentation"
+
 
 # How do we install the doc tarball?
 # create the installation directory.
@@ -433,9 +437,9 @@ $(pdf_out):  $(DOX_TRIGGER)
 $(rtf_out):  $(DOX_TRIGGER)
 	if test "x$(DOX_DO_RTF)" = "xyes"  ; then  cp rtf/refman.rtf $(rtf_out) ; fi
 
-$(pandir)/gtmodel_s01.3gt:  $(DOX_TRIGGER)
+$(mandir)/gtmodel_s01.3gt:  $(DOX_TRIGGER)
 	@echo "man page ready"
-$(pandir)/gt_fill_met_cache.3gt:  $(DOX_TRIGGER)
+$(mandir)/gt_fill_met_cache.3gt:  $(DOX_TRIGGER)
 	@echo "man page ready"
 
 html-local: $(DOX_TRIGGER)

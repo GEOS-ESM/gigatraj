@@ -14,9 +14,27 @@
      Test utilities for gigatraj
 */
 
+#include <stdlib.h>
 #include "test_utils.hh"
 
 using namespace gigatraj;
+
+std::string datadir( std::string dir )
+{
+    std::string result;
+    char *envdir;
+
+    result = "";
+    if ( dir != "" ) {
+       envdir = getenv( dir.c_str() );
+       if ( envdir != NULL ) {
+          result = std::string( envdir ) + "/";
+       }
+    }
+
+    return result;
+}
+
    
 int mismatch( gigatraj::real a, gigatraj::real b) 
 {

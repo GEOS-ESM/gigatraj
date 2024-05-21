@@ -680,6 +680,9 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
+DO_MYGEOS
+MYGEOS_FALSE
+MYGEOS_TRUE
 DO_GEOSFP
 GEOSFP_FALSE
 GEOSFP_TRUE
@@ -783,9 +786,11 @@ enable_wrap180
 enable_doxygen
 enable_mpi
 enable_netcdf
+enable_allmet
 enable_merra
 enable_merra2
 enable_geosfp
+enable_mygeos
 enable_dependency_tracking
 '
       ac_precious_vars='build_alias
@@ -1426,9 +1431,11 @@ Optional Features:
   --enable-doxygen		Allows generation of documentation files
   --enable-mpi		Construct a version of the library that uses MPI for parallel processing
   --enable-netcdf		Allows use of netcdf4 files
+  --enable-allmet		Add all meteorological data classes
   --enable-merra		Add class for reading NASA's GMAO MERRA meteorological data
   --enable-merra2		Add class for reading NASA's GMAO MERRA2 meteorological data
   --enable-geosfp		Add class for reading NASA's GMAO GEOS fp meteorological data
+  --enable-mygeos		Add class for reading local output files from NASA's GMAO GEOS
   --enable-dependency-tracking
                           do not reject slow dependency extractors
   --disable-dependency-tracking
@@ -3137,6 +3144,21 @@ DO_NETCDF=1
 
 fi
 
+
+##### optional MetData subclasses
+
+# Check whether --enable-allmet was given.
+if test "${enable_allmet+set}" = set; then :
+  enableval=$enable_allmet; case "${enableval}" in
+ yes) do_allmet=true ;;
+ no)  do_allmet=false ;;
+ *) as_fn_error $? "bad value ${enableval} for --enable-allmet" "$LINENO" 5 ;;
+ esac
+else
+  do_allmet=false
+fi
+
+
 # Check whether --enable-merra was given.
 if test "${enable_merra+set}" = set; then :
   enableval=$enable_merra; case "${enableval}" in
@@ -3148,6 +3170,9 @@ else
   do_merra=false
 fi
 
+if test x$do_allmet = xtrue ; then
+   do_merra=true
+fi
  if test x$do_merra = xtrue; then
   MERRA_TRUE=
   MERRA_FALSE='#'
@@ -3175,6 +3200,9 @@ else
   do_merra2=false
 fi
 
+if test x$do_allmet = xtrue ; then
+   do_merra2=true
+fi
  if test x$do_merra2 = xtrue; then
   MERRA2_TRUE=
   MERRA2_FALSE='#'
@@ -3202,6 +3230,9 @@ else
   do_geosfp=false
 fi
 
+if test x$do_allmet = xtrue ; then
+   do_geosfp=true
+fi
  if test x$do_geosfp = xtrue; then
   GEOSFP_TRUE=
   GEOSFP_FALSE='#'
@@ -3218,8 +3249,41 @@ DO_GEOSFP=1
 
 fi
 
+# Check whether --enable-mygeos was given.
+if test "${enable_mygeos+set}" = set; then :
+  enableval=$enable_mygeos; case "${enableval}" in
+ yes) do_mygeos=true ;;
+ no)  do_mygeos=false ;;
+ *) as_fn_error $? "bad value ${enableval} for --enable-mygeos" "$LINENO" 5 ;;
+ esac
+else
+  do_mygeos=false
+fi
+
+if test x$do_allmet = xtrue ; then
+   do_mygeos=true
+fi
+ if test x$do_mygeos = xtrue; then
+  MYGEOS_TRUE=
+  MYGEOS_FALSE='#'
+else
+  MYGEOS_TRUE='#'
+  MYGEOS_FALSE=
+fi
+
+DO_MYGEOS=0
+
+if test x$do_mygeos = xtrue ; then
+do_netcdf=true
+DO_MYGEOS=1
+
+fi
+
+
 
 ###### Enough with specifications. Let's start checking for stuff.
+
+
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -4395,6 +4459,7 @@ fi
 
 
 
+
 if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.
 set dummy ${ac_tool_prefix}ranlib; ac_word=$2
@@ -5372,7 +5437,6 @@ fi
 
 done
 
-# Do this for malloc/calloc
 for ac_header in stdlib.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "stdlib.h" "ac_cv_header_stdlib_h" "$ac_includes_default"
@@ -5439,6 +5503,18 @@ do :
 if test "x$ac_cv_header_sys_stat_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_STAT_H 1
+_ACEOF
+
+fi
+
+done
+
+for ac_header in string.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "string.h" "ac_cv_header_string_h" "$ac_includes_default"
+if test "x$ac_cv_header_string_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_STRING_H 1
 _ACEOF
 
 fi
@@ -6110,7 +6186,7 @@ _ACEOF
 fi
 
 
-ac_config_files="$ac_config_files Makefile include/gigatraj/Makefile include/gigatraj/gigatraj.hh lib/Makefile lib/filters/Makefile lib/metsources/Makefile src/Makefile test/Makefile doc/gigatraj_base.dconf:doc/gigatraj_base.dconf.in doc/latex_yes.dconf:doc/latex_yes.dconf.in doc/Makefile"
+ac_config_files="$ac_config_files Makefile include/gigatraj/Makefile include/gigatraj/gigatraj.hh lib/Makefile lib/filters/Makefile lib/metsources/Makefile src/Makefile confiles/Makefile test/Makefile doc/gigatraj_base.dconf:doc/gigatraj_base.dconf.in doc/latex_yes.dconf:doc/latex_yes.dconf.in doc/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6271,6 +6347,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${GEOSFP_TRUE}" && test -z "${GEOSFP_FALSE}"; then
   as_fn_error $? "conditional \"GEOSFP\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${MYGEOS_TRUE}" && test -z "${MYGEOS_FALSE}"; then
+  as_fn_error $? "conditional \"MYGEOS\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${AMDEP_TRUE}" && test -z "${AMDEP_FALSE}"; then
@@ -6918,6 +6998,7 @@ do
     "lib/filters/Makefile") CONFIG_FILES="$CONFIG_FILES lib/filters/Makefile" ;;
     "lib/metsources/Makefile") CONFIG_FILES="$CONFIG_FILES lib/metsources/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "confiles/Makefile") CONFIG_FILES="$CONFIG_FILES confiles/Makefile" ;;
     "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
     "doc/gigatraj_base.dconf") CONFIG_FILES="$CONFIG_FILES doc/gigatraj_base.dconf:doc/gigatraj_base.dconf.in" ;;
     "doc/latex_yes.dconf") CONFIG_FILES="$CONFIG_FILES doc/latex_yes.dconf:doc/latex_yes.dconf.in" ;;

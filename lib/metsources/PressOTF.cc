@@ -120,7 +120,7 @@ GridField3D* PressOTF::calc( const GridField3D& input, const real start, int fla
        
        // duplicate the input field, to create the needed output object
        // Use the vertical coordinate values as data values.
-       // (Note tha this also takes care of any metadata settings.)
+       // (Note that his also takes care of any metadata settings.)
        result = input.generateVertical();
        
     } else if ( input.quantity() == temp_name && input.vertical() == theta_name ) {

@@ -325,9 +325,9 @@ void Flock::setup( const Parcel &p, ProcessGrp* pgrp, int n, int r)
       // but for now, we'll sonsider this a pathological case and
       // throw an exception
       if ( met_procs != NULLPTR ) {
-         delete met_procs;
+         delete[] met_procs;
       }
-      delete grp_proc_list;
+      delete[] grp_proc_list;
       std::cerr << "Too few parcels (" << n 
                 << ") to occupy the number of processors (" 
                 << num_traceprocs << ")" << std::endl;
@@ -424,7 +424,7 @@ void Flock::setup( const Parcel &p, ProcessGrp* pgrp, int n, int r)
           //- std::cerr << "[" << my_proc << "/" << num_traceprocs << "] end split"  << std::endl;
        } catch (...) {
           // release stuff here
-          delete met_procs;
+          delete[] met_procs;
           // destroy all (sub)groups created hitherto
           for ( pi=subgroups.begin(); pi != subgroups.end(); pi++ )
           {
@@ -568,9 +568,9 @@ void Flock::setup( const Parcel &p, ProcessGrp* pgrp, int n, int r)
 
    } // end of (sub)group creation loop
 
-   delete grp_proc_list;
+   delete[] grp_proc_list;
    if ( met_procs != NULLPTR ) {
-      delete met_procs;
+      delete[] met_procs;
    }
    //- std::cerr << "[" << my_proc << "/" << num_traceprocs << "] exiting setup" << std::endl;
 
@@ -629,6 +629,11 @@ Flock::iterator::iterator()
 
 Flock::iterator::iterator(int init, Flock *flk) 
 {
+    set(init, flk);
+};
+
+void Flock::iterator::set(int init, Flock *flk)
+{
    my_flock = flk; 
    if ( my_flock->my_num_parcels >= 0 ) {
       if ( init <  my_flock->my_num_parcels ) {
@@ -639,7 +644,8 @@ Flock::iterator::iterator(int init, Flock *flk)
    } else {
       throw(badparcelindex());
    }      
-};
+
+}
 
 Parcel& Flock::iterator::operator*() const 
 {
@@ -786,7 +792,7 @@ void Flock::fin()
 
 Flock::Iter Flock::begin() 
 {
-    Flock::Iter *i;
+    Flock::Iter ii;
     int n;
     
     
@@ -798,19 +804,19 @@ Flock::Iter Flock::begin()
        n = -1;  // unless this is a met-reading processor
     }  
      
-    i = new Flock::Iter( n, this );
+    ii.set( n, this );
     
-    return *i;
+    return ii;
 
 };
 
 Flock::Iter Flock::end()
 {
-    Flock::Iter *i;
+    Flock::Iter ii;
     
-    i = new Flock::Iter( -1, this );
+    ii.set( -1, this );
     
-    return *i;
+    return ii;
 
 };
 

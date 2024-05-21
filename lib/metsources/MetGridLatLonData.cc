@@ -122,6 +122,64 @@ MetGridData& MetGridLatLonData::operator=(const MetGridData& src)
 }
 
 
+void MetGridLatLonData::setOption( const std::string &name, const std::string &value )
+{    
+     MetGridData::setOption( name, value ); 
+}
+void MetGridLatLonData::setOption( const std::string &name, int value )
+{
+     MetGridData::setOption( name, value ); 
+}
+
+void MetGridLatLonData::setOption( const std::string &name, float value )
+{
+     MetGridData::setOption( name, value ); 
+}
+
+void MetGridLatLonData::setOption( const std::string &name, double value )
+{
+     MetGridData::setOption( name, value ); 
+}
+
+bool MetGridLatLonData::getOption( const std::string &name, std::string &value )
+{
+    bool result;
+    
+    result = MetGridData::getOption( name, value ); 
+    
+    return result;
+}
+
+bool MetGridLatLonData::getOption( const std::string &name, int &value )
+{
+    bool result;
+    
+    result = MetGridData::getOption( name, value ); 
+
+    return result;
+}
+
+
+bool MetGridLatLonData::getOption( const std::string &name, float &value )
+{
+    bool result;
+    
+    result = MetGridData::getOption( name, value ); 
+
+    return result;
+}
+
+
+bool MetGridLatLonData::getOption( const std::string &name, double &value )
+{
+    bool result;
+    
+    result = MetGridData::getOption( name, value ); 
+
+    return result;
+}
+
+
 
 
 
@@ -160,7 +218,7 @@ void MetGridLatLonData::get_uvw( double time, real lon, real lat, real z, real *
     } else {   
        *w = wfctr*getData(wind_vert_name, time, lon, lat, z, METDATA_MKS | METDATA_THROWBAD );
     }
-    if ( debug >= 100 ) {
+    if ( dbug >= 100 ) {
        std::cerr << "   @@@  u(" << lon << "," << lat << "," << z << "," << time2Cal(time) << ") = " << *u << std::endl;
        std::cerr << "   @@@  v(" << lon << "," << lat << "," << z << "," << time2Cal(time) << ") = " << *v << std::endl;
        std::cerr << "   @@@  w(" << lon << "," << lat << "," << z << "," << time2Cal(time) << ") = " << *w << std::endl;       
@@ -260,7 +318,7 @@ real MetGridLatLonData::getData( string quantity, double time, real lon, real la
      
      //std::cerr << "==== 1: in getdata for " << ndims << " dims " << std::endl;        
      
-     // change internalmodel time to met source calendar time string   
+     // change internal model time to met source calendar time string   
      cxtime = time2Cal( time, 4 ); 
      
      // send the numeric time to bracket, so we can use the full numeric precision
@@ -268,7 +326,7 @@ real MetGridLatLonData::getData( string quantity, double time, real lon, real la
      ct1 = time2Cal(tt1);
      ct2 = time2Cal(tt2);
      
-     if ( debug > 2 ) {
+     if ( dbug > 2 ) {
         std::cerr << "MetGridLatLonData::getData: bracketing source data time " << time2Cal( time ) << "(" << time << ") between " << ct1 << " and " << ct2 << std::endl;        
      }
      //- std::cerr << "bracket times " << time << " = " << ct1 << " vs " << ct2 << std::endl;
@@ -292,17 +350,17 @@ real MetGridLatLonData::getData( string quantity, double time, real lon, real la
            new_directGrid3D() to fill its caches, and our new_directGrid3D() always 
            returns a GridLatLonField3D.
         */   
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getData: ==== about to fetch 3D field" << std::endl;        
         }
         g1 = dynamic_cast<GridLatLonField3D*>(new_mgmtGrid3D( quantity, ct1 ));
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getData: ==== about to request 3D field" << std::endl;        
         }
         
         // if we are a met client, then alert the met server that we are about to request data gridpoints
         request_data3D(quantity,ct1);
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getData: ==== about to spatially interpolate the 3D field" << std::endl;   
         }        
         
@@ -325,7 +383,7 @@ real MetGridLatLonData::getData( string quantity, double time, real lon, real la
         remove(g1);
 
         if ( is_valid && (ct1 != ct2) ) {
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "MetGridLatLonData::getData: ==== about to get data for the second of bracketed times for 3D field" << std::endl; 
            }          
            g2 = dynamic_cast<GridLatLonField3D*>(new_mgmtGrid3D( quantity, ct2 ));     
@@ -353,19 +411,19 @@ real MetGridLatLonData::getData( string quantity, double time, real lon, real la
         
      } else {
         // surface data
-        if ( debug> 2 ) {
+        if ( dbug> 2 ) {
             std::cerr << "MetGridLatLonData::getData: ==== getting a 2d field" << std::endl;        
         }
 
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getData: ==== about to fetch Sfc field" << std::endl;        
         }
         s1 = dynamic_cast<GridLatLonFieldSfc*>(new_mgmtGridSfc( quantity, ct1 ));
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getData: ==== about to request Sfc field" << std::endl;        
         }
         request_dataSfc(quantity,ct1);
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getData: ==== about to spatially interpolate the Sfc field" << std::endl;   
         }        
         badval = s1->fillval();
@@ -387,7 +445,7 @@ real MetGridLatLonData::getData( string quantity, double time, real lon, real la
         remove(s1);
 
         if ( is_valid && ( ct1 != ct2 ) ) {
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "MetGridLatLonData::getData: ==== about to get data for the second of bracketed times for Sfc field" << std::endl; 
            }          
            s2 = dynamic_cast<GridLatLonFieldSfc*>(new_mgmtGridSfc( quantity, ct2 ));
@@ -415,7 +473,7 @@ real MetGridLatLonData::getData( string quantity, double time, real lon, real la
         
      } 
   
-     if ( debug > 3 ) {   
+     if ( dbug > 3 ) {   
         std::cerr << "MetGridLatLonData::getData: ==== about to time interpolate between " << val1 << " and " << val2 << std::endl; 
         //std::cerr << "val1=" << val1 << ", t1=" << t1 << std::endl;     
         //std::cerr << "val2=" << val2 << ", t2=" << t2 << std::endl;
@@ -426,14 +484,14 @@ real MetGridLatLonData::getData( string quantity, double time, real lon, real la
      } else {
         result = badval;
      }
-     if ( debug >= 30 ) {
+     if ( dbug >= 30 ) {
         std::cerr << "MetGridLatLonData::getData:___ quantity, lon, lat, z= " << quantity << ", " << lon << ", " << lat << ", " << z << std::endl;
         std::cerr << "MetGridLatLonData::getData:___ t-interp " << ct1 << "(" << t1 << ")" << ", " << val1 << std::endl;
         std::cerr << "MetGridLatLonData::getData:___          " << ct2 << "(" << t2 << ")" << ", " << val2 << std::endl;
         std::cerr << "MetGridLatLonData::getData:___        = " << time << ", " << result << std::endl;
      }
      
-     if ( debug > 3 ) {   
+     if ( dbug > 3 ) {   
         std::cerr << "MetGridLatLonData::getData: ==== returning " << result << std::endl; 
      } 
 
@@ -497,7 +555,7 @@ void MetGridLatLonData::getVectorData( string lonquantity, string latquantity, r
      ct1 = time2Cal(tt1);
      ct2 = time2Cal(tt2);
      
-     if ( debug > 2 ) {
+     if ( dbug > 2 ) {
         std::cerr << "tt1=" << tt1 << ", ct1=" << ct1 << std::endl;
         std::cerr << "tt2=" << tt2 << ", ct2=" << ct2 << std::endl;
         std::cerr << "MetGridLatLonData::getVectorData: bracketing source data time " << time2Cal( time ) << "(" << time << ") between " << ct1 << " and " << ct2 << std::endl;        
@@ -516,23 +574,23 @@ void MetGridLatLonData::getVectorData( string lonquantity, string latquantity, r
            new_directGrid3D() to fill its caches, and our new_directGrid3D() always 
            returns a GridLatLonField3D.
         */   
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData: ==== about to fetch lon 3D field" << std::endl;        
         }
         gx1 = dynamic_cast<GridLatLonField3D*>(new_mgmtGrid3D( lonquantity, ct1 ));
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData: ==== about to request lon 3D field" << std::endl;        
         }
 
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData: ==== about to fetch lat 3D field" << std::endl;        
         }
         gy1 = dynamic_cast<GridLatLonField3D*>(new_mgmtGrid3D( latquantity, ct1 ));
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData: ==== about to request lat 3D field" << std::endl;        
         }
 
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData: ==== about to spatially interpolate the 3D field" << std::endl;   
         }        
         xbadval = gx1->fillval();
@@ -562,11 +620,11 @@ void MetGridLatLonData::getVectorData( string lonquantity, string latquantity, r
         remove(gx1);
 
         if ( is_valid && (ct1 != ct2) ) {
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "MetGridLatLonData::getVectorData: ==== about to get lon data for the second of bracketed times for 3D field" << std::endl; 
            }          
            gx2 = dynamic_cast<GridLatLonField3D*>(new_mgmtGrid3D( lonquantity, ct2 ));     
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "MetGridLatLonData::getVectorData: ==== about to get lat data for the second of bracketed times for 3D field" << std::endl; 
            }          
            gy2 = dynamic_cast<GridLatLonField3D*>(new_mgmtGrid3D( latquantity, ct2 ));     
@@ -601,27 +659,27 @@ void MetGridLatLonData::getVectorData( string lonquantity, string latquantity, r
         
      } else {
         // surface data
-        if ( debug ) {
+        if ( dbug ) {
             std::cerr << "MetGridLatLonData::getVectorData: ==== getting a 2d field" << std::endl;        
         }
 
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData: ==== about to fetch lon Sfc field" << std::endl;        
         }
         sx1 = dynamic_cast<GridLatLonFieldSfc*>(new_mgmtGridSfc( lonquantity, ct1 ));
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData: ==== about to request lon Sfc field" << std::endl;        
         }
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData: ==== about to fetch lat Sfc field" << std::endl;        
         }
         sy1 = dynamic_cast<GridLatLonFieldSfc*>(new_mgmtGridSfc( latquantity, ct1 ));
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData: ==== about to request lat Sfc field" << std::endl;        
         }
 
 
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData: ==== about to spatially interpolate the Sfc field" << std::endl;   
         }        
         xbadval = sx1->fillval();
@@ -650,11 +708,11 @@ void MetGridLatLonData::getVectorData( string lonquantity, string latquantity, r
         remove(sx1);
 
         if ( is_valid && ( ct1 != ct2 ) ) {
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "MetGridLatLonData::getVectorData: ==== about to get data for the second of bracketed times for lon Sfc field" << std::endl; 
            }          
            sx2 = dynamic_cast<GridLatLonFieldSfc*>(new_mgmtGridSfc( lonquantity, ct2 ));
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "MetGridLatLonData::getVectorData: ==== about to get data for the second of bracketed times for lat Sfc field" << std::endl; 
            }          
            sy2 = dynamic_cast<GridLatLonFieldSfc*>(new_mgmtGridSfc( latquantity, ct2 ));
@@ -688,7 +746,7 @@ void MetGridLatLonData::getVectorData( string lonquantity, string latquantity, r
         
      } 
   
-     if ( debug > 3 ) {   
+     if ( dbug > 3 ) {   
         std::cerr << "MetGridLatLonData::getVectorData: ==== about to time interpolate between " << lonval1 << " and " << lonval2 << std::endl; 
         std::cerr << "MetGridLatLonData::getVectorData: ==== about to time interpolate between " << latval1 << " and " << latval2 << std::endl; 
      }
@@ -699,7 +757,7 @@ void MetGridLatLonData::getVectorData( string lonquantity, string latquantity, r
         lonval = xbadval;
         latval = ybadval;
      }
-     if ( debug >= 100 ) {
+     if ( dbug >= 100 ) {
         std::cerr << "___x t-interp " << ct1 << "(" << t1 << ")" << ", " << lonval1 << std::endl;
         std::cerr << "___x          " << ct2 << "(" << t2 << ")" << ", " << lonval2 << std::endl;
         std::cerr << "___x        = " << time << ", " << lonval << std::endl;
@@ -708,7 +766,7 @@ void MetGridLatLonData::getVectorData( string lonquantity, string latquantity, r
         std::cerr << "___y        = " << time << ", " << latval << std::endl;
      }
      
-     if ( debug > 3 ) {   
+     if ( dbug > 3 ) {   
         std::cerr << "MetGridLatLonData::getVectorData: ==== returning " << result << std::endl; 
      } 
 
@@ -794,7 +852,7 @@ void MetGridLatLonData::getData( string quantity, double time, int n, real* lons
      ct1 = time2Cal(tt1);
      ct2 = time2Cal(tt2);
      
-     if ( debug > 2 ) {
+     if ( dbug > 2 ) {
         std::cerr << "MetGridLatLonData::getData: bracketing source data time " << time2Cal( time ) 
                   << "(" << time << ") between " << ct1 << " and " << ct2 << std::endl;        
      }
@@ -819,17 +877,17 @@ void MetGridLatLonData::getData( string quantity, double time, int n, real* lons
            new_directGrid3D() to fill its caches, and our new_directGrid3D() always 
            returns a GridLatLonField3D.
         */   
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getData: ==== about to fetch 3D field" << std::endl;        
         }
         g1 = dynamic_cast<GridLatLonField3D*>(new_mgmtGrid3D( quantity, ct1 ));
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getData: ==== about to request 3D field" << std::endl;        
         }
         
         // if we are a met client, then alert the met server that we are about to request data gridpoints
         request_data3D(quantity,ct1);
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getData: ==== about to spatially interpolate the 3D field" << std::endl;   
         }        
         
@@ -861,7 +919,7 @@ void MetGridLatLonData::getData( string quantity, double time, int n, real* lons
         remove(g1);
 
         if ( is_valid && (ct1 != ct2) ) {
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "MetGridLatLonData::getData: ==== about to get data for the second of bracketed times for 3D field" << std::endl; 
            }          
            g2 = dynamic_cast<GridLatLonField3D*>(new_mgmtGrid3D( quantity, ct2 ));     
@@ -901,19 +959,19 @@ void MetGridLatLonData::getData( string quantity, double time, int n, real* lons
         
      } else {
         // surface data
-        if ( debug> 2 ) {
+        if ( dbug> 2 ) {
             std::cerr << "MetGridLatLonData::getData: ==== getting a 2d field" << std::endl;        
         }
 
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getData: ==== about to fetch Sfc field" << std::endl;        
         }
         s1 = dynamic_cast<GridLatLonFieldSfc*>(new_mgmtGridSfc( quantity, ct1 ));
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getData: ==== about to request Sfc field" << std::endl;        
         }
         request_dataSfc(quantity,ct1);
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getData: ==== about to spatially interpolate the Sfc field" << std::endl;   
         }        
         badval = s1->fillval();
@@ -944,7 +1002,7 @@ void MetGridLatLonData::getData( string quantity, double time, int n, real* lons
         remove(s1);
 
         if ( ct1 != ct2 ) {
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "MetGridLatLonData::getData: ==== about to get data for the second of bracketed times for Sfc field" << std::endl; 
            }          
            s2 = dynamic_cast<GridLatLonFieldSfc*>(new_mgmtGridSfc( quantity, ct2 ));
@@ -984,7 +1042,7 @@ void MetGridLatLonData::getData( string quantity, double time, int n, real* lons
         
      } 
   
-     if ( debug > 3 ) {   
+     if ( dbug > 3 ) {   
         std::cerr << "MetGridLatLonData::getData: ==== about to time interpolate between " << vals1[0] << " and " << vals2[0] << std::endl; 
         //std::cerr << "val1=" << val1 << ", t1=" << t1 << std::endl;     
         //std::cerr << "val2=" << val2 << ", t2=" << t2 << std::endl;
@@ -1010,7 +1068,7 @@ void MetGridLatLonData::getData( string quantity, double time, int n, real* lons
         }
         values[i] = result;
      }   
-     if ( debug >= 30 ) {
+     if ( dbug >= 30 ) {
         std::cerr << "MetGridLatLonData::getData:___ quantity, lon, lat, z= " << quantity << ", " << lons[0] << ", " << lats[0] << ", " << zs[0] << std::endl;
         std::cerr << "MetGridLatLonData::getData:___ t-interp " << ct1 << "(" << t1 << ")" << ", " << vals1[0] << std::endl;
         std::cerr << "MetGridLatLonData::getData:___          " << ct2 << "(" << t2 << ")" << ", " << vals2[0] << std::endl;
@@ -1020,7 +1078,7 @@ void MetGridLatLonData::getData( string quantity, double time, int n, real* lons
      delete vals2;
      delete vals1;
      
-     if ( debug > 3 ) {   
+     if ( dbug > 3 ) {   
         std::cerr << "MetGridLatLonData::getData: ==== returning " << result << std::endl; 
      } 
 
@@ -1072,7 +1130,7 @@ void MetGridLatLonData::getVectorData( int n, string lonquantity, string latquan
      ct1 = time2Cal(tt1);
      ct2 = time2Cal(tt2);
      
-     if ( debug > 2 ) {
+     if ( dbug > 2 ) {
         std::cerr << "tt1=" << tt1 << ", ct1=" << ct1 << std::endl;
         std::cerr << "tt2=" << tt2 << ", ct2=" << ct2 << std::endl;
         std::cerr << "MetGridLatLonData::getVectorData: bracketing source data time " << time2Cal( time ) << "(" << time << ") between " << ct1 << " and " << ct2 << std::endl;        
@@ -1097,23 +1155,23 @@ void MetGridLatLonData::getVectorData( int n, string lonquantity, string latquan
            new_directGrid3D() to fill its caches, and our new_directGrid3D() always 
            returns a GridLatLonField3D.
         */   
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to fetch lon 3D field" << std::endl;        
         }
         gx1 = dynamic_cast<GridLatLonField3D*>(new_mgmtGrid3D( lonquantity, ct1 ));
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to request lon 3D field" << std::endl;        
         }
 
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to fetch lat 3D field" << std::endl;        
         }
         gy1 = dynamic_cast<GridLatLonField3D*>(new_mgmtGrid3D( latquantity, ct1 ));
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to request lat 3D field" << std::endl;        
         }
 
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to spatially interpolate the 3D field" << std::endl;   
         }        
         xbadval = gx1->fillval();
@@ -1153,12 +1211,12 @@ void MetGridLatLonData::getVectorData( int n, string lonquantity, string latquan
         remove(gx1);
 
         if ( ct1 != ct2 ) {
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to get lon data for the second of bracketed times for 3D field" 
                         << std::endl; 
            }          
            gx2 = dynamic_cast<GridLatLonField3D*>(new_mgmtGrid3D( lonquantity, ct2 ));     
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to get lat data for the second of bracketed times for 3D field" 
                         << std::endl; 
            }          
@@ -1210,27 +1268,27 @@ void MetGridLatLonData::getVectorData( int n, string lonquantity, string latquan
 
         // surface data
 
-        if ( debug ) {
+        if ( dbug ) {
             std::cerr << "MetGridLatLonData::getVectorData-vector: ==== getting a 2d field" << std::endl;        
         }
 
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to fetch lon Sfc field" << std::endl;        
         }
         sx1 = dynamic_cast<GridLatLonFieldSfc*>(new_mgmtGridSfc( lonquantity, ct1 ));
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to request lon Sfc field" << std::endl;        
         }
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to fetch lat Sfc field" << std::endl;        
         }
         sy1 = dynamic_cast<GridLatLonFieldSfc*>(new_mgmtGridSfc( latquantity, ct1 ));
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to request lat Sfc field" << std::endl;        
         }
 
 
-        if ( debug > 2 ) {
+        if ( dbug > 2 ) {
            std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to spatially interpolate the Sfc field" << std::endl;   
         }        
         xbadval = sx1->fillval();
@@ -1269,13 +1327,13 @@ void MetGridLatLonData::getVectorData( int n, string lonquantity, string latquan
         remove(sx1);
 
         if ( ct1 != ct2 ) {
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to get data for the "
                         << "second of bracketed times for lon Sfc field" 
                         << std::endl; 
            }          
            sx2 = dynamic_cast<GridLatLonFieldSfc*>(new_mgmtGridSfc( lonquantity, ct2 ));
-           if ( debug > 2 ) {
+           if ( dbug > 2 ) {
               std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to get data for the second of bracketed times for lat Sfc field" 
                         << std::endl; 
            }          
@@ -1317,7 +1375,7 @@ void MetGridLatLonData::getVectorData( int n, string lonquantity, string latquan
         
      } 
   
-     if ( debug > 3 ) {   
+     if ( dbug > 3 ) {   
         std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to time interpolate between " 
                   << lonvals1[0] << " and " << lonvals2[0] << std::endl; 
         std::cerr << "MetGridLatLonData::getVectorData-vector: ==== about to time interpolate between " 
@@ -1335,7 +1393,7 @@ void MetGridLatLonData::getVectorData( int n, string lonquantity, string latquan
             latvals[i] = ybadval;
          }
 
-         if ( debug >= 100 && i == 0 ) {
+         if ( dbug >= 100 && i == 0 ) {
             std::cerr << "@___@x t-interp " << ct1 << "(" << t1 << ")" << ", " << lonvals1[i] << std::endl;
             std::cerr << "@___@x          " << ct2 << "(" << t2 << ")" << ", " << lonvals2[i] << std::endl;
             std::cerr << "@___@x        = " << time << ", " << lonvals[i] << std::endl;
@@ -1344,7 +1402,7 @@ void MetGridLatLonData::getVectorData( int n, string lonquantity, string latquan
             std::cerr << "@___@y        = " << time << ", " << latvals[i] << std::endl;
          }
      
-         if ( debug > 3 ) {   
+         if ( dbug > 3 ) {   
             std::cerr << "MetGridLatLonData::getVectorData: ==== returning " << result << std::endl; 
          } 
 
@@ -1410,7 +1468,7 @@ GridField3D* MetGridLatLonData::new_clientGrid3D( const std::string& quantity, c
    
        // receive grid metadata
        result->receive_meta();
-       if ( debug >= 1 ) {
+       if ( dbug >= 1 ) {
           std::cerr << "MetLatLonGridData::new_clientGrid3D:  (met client) received metadata from met processor" << std::endl;
        }    
 
@@ -1463,7 +1521,7 @@ GridFieldSfc* MetGridLatLonData::new_clientGridSfc( const std::string& quantity,
    
        // receive grid metadata
        result->receive_meta();
-       if ( debug >= 1 ) {
+       if ( dbug >= 1 ) {
           std::cerr << "MetLatLonGridData::new_clientGridSfc:  (met client) received metadata from met processor" << std::endl;
        }    
 
@@ -1493,7 +1551,7 @@ double MetGridLatLonData::get_default_timedelta( const std::string &quantity, co
      time = cal2Time( caltime );
       
      bracket( quantity, time, &dbeg, &dend );
-     if ( abs( dend - dbeg ) < 1e-8 ) {
+     if ( ABS( dend - dbeg ) < 1e-8 ) {
         // oop's the test time lies on the boundary between data time ticks
         // shift it by about 10 minutes
         time = time + 10.0/60.0/24.0;
@@ -1569,17 +1627,17 @@ void MetGridLatLonData::writeCache( const GridField3D* item ) const
                try {
                   // try to open the file with locking
                   cachelock = new FileLock;
-                  if ( debug > 2 ) {
+                  if ( dbug > 2 ) {
                      std::cerr << "MetGridLatLonData::writeCache: (3D) *** opening cache file for writing: " << cachepath->fullpath() << std::endl;
                   }
                   outcache = cachelock->openw( cachepath->fullpath(), 0 );
                   // write the data out
-                  if ( debug  > 2 ) {
+                  if ( dbug  > 2 ) {
                      std::cerr << "MetGridLatLonData::writeCache: (3D)   writing cached to from " << actualItem->id() << std::endl;
                   }
                   *outcache << *actualItem;
                   // close the file and release the lock
-                  if ( debug  > 2 ) {
+                  if ( dbug  > 2 ) {
                      std::cerr << "MetGridLatLonData::writeCache:  (3D)  closing written cache file" << std::endl;
                   }
                   cachelock->closer(outcache);
@@ -1615,17 +1673,17 @@ void MetGridLatLonData::writeCache( const GridFieldSfc* item ) const
                try {
                   // try to open the file with locking
                   cachelock = new FileLock;
-                  if ( debug > 2 ) {
+                  if ( dbug > 2 ) {
                      std::cerr << "MetGridLatLonData::writeCache*: (Sfc) ** opening cache file for writing: " << cachepath->fullpath() << std::endl;
                   }
                   outcache = cachelock->openw( cachepath->fullpath(), 0 );
                   // write the data out
-                  if ( debug > 2 ) {
+                  if ( dbug > 2 ) {
                      std::cerr << "MetGridLatLonData::writeCache: (Sfc)   writing cached to from " << actualItem->id() << std::endl;
                   }
                   *outcache << *actualItem;
                   // close the file and release the lock
-                  if ( debug > 2 ) {
+                  if ( dbug > 2 ) {
                      std::cerr << "MetGridLatLonData::writeCache:  (Sfc)  closing written cache file" << std::endl;
                   }
                   cachelock->closer(outcache);
@@ -1655,7 +1713,7 @@ GridField3D* MetGridLatLonData::readCache3D( const std::string quantity, const s
     grid3d = NULLPTR;
 
     if ( diskcaching ) {
-    
+
        // create a grid and set up quantities that
        // are needed for creating the cache file name
        grid3d = new GridLatLonField3D;
@@ -1671,18 +1729,18 @@ GridField3D* MetGridLatLonData::readCache3D( const std::string quantity, const s
        
        if ( cachepath != NULLPTR ) {
           cachelock = new FileLock;
-          //cachelock->debug = 1;
+          //cachelock->dbug = 1;
           try {
-             if ( debug >= 2 ) {
+             if ( dbug >= 2 ) {
                 std::cerr << "MetGridLatLonData::readCache3D: +++ opening cache file " << cachepath->fullpath() << std::endl;
              }
              int num_procs = 1;
              if ( my_pgroup != NULLPTR ) {
-                my_pgroup->numberOfProcessors();
+                num_procs = my_pgroup->numberOfProcessors();
              }
-             incache = cachelock->openr( cachepath->fullpath(), - num_procs );
+             incache = cachelock->openr( cachepath->fullpath(), - num_procs*2 );
              try {
-                if ( debug >= 2 ) {
+                if ( dbug >= 2 ) {
                    std::cerr << "MetGridLatLonData::readCache3D:   reading cached data from " << grid3d->id() << std::endl;
                 }
                 *incache >> *grid3d;
@@ -1704,23 +1762,23 @@ GridField3D* MetGridLatLonData::readCache3D( const std::string quantity, const s
                    usingCache = true;
                 } else {
                    // the data have expired                   
-                   if ( debug >= 2 ) {
+                   if ( dbug >= 2 ) {
                        std::cerr << "MetGridLatLonData::readCache3D :  data read from cache have expired: " << expt << " vs " << now << std::endl;
                    }
                    usingCache = false;
                 }
              } catch (...) {
-                if ( debug >= 2 ) {
+                if ( dbug >= 2 ) {
                    std::cerr << "MetGridLatLonData::readCache3D :  error reading cache" << std::endl;
                 }
                 usingCache= false;     
              }
-             if ( debug >= 2 ) {
+             if ( dbug >= 2 ) {
                 std::cerr << "MetGridLatLonData::readCache3D:   closing read cache file" << std::endl;
              }
              cachelock->closer(incache);
           } catch (...) {
-             if ( debug >= 2 ) {
+             if ( dbug >= 2 ) {
                 std::cerr << "MetGridLatLonData::readCache3D:   no cache to read" << std::endl;
              }
              usingCache= false;     
@@ -1785,11 +1843,11 @@ GridFieldSfc* MetGridLatLonData::readCacheSfc( const std::string quantity, const
        if ( cachepath != NULLPTR ) {
           try {
              cachelock = new FileLock;
-             if ( debug >= 2 ) {
+             if ( dbug >= 2 ) {
                 std::cerr << "MetGridLatLonData::readCacheSfc: +++ opening cache file " << cachepath->fullpath() << std::endl;
              }
              incache = cachelock->openr( cachepath->fullpath(), -1 );
-             if ( debug >= 2 ) {
+             if ( dbug >= 2 ) {
                 std::cerr << "MetGridLatLonData::readCacheSfc:   reading cached data from " << gridsfc->id() << std::endl;
              }
              *incache >> *gridsfc;
@@ -1810,20 +1868,20 @@ GridFieldSfc* MetGridLatLonData::readCacheSfc( const std::string quantity, const
                 usingCache = true;
              } else {
                 // the data have expired                   
-                if ( debug >= 2 ) {
+                if ( dbug >= 2 ) {
                     std::cerr << "MetGridLatLonData::readCacheSfc :  data read from cache have expired: " << expt << " vs " << now << std::endl;
                 }
                 usingCache = false;
              }
 
-             if ( debug >= 2 ) {
+             if ( dbug >= 2 ) {
                 std::cerr << "MetGridLatLonData::readCacheSfc:   closing read cache file" << std::endl;
              }
              cachelock->closer(incache);
              delete cachelock;
              delete cachepath;
           } catch (...) {
-             if ( debug >= 2 ) {
+             if ( dbug >= 2 ) {
                 std::cerr << "MetGridLatLonData::readCacheSfc:   no cache to read" << std::endl;
              }
              usingCache= false;     

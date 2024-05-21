@@ -303,6 +303,7 @@ class MetGEOSfpAssim : public MetGEOSfp {
       bool getOption( const std::string &name, double &value );
 
 
+
    protected:
 
        

@@ -948,7 +948,7 @@ void GridLatLonFieldSfc::gridpoints( int n, int* is, int* js, real* vals, int fl
      
      }
 
-     delete coords;
+     delete[] coords;
 }
 
 
@@ -1154,7 +1154,7 @@ void GridLatLonFieldSfc::receive_meta()
          for ( i=0; i<nlats; i++ ) {
              lats.push_back(dimvals[i]);
          }    
-         delete dimvals;
+         delete[] dimvals;
          if ( nlats > 1 ) {
              if ( lats[1] > lats[0] ) {
                 latdir = 1;
@@ -1228,7 +1228,7 @@ void GridLatLonFieldSfc::svr_send_meta(int id) const
              dimvals[i] = lons[i];
          }    
          pgroup->send_reals( id, nlons, dimvals, PGR_TAG_GDIMS ); 
-         delete dimvals;
+         delete[] dimvals;
 
          // send the latitudes
          try {
@@ -1240,7 +1240,7 @@ void GridLatLonFieldSfc::svr_send_meta(int id) const
              dimvals[i] = lats[i];
          }    
          pgroup->send_reals( id, nlats, dimvals, PGR_TAG_GDIMS ); 
-         delete dimvals;
+         delete[] dimvals;
    
      }
 

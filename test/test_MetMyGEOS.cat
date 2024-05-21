@@ -1,0 +1,19 @@
+
+;lonCoord; latCoord; vertCoord
+
+# Dimensions
+#
+MYLON ~ lon; degrees_east ; LHN; -180.0, 108.0, 5
+MYLAT ~ lat; degrees_north; LHN; -90.0, 90.0, 6
+MYPRS ~ P; hPa; V; 350, 300, 250, 200, 150, 100, 70, 50, 40, 30, 20
+
+ROOT/S = "${GIGATRAJ_CATALOGS}/Data"
+
+datdir/S = ${ROOT} + "/"
+
+tmain := [${YEAR}-${MONTH}-${DOM}T${HOUR}:00];PT1H;0;1; MYLON;MYLAT; MYPRS; ${datdir}/gigatraj_merra2.geosgcm_prog.${YEAR}${MONTH}${DOM}_${HOUR}${MINUTE}z.nc4
+
+PS:    surface_pressure:                    2: tmain[Pa]
+T:     air_temperature:                     3: tmain[K]
+U:     eastward_wind:                       3: tmain[m s-1]
+

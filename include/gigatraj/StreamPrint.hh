@@ -219,12 +219,12 @@ class StreamPrint : public ParcelReporter {
 
           * "%c" prints out a sequence of "c" characters. 
              A number can be inserted in front of the "c" to specify the total length of the output field. 
-             Otherwise just one "c" is printed. This code is included for compatibility with the StreamREad class's
+             Otherwise just one "c" is printed. This code is included for compatibility with the StreamRead class's
              format specifications.    
           
           * "%x" prints out a sequence of "x" characters. 
              A number can be inserted in front of the "x" to specify the total length of the output field. 
-             Otherwise just one "x" is printed. This code is included for compatibility with the StreamREad class's
+             Otherwise just one "x" is printed. This code is included for compatibility with the StreamRead class's
              format specifications.    
           
           
