@@ -1590,8 +1590,8 @@ void BilinearHinterp::vinterpVector( real lon, real lat, real z, real &xval, rea
                    tmplon = xgrid.longitude(is[idx+i]);
                    cdlon = COS( (tmplon - lon)*RCONV  );
                    sdlon = SIN( (tmplon - lon)*RCONV  );
-                   xtmp =  xvals[idx + i]*cdlon + yvals[idx + i]*sdlon; 
-                   ytmp = -xvals[idx + i]*sdlon + yvals[idx + i]*cdlon;
+                   xtmp =  xvals[idx + i]*cdlon - yvals[idx + i]*sdlon; 
+                   ytmp =  xvals[idx + i]*sdlon + yvals[idx + i]*cdlon;
                    xvals[idx + i] = xtmp;
                    yvals[idx + i] = ytmp;
                }
@@ -1807,8 +1807,8 @@ void BilinearHinterp::vinterpVector( int n, const real* lons, const real* lats, 
                       tmplon = xgrid.longitude(is[idx+ii]);
                       cdlon = COS( (tmplon - lon)*RCONV  );
                       sdlon = SIN( (tmplon - lon)*RCONV  );
-                      xtmp =  xvalsprf[idx + ii]*cdlon + yvalsprf[idx + ii]*sdlon; 
-                      ytmp = -xvalsprf[idx + ii]*sdlon + yvalsprf[idx + ii]*cdlon;
+                      xtmp =  xvalsprf[idx + ii]*cdlon - yvalsprf[idx + ii]*sdlon; 
+                      ytmp =  xvalsprf[idx + ii]*sdlon + yvalsprf[idx + ii]*cdlon;
                       xvalsprf[idx + ii] = xtmp;
                       yvalsprf[idx + ii] = ytmp;
                   }
