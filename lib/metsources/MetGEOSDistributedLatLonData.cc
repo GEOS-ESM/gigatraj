@@ -43,7 +43,7 @@ MetGEOSDistributedLatLonData::MetGEOSDistributedLatLonData(
       )  
 {
 
-  comm = mpicomm;
+  comm = MPI_Comm_f2c(mpicomm);
   MPI_Comm_size(comm, &npes);
   MPI_Comm_rank(comm, &my_rank);
   nlons_global = Iglobal;

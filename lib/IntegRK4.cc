@@ -16,7 +16,7 @@ using namespace gigatraj;
 
 const std::string IntegRK4::id = "IntegRK4";
 
-const real gigatraj::IntegRK4::NEARPOLE = 88.0;
+const real gigatraj::IntegRK4::NEARPOLE = 85.0;
 
 IntegRK4 :: IntegRK4()
 {

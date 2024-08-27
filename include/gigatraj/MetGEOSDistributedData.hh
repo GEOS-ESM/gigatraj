@@ -37,7 +37,7 @@ class MetGEOSDistributedData {
       int debug = 100;
    //protected:
       double basetime;
-      int comm;
+      MPI_Comm comm;
       int my_rank;
       int npes;
 

@@ -15,7 +15,7 @@
 
 using namespace gigatraj;
 
-const real gigatraj::BilinearHinterp::NEARPOLE = 75.0;
+const real gigatraj::BilinearHinterp::NEARPOLE = 85.0;
 
 BilinearHinterp::BilinearHinterp()
 {
