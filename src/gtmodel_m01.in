@@ -108,5 +108,5 @@ echo "${PROG} ${OPTS[@]}" >&2
 # run the model, distributed among NPROCS processors
 # and possible logging (processor-tagged) output to a file
 #mpirun -np ${NPROCS} ${LABL} "${LOGARG[@]}" stdbuf -eL "${PROG}" "${OPTS[@]}"
-mpirun -np ${NPROCS} ${LABL} "${LOGARG[@]}" "${PROG}" "${OPTS[@]}"
+@MPIPATH@mpirun -np ${NPROCS} ${LABL} "${LOGARG[@]}" "${PROG}" "${OPTS[@]}"
 
