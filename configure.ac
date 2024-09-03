@@ -57,43 +57,266 @@ AM_CONDITIONAL([DOXYGEN], [test x$do_doxygen = xtrue])
 # the list of c andc++ compilers to look for--we will edit this if mpicc and mpicxx are available)
 CLIST_CC="gcc cl cc"
 CLIST_CXX="g++ c++"
-AC_ARG_ENABLE([mpi],
-[  --enable-mpi		Construct a version of the library that uses MPI for parallel processing ],
-[case "${enableval}" in
- yes) do_mpi=true ;;
+
+#------- MPI ----------
+g_path_mpi_pfx=""
+AC_MSG_CHECKING(--with-mpi)
+AC_ARG_WITH([mpi],
+[  --with-mpi=path     Construct a version of the library that uses MPI for parallel processing ],
+[case "${with_mpi}" in
+ yes) do_mpi=true 
+      g_path_mpi_pfx="/usr"
+      if test "X${MPI_PREFIX}" != "X" ; then
+         if test -d "${MPI_PREFIX}/" ; then
+            g_path_mpi_pfx="${MPI_PREFIX}"
+         else
+            AC_MSG_ERROR([${MPI_PREFIX} is not a directory])   
+         fi 
+      fi ;;
  no)  do_mpi=false ;;
- *) AC_MSG_ERROR([bad value ${enableval} for --enable-mpi]) ;;
+ *)   do_mpi=true
+      if test -d "${withval}/" ; then
+          g_path_mpi_pfx="${withval}"
+      else
+          AC_MSG_ERROR([Cannot find MPI prefix directory ${withval}])
+      fi ;;
  esac], [do_mpi=false])
+AC_MSG_RESULT($do_mpi)
+
+g_path_mpi_bin=""
+AC_MSG_CHECKING(--with-mpi-bin)
+AC_ARG_WITH([mpi-bin],
+[  --with-mpi-bin=path     Specify the path of the MPI binaries (e.g., mpirun) ],
+[ do_mpi=true 
+  if test "x$g_path_mpi_pfx}" = "x" ; then
+     g_path_mpi_pfx="/usr"
+  fi
+  if test "x${withval}" != "x" ; then
+     if test -d "${withval}/" ; then
+        g_path_mpi_bin="${withval}"
+     else
+        AC_MSG_ERROR([cannot find MPI bin directory $withval])
+     fi
+  fi 
+], )
+if test "x${do_mpi}" = "xtrue" ; then
+   if test "x${g_path_mpi_bin}" = "x" ; then
+      if test -d "${g_path_mpi_pfx}/bin/" ; then
+         g_path_mpi_bin="${g_path_mpi_pfx}/bin"
+      fi   
+   fi
+fi
+AC_MSG_RESULT($g_path_mpi_bin)
+
+g_path_mpi_lib=""
+AC_MSG_CHECKING(--with-mpi-lib)
+AC_ARG_WITH([mpi-lib],
+[  --with-mpi-lib=path     Specify the path of the MPI libraries ],
+[ do_mpi=true 
+  if test "x$g_path_mpi_pfx}" = "x" ; then
+     g_path_mpi_pfx="/usr"
+  fi
+  if test "x${withval}" != "x" ; then
+     if test -d "${withval}/" ; then
+        g_path_mpi_lib="${withval}"
+     else
+        AC_MSG_ERROR([cannot find MPI bin directory $withval])
+     fi
+  fi 
+], )
+if test "x${do_mpi}" = "xtrue" ; then
+   if test "x${g_path_mpi_lib}" = "x" ; then
+      if test -d "${g_path_mpi_pfx}/lib/" ; then
+         g_path_mpi_lib="${g_path_mpi_pfx}/lib"
+      fi   
+   fi
+fi
+AC_MSG_RESULT($g_path_mpi_lib)
+
+g_path_mpi_incl=""
+AC_MSG_CHECKING(--with-mpi-include)
+AC_ARG_WITH([mpi-include],
+[  --with-mpi-include=path     Specify the path of the MPI include files ],
+[ do_mpi=true 
+  if test "x$g_path_mpi_pfx}" = "x" ; then
+     g_path_mpi_pfx="/usr"
+  fi
+  if test "x${withval}" != "x" ; then
+     if test -d "${withval}/" ; then
+        g_path_mpi_incl="${withval}"
+     else
+        AC_MSG_ERROR([cannot find MPI bin directory $withval])
+     fi
+  fi 
+], )
+if test "x${do_mpi}" = "xtrue" ; then
+   if test "x${g_path_mpi_incl}" = "x" ; then
+      if test -d "${g_path_mpi_pfx}/include/" ; then
+         g_path_mpi_incl="${g_path_mpi_pfx}/include"
+      fi   
+   fi
+fi
+AC_MSG_RESULT($g_path_mpi_incl)
+
+#------- NETCDF ----------
+g_path_ncdf_pfx=""
+AC_MSG_CHECKING(--with-netcdf)
+AC_ARG_WITH([netcdf],
+[  --with-netcdf=path     Construct a version of the library that uses NetCDF for parallel processing ],
+[case "${with_netcdf}" in
+ yes) do_ncdf=true 
+      g_path_ncdf_pfx="/usr"
+      if test "X${NCDF_PREFIX}" != "X" ; then
+         if test -d "${NCDF_PREFIX}/" ; then
+            g_path_ncdf_pfx="${NCDF_PREFIX}"
+         else
+            AC_MSG_ERROR([${NCDF_PREFIX} is not a directory])   
+         fi 
+      fi ;;
+ no)  do_ncdf=false ;;
+ *)   do_ncdf=true
+      if test -d "${withval}/" ; then
+          g_path_ncdf_pfx="${withval}"
+      else
+          AC_MSG_ERROR([Cannot find NCDF prefix directory ${withval}])
+      fi ;;
+ esac], [do_ncdf=false])
+AC_MSG_RESULT($do_ncdf)
+
+g_path_ncdf_lib=""
+AC_MSG_CHECKING(--with-netcdf-lib)
+AC_ARG_WITH([netcdf-lib],
+[  --with-netcdf-lib=path     Specify the path of the NetCDF libraries ],
+[ do_ncdf=true 
+  if test "x$g_path_ncdf_pfx}" = "x" ; then
+     g_path_ncdf_pfx="/usr"
+  fi
+  if test "x${withval}" != "x" ; then
+     if test -d "${withval}/" ; then
+        g_path_ncdf_lib="${withval}"
+     else
+        AC_MSG_ERROR([cannot find NCDF bin directory $withval])
+     fi
+  fi 
+], )
+if test "x${do_ncdf}" = "xtrue" ; then
+   if test "x${g_path_ncdf_lib}" = "x" ; then
+      if test -d "${g_path_ncdf_pfx}/lib/" ; then
+         g_path_ncdf_lib="${g_path_ncdf_pfx}/lib"
+      fi   
+   fi
+fi
+AC_MSG_RESULT($g_path_ncdf_lib)
+
+g_path_ncdf_incl=""
+AC_MSG_CHECKING(--with-netcdf-include)
+AC_ARG_WITH([netcdf-include],
+[  --with-netcdf-include=path     Specify the path of the NetCDF include files ],
+[ do_ncdf=true 
+  if test "x$g_path_ncdf_pfx}" = "x" ; then
+     g_path_ncdf_pfx="/usr"
+  fi
+  if test "x${withval}" != "x" ; then
+     if test -d "${withval}/" ; then
+        g_path_ncdf_incl="${withval}"
+     else
+        AC_MSG_ERROR([cannot find NCDF bin directory $withval])
+     fi
+  fi 
+], )
+if test "x${do_ncdf}" = "xtrue" ; then
+   if test "x${g_path_ncdf_incl}" = "x" ; then
+      if test -d "${g_path_ncdf_pfx}/include/" ; then
+         g_path_ncdf_incl="${g_path_ncdf_pfx}/include"
+      fi   
+   fi
+fi
+AC_MSG_RESULT($g_path_ncdf_incl)
+
+
+save_libs="${LIBS}"
+save_cflags="${CFLAGS}"
+save_path="${PATH}"
+
+if test "X${do_mpi}" = "Xtrue" ; then
+
+   if test "X${g_path_mpi_bin}" != "X" ; then
+      MPI_PATH="${g_path_mpi_bin}/"
+      PATH="${PATH}:${MPI_PATH}"
+   fi
+   
+   # openMPI wants us to use mpicc instead of cc or gcc, so we test for its presence
+   AC_CHECK_PROG([use_mpicc], [mpicc], [yes], [no])
+   # this is actually more of a check for whether the MPI C++ bindings 
+   # are present in this site's openmpi installation
+   AC_CHECK_PROG([use_mpicxx], [mpicxx], [yes], [no])
+   if test x$use_mpicc = xyes ; then
+      CLIST_CC="${MPI_PATH}mpicc ${CLIST_CC}"
+   fi
+   if test x$use_mpicxx = xyes ; then
+      CLIST_CXX="${MPI_PATH}mpicxx ${CLIST_CXX}"
+   fi
+
+   # now the MPI library
+   if test "X${g_path_mpi_lib}" != "X" ; then
+      MPI_LIBS="-L${g_path_mpi_lib}/"
+      LIBS="${LIBS} ${MPI_LIBS} "
+   fi
+
+   # We are using MPI C bindings in gigatraj, even
+   # though gigatraj is written in C++.
+   # (So sue us.)
+   MPI_CFLAGS="-DOMPI_SKIP_MPICXX  "
+   # now the MPI include files
+   if test "X${g_path_mpi_incl}" != "X" ; then
+      MPI_CFLAGS="${MPI_CFLAGS} -I${g_path_mpi_incl}/"
+   fi
+   CFLAGS="${CFLAGS} ${MPI_CFLAGS} "
+fi
+
+if test "X${do_ncdf}" = "Xtrue" ; then
+
+   # the NCDF library
+   if test "X${g_path_ncdf_lib}" != "X" ; then
+      NCDF_LIBS="-L${g_path_ncdf_lib}/"
+      LIBS="${LIBS} ${NCDF_LIBS} "
+   fi
+
+   NCDF_CFLAGS=""
+   # now the NCDF include files
+   if test "X${g_path_ncdf_incl}" != "X" ; then
+      NCDF_CFLAGS="${NCDF_CFLAGS} -I${g_path_ncdf_incl}/"
+   fi
+   CFLAGS="${CFLAGS} ${NCDF_CFLAGS} "
+fi
+
+#AC_MSG_WARN([MPI_PATH=${MPI_PATH}])
+#AC_MSG_WARN([MPI_LIBS=${MPI_LIBS}])
+#AC_MSG_WARN([MPI_CFLAGS=${MPI_CFLAGS}])
+#AC_MSG_WARN([CLIST_CC=${CLIST_CC}])
+#AC_MSG_WARN([CLIST_CXX=${CLIST_CXX}])
+#AC_MSG_WARN([NCDF_LIBS=${NCDF_LIBS}])
+#AC_MSG_WARN([NCDF_CFLAGS=${NCDF_CFLAGS}])
+ 
 AM_CONDITIONAL([MPI], [test x$do_mpi = xtrue])
 AC_SUBST([DO_MPI],[0])
 if test x$do_mpi = xtrue ; then
 AC_SUBST([DO_MPI], [1])
+AC_SUBST([MPIPATH], [${MPI_PATH}])
+AC_SUBST([MPICFLAGS], [${MPI_CFLAGS}])
+AC_SUBST([MPILIBS], [${MPI_LIBS}])
 # openMPI wants us to use mpicc instead of cc or gcc, so we test for its presence
 AC_CHECK_PROG([use_mpicc], [mpicc], [yes], [no])
 # this is actually more of a check for whether the MPI C++ bindings 
 # are present in this site's openmpi installation
 AC_CHECK_PROG([use_mpicxx], [mpicxx], [yes], [no])
 if test x$use_mpicc = xyes ; then
-   CLIST_CC="mpicc ${CLIST_CC}"
+   CLIST_CC="${MPI_PATH}mpicc ${CLIST_CC}"
 fi
 if test x$use_mpicxx = xyes ; then
-   CLIST_CXX="mpicxx ${CLIST_CXX}"
+   CLIST_CXX="${MPI_PATH}mpicxx ${CLIST_CXX}"
 fi
 fi
-
-AC_ARG_ENABLE([netcdf],
-[  --enable-netcdf		Allows use of netcdf4 files ],
-[case "${enableval}" in
- yes) do_netcdf=true ;;
- no)  do_netcdf=false ;;
- *) AC_MSG_ERROR([bad value ${enableval} for --enable-netcdf]) ;;
- esac], [do_netcdf=false])
-AM_CONDITIONAL([NETCDF], [test x$do_netcdf = xtrue])
-AC_SUBST([DO_NETCDF],[0])
-if test x$do_netcdf = xtrue ; then
-AC_SUBST([DO_NETCDF], [1])
-fi
-
 
 ##### optional MetData subclasses 
 
@@ -118,7 +341,7 @@ fi
 AM_CONDITIONAL([MERRA], [test x$do_merra = xtrue])
 AC_SUBST([DO_MERRA],[0])
 if test x$do_merra = xtrue ; then
-do_netcdf=true
+do_ncdf=true
 AC_SUBST([DO_MERRA], [1])
 fi
 
@@ -135,7 +358,7 @@ fi
 AM_CONDITIONAL([MERRA2], [test x$do_merra2 = xtrue])
 AC_SUBST([DO_MERRA2],[0])
 if test x$do_merra2 = xtrue ; then
-do_netcdf=true
+do_ncdf=true
 AC_SUBST([DO_MERRA2], [1])
 fi
 
@@ -152,7 +375,7 @@ fi
 AM_CONDITIONAL([GEOSFP], [test x$do_geosfp = xtrue])
 AC_SUBST([DO_GEOSFP],[0])
 if test x$do_geosfp = xtrue ; then
-do_netcdf=true
+do_ncdf=true
 AC_SUBST([DO_GEOSFP], [1])
 fi
 
@@ -169,10 +392,19 @@ fi
 AM_CONDITIONAL([MYGEOS], [test x$do_mygeos = xtrue])
 AC_SUBST([DO_MYGEOS],[0])
 if test x$do_mygeos = xtrue ; then
-do_netcdf=true
+do_ncdf=true
 AC_SUBST([DO_MYGEOS], [1])
 fi
 
+
+
+AM_CONDITIONAL([NETCDF], [test x$do_ncdf = xtrue])
+AC_SUBST([DO_NETCDF],[0])
+if test x$do_ncdf = xtrue ; then
+AC_SUBST([DO_NETCDF], [1])
+AC_SUBST([NCDFCFLAGS], [${NCDF_CFLAGS}])
+AC_SUBST([NCDFLIBS], [${NCDF_LIBS}])
+fi
 
 
 ###### Enough with specifications. Let's start checking for stuff.
@@ -212,11 +444,13 @@ fi
 # Define which forms of documentation Doxygen should generate
 AM_CONDITIONAL([DOX_DOES_HTML], [true])
 AM_CONDITIONAL([DOX_DOES_LATEX], [test x${DOX_RUN_LATEX} != x ])
+#AM_CONDITIONAL([DOX_DOES_LATEX], [false])
 AM_CONDITIONAL([DOX_DOES_MAN], [true])
 AM_CONDITIONAL([DOX_DOES_RTF], [true])
 AM_CONDITIONAL([DOX_DOES_XML], [false])
 AM_CONDITIONAL([DOX_DOES_PERLMOD], [false])
 AM_CONDITIONAL([DOX_DOES_AUTOGEN], [false])
+AM_CONDITIONAL([DOX_DOES_DOCBOOK], [false])
 # The base doxygen config file, doc/gigatraj_base.dconf.in, 
 # refers to certain C Macro definitions to determine which
 # sections of the documentation are to be generated.
@@ -264,13 +498,17 @@ fi
 #    only check for MPI if we are using MPI
 if test x$do_mpi = xtrue ; then
 # we will need the header file
-AC_CHECK_HEADERS([mpi.h], [], [AC_MSG_ERROR(no MPI header file was  found)])
+#AC_CHECK_HEADERS([mpi.h], [], [AC_MSG_ERROR(no MPI header file was  found)])
+AC_CHECK_HEADERS([mpi.h  openmpi-x86_64/mpi.h]
+  , [gigatraj_found_mpi_headers=yes; break;])
+AS_IF([test "x$gigatraj_found_mpi_headers" != "xyes"], [AC_MSG_ERROR([no MPI header file was  found])])
 if test x$use_mpicc = xno ; then
 # we will need the MPI C library 
+#AC_LIB_LINKFLAGS(mpi)
 AC_SEARCH_LIBS([MPI_Init],[mpi], [], [AC_MSG_ERROR(no MPI library file was found)] )
 fi
 if test x$test_mpicxx = xyes ; then
-# MPI C++ bindings are present, so the headre file contains C++ definisiotns,
+# MPI C++ bindings are present, so the header file contains C++ definisiotns,
 # so we will need this library as well.
 AC_CHECK_LIB([mpi_cxx], [MPI_Init], [], [] )
 fi
@@ -278,7 +516,7 @@ fi
 
 #    check for netcdf v4 if we are using MERRA, MERRAS2, or GEOSFP
 #if test x$do_merra = xtrue || test x$do_merra2 = xtrue || test x$do_geosfp = xtrue ; then
-if test x$do_netcdf = xtrue ; then
+if test x$do_ncdf = xtrue ; then
 AC_MSG_NOTICE([Doing netcdf!!!!])
 AC_CHECK_HEADERS([netcdf.h], [], [AC_MSG_ERROR(no NetCDF header file was  found)])
 AC_SEARCH_LIBS([nc_put_var1_uint], [netcdf], [], [AC_MSG_ERROR([You need to install netcdf v4 or greater (with dap enabled), or the libdap and libnc-dap libraries from http://opendap.org/download/index.html])])
@@ -298,9 +536,13 @@ AC_CONFIG_FILES([Makefile
                  lib/filters/Makefile
                  lib/metsources/Makefile
                  src/Makefile
+                 src/gtmodel_m01 src/gtmodel_m02
                  confiles/Makefile
                  test/Makefile
+                 test/test_MPI.sh
                  doc/gigatraj_base.dconf:doc/gigatraj_base.dconf.in
                  doc/latex_yes.dconf:doc/latex_yes.dconf.in
                  doc/Makefile])
 AC_OUTPUT
+
+chmod 755 src/gtmodel_m01 src/gtmodel_m02 test/test_MPI.sh
