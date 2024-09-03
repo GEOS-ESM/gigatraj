@@ -491,7 +491,7 @@ std::string MetData::get_cfg_value( std::string& line, int* pos )
      return result;
 }
 
-bool MetData::str2int(const std::string &value, int* result  )
+bool MetData::str2int(const std::string &value, int* result  ) const
 {
     std::istringstream *numstr; 
     bool status;
@@ -508,7 +508,7 @@ bool MetData::str2int(const std::string &value, int* result  )
     return status;
 }
 
-bool MetData::str2float(const std::string &value, float* result)
+bool MetData::str2float(const std::string &value, float* result) const
 {
     std::istringstream *numstr; 
     bool status;
@@ -526,7 +526,7 @@ bool MetData::str2float(const std::string &value, float* result)
     return status;
 }
 
-bool MetData::str2dbl(const std::string &value, double* result)
+bool MetData::str2dbl(const std::string &value, double* result) const
 {
     std::istringstream *numstr; 
     bool status;
@@ -544,7 +544,7 @@ bool MetData::str2dbl(const std::string &value, double* result)
     return status;
 }
 
-bool MetData::str2bool(const std::string &value, bool* result)
+bool MetData::str2bool(const std::string &value, bool* result) const
 {
     std::string cc;
     bool status;
@@ -567,6 +567,58 @@ bool MetData::str2bool(const std::string &value, bool* result)
     }
     return status;
 }
+
+bool MetData::int2str( int value, std::string& result ) const
+{
+    bool status;
+    std::ostringstream oo;
+    
+    status = true;
+    oo << value;
+    result = oo.str();
+    
+    
+    return status;
+}
+
+bool MetData::float2str( float value, std::string& result ) const
+{
+    bool status;
+    std::ostringstream oo;
+    
+    status = true;
+    oo << value;
+    result = oo.str();
+    
+    
+    return status;
+}
+
+bool MetData::dbl2str( double value, std::string& result ) const
+{
+    bool status;
+    std::ostringstream oo;
+    
+    status = true;
+    oo << value;
+    result = oo.str();
+        
+    return status;
+}
+
+bool MetData::bool2str( bool value, std::string& result ) const
+{
+    bool status;
+    std::ostringstream oo;
+    
+    status = true;
+    oo << value;
+    result = oo.str();
+    
+    return status;
+}
+
+
 
 void MetData::debug( int level )
 {

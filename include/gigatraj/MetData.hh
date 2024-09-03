@@ -971,35 +971,69 @@ class MetData {
       /// converts a string to an integer
       /*! This method converts a string to an integer
       
-            \param value a referecne to the string to be converted
+            \param value a reference to the string to be converted
             \param result a pointer to the output converted value
             \return true if the conversion was successful, false otherwise
       */
-      bool str2int(const std::string &value, int* result  );
+      bool str2int(const std::string &value, int* result  ) const;
       /// converts a string to a float
       /*! This method converts a string to a float
       
-            \param value a referecne to the string to be converted
+            \param value a reference to the string to be converted
             \param result a pointer to the output converted value
             \return true if the conversion was successful, false otherwise
       */
-      bool str2float(const std::string &value, float* result);
+      bool str2float(const std::string &value, float* result) const;
       /// converts a string to a double
       /*! This method converts a string to a double
       
-            \param value a referecne to the string to be converted
+            \param value a reference to the string to be converted
             \param result a pointer to the output converted value
             \return true if the conversion was successful, false otherwise
       */
-      bool str2dbl(const std::string &value, double* result);
+      bool str2dbl(const std::string &value, double* result) const;
       /// converts a string to a boolean
       /*! This method converts a string to a boolean
       
-            \param value a referecne to the string to be converted
+            \param value a reference to the string to be converted
             \param result a pointer to the output converted value
             \return true if the conversion was successful, false otherwise
       */
-      bool str2bool(const std::string &value, bool* result);
+      bool str2bool(const std::string &value, bool* result) const;
+
+      /// converts an integer to a string
+      /*! This method converts a integer to a string
+            \param value the int to be converted
+            \param result a reference to the output string
+            \return true if the conversion was successful, false otherwise
+      */
+      bool int2str( int value, std::string& result ) const;
+      
+      /// converts a float to a string
+      /*! This method converts a floating point number to a string
+            \param value the float to be converted
+            \param result a reference to the output string
+            \return true if the conversion was successful, false otherwise
+      */
+      bool float2str( float value, std::string& result ) const;
+      
+      /// converts a double to a string
+      /*! This method converts a double precision number to a string
+            \param value the double to be converted
+            \param result a reference to the output string
+            \return true if the conversion was successful, false otherwise
+      */
+      bool dbl2str( double value, std::string& result ) const;
+      
+      /// converts a boolean to a string
+      /*! This method converts a boolean to a string
+            \param value the boolean to be converted
+            \param result a reference to the output string
+            \return true if the conversion was successful, false otherwise
+      */
+      bool bool2str( bool value, std::string& result ) const;
+      
+
 };
 }
 
