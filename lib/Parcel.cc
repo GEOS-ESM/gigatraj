@@ -14,6 +14,7 @@
 #include "gigatraj/Earth.hh"
 #include "gigatraj/MetSBRot.hh"
 #include "gigatraj/IntegRK4a.hh"
+#include "gigatraj/IntegRK4.hh"
 
 using namespace gigatraj;
 
@@ -260,7 +261,11 @@ void Parcel :: receive( const ProcessGrp* pgroup, const int id)
 
 void Parcel :: integrator( Integrator *intg )
 {
-    integ = intg;
+    if ( intg != NULLPTR ) {
+       integ = intg;
+    } else {
+       integ = &irk4;
+    }
 }
 
 Integrator* Parcel :: integrator()
@@ -270,9 +275,14 @@ Integrator* Parcel :: integrator()
 
 void Parcel :: conformal( int mode )
 {
-    integ->conformal( mode );
     nav->conformal( mode );
-    
+    integ->conformal( mode );
+    //if (mode == 0 ) {
+    //   integ = &irk4;
+    //} else {
+    //   // use the integ
+    //   integ = new IntegRK4;    
+    //}
 }
 
 int Parcel :: conformal()
