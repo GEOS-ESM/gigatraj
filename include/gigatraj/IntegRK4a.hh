@@ -11,7 +11,7 @@ namespace gigatraj {
 
 \ingroup integrators
 
-\brief implements fourth-order Rugge-Kutta integration of parcel trajectories
+\brief implements fourth-order Runge-Kutta integration of parcel trajectories
 
 The IntegRK4a class provides a method for integrating trajectories
 using the fourth-order Runga-Kutte method. In this method,

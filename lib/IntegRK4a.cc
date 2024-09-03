@@ -166,7 +166,7 @@ void IntegRK4a :: go( real &lon, real &lat, real &z, double &t, MetData *metsrc,
     }
     
     
-    // aply the Runga-Kutte method to get the
+    // apply the Runga-Kutte method to get the
     // changes in lon,lat, and z
     dx = ( dlon1 + 2.0*dlon2 + 2.0*dlon3 + dlon4 )/6.0;
     dy = ( dlat1 + 2.0*dlat2 + 2.0*dlat3 + dlat4 )/6.0;
