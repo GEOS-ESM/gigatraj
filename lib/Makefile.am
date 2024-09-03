@@ -26,6 +26,13 @@ SUBDIRS = metsources filters
 
 EXTRA_DIST = metsources/catalog_merra.py
 
+if MPI
+   AM_CPPFLAGS += @MPICFLAGS@
+endif
+if NETCDF
+   AM_CPPFLAGS += @NCDFCFLAGS@
+endif
+
 libgigatraj_a_SOURCES = ../include/gigatraj/RandomSrc.hh        RandomSrc.cc \
                         ../include/gigatraj/FilePath.hh         FilePath.cc \
                         ../include/gigatraj/FileLock.hh         FileLock.cc \
@@ -66,27 +73,23 @@ if MPI
    libgigatraj_a_SOURCES +=  ../include/gigatraj/MPIGrp.hh           MPIGrp.cc 
 endif
 
+if MYGEOS
+   libgigatraj_a_SOURCES += ../include/gigatraj/MetMyGEOS.hh     metsources/MetMyGEOS.cc
+endif
 if MERRA
-   libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSPortal.hh     metsources/MetGEOSPortal.cc
-   libgigatraj_a_SOURCES += ../include/gigatraj/MERRA_Directory.hh  metsources/MERRA_Directory_Data.hh metsources/MERRA_Directory.cc
+   libgigatraj_a_SOURCES += ../include/gigatraj/MetMyGEOS.hh     metsources/MetMyGEOS.cc
    metsources_MERRA_Directory_cc_CFLAGS = $(MDIRFLAG)
    libgigatraj_a_SOURCES += ../include/gigatraj/MetMERRA.hh     metsources/MetMERRA.cc
 endif
 if MERRA2
-   libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSPortal.hh     metsources/MetGEOSPortal.cc
-   libgigatraj_a_SOURCES += ../include/gigatraj/MERRA2_Directory.hh  metsources/MERRA2_Directory_Data.hh metsources/MERRA2_Directory.cc
+   libgigatraj_a_SOURCES += ../include/gigatraj/MetMyGEOS.hh     metsources/MetMyGEOS.cc
    libgigatraj_a_SOURCES += ../include/gigatraj/MetMERRA2.hh     metsources/MetMERRA2.cc
 endif
 if GEOSFP
-   libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSPortal.hh     metsources/MetGEOSPortal.cc
-   libgigatraj_a_SOURCES += ../include/gigatraj/GEOSfpFcast_Directory.hh  metsources/GEOSfpFcast_Directory_Data.hh metsources/GEOSfpFcast_Directory.cc
-   libgigatraj_a_SOURCES += ../include/gigatraj/GEOSfpAssim_Directory.hh  metsources/GEOSfpAssim_Directory_Data.hh metsources/GEOSfpAssim_Directory.cc
+   libgigatraj_a_SOURCES += ../include/gigatraj/MetMyGEOS.hh     metsources/MetMyGEOS.cc
    libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSfpFcast.hh     metsources/MetGEOSfpFcast.cc
    libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSfpAssim.hh     metsources/MetGEOSfpAssim.cc
    libgigatraj_a_SOURCES += ../include/gigatraj/MetGEOSfp.hh     metsources/MetGEOSfp.cc
-endif
-if MYGEOS
-   libgigatraj_a_SOURCES += ../include/gigatraj/MetMyGEOS.hh     metsources/MetMyGEOS.cc
 endif
 libgigatraj_a_SOURCES += ../include/gigatraj/MetSelector.hh     metsources/MetSelector.cc
 

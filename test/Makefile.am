@@ -10,7 +10,15 @@ GIGATRAJ_INCLUDE = -I$(top_srcdir)/include/ -I${top_builddir}/include
 ## Everything needs the gigatraj library includes
 AM_CPPFLAGS  = $(GIGATRAJ_INCLUDE)
 
+if MPI
+   AM_CPPFLAGS += @MPICFLAGS@
+   AM_LDFLAGS += @MPILIBS@ -lmpi
+endif
 
+if NETCDF
+   AM_CPPFLAGS += @NCDFCFLAGS@
+   AM_LDFLAGS += @NCDFLIBS@ -lnetcdf
+endif
 
 ##### Very Basic stuff
 
@@ -107,21 +115,26 @@ if MYGEOS
    EXTRA_DIST += Data/gigatraj_merra2.geosgcm_prog.20000415_0400z.nc4
 endif
 if MERRA
-   TESTS += test_MetMERRA
+   TESTS += test_MetMERRA.sh
    check_PROGRAMS += test_MetMERRA
    test_MetMERRA_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
+   EXTRA_DIST += test_MetMERRA.sh MERRA.cat ;
 endif
 if MERRA2
-   TESTS += test_MetMERRA2
+   TESTS += test_MetMERRA2.sh
    check_PROGRAMS += test_MetMERRA2
    test_MetMERRA2_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
+   EXTRA_DIST += test_MetMERRA2.sh MERRA2.cat ;
 endif
 if GEOSFP
-   TESTS += test_MetGEOSfpFcast test_MetGEOSfpAssim test_MetGEOSfp
+   TESTS += test_MetGEOSfpFcast.sh test_MetGEOSfpAssim.sh test_MetGEOSfp.sh
    check_PROGRAMS += test_MetGEOSfpFcast test_MetGEOSfpAssim test_MetGEOSfp
    test_MetGEOSfpFcast_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
    test_MetGEOSfpAssim_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
    test_MetGEOSfp_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
+   EXTRA_DIST += test_MetGEOSfp.sh GEOSfp.cat ;
+   EXTRA_DIST += test_MetGEOSfpAssim.sh GEOSfpAssim.cat ;
+   EXTRA_DIST += test_MetGEOSfpFcast.sh GEOSfpFcast.cat ;
 endif
 TESTS += test_MetSelector
 check_PROGRAMS += test_MetSelector
