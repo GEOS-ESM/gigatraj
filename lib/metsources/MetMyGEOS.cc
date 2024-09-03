@@ -250,32 +250,31 @@ void MetMyGEOS::setOption( const std::string &name, const std::string &value )
         temperature_name = value;
      } else if ( name == "TemperatureDotName" ) {
         temperatureDot_name = value;
+     } else {
+        MetGridLatLonData::setOption( name, value );
      }
 }
 
 void MetMyGEOS::setOption( const std::string &name, int value )
 {
-    int tmp;
-
-    if ( name == "HorizontalGridThinning" ) {
-        set_thinning(value);
-    } else if ( name == "HorizontalGridOffset" ) {
-        tmp = thinning();
-        set_thinning( tmp, value );
 /*
-    } else if ( name == "Delay" ) {
+    if ( name == "Delay" ) {
         setWaitOpen(value);
+    } else {    
 */
-    }
+    MetGridLatLonData::setOption( name, value );
+//    }
     
 }
 
 void MetMyGEOS::setOption( const std::string &name, float value )
 {
+    MetGridLatLonData::setOption( name, value );
 }
 
 void MetMyGEOS::setOption( const std::string &name, double value )
 {
+    MetGridLatLonData::setOption( name, value );
 }
 
 
@@ -308,16 +307,22 @@ bool MetMyGEOS::getOption( const std::string &name, std::string &value )
       result = true;
    } else if ( name == "PressureName" ) {
       value = pressure_name;
+      result = true;
    } else if ( name == "AltitudeName" ) {
       value = altitude_name;
+      result = true;
    } else if ( name == "PressureAltitudeName" ) {
       value = palt_name;
+      result = true;
    } else if ( name == "ModelLevelName" ) {
       value = modellevel_name;
+      result = true;
    } else if ( name == "ModelEdgeName" ) {
       value = modeledge_name;
+      result = true;
    } else if ( name == "PotentialTemperatureName" ) {
       value = pottemp_name;
+      result = true;
    } else if ( name == "PressureDotName" ) {
       value = pressureDot_name;
    } else if ( name == "AltitudeDotName" ) {
@@ -326,46 +331,36 @@ bool MetMyGEOS::getOption( const std::string &name, std::string &value )
       value = paltDot_name;
    } else if ( name == "PotentialTemperatureDotName" ) {
       value = thetaDot_name;
+      result = true;
    } else if ( name == "TemperatureName" ) {
       value = temperature_name;
+      result = true;
    } else if ( name == "TemperatureDotName" ) {
       value = temperatureDot_name;
+      result = true;
+   } else {
+      result =  MetGridLatLonData::getOption( name, value );
    }
+   
    return result;
 }
 
 
 bool MetMyGEOS::getOption( const std::string &name, int &value )
 {
-    bool result = false;
-    int tmp;
-
-    if ( name == "HorizontalGridThinning" ) {
-        value = thinning();
-        result = true;
-    } else if ( name == "HorizontalGridOffset" ) {
-        (void) thinning(&tmp);
-        value = tmp;
-        result = true;
-    }
-
-    return result;
+    return MetGridLatLonData::getOption( name, value );
 }
 
 
 bool MetMyGEOS::getOption( const std::string &name, float &value )
 {
-    bool result = false;
-    value = 0.0;
-    return result;
+    return MetGridLatLonData::getOption( name, value );
 }
 
 
 bool MetMyGEOS::getOption( const std::string &name, double &value )
 {
-    bool result = false;
-    value = 0.0;
-    return result;
+    return MetGridLatLonData::getOption( name, value );
 }
 
 
@@ -1493,31 +1488,6 @@ std::string MetMyGEOS::modelRun() const
     return modelrun;
 }
 
-
-int MetMyGEOS::thinning( int *offset )
-{
-    if ( offset != NULL ) {
-       *offset = skoff;
-    }
-    
-    return skip;
-}
-
-void MetMyGEOS::set_thinning( int thin, int offset )
-{
-    if ( thin > 1 ) {
-       skip = thin;
-    } else {
-       skip = 1;
-    } 
-    if ( offset >= 0 ) {
-       skoff = offset;
-    } else {
-       skoff = 0;
-    }
-    
-}
-
 real MetMyGEOS::defaultBad() const
 {
     return fillval;
@@ -1853,6 +1823,7 @@ void MetMyGEOS::reset()
      ds.clear();
      test_dsrc = -1;
      opened_dsrc = -1;
+     target_time_valid = false;
      
      setup_vars();
 
@@ -2021,6 +1992,34 @@ bool  MetMyGEOS::dsInit( const std::string& quantity, const std::string& time )
 
      return result;
 }   
+
+
+bool MetMyGEOS::DsValid( const std::string& quant, double t )
+{
+     bool result;
+     int index;
+     
+     result = false;
+     
+     if ( ds.size() > 0 ) {
+        index = 0;
+        if ( test_dsrc >= 0 && test_dsrc < ds.size() ) {
+            index = test_dsrc;
+        }
+        if ( is_open && opened_dsrc >= 0 && opened_dsrc < ds.size() ) {
+           index == opened_dsrc;
+        }
+        
+        if ( quant == ds[index].name ) {
+        
+          result = true;
+        }
+     }
+     
+     return result;
+}
+
+
 
 std::string MetMyGEOS::queryQuantity( int index )
 {
@@ -2299,6 +2298,10 @@ void MetMyGEOS::Source_open( bool pre, int index )
      std::vector<int>    attr_val_i;
      std::vector<double> attr_val_d;
      bool do_open;
+     bool ok;
+     int start_index;
+     int bad_index;
+     int ds_size;
 
      int waittime;
 
@@ -2310,8 +2313,31 @@ void MetMyGEOS::Source_open( bool pre, int index )
         index = test_dsrc;
      }
      
+     ds_size = ds.size();
+
+     bad_index = -1;
+     start_index = 0;
+     if ( is_open && (! Source_testDesiredTime()) ) {
+        Source_close();
+        bad_index = test_dsrc;
+        start_index = test_dsrc;
+        if ( test_dsrc < (ds_size - 1) ) { 
+            start_index++;
+        }    
+        if ( dbug > 5 ) {
+           std::cerr << "source closed and start_index now adjusted to " << start_index << std::endl;
+        }
+        if ( index == test_dsrc ) {
+           index = start_index;
+        }
+     }
+     if ( ( bad_index >= 0 ) && (bad_index == index) && ( (bad_index + 1) < ds_size) ) {
+        index = bad_index + 1;
+     }
+        
      // try this one first
-     if ( index >= 0 ) {
+     url = "_INVALID_";
+     if ( (index >= 0) && (index < ds_size)  ) {
         if ( pre ) {
            url = ds[index].pre;
         } else {
@@ -2343,8 +2369,10 @@ void MetMyGEOS::Source_open( bool pre, int index )
            (void) sleep( openwait ); // sleep this time between opens, to avoid being obnoxious to the server
         }
 
+        ok = false;
         if ( ds[index].type != 2 ) {
-        
+           // not of type OTF.
+           
            trial = 0;
            do {
 
@@ -2363,6 +2391,13 @@ void MetMyGEOS::Source_open( bool pre, int index )
               opened_dsrc = index;
               opened_url = url;
               test_dsrc = index;
+              ok =  Source_postOpen(index);
+              
+              if ( ! ok ) {
+                 Source_close();
+                 bad_index = index;
+              }
+              
            } else {
               std::cerr << "MetMyGEOS::Source_open: Bad url: " << url << std::endl;
            }
@@ -2374,164 +2409,79 @@ void MetMyGEOS::Source_open( bool pre, int index )
         }
         
         // either there was no first attempt, or there was one and it was unsuccessful
-        if ( (index < 0) || ( err != NC_NOERR) ) {
+        if ( (index < 0) || (index >= ds_size) || (! ok) ) {
         
            // ok, then try each DataSource in turn
-           for ( index=0; index < ds.size(); index++ ) {
+           for ( index=start_index; index < ds_size; index++ ) {
         
-               if ( pre ) {
-                  url = ds[index].pre;
-               } else {
-                  url = ds[index].post;
-               }
-           
-               if ( dbug > 5 ) {
-                  std::cerr << "MetMyGEOS::Source_open: attempting nc_open of ds index " << index 
-                  << ": <<" << url  << ">>" << std::endl;
-               }
-           
-              if ( ds[index].type != 2 ) {
-           
-                 trial = 0;
-                 do {
-
-                    if ( dbug > 5 ) {
-                       std::cerr << "MetMyGEOS::Source_open: attempting nc_open of: <<" << url  << ">>" << std::endl;
-                    }
-                    
-                    std::cerr << " nc_opening url at " << url << std::endl;
-                    err = nc_open( url.c_str(), NC_NOWRITE, &ncid);     
-                    //- std::cerr << " nc_opened url " << url << std::endl;
-                    
-                    // go through multiple open attempts obly if this really is a URL.
-                 } while ( (err != NC_NOERR) && (ds[index].type == 1) && (try_again( err, trial ) ) );
-                 if ( err == NC_NOERR ) {
-                 
-                    if ( dbug > 5 ) {
-                       std::cerr << "MetMyGEOS::Source_open: nc_open of ds index " << index 
-                       << " succeeded" << std::endl;
-                    }
-                    
-                    is_open = true;
-                    
-                    opened_dsrc = index;
-                    opened_url = url;
-                    test_dsrc = index;
-                    
-                    // set default target attribute priorities
-
-                 
-                    // don't try to open any more
-                    break;
-                 }
-              } else {
-                 if ( dbug > 5 ) {
-                    std::cerr << "Cannot open " << url << " as a netcdf file" << std::endl;
-                 }
-              }
+               if ( index != bad_index ) {
         
-           }
+                  if ( pre ) {
+                     url = ds[index].pre;
+                  } else {
+                     url = ds[index].post;
+                  }
+           
+                  if ( dbug > 5 ) {
+                     std::cerr << "MetMyGEOS::Source_open: attempting nc_open of ds index " << index 
+                     << ": <<" << url  << ">>" << std::endl;
+                  }
+           
+                  // if not an OTF
+                  if ( ds[index].type != 2 ) {
+                     if ( dbug > 5 ) {
+                        std::cerr << "MetMyGEOS::Source_open:time trial of index " << index << std::endl;           
+                     }
+                     
+                     trial = 0;
+                     do {
+
+                        if ( dbug > 5 ) {
+                           std::cerr << "MetMyGEOS::Source_open: attempting nc_open of: <<" << url  << ">>" << std::endl;
+                        }
+                        
+                        std::cerr << " nc_opening url at " << url << std::endl;
+                        err = nc_open( url.c_str(), NC_NOWRITE, &ncid);     
+                        //- std::cerr << " nc_opened url " << url << std::endl;
+                        
+                        // go through multiple open attempts obly if this really is a URL.
+                     } while ( (err != NC_NOERR) && (ds[index].type == 1) && (try_again( err, trial ) ) );
+                     if ( err == NC_NOERR ) {
+                     
+                        if ( dbug > 5 ) {
+                           std::cerr << "MetMyGEOS::Source_open: nc_open of ds index " << index 
+                           << " succeeded" << std::endl;
+                        }
+                        
+                        is_open = true;
+                        
+                        opened_dsrc = index;
+                        opened_url = url;
+                        test_dsrc = index;
+                        url_tgrid.clear();
+                        
+                        // set default target attribute priorities
+
+                        // make sure this URL is appropriate
+                        if ( Source_postOpen(index) ) {                 
+                            // don't try to open any more
+                            break;
+                        } else {
+                            // unsatisfactory
+                            Source_close();
+                        }
+                     }
+                  } else {
+                     if ( dbug > 5 ) {
+                        std::cerr << "Cannot open " << url << " as a netcdf file" << std::endl;
+                     }
+                  }
+               }        
+           } // next index
         }
         
         // did at least one open attempt succees?
-        if ( is_open ) {
-        
-           update_hgrid();
-           update_vgrid();
-           update_tgrid();
-        
-           trial = 0;
-           do {
-              err = nc_inq(ncid, &ndimens, &nvars, &ngatts, &unlimdim_idx);
-           } while ( (ds[index].type == 1) && (try_again( err, trial ) ) );
-           if ( err != NC_NOERR ) {
-              throw(badNetcdfError(err));
-           }
-        
-           if ( dbug > 2 ) {
-              std::cerr << "MetMyGEOS::Source_open: initial inq: " << ndimens << ", " << nvars 
-                        << ", " << ngatts << ", " << unlimdim_idx << std::endl;
-           }
-            
-           // go through the netcdf global attributes, one by one
-           for (int i=0; i < ngatts; i++) {
-               trial = 0;
-               do {
-                  err = nc_inq_attname(ncid, NC_GLOBAL, i, attr_name );
-               } while ( (ds[index].type == 1) && (try_again( err, trial ) ) );
-               if ( err != NC_NOERR ) {
-                  throw(badNetcdfError(err));
-               }
-               
-               // c-string to c++ string
-               name.assign(attr_name);
-               
-               trial = 0;
-               do {
-                  err = nc_inq_att(ncid, NC_GLOBAL, attr_name, &attr_type, &attr_size );
-               } while ( (ds[index].type == 1) && (try_again( err, trial ) ) );
-               if ( err != NC_NOERR ) {
-                  throw(badNetcdfError(err));
-               }
-               
-               if ( dbug > 4 ) {
-                  std::cerr << "MetMyGEOS::Source_open: reading global attr " << i << ": " << name 
-                  << "(" << attr_type << " x " << attr_size << ") ";
-               }
-               
-               switch (attr_type) {
-               case NC_CHAR: 
-                   // character-based metadata consists of human-readable information
-                   // that is useful to know
-                   //- std::cerr << " [NC_CHAR] ";
-                   
-                   // (but omit "ArchivedMetadata.0", since that does not work)
-                   if ( name != "ArchivedMetadata.0" ) {
-                   
-                      Source_read_attr( attr_val_str, attr_name, NC_GLOBAL, attr_size );
-                      if ( dbug > 4  ) {
-                         std::cerr << "= " << gattr_strings[name];
-                      }
-                      gattr_strings[name] = attr_val_str;
-                      
-                   }
-                   break;
-               case NC_FLOAT:
-                   //- std::cerr << " [NC_FLOAT] ";
-                   // a float attribute may be an array of floats.
-                   Source_read_attr( attr_val_f, attr_name, NC_GLOBAL, attr_size );
-                   if ( dbug > 4  ) {
-                      std::cerr << "= " << gattr_reals[name];
-                   }
-                   // use only the first value; toss the rest
-                   gattr_reals[name] = attr_val_f[0];
-                   attr_val_f.clear();
-                   
-                   break;
-               case NC_DOUBLE:
-                   //- std::cerr << " [NC_DOUBLE] ";
-                   // a double attribute may be an array of doubles.
-                   Source_read_attr( attr_val_d, attr_name, NC_GLOBAL, attr_size );
-                   if ( dbug > 4  ) {
-                      std::cerr << "= " << gattr_reals[name];
-                   }
-                   gattr_reals[name] = attr_val_d[0];
-                   break;
-               default:
-                   // ignore 
-                   break;    
-               }
-                
-               if ( dbug > 4  ) {
-                  std::cerr << std::endl;
-               }
-
-           }                                                         
-
-           // do the initial inquiries to get basic sizes and shapes
-           Source_read_all_dims();
-
-        } else {
+        if ( ! is_open ) {
            std::cerr << "MetMyGEOS::Source_open: Could not open any Data Sources for : " << ds[0].name << std::endl;
            throw(badNetcdfOpen(err));     
         }
@@ -2539,6 +2489,132 @@ void MetMyGEOS::Source_open( bool pre, int index )
      }
 
 } 
+
+
+bool MetMyGEOS::Source_postOpen( int index ) 
+{
+     std::string url;
+     std::string name;
+     int trial;
+     int err;
+     char attr_name[NC_MAX_NAME+1];
+     char attr_cval[NC_MAX_NAME+1];
+     int attr_type;
+     size_t  attr_size;
+     std::string s_value;
+     float f_value;
+     std::string attr_val_str;
+     std::vector<float>  attr_val_f;
+     std::vector<char>   attr_val_c;
+     std::vector<int>    attr_val_i;
+     std::vector<double> attr_val_d;
+     bool result;
+
+     result = true;
+
+     update_hgrid();
+     update_vgrid();
+     update_tgrid();
+     
+     trial = 0;
+     do {
+        err = nc_inq(ncid, &ndimens, &nvars, &ngatts, &unlimdim_idx);
+     } while ( (ds[index].type == 1) && (try_again( err, trial ) ) );
+     if ( err != NC_NOERR ) {
+        throw(badNetcdfError(err));
+     }
+     
+     if ( dbug > 2 ) {
+        std::cerr << "MetMyGEOS::Source_postOpen: initial inq: " << ndimens << ", " << nvars 
+                  << ", " << ngatts << ", " << unlimdim_idx << std::endl;
+     }
+      
+     // go through the netcdf global attributes, one by one
+     for (int i=0; i < ngatts; i++) {
+         trial = 0;
+         do {
+            err = nc_inq_attname(ncid, NC_GLOBAL, i, attr_name );
+         } while ( (ds[index].type == 1) && (try_again( err, trial ) ) );
+         if ( err != NC_NOERR ) {
+            throw(badNetcdfError(err));
+         }
+         
+         // c-string to c++ string
+         name.assign(attr_name);
+         
+         trial = 0;
+         do {
+            err = nc_inq_att(ncid, NC_GLOBAL, attr_name, &attr_type, &attr_size );
+         } while ( (ds[index].type == 1) && (try_again( err, trial ) ) );
+         if ( err != NC_NOERR ) {
+            throw(badNetcdfError(err));
+         }
+         
+         if ( dbug > 4 ) {
+            std::cerr << "MetMyGEOS::Source_postOpen: reading global attr " << i << ": " << name 
+            << "(" << attr_type << " x " << attr_size << ") ";
+         }
+         
+         switch (attr_type) {
+         case NC_CHAR: 
+             // character-based metadata consists of human-readable information
+             // that is useful to know
+             //- std::cerr << " [NC_CHAR] ";
+             
+             // (but omit "ArchivedMetadata.0", since that does not work)
+             if ( name != "ArchivedMetadata.0" ) {
+             
+                Source_read_attr( attr_val_str, attr_name, NC_GLOBAL, attr_size );
+                if ( dbug > 4  ) {
+                   std::cerr << "= " << gattr_strings[name];
+                }
+                gattr_strings[name] = attr_val_str;
+                
+             }
+             break;
+         case NC_FLOAT:
+             //- std::cerr << " [NC_FLOAT] ";
+             // a float attribute may be an array of floats.
+             Source_read_attr( attr_val_f, attr_name, NC_GLOBAL, attr_size );
+             if ( dbug > 4  ) {
+                std::cerr << "= " << gattr_reals[name];
+             }
+             // use only the first value; toss the rest
+             gattr_reals[name] = attr_val_f[0];
+             attr_val_f.clear();
+             
+             break;
+         case NC_DOUBLE:
+             //- std::cerr << " [NC_DOUBLE] ";
+             // a double attribute may be an array of doubles.
+             Source_read_attr( attr_val_d, attr_name, NC_GLOBAL, attr_size );
+             if ( dbug > 4  ) {
+                std::cerr << "= " << gattr_reals[name];
+             }
+             gattr_reals[name] = attr_val_d[0];
+             break;
+         default:
+             // ignore 
+             break;    
+         }
+          
+         if ( dbug > 4  ) {
+            std::cerr << std::endl;
+         }
+
+     }                                                         
+
+     // do the initial inquiries to get basic sizes and shapes
+     Source_read_all_dims();
+     
+     // check if there there is a desired time in p[lay,
+     // and if there is then check thjat this freshly-opened
+     // file has the desired time in it
+     result = Source_testDesiredTime();
+
+     return result;
+}
+
 
 void MetMyGEOS::Source_close()
 {
@@ -2568,9 +2644,41 @@ void MetMyGEOS::Source_close()
     tgrid.clear();
     hgrid.clear();
     vgrid.clear();
+    url_tgrid.clear();
 
 } 
 
+void MetMyGEOS::Source_setDesiredTime( double t )
+{
+    target_time = t;
+    target_time_valid = true;
+}
+
+void MetMyGEOS::Source_setDesiredTime( const std::string& d )
+{
+    target_date = d;
+    target_time = cal2Time(d);
+    target_time_valid = true;
+}
+
+void MetMyGEOS::Source_clearDesiredTime()
+{
+      target_time_valid = false;
+}
+
+
+bool MetMyGEOS::Source_testDesiredTime()
+{
+    bool result;    
+    
+    result = true;
+    
+    if (target_time_valid) {
+       result = url_tgrid.inside( target_time );
+    } 
+    
+    return result;
+}
 
 void MetMyGEOS::Source_checkdims(const int nvdims, const int*dimids )
 {
@@ -2656,23 +2764,30 @@ int MetMyGEOS::Source_findtime(const std::string& quantity, const double desired
        std::cerr << "MetMyGEOS::Source_findtime: Looking for time " << desired_time  << std::endl;
     }
     
-    // put the time into string form, to feed to the Castalog
+    // put the time into string form, to feed to the Catalog
     validTime = time2Cal( desired_time );
-    // Now have the Catalog look it up
-    ok =  dsInit(quantity, validTime );
-    if ( ok ) {
     
-       // get the time of the first snapshot in the file, 
-       // converted from Catalog time to model time
-       btime = catTime2metTime( ds[test_dsrc].preStart_t );
-       // get the delta time between snapshoits in the file
-       tincrement = ds[test_dsrc].tDelta;
-       if ( dbug > 4 ) {
-          std::cerr << "MetMyGEOS::Source_findtime:  time inc is " << tincrement << std::endl;
-          std::cerr << "MetMyGEOS::Source_findtime:  base time is " << btime << std::endl;
-       }
+    if ( ! is_open ) {
+       // Now have the Catalog look it up
+       ok =  dsInit(quantity, validTime );
+       if ( ok ) {
     
+          // get the time of the first snapshot in the file, 
+          // converted from Catalog time to model time
+          btime = catTime2metTime( ds[test_dsrc].preStart_t );
+          // get the delta time between snapshoits in the file
+          tincrement = ds[test_dsrc].tDelta;
+          if ( dbug > 4 ) {
+             std::cerr << "MetMyGEOS::Source_findtime: catalog time inc is " << tincrement << std::endl;
+             std::cerr << "MetMyGEOS::Source_findtime: catalog base time is " << btime << std::endl;
+          }
+       }   
+    } else {
+       
+        ok = tgrid.get( desired_time, btime, idx, tincrement);
+    }      
     
+    if (ok) {
        idx = 0;
        if ( tincrement > 0 ) {
           idx = round( (desired_time - btime)/tincrement );
@@ -4313,7 +4428,6 @@ void MetMyGEOS::Source_read_all_dims()
     int tn, xn, yn;
     HGridSpec url_hgrid;
     VGridSpec url_vgrid;
-    TGridSpec url_tgrid;
     double offset, scale;
     
     dname = legalDims[3]; // time
@@ -4344,8 +4458,11 @@ void MetMyGEOS::Source_read_all_dims()
     tstart = tstart*scale + offset;
     tend = tend*scale + offset;
     tdelta = tdelta*scale;
-    url_tgrid.set( tstart, tstart + tn*tdelta, tdelta );
-    if ( ! tgrid.test( url_tgrid ) ) {
+    //url_tgrid.set( tstart, tstart + tn*tdelta, tdelta );
+    url_tgrid.set( tstart, tstart + tn*tdelta, tn, tdelta, tend );
+    if ( tgrid.test( url_tgrid ) ) {
+       tgrid.merge( url_tgrid );
+    } else {
        std::cerr << "MetMyGEOS::Source_read_all_dims: The file's time gridding is incompatible with its specifications. " << dname << ": " << dim_type << std::endl;
        throw(badDimsForm()); 
     }
@@ -4760,7 +4877,7 @@ void MetMyGEOS::Source_read_data_floats( std::vector<real>&vals, int var_id, int
      }
      
      
-     // we will be reading a maximum of this mahy7 floats,
+     // we will be reading a maximum of this many7 floats,
      // so we need a buffer that is this big.
      maxChunk = tCountMax*vCountMax*latCountMax*lonCountMax;
      
@@ -5299,6 +5416,8 @@ void MetMyGEOS::readSource( const std::string& quantity, const std::string time,
      init();
          
      mtime = cal2Time(time);
+     Source_setDesiredTime( mtime );
+     
      grid3d->set_time( mtime, time );
      grid3d->set_quantity(quantity);
     
@@ -5409,6 +5528,9 @@ void MetMyGEOS::readSource( const std::string& quantity, const std::string time,
          // units should be OK
       }
    }
+   
+   Source_clearDesiredTime();
+   
 }
 
 // Sfc
@@ -5425,7 +5547,9 @@ void MetMyGEOS::readSource( const std::string& quantity, const std::string time,
      real bad;
          
           
-     mtime = cal2Time(time);
+     mtime = cal2Time(time);   
+     Source_setDesiredTime(mtime);
+     
      grid2d->set_time( mtime, time );
      grid2d->set_quantity(quantity);
     
@@ -5531,6 +5655,7 @@ void MetMyGEOS::readSource( const std::string& quantity, const std::string time,
         }
      }
      
+     Source_clearDesiredTime();
 
 }
 
@@ -6493,27 +6618,202 @@ bool MetMyGEOS::TGridSpec::set( double tstart, double tnext, double tdelta )
     double xstart;
     double xend;
     double xdelta;
-    double xn;
+    int xn;
     int nn;
     double qend;
+    bool has_next;
+    bool has_delta;
     
     result = true;
     
+    clear();
+
+    // we always have a start    
     start = tstart;
+    given = given | 0x01;
+    
     next = tnext;
     delta = tdelta;
-    if ( next > start ) {
-       if ( delta == 0.0 ) {
-          if ( start != next ) {
+    
+    has_next =  finite(next) && ( next >= start );
+    has_delta = finite(delta) && ( delta > 0.0 );
+    
+    if ( has_next ) {
+       // 'next' was specified
+       if ( next > start ) {
+          given = given | 0x02;
+          if ( has_delta ) {
+             // 'delta' was specified
+             given = given | 0x04;
+             // find the number if times snapshots between the start and the next
+             xn = round((next - start)/delta);
+             if ( xn > 2 ) {
+                // more than one snapshot before the next file
+                end = next - delta;
+                n = xn - 1;
+             } else {
+                // only one delta between this file and the next
+                n = 1;
+                end = start;
+             }              
+          } else {
+             // delta not specified, but next > start
+             // there must be only one snapshot in each file
              delta = next - start;
+             n = 1;
+             end = start;
           }
-       }
-    } else if ( next == start ) {
+       } else if ( next == start ) {
+          // only one time in the spec.
+          if ( finite(delta) && (delta > 0.0) ) {
+             given = given | 0x04;
+             next = start + delta;
+             n = 1;
+             end = start;
+             // delta was specified but not next
+          } else {
+             result = false;
+          }
+       }   
+    } else {
+       // no valid next given
        if ( delta > 0.0 ) {
+          given = given | 0x04;
+          // assume one snapshot per file
           next = start + delta;
+          n = 1;
+          end = start;
+       } else {
+          // time grid is under-specified
+          result = false;
        }
     }
 
+    
+    return result;
+
+}
+
+bool MetMyGEOS::TGridSpec::set( double tstart, double tend, int tn )
+{
+    bool result;
+    double xstart;
+    double xend;
+    double xdelta;
+    int xn;
+    int nn;
+    double qend;
+    bool has_end;
+    bool has_n;
+    
+    result = true;
+    
+    clear();
+
+    // we always have a start    
+    start = tstart;
+    given = given | 0x01;
+
+    end = tend;
+    n = tn;
+
+    has_end = finite(end) && ( end > start );
+    has_n = (n > 1 );
+
+    if ( has_end ) {
+       // 'end' was specified
+       given = given | 0x10;
+       if ( n > 1 ) {
+          // n was specified
+          given = given | 0x08;
+          delta = (end - start)/n ;
+       } else {
+         // if end > start, then n must be > 1
+         result = false;
+       }
+    } else {
+       // end <= start, so there is only one snapshot
+       // in the file. But we have no idea what is the delta
+       // between this file and the next one.
+       // this time grid is under-specified
+       result = false;
+    }
+
+    
+    return result;
+
+}
+
+bool MetMyGEOS::TGridSpec::set( double tstart, double tnext, int tn, double tdelta, double tend )
+{
+    bool result;
+    double xstart;
+    double xend;
+    double xdelta;
+    int xn;
+    int nn;
+    double qend;
+    bool has_end;
+    bool has_n;
+    bool has_delta;
+    bool has_next;
+    
+    result = true;
+    
+    clear();
+
+    // we always have a start    
+    start = tstart;
+    given = given | 0x01;
+
+    end = tend;
+    n = tn;
+    next = tnext;
+    delta = tdelta;
+
+    has_next = finite(next) && ( next > start );
+    has_end = finite(end) && ( end > start );
+    has_n = (n >= 1 );
+    has_delta = finite(delta) && ( delta > 0.0);
+
+    if ( has_next ) {
+       given = given | 0x02;       
+    } 
+    if ( has_delta ) {
+       given = given | 0x04;       
+    } 
+    if ( has_n ) {
+       given = given | 0x08;       
+    } 
+    if ( has_end ) {
+       given = given | 0x10;       
+    } 
+
+    if ( ! has_delta ) {
+       if ( has_n && has_end ) {
+          if ( n > 1 ) {
+             delta = (end - start)/(n - 1);
+          } else {
+             delta = 0.0;
+          }
+       }    
+    }
+    if ( ! has_n ) {
+       if ( has_delta ) {
+          if ( has_end ) {
+             n = round( (end - start)/delta ) + 1;
+          } else if ( has_next ) {
+             n = round( (next - start)/delta );
+          }
+       }
+    }
+    if ( ! has_next ) {
+       if ( has_n && has_delta && has_next ) {
+          next = start + delta*n;
+       }
+    }
+    
+    // Should really check ot make sure that what everything specificed was mutually consistent
     
     return result;
 
@@ -6527,34 +6827,50 @@ bool MetMyGEOS::TGridSpec::test( const TGridSpec& cmp ) const
     double s1, s2;
     double e1, e2;
     double d1, d2;
+    bool has_start;
+    bool has_next;
+    bool has_delta;
+    bool has_n;
+    bool has_end;
+    
     
     result = false;
     
     // times must match within 10 seconds
     threshold = 10.0/3600.0/24.0;
+     
+    has_start  = (given & 0x01) && (cmp.given & 0x01) && finite(start) && finite(cmp.start);
+    has_next   = (given & 0x02) && (cmp.given & 0x02) && finite(next) && finite(cmp.next);
+    has_delta  = (given & 0x04) && (cmp.given & 0x04) && finite(delta) && finite(cmp.delta) 
+               && (delta > 0.0) && (cmp.delta > 0.0 );
+    has_n      = (given & 0x08) && (cmp.given & 0x08) && (n > 0) && (cmp.n > 0 );
+    has_end    = (given & 0x10) && (cmp.given & 0x10) && finite(end) && finite(cmp.end);
     
     // the start times must match
-    if ( fabs( start - cmp.start ) < threshold ) {
-       if ( (delta != 0.0) && (cmp.delta != 0.0) ) {
-          if ( fabs( delta - cmp.delta ) < threshold ) {
-             if ( finite(next) and finite(cmp.next) ) {
-                if ( fabs( next - cmp.next ) < threshold ) {   
-                   result = true;;
-                }
-             } else {
-                // if either ofthe next fields is not finite, then
-                // it still counts as a match.
-                // This happens if all of the time snapshots are in one URL
-                // that keeps getting extemned with more data, so that the
-                // Catalog does not know when the data end.
-                result = true;
-             }
-          }
-       } else {
-          // at least one of the deltas is zero, which matches anything
-          result = true;
+    if ( has_start && (fabs( start - cmp.start ) < threshold) ) {
+       
+       result = true;
+       
+       // shall we compare the deltsa?
+       if ( has_delta ) {
+          result = result && ( fabs( delta - cmp.delta ) < threshold );
        }
-    }
+       
+       // shall we compare the 'next' time?
+       if ( has_next ) {
+          result = result && ( fabs( next - cmp.next ) < threshold );
+       }
+       
+       // compare the  number of times/
+       if ( has_n ) {
+          result = result && (  n == cmp.n );
+       }
+       
+       // shall we compare the 'end' time?
+       if ( has_end ) {
+          result = result && ( fabs( end - cmp.end ) < threshold );
+       }
+       
        
 /*
     // the number of times must match, unless one of them is zero
@@ -6579,12 +6895,178 @@ bool MetMyGEOS::TGridSpec::test( const TGridSpec& cmp ) const
              result = true;
           }
        }
-    }
 */
     
+    }
     return result;
 }
 
+
+bool MetMyGEOS::TGridSpec::inside( double t )
+{
+    bool result;
+
+    if ( n > 0 ) {
+       // multiple time steps in URL, so 'end' is valid
+       // do the easy--and most likely--check first
+       result = ( t >= start ) && ( t <= end );
+       // but the equality tests might not be right, so
+       // be a little more careful, maybe
+       if ( ! result ) {
+          // are we within 1/10 second of the start?
+          result = abs( t - start ) < (0.1/3600.0/24.0);
+          if ( ! result ) {
+             result = abs( end - t ) < (0.1/3600.0/24.0);
+          }
+       }
+       
+    } else {
+       // single time step in URL
+       result = ( t >= start ) && ( t < next );
+       // but the equality tests might not be right, so
+       // be a little more careful, maybe
+       if ( ! result ) {
+          // are we within 1/10 second of the start?
+          result = abs( t - start ) < (0.1/3600.0/24.0);
+          
+          // (and if we are really close to 'next', then we 
+          // are out of time range for this tgrid.)
+       }
+    }
+    
+    return result;
+}  
+
+bool MetMyGEOS::TGridSpec::merge( TGridSpec& in )
+{
+     bool result;
+     bool has_start;
+     bool has_next;
+     bool has_delta;
+     bool has_n;
+     bool has_end;
+     bool in_has_start;
+     bool in_has_next;
+     bool in_has_delta;
+     bool in_has_n;
+     bool in_has_end;
+
+     result = this->test( in );
+     if ( result ) {
+        
+         has_start  = (given & 0x01) && finite(start);
+         has_next   = (given & 0x02) && finite(next) ;
+         has_delta  = (given & 0x04) && finite(delta) && (delta > 0.0);
+         has_n      = (given & 0x08) && (n > 0);
+         has_end    = (given & 0x10) && finite(end);
+        
+         in_has_start  = (in.given & 0x01) && finite(in.start);
+         in_has_next   = (in.given & 0x02) && finite(in.next) ;
+         in_has_delta  = (in.given & 0x04) && finite(in.delta) && (in.delta > 0.0);
+         in_has_n      = (in.given & 0x08) && (in.n > 0);
+         in_has_end    = (in.given & 0x10) && finite(in.end);
+         
+         if ( ( ! has_start ) && in_has_start ) {
+            start = in.start;
+         }
+         if ( ( ! has_next ) && in_has_next ) {
+            next = in.next;
+         }
+         if ( ( ! has_delta ) && in_has_delta ) {
+            delta = in.delta;
+         }
+         if ( ( ! has_n ) && in_has_n ) {
+            n = in.n;
+         }
+         if ( ( ! has_end ) && in_has_end ) {
+            end = in.end;
+         }
+           
+        
+     }
+     return result;
+}   
+
+bool MetMyGEOS::TGridSpec::get( double desired_time, double& myStart, int& myN, double& myInc ) const
+{
+     bool result;
+     bool has_start;
+     bool has_next;
+     bool has_delta;
+     bool has_n;
+     bool has_end;
+     double tyme;
+     
+     // these items may have bene comuted. We can still use them,
+     // so we don't have to check 'given' to see whether they were specified 
+     has_start  = finite(start);
+     has_next   = finite(next) ;
+     has_delta  = finite(delta) && (delta > 0.0);
+     has_n      = (n > 0);
+     has_end    = finite(end);
+     
+     result = false;
+     
+     if ( has_start ) {
+     
+         myStart = start;
+
+         tyme = desired_time - start;
+         
+         myN = 0;
+         myInc = 0.0;
+         if ( tyme >= 0.0 ) {
+
+            if ( has_delta ) {
+            
+               myInc = delta;
+               result = true;
+            
+            } else {
+            
+               if ( has_n ) {               
+                  if (  n > 1 ) {
+                     if ( has_end ) {
+                        myInc = (end - start)/(n - 1);
+                        result = true;
+                     }   
+                  } else {  
+                     if ( ( n == 1 ) || ( n == 0 ) ) {
+                        result = true;
+                     }
+                  }
+               } else{
+                  // no delta? no n?
+                  // probably only one time in this grid
+                  result = true;
+               }
+            }
+            
+            if ( result ) {
+               if ( myInc > 0.0 ) {
+                  // if we are within 1 second of the next time,
+                  // go ahead and use that
+                  myN = tyme/myInc + 0.00001;
+                  // except for this case
+                  if ( has_n && (myN == n) ) {
+                     myN = n - 1;
+                  }
+               } else {
+                  myN = 0;
+               }
+            }
+                           
+         }
+         // last sanity check
+         if ( ( myN < 0 ) || ( has_n && (myN >= n) ) ) {
+            result = false;
+         }
+     }
+     
+     
+     return result;
+     
+}
 
 double MetMyGEOS::Source_time_nativeTo1900( double nativeTime ) const
 {

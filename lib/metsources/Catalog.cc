@@ -6730,11 +6730,7 @@ Catalog::VarVal* Catalog::lookup( const std::string& name )
      bool ok;
      
      result = NULLPTR;
-     
-if ( name == "START" ) {
-   std::cerr << "hello" << std::endl;
-}     
-     
+          
      if ( dbug > 60 ) {
         std::cerr << "Catalog::lookup begins w/ name = " << name << std::endl;
      }
