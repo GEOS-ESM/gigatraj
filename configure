@@ -635,6 +635,8 @@ GREP
 CPP
 DOXDEF_MPI
 DOXDEF_DOUBLE
+DOX_DOES_DOCBOOK_FALSE
+DOX_DOES_DOCBOOK_TRUE
 DOX_DOES_AUTOGEN_FALSE
 DOX_DOES_AUTOGEN_TRUE
 DOX_DOES_PERLMOD_FALSE
@@ -680,6 +682,11 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
+NCDFLIBS
+NCDFCFLAGS
+DO_NETCDF
+NETCDF_FALSE
+NETCDF_TRUE
 DO_MYGEOS
 MYGEOS_FALSE
 MYGEOS_TRUE
@@ -692,14 +699,14 @@ MERRA2_TRUE
 DO_MERRA
 MERRA_FALSE
 MERRA_TRUE
-DO_NETCDF
-NETCDF_FALSE
-NETCDF_TRUE
-use_mpicxx
-use_mpicc
+MPILIBS
+MPICFLAGS
+MPIPATH
 DO_MPI
 MPI_FALSE
 MPI_TRUE
+use_mpicxx
+use_mpicc
 DOXYGEN_FALSE
 DOXYGEN_TRUE
 DO_WRAP180
@@ -784,8 +791,13 @@ enable_double
 enable_wrap0
 enable_wrap180
 enable_doxygen
-enable_mpi
-enable_netcdf
+with_mpi
+with_mpi_bin
+with_mpi_lib
+with_mpi_include
+with_netcdf
+with_netcdf_lib
+with_netcdf_include
 enable_allmet
 enable_merra
 enable_merra2
@@ -1429,8 +1441,6 @@ Optional Features:
   --enable-wrap0		by default, set longitudes to wrap at 0 degrees, making a range of 0 to 360
   --enable-wrap180		by default, set longitudes to wrap at 180 degrees, making a range of -180 to 180
   --enable-doxygen		Allows generation of documentation files
-  --enable-mpi		Construct a version of the library that uses MPI for parallel processing
-  --enable-netcdf		Allows use of netcdf4 files
   --enable-allmet		Add all meteorological data classes
   --enable-merra		Add class for reading NASA's GMAO MERRA meteorological data
   --enable-merra2		Add class for reading NASA's GMAO MERRA2 meteorological data
@@ -1440,6 +1450,17 @@ Optional Features:
                           do not reject slow dependency extractors
   --disable-dependency-tracking
                           speeds up one-time build
+
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-mpi=path     Construct a version of the library that uses MPI for parallel processing
+  --with-mpi-bin=path     Specify the path of the MPI binaries (e.g., mpirun)
+  --with-mpi-lib=path     Specify the path of the MPI libraries
+  --with-mpi-include=path     Specify the path of the MPI include files
+  --with-netcdf=path     Construct a version of the library that uses NetCDF for parallel processing
+  --with-netcdf-lib=path     Specify the path of the NetCDF libraries
+  --with-netcdf-include=path     Specify the path of the NetCDF include files
 
 Some influential environment variables:
   CC          C compiler command
@@ -3007,16 +3028,371 @@ fi
 # the list of c andc++ compilers to look for--we will edit this if mpicc and mpicxx are available)
 CLIST_CC="gcc cl cc"
 CLIST_CXX="g++ c++"
-# Check whether --enable-mpi was given.
-if test "${enable_mpi+set}" = set; then :
-  enableval=$enable_mpi; case "${enableval}" in
- yes) do_mpi=true ;;
+
+#------- MPI ----------
+g_path_mpi_pfx=""
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking --with-mpi" >&5
+$as_echo_n "checking --with-mpi... " >&6; }
+
+# Check whether --with-mpi was given.
+if test "${with_mpi+set}" = set; then :
+  withval=$with_mpi; case "${with_mpi}" in
+ yes) do_mpi=true
+      g_path_mpi_pfx="/usr"
+      if test "X${MPI_PREFIX}" != "X" ; then
+         if test -d "${MPI_PREFIX}/" ; then
+            g_path_mpi_pfx="${MPI_PREFIX}"
+         else
+            as_fn_error $? "${MPI_PREFIX} is not a directory" "$LINENO" 5
+         fi
+      fi ;;
  no)  do_mpi=false ;;
- *) as_fn_error $? "bad value ${enableval} for --enable-mpi" "$LINENO" 5 ;;
+ *)   do_mpi=true
+      if test -d "${withval}/" ; then
+          g_path_mpi_pfx="${withval}"
+      else
+          as_fn_error $? "Cannot find MPI prefix directory ${withval}" "$LINENO" 5
+      fi ;;
  esac
 else
   do_mpi=false
 fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $do_mpi" >&5
+$as_echo "$do_mpi" >&6; }
+
+g_path_mpi_bin=""
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking --with-mpi-bin" >&5
+$as_echo_n "checking --with-mpi-bin... " >&6; }
+
+# Check whether --with-mpi-bin was given.
+if test "${with_mpi_bin+set}" = set; then :
+  withval=$with_mpi_bin;  do_mpi=true
+  #if test "x$g_path_mpi_pfx}" = "x" ; then
+  #   g_path_mpi_pfx="/usr"
+  #fi
+  if test "x${withval}" != "x" ; then
+     if test -d "${withval}/" ; then
+        g_path_mpi_bin="${withval}"
+     else
+        as_fn_error $? "cannot find MPI bin directory $withval" "$LINENO" 5
+     fi
+  fi
+
+fi
+
+if test "x${do_mpi}" = "xtrue" ; then
+   if test "x${g_path_mpi_bin}" = "x" ; then
+      as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+      for as_dir in $PATH
+      do
+          if test -x $as_dir/mpirun ; then
+             g_path_mpi_bin=$as_dir
+             break
+          fi
+      done
+      IFS=$as_save_IFS
+      if test "x$g_path_mpi_pfx}" = "x" ; then
+         g_path_mpi_pfx=`dirname $g_path_mpi_bin`
+      fi
+      #if test -d "${g_path_mpi_pfx}/bin/" ; then
+      #   g_path_mpi_bin="${g_path_mpi_pfx}/bin"
+      #fi
+   fi
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $g_path_mpi_bin" >&5
+$as_echo "$g_path_mpi_bin" >&6; }
+
+g_path_mpi_lib=""
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking --with-mpi-lib" >&5
+$as_echo_n "checking --with-mpi-lib... " >&6; }
+
+# Check whether --with-mpi-lib was given.
+if test "${with_mpi_lib+set}" = set; then :
+  withval=$with_mpi_lib;  do_mpi=true
+  if test "x$g_path_mpi_pfx}" = "x" ; then
+     g_path_mpi_pfx="/usr"
+  fi
+  if test "x${withval}" != "x" ; then
+     if test -d "${withval}/" ; then
+        g_path_mpi_lib="${withval}"
+     else
+        as_fn_error $? "cannot find MPI bin directory $withval" "$LINENO" 5
+     fi
+  fi
+
+fi
+
+if test "x${do_mpi}" = "xtrue" ; then
+   if test "x${g_path_mpi_lib}" = "x" ; then
+      if test -d "${g_path_mpi_pfx}/lib/" ; then
+         g_path_mpi_lib="${g_path_mpi_pfx}/lib"
+      fi
+   fi
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $g_path_mpi_lib" >&5
+$as_echo "$g_path_mpi_lib" >&6; }
+
+g_path_mpi_incl=""
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking --with-mpi-include" >&5
+$as_echo_n "checking --with-mpi-include... " >&6; }
+
+# Check whether --with-mpi-include was given.
+if test "${with_mpi_include+set}" = set; then :
+  withval=$with_mpi_include;  do_mpi=true
+  if test "x$g_path_mpi_pfx}" = "x" ; then
+     g_path_mpi_pfx="/usr"
+  fi
+  if test "x${withval}" != "x" ; then
+     if test -d "${withval}/" ; then
+        g_path_mpi_incl="${withval}"
+     else
+        as_fn_error $? "cannot find MPI bin directory $withval" "$LINENO" 5
+     fi
+  fi
+
+fi
+
+if test "x${do_mpi}" = "xtrue" ; then
+   if test "x${g_path_mpi_incl}" = "x" ; then
+      if test -d "${g_path_mpi_pfx}/include/" ; then
+         g_path_mpi_incl="${g_path_mpi_pfx}/include"
+      fi
+   fi
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $g_path_mpi_incl" >&5
+$as_echo "$g_path_mpi_incl" >&6; }
+
+#------- NETCDF ----------
+g_path_ncdf_pfx=""
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking --with-netcdf" >&5
+$as_echo_n "checking --with-netcdf... " >&6; }
+
+# Check whether --with-netcdf was given.
+if test "${with_netcdf+set}" = set; then :
+  withval=$with_netcdf; case "${with_netcdf}" in
+ yes) do_ncdf=true
+      g_path_ncdf_pfx="/usr"
+      if test "X${NCDF_PREFIX}" != "X" ; then
+         if test -d "${NCDF_PREFIX}/" ; then
+            g_path_ncdf_pfx="${NCDF_PREFIX}"
+         else
+            as_fn_error $? "${NCDF_PREFIX} is not a directory" "$LINENO" 5
+         fi
+      fi ;;
+ no)  do_ncdf=false ;;
+ *)   do_ncdf=true
+      if test -d "${withval}/" ; then
+          g_path_ncdf_pfx="${withval}"
+      else
+          as_fn_error $? "Cannot find NCDF prefix directory ${withval}" "$LINENO" 5
+      fi ;;
+ esac
+else
+  do_ncdf=false
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $do_ncdf" >&5
+$as_echo "$do_ncdf" >&6; }
+
+g_path_ncdf_lib=""
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking --with-netcdf-lib" >&5
+$as_echo_n "checking --with-netcdf-lib... " >&6; }
+
+# Check whether --with-netcdf-lib was given.
+if test "${with_netcdf_lib+set}" = set; then :
+  withval=$with_netcdf_lib;  do_ncdf=true
+  if test "x$g_path_ncdf_pfx}" = "x" ; then
+     g_path_ncdf_pfx="/usr"
+  fi
+  if test "x${withval}" != "x" ; then
+     if test -d "${withval}/" ; then
+        g_path_ncdf_lib="${withval}"
+     else
+        as_fn_error $? "cannot find NCDF bin directory $withval" "$LINENO" 5
+     fi
+  fi
+
+fi
+
+if test "x${do_ncdf}" = "xtrue" ; then
+   if test "x${g_path_ncdf_lib}" = "x" ; then
+      if test -d "${g_path_ncdf_pfx}/lib/" ; then
+         g_path_ncdf_lib="${g_path_ncdf_pfx}/lib"
+      fi
+   fi
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $g_path_ncdf_lib" >&5
+$as_echo "$g_path_ncdf_lib" >&6; }
+
+g_path_ncdf_incl=""
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking --with-netcdf-include" >&5
+$as_echo_n "checking --with-netcdf-include... " >&6; }
+
+# Check whether --with-netcdf-include was given.
+if test "${with_netcdf_include+set}" = set; then :
+  withval=$with_netcdf_include;  do_ncdf=true
+  if test "x$g_path_ncdf_pfx}" = "x" ; then
+     g_path_ncdf_pfx="/usr"
+  fi
+  if test "x${withval}" != "x" ; then
+     if test -d "${withval}/" ; then
+        g_path_ncdf_incl="${withval}"
+     else
+        as_fn_error $? "cannot find NCDF bin directory $withval" "$LINENO" 5
+     fi
+  fi
+
+fi
+
+if test "x${do_ncdf}" = "xtrue" ; then
+   if test "x${g_path_ncdf_incl}" = "x" ; then
+      if test -d "${g_path_ncdf_pfx}/include/" ; then
+         g_path_ncdf_incl="${g_path_ncdf_pfx}/include"
+      fi
+   fi
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $g_path_ncdf_incl" >&5
+$as_echo "$g_path_ncdf_incl" >&6; }
+
+
+save_libs="${LIBS}"
+save_cflags="${CFLAGS}"
+save_path="${PATH}"
+
+if test "X${do_mpi}" = "Xtrue" ; then
+
+   if test "X${g_path_mpi_bin}" != "X" ; then
+      MPI_PATH="${g_path_mpi_bin}/"
+      PATH="${PATH}:${MPI_PATH}"
+   fi
+
+   # openMPI wants us to use mpicc instead of cc or gcc, so we test for its presence
+   # Extract the first word of "mpicc", so it can be a program name with args.
+set dummy mpicc; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_use_mpicc+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$use_mpicc"; then
+  ac_cv_prog_use_mpicc="$use_mpicc" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_use_mpicc="yes"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_prog_use_mpicc" && ac_cv_prog_use_mpicc="no"
+fi
+fi
+use_mpicc=$ac_cv_prog_use_mpicc
+if test -n "$use_mpicc"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $use_mpicc" >&5
+$as_echo "$use_mpicc" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+   # this is actually more of a check for whether the MPI C++ bindings
+   # are present in this site's openmpi installation
+   # Extract the first word of "mpicxx", so it can be a program name with args.
+set dummy mpicxx; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_use_mpicxx+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$use_mpicxx"; then
+  ac_cv_prog_use_mpicxx="$use_mpicxx" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_use_mpicxx="yes"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_prog_use_mpicxx" && ac_cv_prog_use_mpicxx="no"
+fi
+fi
+use_mpicxx=$ac_cv_prog_use_mpicxx
+if test -n "$use_mpicxx"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $use_mpicxx" >&5
+$as_echo "$use_mpicxx" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+   if test x$use_mpicc = xyes ; then
+      CLIST_CC="mpicc ${CLIST_CC}"
+   fi
+   if test x$use_mpicxx = xyes ; then
+      CLIST_CXX="mpicxx ${CLIST_CXX}"
+   fi
+
+   # now the MPI library
+   if test "X${g_path_mpi_lib}" != "X" ; then
+      MPI_LIBS="-L${g_path_mpi_lib}/"
+      LIBS="${LIBS} ${MPI_LIBS} "
+   fi
+
+   # We are using MPI C bindings in gigatraj, even
+   # though gigatraj is written in C++.
+   # (So sue us.)
+   MPI_CFLAGS="-DOMPI_SKIP_MPICXX  "
+   # now the MPI include files
+   if test "X${g_path_mpi_incl}" != "X" ; then
+      MPI_CFLAGS="${MPI_CFLAGS} -I${g_path_mpi_incl}/"
+   fi
+   CFLAGS="${CFLAGS} ${MPI_CFLAGS} "
+fi
+
+if test "X${do_ncdf}" = "Xtrue" ; then
+
+   # the NCDF library
+   if test "X${g_path_ncdf_lib}" != "X" ; then
+      NCDF_LIBS="-L${g_path_ncdf_lib}/"
+      LIBS="${LIBS} ${NCDF_LIBS} "
+   fi
+
+   NCDF_CFLAGS=""
+   # now the NCDF include files
+   if test "X${g_path_ncdf_incl}" != "X" ; then
+      NCDF_CFLAGS="${NCDF_CFLAGS} -I${g_path_ncdf_incl}/"
+   fi
+   CFLAGS="${CFLAGS} ${NCDF_CFLAGS} "
+fi
+
+#AC_MSG_WARN([MPI_PATH=${MPI_PATH}])
+#AC_MSG_WARN([MPI_LIBS=${MPI_LIBS}])
+#AC_MSG_WARN([MPI_CFLAGS=${MPI_CFLAGS}])
+#AC_MSG_WARN([CLIST_CC=${CLIST_CC}])
+#AC_MSG_WARN([CLIST_CXX=${CLIST_CXX}])
+#AC_MSG_WARN([NCDF_LIBS=${NCDF_LIBS}])
+#AC_MSG_WARN([NCDF_CFLAGS=${NCDF_CFLAGS}])
 
  if test x$do_mpi = xtrue; then
   MPI_TRUE=
@@ -3030,6 +3406,12 @@ DO_MPI=0
 
 if test x$do_mpi = xtrue ; then
 DO_MPI=1
+
+MPIPATH=${MPI_PATH}
+
+MPICFLAGS=${MPI_CFLAGS}
+
+MPILIBS=${MPI_LIBS}
 
 # openMPI wants us to use mpicc instead of cc or gcc, so we test for its presence
 # Extract the first word of "mpicc", so it can be a program name with args.
@@ -3118,33 +3500,6 @@ if test x$use_mpicxx = xyes ; then
 fi
 fi
 
-# Check whether --enable-netcdf was given.
-if test "${enable_netcdf+set}" = set; then :
-  enableval=$enable_netcdf; case "${enableval}" in
- yes) do_netcdf=true ;;
- no)  do_netcdf=false ;;
- *) as_fn_error $? "bad value ${enableval} for --enable-netcdf" "$LINENO" 5 ;;
- esac
-else
-  do_netcdf=false
-fi
-
- if test x$do_netcdf = xtrue; then
-  NETCDF_TRUE=
-  NETCDF_FALSE='#'
-else
-  NETCDF_TRUE='#'
-  NETCDF_FALSE=
-fi
-
-DO_NETCDF=0
-
-if test x$do_netcdf = xtrue ; then
-DO_NETCDF=1
-
-fi
-
-
 ##### optional MetData subclasses
 
 # Check whether --enable-allmet was given.
@@ -3184,7 +3539,7 @@ fi
 DO_MERRA=0
 
 if test x$do_merra = xtrue ; then
-do_netcdf=true
+do_ncdf=true
 DO_MERRA=1
 
 fi
@@ -3214,7 +3569,7 @@ fi
 DO_MERRA2=0
 
 if test x$do_merra2 = xtrue ; then
-do_netcdf=true
+do_ncdf=true
 DO_MERRA2=1
 
 fi
@@ -3244,7 +3599,7 @@ fi
 DO_GEOSFP=0
 
 if test x$do_geosfp = xtrue ; then
-do_netcdf=true
+do_ncdf=true
 DO_GEOSFP=1
 
 fi
@@ -3274,16 +3629,40 @@ fi
 DO_MYGEOS=0
 
 if test x$do_mygeos = xtrue ; then
-do_netcdf=true
+do_ncdf=true
 DO_MYGEOS=1
 
 fi
 
 
 
+ if test x$do_ncdf = xtrue; then
+  NETCDF_TRUE=
+  NETCDF_FALSE='#'
+else
+  NETCDF_TRUE='#'
+  NETCDF_FALSE=
+fi
+
+DO_NETCDF=0
+
+if test x$do_ncdf = xtrue ; then
+DO_NETCDF=1
+
+NCDFCFLAGS=${NCDF_CFLAGS}
+
+NCDFLIBS=${NCDF_LIBS}
+
+fi
+
+
 ###### Enough with specifications. Let's start checking for stuff.
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: CLIST_CC=${CLIST_CC}" >&5
+$as_echo "$as_me: WARNING: CLIST_CC=${CLIST_CC}" >&2;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: CLIST_CXX=${CLIST_CXX}" >&5
+$as_echo "$as_me: WARNING: CLIST_CXX=${CLIST_CXX}" >&2;}
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -4073,6 +4452,13 @@ else
 fi
 
 
+if test x$CC = xmpicc ; then
+   if test x$MPI_PATH != x ; then
+      if test -x "$MPI_PATH$CC" ; then
+         CC="$MPI_PATH$CC"
+      fi
+   fi
+fi
 ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -4458,7 +4844,13 @@ else
 fi
 
 
-
+if test x$CXX = xmpicxx ; then
+   if test x$MPI_PATH != x ; then
+      if test -x "$MPI_PATH$CXX" ; then
+         CXX="$MPI_PATH$CXX"
+      fi
+   fi
+fi
 
 if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.
@@ -4948,6 +5340,7 @@ else
   DOX_DOES_LATEX_FALSE=
 fi
 
+#AM_CONDITIONAL([DOX_DOES_LATEX], [false])
  if true; then
   DOX_DOES_MAN_TRUE=
   DOX_DOES_MAN_FALSE='#'
@@ -4986,6 +5379,14 @@ fi
 else
   DOX_DOES_AUTOGEN_TRUE='#'
   DOX_DOES_AUTOGEN_FALSE=
+fi
+
+ if false; then
+  DOX_DOES_DOCBOOK_TRUE=
+  DOX_DOES_DOCBOOK_FALSE='#'
+else
+  DOX_DOES_DOCBOOK_TRUE='#'
+  DOX_DOES_DOCBOOK_FALSE=
 fi
 
 # The base doxygen config file, doc/gigatraj_base.dconf.in,
@@ -5555,22 +5956,27 @@ fi
 #    only check for MPI if we are using MPI
 if test x$do_mpi = xtrue ; then
 # we will need the header file
-for ac_header in mpi.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "mpi.h" "ac_cv_header_mpi_h" "$ac_includes_default"
-if test "x$ac_cv_header_mpi_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_MPI_H 1
-_ACEOF
+#AC_CHECK_HEADERS([mpi.h], [], [AC_MSG_ERROR(no MPI header file was  found)])
+for ac_header in mpi.h  openmpi-x86_64/mpi.h
 
-else
-  as_fn_error $? "no MPI header file was  found" "$LINENO" 5
+do :
+  as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
+ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
+if eval test \"x\$"$as_ac_Header"\" = x"yes"; then :
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+ gigatraj_found_mpi_headers=yes; break;
 fi
 
 done
 
+if test "x$gigatraj_found_mpi_headers" != "xyes"; then :
+  as_fn_error $? "no MPI header file was  found" "$LINENO" 5
+fi
 if test x$use_mpicc = xno ; then
 # we will need the MPI C library
+#AC_LIB_LINKFLAGS(mpi)
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing MPI_Init" >&5
 $as_echo_n "checking for library containing MPI_Init... " >&6; }
 if ${ac_cv_search_MPI_Init+:} false; then :
@@ -5631,7 +6037,7 @@ fi
 
 fi
 if test x$test_mpicxx = xyes ; then
-# MPI C++ bindings are present, so the headre file contains C++ definisiotns,
+# MPI C++ bindings are present, so the header file contains C++ definisiotns,
 # so we will need this library as well.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Init in -lmpi_cxx" >&5
 $as_echo_n "checking for MPI_Init in -lmpi_cxx... " >&6; }
@@ -5683,7 +6089,7 @@ fi
 
 #    check for netcdf v4 if we are using MERRA, MERRAS2, or GEOSFP
 #if test x$do_merra = xtrue || test x$do_merra2 = xtrue || test x$do_geosfp = xtrue ; then
-if test x$do_netcdf = xtrue ; then
+if test x$do_ncdf = xtrue ; then
 { $as_echo "$as_me:${as_lineno-$LINENO}: Doing netcdf!!!!" >&5
 $as_echo "$as_me: Doing netcdf!!!!" >&6;}
 for ac_header in netcdf.h
@@ -6186,7 +6592,7 @@ _ACEOF
 fi
 
 
-ac_config_files="$ac_config_files Makefile include/gigatraj/Makefile include/gigatraj/gigatraj.hh lib/Makefile lib/filters/Makefile lib/metsources/Makefile src/Makefile confiles/Makefile test/Makefile doc/gigatraj_base.dconf:doc/gigatraj_base.dconf.in doc/latex_yes.dconf:doc/latex_yes.dconf.in doc/Makefile"
+ac_config_files="$ac_config_files Makefile include/gigatraj/Makefile include/gigatraj/gigatraj.hh lib/Makefile lib/filters/Makefile lib/metsources/Makefile src/Makefile src/gtmodel_m01 src/gtmodel_m02 confiles/Makefile test/Makefile test/test_MPI.sh doc/gigatraj_base.dconf:doc/gigatraj_base.dconf.in doc/latex_yes.dconf:doc/latex_yes.dconf.in doc/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6333,10 +6739,6 @@ if test -z "${MPI_TRUE}" && test -z "${MPI_FALSE}"; then
   as_fn_error $? "conditional \"MPI\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
-if test -z "${NETCDF_TRUE}" && test -z "${NETCDF_FALSE}"; then
-  as_fn_error $? "conditional \"NETCDF\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
 if test -z "${MERRA_TRUE}" && test -z "${MERRA_FALSE}"; then
   as_fn_error $? "conditional \"MERRA\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -6351,6 +6753,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${MYGEOS_TRUE}" && test -z "${MYGEOS_FALSE}"; then
   as_fn_error $? "conditional \"MYGEOS\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${NETCDF_TRUE}" && test -z "${NETCDF_FALSE}"; then
+  as_fn_error $? "conditional \"NETCDF\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${AMDEP_TRUE}" && test -z "${AMDEP_FALSE}"; then
@@ -6391,6 +6797,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${DOX_DOES_AUTOGEN_TRUE}" && test -z "${DOX_DOES_AUTOGEN_FALSE}"; then
   as_fn_error $? "conditional \"DOX_DOES_AUTOGEN\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${DOX_DOES_DOCBOOK_TRUE}" && test -z "${DOX_DOES_DOCBOOK_FALSE}"; then
+  as_fn_error $? "conditional \"DOX_DOES_DOCBOOK\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${LONGARGS_TRUE}" && test -z "${LONGARGS_FALSE}"; then
@@ -6998,8 +7408,11 @@ do
     "lib/filters/Makefile") CONFIG_FILES="$CONFIG_FILES lib/filters/Makefile" ;;
     "lib/metsources/Makefile") CONFIG_FILES="$CONFIG_FILES lib/metsources/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "src/gtmodel_m01") CONFIG_FILES="$CONFIG_FILES src/gtmodel_m01" ;;
+    "src/gtmodel_m02") CONFIG_FILES="$CONFIG_FILES src/gtmodel_m02" ;;
     "confiles/Makefile") CONFIG_FILES="$CONFIG_FILES confiles/Makefile" ;;
     "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
+    "test/test_MPI.sh") CONFIG_FILES="$CONFIG_FILES test/test_MPI.sh" ;;
     "doc/gigatraj_base.dconf") CONFIG_FILES="$CONFIG_FILES doc/gigatraj_base.dconf:doc/gigatraj_base.dconf.in" ;;
     "doc/latex_yes.dconf") CONFIG_FILES="$CONFIG_FILES doc/latex_yes.dconf:doc/latex_yes.dconf.in" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
@@ -7729,3 +8142,5 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
 $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
 
+
+chmod 755 src/gtmodel_m01 src/gtmodel_m02 test/test_MPI.sh

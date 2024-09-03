@@ -88,9 +88,9 @@ AC_MSG_CHECKING(--with-mpi-bin)
 AC_ARG_WITH([mpi-bin],
 [  --with-mpi-bin=path     Specify the path of the MPI binaries (e.g., mpirun) ],
 [ do_mpi=true 
-  if test "x$g_path_mpi_pfx}" = "x" ; then
-     g_path_mpi_pfx="/usr"
-  fi
+  #if test "x$g_path_mpi_pfx}" = "x" ; then
+  #   g_path_mpi_pfx="/usr"
+  #fi
   if test "x${withval}" != "x" ; then
      if test -d "${withval}/" ; then
         g_path_mpi_bin="${withval}"
@@ -101,9 +101,21 @@ AC_ARG_WITH([mpi-bin],
 ], )
 if test "x${do_mpi}" = "xtrue" ; then
    if test "x${g_path_mpi_bin}" = "x" ; then
-      if test -d "${g_path_mpi_pfx}/bin/" ; then
-         g_path_mpi_bin="${g_path_mpi_pfx}/bin"
-      fi   
+      as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+      for as_dir in $PATH
+      do
+          if test -x $as_dir/mpirun ; then
+             g_path_mpi_bin=$as_dir
+             break
+          fi
+      done
+      IFS=$as_save_IFS
+      if test "x$g_path_mpi_pfx}" = "x" ; then
+         g_path_mpi_pfx=`dirname $g_path_mpi_bin`
+      fi
+      #if test -d "${g_path_mpi_pfx}/bin/" ; then
+      #   g_path_mpi_bin="${g_path_mpi_pfx}/bin"
+      #fi   
    fi
 fi
 AC_MSG_RESULT($g_path_mpi_bin)
@@ -251,10 +263,10 @@ if test "X${do_mpi}" = "Xtrue" ; then
    # are present in this site's openmpi installation
    AC_CHECK_PROG([use_mpicxx], [mpicxx], [yes], [no])
    if test x$use_mpicc = xyes ; then
-      CLIST_CC="${MPI_PATH}mpicc ${CLIST_CC}"
+      CLIST_CC="mpicc ${CLIST_CC}"
    fi
    if test x$use_mpicxx = xyes ; then
-      CLIST_CXX="${MPI_PATH}mpicxx ${CLIST_CXX}"
+      CLIST_CXX="mpicxx ${CLIST_CXX}"
    fi
 
    # now the MPI library
@@ -311,10 +323,10 @@ AC_CHECK_PROG([use_mpicc], [mpicc], [yes], [no])
 # are present in this site's openmpi installation
 AC_CHECK_PROG([use_mpicxx], [mpicxx], [yes], [no])
 if test x$use_mpicc = xyes ; then
-   CLIST_CC="${MPI_PATH}mpicc ${CLIST_CC}"
+   CLIST_CC="mpicc ${CLIST_CC}"
 fi
 if test x$use_mpicxx = xyes ; then
-   CLIST_CXX="${MPI_PATH}mpicxx ${CLIST_CXX}"
+   CLIST_CXX="mpicxx ${CLIST_CXX}"
 fi
 fi
 
@@ -410,10 +422,25 @@ fi
 ###### Enough with specifications. Let's start checking for stuff.
 
 
+AC_MSG_WARN([CLIST_CC=${CLIST_CC}])
+AC_MSG_WARN([CLIST_CXX=${CLIST_CXX}])
  
 AC_PROG_CC( [ ${CLIST_CC} ] )
+if test x$CC = xmpicc ; then
+   if test x$MPI_PATH != x ; then
+      if test -x "$MPI_PATH$CC" ; then
+         CC="$MPI_PATH$CC"
+      fi
+   fi
+fi 
 AC_PROG_CXX( [ ${CLIST_CXX} ] )
- 
+if test x$CXX = xmpicxx ; then
+   if test x$MPI_PATH != x ; then
+      if test -x "$MPI_PATH$CXX" ; then
+         CXX="$MPI_PATH$CXX"
+      fi
+   fi
+fi 
 
 AC_PROG_RANLIB
 AM_PROG_AR([ar])

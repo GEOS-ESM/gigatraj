@@ -413,4 +413,44 @@ test_traj001_DEPENDENCIES = ../lib/libgigatraj.a
 test_traj010_SOURCES = test_traj010.cc test_utils.cc test_utils.hh
 test_traj010_DEPENDENCIES = ../lib/libgigatraj.a
 
+test_MPIGrp.sh: test_MPI.sh
+	ln -s test_MPI.sh $@
 
+test_BilinearHinterp_MPI.sh: test_MPI.sh
+	ln -s test_MPI.sh $@
+
+test_FileLock_MPI.sh: test_MPI.sh
+	ln -s test_MPI.sh $@
+
+test_FlockMPI.sh: test_MPI.sh
+	ln -s test_MPI.sh $@
+
+test_GridLatLonField3D_MPI.sh: test_MPI.sh
+	ln -s test_MPI.sh $@
+
+test_GridLatLonFieldSfc_MPI.sh: test_MPI.sh
+	ln -s test_MPI.sh $@
+
+test_MetGridSBRot_MPI.sh: test_MPI.sh
+	ln -s test_MPI.sh $@
+
+test_MetSBRot_MPI.sh: test_MPI.sh
+	ln -s test_MPI.sh $@
+
+test_NetcdfInMPI.sh: test_MPI.sh
+	ln -s test_MPI.sh $@
+
+test_NetcdfOutMPI.sh: test_MPI.sh
+	ln -s test_MPI.sh $@
+
+test_StreamPrintMPI.sh: test_MPI.sh
+	ln -s test_MPI.sh $@
+
+test_StreamReadMPI.sh: test_MPI.sh
+	ln -s test_MPI.sh $@
+
+test_SwarmMPI.sh: test_MPI.sh
+	ln -s test_MPI.sh $@
+
+
+        
