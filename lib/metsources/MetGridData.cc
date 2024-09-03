@@ -180,12 +180,38 @@ void MetGridData::assign( const MetGridData& src )
 
 void MetGridData::setOption( const std::string &name, const std::string &value )
 {    
-     MetData::setOption( name, value ); 
+    int tmp;
+    int ival;
+    int fval;
+    int dval;
+    int bval;
+    
+    if ( name == "HorizontalGridThinning" ) {
+        if ( str2int( value, &ival ) ) {
+           set_thinning(ival);
+        }   
+    } else if ( name == "HorizontalGridOffset" ) {
+        tmp = thinning();
+        if ( str2int( value, &ival ) ) {
+           set_thinning( tmp, ival );
+        }   
+    } else {
+        MetData::setOption( name, value ); 
+    }
 }
 
 void MetGridData::setOption( const std::string &name, int value )
 {
-     MetData::setOption( name, value ); 
+    int tmp;
+    
+    if ( name == "HorizontalGridThinning" ) {
+        set_thinning(value);
+    } else if ( name == "HorizontalGridOffset" ) {
+        tmp = thinning();
+        set_thinning( tmp, value );
+    } else {
+        MetData::setOption( name, value ); 
+    }
 }
 
 void MetGridData::setOption( const std::string &name, float value )
@@ -200,18 +226,37 @@ void MetGridData::setOption( const std::string &name, double value )
 
 bool MetGridData::getOption( const std::string &name, std::string &value )
 {
-    bool result;
+    bool result = false;
+    int ival;
     
-    result = MetData::getOption( name, value ); 
-    
+    if ( name == "HorizontalGridThinning" ) {
+        ival = thinning();
+        result = int2str( ival, value );
+    } else if ( name == "HorizontalGridOffset" ) {
+        (void) thinning(&ival);
+        result = int2str( ival, value );
+    } else {
+       result = MetData::getOption( name, value ); 
+    }
+     
     return result;
 }
 
 bool MetGridData::getOption( const std::string &name, int &value )
 {
     bool result;
+    int tmp;
     
-    result = MetData::getOption( name, value ); 
+    if ( name == "HorizontalGridThinning" ) {
+        value = thinning();
+        result = true;
+    } else if ( name == "HorizontalGridOffset" ) {
+        (void) thinning(&tmp);
+        value = tmp;
+        result = true;
+    } else {
+       result = MetData::getOption( name, value ); 
+    }
 
     return result;
 }
@@ -254,6 +299,31 @@ void MetGridData::set_hinterp( HLatLonInterp* hinterp, bool okToDelete )
      hin = hinterp;
      myHin = okToDelete;
 }
+
+int MetGridData::thinning( int *offset )
+{
+    if ( offset != NULL ) {
+       *offset = skoff;
+    }
+    
+    return skip;
+}
+
+void MetGridData::set_thinning( int thin, int offset )
+{
+    if ( thin > 1 ) {
+       skip = thin;
+    } else {
+       skip = 1;
+    } 
+    if ( offset >= 0 ) {
+       skoff = offset;
+    } else {
+       skoff = 0;
+    }
+    
+}
+
 
 void MetGridData::flush_cache() 
 {

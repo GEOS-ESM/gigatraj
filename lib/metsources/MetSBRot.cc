@@ -232,8 +232,16 @@ int MetSBRot::get_cal() const
 
 void MetSBRot::setOption( const std::string &name, const std::string &value )
 {
+     int item;
+     float fitem;
+     double ditem;
+     
      if ( name == "test" ) {
         testString = value;
+     } else if ( name == "tilt" || name == "maxwind") {
+        if ( str2float( value, &fitem ) ) {
+           setOption(name, fitem );
+        }
      } else {
         MetData::setOption( name, value );
      }
@@ -252,6 +260,10 @@ void MetSBRot::setOption( const std::string &name, float value )
 {
      if ( name == "test" ) {
         testFloat = value;
+     } else if ( name == "tilt" ) {
+        set( ws, value );
+     } else if ( name == "maxwind" ) {
+        set( value );
      } else {
         MetData::setOption( name, value );
      }
@@ -270,10 +282,15 @@ void MetSBRot::setOption( const std::string &name, double value )
 bool MetSBRot::getOption( const std::string &name, std::string &value )
 {
      bool result;
+     float fitem;
      
      if ( name == "test" ) {
         value = testString;
         result = true;
+     } else if ( name == "tilt" || name == "maxwind") {
+        if ( getOption( name, fitem ) ) {
+           result = float2str( fitem, value );
+        }
      } else {
         result = MetData::getOption( name, value );
      }
@@ -304,6 +321,10 @@ bool MetSBRot::getOption( const std::string &name, float &value )
      if ( name == "test" ) {
         value = testFloat;
         result = true;
+     } else if ( name == "tilt" ) {
+        value = bb;
+     } else if ( name == "maxwind" ) {
+        value = ws;
      } else {
         result = MetData::getOption( name, value );
      }

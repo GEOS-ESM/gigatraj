@@ -438,6 +438,8 @@ class MetSBRot : public MetData {
           \param name the name of the option that is to be configured.
                       Names that are not recognized by a specific subclass are
                       silently ignored.
+                      Accepted names are: "title" to ste the title of the axis, and "maxwind"
+                      to set the maximum wind speed.
                       
           \param value the value to be applied to the named configuration option
       
@@ -512,6 +514,8 @@ class MetSBRot : public MetData {
           \param name the name of the option that is to be obtained.
                       Names that are not recognized by a specific subclass 
                       will return 0.
+                      Accepted names are: "title" to ste the title of the axis, and "maxwind"
+                      to set the maximum wind speed.
                       
           \param value (output) the value to be obtained from the named configuration option
       

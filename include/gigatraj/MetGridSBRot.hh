@@ -56,6 +56,8 @@ class MetGridSBRot : public MetGridLatLonData {
       , real windspeed=20
       , real tilt=30.0
       );
+//      , real windspeed=40
+//      , real tilt=0.0
       
       /// alternative constructor
       /*! This is an alternative  constructor.
@@ -287,6 +289,8 @@ class MetGridSBRot : public MetGridLatLonData {
           \param name the name of the option that is to be configured.
                       Names that are not recognized by a specific subclass are
                       silently ignored.
+                      Options accepted by MetGridSBRot are those accpted by MetSBRot,
+                      plus those accepted by MetGridLatLonData.
                       
           \param value the value to be applied to the named configuration option
       

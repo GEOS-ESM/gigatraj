@@ -368,6 +368,8 @@ void MetGridSBRot::setOption( const std::string &name, const std::string &value 
 {
      if ( name == "test" ) {
         metfcn->setOption( name, value);
+     } else if ( name == "tilt" || name == "maxwind" ) {
+        metfcn->setOption( name, value);
      } else {
         MetGridLatLonData::setOption( name, value );
      }

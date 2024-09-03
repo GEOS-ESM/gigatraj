@@ -425,6 +425,38 @@ class MetGridData : public MetData {
            return hin;
       }
 
+
+      /// retrieve the thinning factor for horizontal data
+      /*! This method returns the thinning factor that is applied to horizontal data.
+          This determines how many data points are to be skipped. A value
+          of 1 or less means that every point is used. A value of 2 means that
+          only every other longitude and latitude is retained. A value of three
+          means that only every third longitude and latitude is retained.
+          (All vertical levels are alays retained.)
+          
+          \param offset an in pointer to which, if non-NULL, is returned the starting index to be used in longitudes
+
+          \return the thinning factor
+
+      */
+      int thinning( int* offset=NULL );
+      
+      /// sets the thinning factor for horizontal data    
+      /*! This method sets the thinning factor that is applied to horizontal data.
+          This determines how many data points are to be skipped. A value
+          of 1 or less means that every point is used. A value of 2 means that
+          only every other longitude and latitude is retained. A value of three
+          means that only every third longitude and latitude is retained.
+          (All vertical levels are alays retained.)
+          
+          \param thin the thinning factor to be applied to subsequent data reads
+          \param offset a offset index used to determine the starting longitude value;
+          
+      */
+      void set_thinning( int thin, int offset=0 );
+
+
+
       /// deletes a 3D data field object
       /*! A number of MetGridData methods return a pointer to a GridField object that
           holds a gridded data field. And every such object must of course be deleted at some
@@ -898,6 +930,11 @@ class MetGridData : public MetData {
        /// override value for data temporal offset (base time within a day)
        double override_tbase;
 
+       
+       /// skip factor in the horizontal grid (0=use every point, 1=use every other point, etc.
+       int skip;
+       /// longitude offset factor to be used when skipping
+       int skoff;
 
 
       /*!
