@@ -3,6 +3,16 @@ AM_CPPFLAGS  = -I$(top_srcdir)/include/ -I${top_builddir}/include
 LDADD = -lgigatraj
 AM_LDFLAGS = -L ../lib/
 
+if MPI
+   AM_CPPFLAGS += @MPICFLAGS@
+   AM_LDFLAGS += @MPILIBS@ -lmpi
+endif
+
+if NETCDF
+   AM_CPPFLAGS += @NCDFCFLAGS@
+   AM_LDFLAGS += @NCDFLIBS@ -lnetcdf
+endif
+
 # We create this file when any of the tools is made.
 # Another makefile in the doc subdirectory uses
 # this to decide whether to re-make the documentation

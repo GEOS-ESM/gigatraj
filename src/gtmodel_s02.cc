@@ -18,20 +18,21 @@ a text file and traces their histories. This model does not use
 multiprocessing, but it can use cached data, if a cache directory is defined.
 
 
-The calling secuence is:
+The calling sequence is:
 \code
 gtmodel_s02 [ --help|-h ] [ --list ] [ --verbose ] [--debug level] [ --config|-c configFile ] [ --rc|-r resourcefile ] \\
                [--cachedir|-d directory ] [ --source|-s metsource ] \\
                [ --begdate|-b yyyy-mm-ddThh:mm:ss ] [ --enddate|-e yyyy-mm-ddThh:mm:ss ] --zerodate|-z yymmddThh:mm:ss\\
-               [ --tstep|-t timeDelta ] \\
-               [ --vertical|-v verticalCoord ] [ --iso|-i ] \\
+               [ --tstep|-t timeDelta ] [ --frequency|-f outputfreq ]  \\
+               [ --vertical|-v verticalCoord ] [ --iso|-i ] [ --parcelvertical pVerticalCoord ] \\
                [ --thin thinfactor [ --thinoff thinoffset ] ] \\
                [ --metbasehr metDataBaseHour] \\
                [ --metspacinghr metDataSpacingHour] \\
-               [ --conformal adjvalue ] \\
+               [ --conformal adjvalue ] [ --integrator=integName ] \\
                [ --parcels|p parcelfile ] \\
+               [--netcdf_out] [--inputnetcdf] \\
                [ --format fmt ] [ --noBadOutput ] [ --input_format fmt ] \\
-               [--delay opentime ] [--mpi] \\
+               [--delay opentime ] [--mpi] [--met_server_ratio m ] \\
                [--save_to savefile ] [ --restore_from savefile ] [ --save_steps nsteps ] [[--keep-save]
 \endcode
               
@@ -102,10 +103,14 @@ begdate=2007-10-23T13
   \li \c noBadOutput : prevents parcels which are not being traced (e.g., parcels which have hit 
                        the ground) from being output
   
+  \li \c netcdf_out : sends output to 
+  
   \li \c inputformat : an initialization input format specifier, as described in the StreamRead class.
                    The codes are basically the same as for the --format option. Any input fields
                    that match the the %i and %{field}m codes are discarded.
   
+  \li \c input_netcdf : specifies that the parcel initialization file is a netcdf file.
+
   \li \c tstep : the time step to be used in the integration, in minutes.
 
   \li \c frequency : the (model) time interval, in hours, between output snapshots of the parcel collection. this 
@@ -125,6 +130,15 @@ begdate=2007-10-23T13
                      Zero means apply no adjustment. A negative value means use the default
                      for the integrator. A positive value's effect depends on the integrator
                      being used.
+
+  \li \c integrator  specifies the name of the integrator to be used. (e.g., "RK4", "RK4a").
+                     (The default value, RK4a, is usually the best.)
+     
+  \li \c metoptions ; specifies a string of ";"-separated options for the met data source.
+                      Each option consists of a keyword followed by an equals sign and a value;
+                      (for example "optionA=value1;OptionB=value2") The values are passed as
+                      strings to the Met data source's setOption() method; the object is free
+                      to ignore any options that is does not recognize.
    
   \li \c thinoff : an offset (default 0) into the longitude index, used when thinning. If
                    thinfactor is 2 and thinoffset is 0, then the longitudes 0, 2, 4,... are
@@ -141,6 +155,9 @@ begdate=2007-10-23T13
                 you will need to use something like mpirun to run the model, instead of
                 running it directory from the command line. 
   
+   \li \c met_server_ratio: sets the ratio of parcel-tracing processors to meteorological data servers 
+                            in a multiprocessing environment. 
+   
    \li \c save_to  after every N time steps, save the model state to the specified file, for later
                    restoration if the model run is interrupted.
    
@@ -194,6 +211,9 @@ Finally, settings from the command-line options are loaded, overwriting any prev
 #include "gigatraj/MPIGrp.hh"
 #endif
 
+#include "gigatraj/IntegRK4a.hh"
+#include "gigatraj/IntegRK4.hh"
+
 #include "gigatraj/Parcel.hh"
 #include "gigatraj/Swarm.hh"
 #include "gigatraj/trace.hh"
@@ -203,6 +223,10 @@ Finally, settings from the command-line options are loaded, overwriting any prev
 #include "gigatraj/StreamPrint.hh"
 #include "gigatraj/StreamDump.hh"
 #include "gigatraj/StreamLoad.hh"
+#ifdef USE_NETCDF
+#include "gigatraj/PGenNetcdf.hh"
+#include "gigatraj/NetcdfOut.hh"
+#endif
 
 using namespace gigatraj;
 using std::cerr;
@@ -310,10 +334,21 @@ int getconfig(int argc, char * const argv[], Configuration& conf, MetSelector &m
     usage +=  " [--thin thinfactor [ --thinoff thinoffset ] ]";
     conf.add("thin"      , cInt,  "1"                   , "" , 0, "horizontal thinning factor" );
     conf.add("thinoff"   , cInt,  "0"                   , "" , 0, "horizontal thinning offset" );
+    usage +=  " [--metoptions 'optionA=value1;optionb=value2']";
+    conf.add("metoptions"  , cString , ""                 , "", 0, "met data option settings" );
+    usage +=  " [--conformal flagValue ]";
     conf.add("conformal" , cInt,  "-1"                  , "" , 0, "conformal wind vector adjustments" );
+    usage +=  " [--integrator integratorName ]";
+    conf.add("integrator"    , cString,"", "", 0, "Non-default Integrator to be used" );
     usage +=  " [--format fmt]";
     conf.add("format"    , cString,"%t, %i, %o, %a, %v", "", 0, "StreamPrint parcel output format string" );
-    usage +=  " [--boBadOutput] ";
+#ifdef USE_NETCDF
+    usage +=  " [--netcdf_out outputfile]";
+    conf.add("netcdf_out"    , cString,""              , "", 0, "The output is to be sent to the netcdf file specified" );
+    usage +=  " [--inputnetcdf]";
+    conf.add("input_netcdf", cBoolean,"N"               , "", 0, "Parcel input file is a netcdf file" );
+#endif
+    usage +=  " [--noBadOutput] ";
     conf.add("noBadOutput", cBoolean,  "N"              , "" , 0, "prevent non-traced parcels from being output" );
     usage +=  " [--inputformat ifmt]";
     conf.add("inputformat", cString,""                 , "", 0, "StreamRead parcel input format string" );
@@ -450,6 +485,125 @@ void save( std::string &save_file, double time, double accumul_time, Swarm*  swa
 }
 
 
+std::string trim_string( std::string& str )
+{
+     std::string result;
+     size_t istart;
+     size_t iend;
+     size_t slen;
+     char cc;
+     
+     result = "";
+
+     slen = str.size(); 
+     if ( slen > 0 ) {
+        istart = 0;
+     
+        cc = str[istart];
+        while ( ( istart < slen) && (cc == ' ' || cc == '\t' || cc == '\n' ) ) {
+           istart++;
+           cc = str[istart];
+        }
+        if ( istart < slen ) {
+           iend = slen - 1;
+           while ( ( iend >= 0 ) && (cc == ' ' || cc == '\t' || cc == '\n' ) ) {
+              iend--;
+              cc = str[iend];
+           }
+           if ( iend >= istart ) {
+              result = str.substr( istart, iend - istart + 1 );
+           }
+           
+        }
+     }
+     
+     return result;
+}
+
+int parse_met_options( const std::string& options, std::vector<std::string>& keys, std::vector<std::string>& values )
+{
+      int result = 0;
+      bool more;
+      size_t istart;
+      size_t iend;
+      size_t optslen;
+      std::string pair;
+      std::string key;
+      std::string val;
+      size_t equals;
+      
+      keys.clear();
+      values.clear();
+      
+      optslen = options.size();
+      if ( optslen == 0 ) {
+         return result;
+      }
+      
+     // std::cerr << "parse_met_options: <<" << options << ">>" << std::endl; 
+      
+      more = true;
+      istart = 0;
+      while (more) {
+          // std::cerr << "   istart=" << istart << std::endl;
+          // search for the delimieter between key=value pairs.
+          iend = options.find( ";", istart );
+          if ( iend == std::string::npos ) {
+             iend = optslen;
+          }
+          // we end on the character just before the ';'
+          // or on the string's ;last character
+          iend --;
+          //std::cerr << "   istart=" << istart <<", iend=" << iend << std::endl;
+          
+          if ( istart < iend ) {
+             // extact this key=value pair form the string of options
+             pair = options.substr( istart, iend - istart + 1 );
+             //std::cerr << "     keyval pair: <<" << pair << ">>" << std::endl; 
+             
+             // now look for the equals sign
+             equals = pair.find( "=" );
+             if ( equals != std::string::npos ) {
+                //std::cerr << "     found equals at " << equals << std::endl;
+                
+                if ( (equals > 0) && ( equals < (pair.size()) - 1) ) { 
+                   key = pair.substr(0, equals );
+                   val = pair.substr(equals + 1, pair.size() - equals );
+                   //std::cerr << "     key=<<" << key << ">>, value=<<" << val << ">>" << std::endl; 
+                   
+                   key = trim_string( key );
+                   val = trim_string( val );
+                   
+                   //std::cerr << "    *key=<<" << key << ">>, value=<<" << val << ">>" << std::endl; 
+                   
+                   keys.push_back(key);
+                   values.push_back( val );
+                   
+                   istart = iend + 2;
+                   if ( iend >= optslen ) {
+                      more = false;
+                   } 
+                } else {
+                   // "+" is the first or the last charectsr? Error!
+                   result = 1;
+                   more = false;
+                }           
+             } else {
+                 // no "="? that's an error
+                 result = 1;
+                 more = false;
+             }
+          } else {
+              more = false;
+          }
+      
+      }
+      
+
+      return result;
+}
+
+
 /*------------------------------------------------------------------------------------------*/
 
 int main( int argc, char * argv[] ) 
@@ -516,6 +670,18 @@ int main( int argc, char * argv[] )
     int scount;
     // we dump parcels states every accumul_time interval    
     double accumul_time;
+#ifdef USE_NETCDF
+    // flag indicating whether to use netcdf for input
+    bool inNetcdf;
+    // flag indicating whether to use netcdf for output
+    bool outNetcdf;
+    // the name of the output netcdf file
+    std::string outNetcdfFile;
+    // for reading a netcdf file
+    PGenNetcdf* in_netcdf;
+    // of rwriting to a netcdf file
+    NetcdfOut* out_netcdf;
+#endif
 
     // a comma-separated list (no spaces!) of quantities to be read and cached
     // by the meteorological data source
@@ -534,7 +700,7 @@ int main( int argc, char * argv[] )
     real junk;
     // the quantity currently being read
     string quant;
-    // the units of hte vertical cooridnte of the meteorological data source
+    // the units of the vertical cooridnte of the meteorological data source
     string vertunits;
     // flag to be set if we are still searching for commas in the
     // quantities string, as we break it apart by commas
@@ -579,8 +745,19 @@ int main( int argc, char * argv[] )
     int delay = 0;
     // wind vector adjustment for spatial interpolation
     int confml;
+    // met data source options
+    std::string metoptions;
+    std::vector<std::string> metopt_keys, metopt_vals;
     // indicates whether cooridnate conversions are needed
     bool conv_parcel_coords;
+    // was the vertical coord set by the user?
+    bool spec_vertical;
+    // was the parcel vertical coordinate set by the user?
+    bool spec_parcelvertical;
+    // the name of a non-default integrator
+    std::string integratorName;
+    // A non-default integrator
+    Integrator* integrator;
 
 
     // we assume all will go well (until it doesn't)    
@@ -595,7 +772,9 @@ int main( int argc, char * argv[] )
        // get the configuration settings
        config.fetchParam("verbose", verbose);
        vertical = config.get("vertical");
+       spec_vertical = ( vertical != "" );
        parcelVertical = config.get("parcelvertical");
+       spec_parcelvertical = ( parcelVertical != "" );
        metsrc_name = config.get("source");
        parcelsource = config.get("parcels");
        begdate = config.get("begdate");
@@ -609,6 +788,8 @@ int main( int argc, char * argv[] )
        config.fetchParam("thin", thin);
        config.fetchParam("thinoff", thinoffset);
        config.fetchParam("conformal", confml);
+       config.fetchParam("integrator", integratorName );
+       config.fetchParam("metoptions", metoptions);
        debug = config.str2int( config.get("debug") );
        fmt = config.get("format");
        config.fetchParam("noBadOutput", nobad);
@@ -623,6 +804,11 @@ int main( int argc, char * argv[] )
        config.fetchParam("restore_from", restore_file );
        sinterval = config.str2int( config.get("save_steps") );
        config.fetchParam("keep_save", keep_save);
+#ifdef USE_NETCDF
+       config.fetchParam("input_netcdf", inNetcdf );
+       outNetcdfFile = config.get("netcdf_out");
+       outNetcdf = ( outNetcdfFile != "" );
+#endif
        
        do_save = ( save_file != "" ) && ( sinterval > 0 );
        do_restore = ( restore_file != "" );
@@ -633,14 +819,18 @@ int main( int argc, char * argv[] )
           // create a process group (MPI, of course)
           // This will call MPI_Init().
           pgrp = new MPIGrp(argc, argv);
-std::cerr << "Doing MPI process groups" << std::endl;
+          if (verbose) {
+             std::cerr << "Doing MPI process groups" << std::endl;
+          }
        } else {
 #else
        if ( 1 ) {
 #endif
           // we use a serial group--no multiprocessing.
           pgrp = new SerialGrp();
-std::cerr << "Doing a serial process group" << std::endl;
+          if (verbose) {
+             std::cerr << "Doing a serial process group" << std::endl;
+          }
        }
 
        if ( zerodate == "" ) {
@@ -666,6 +856,8 @@ std::cerr << "Doing a serial process group" << std::endl;
           cerr << "thin = " << thin << endl;
           cerr << "thinoff = " << thinoffset << endl;
           cerr << "conformal = " << confml << endl;
+          cerr << "integrator = " << integratorName << endl;
+          cerr << "metoptions = " << metoptions << endl;
           cerr << "format = " << fmt << endl;
           cerr << "noBadOutput = " << nobad << endl;
           cerr << "inputformat = " << ifmt << endl;
@@ -673,7 +865,12 @@ std::cerr << "Doing a serial process group" << std::endl;
           cerr << "delay = " << delay << endl;
           cerr << "save_to = " << save_file << endl;
           cerr << "restore_from = " << restore_file << endl;
-          cerr << "save_stepso = " << sinterval << endl;
+          cerr << "save_steps = " << sinterval << endl;
+#ifdef USE_NETCDF
+          cerr << "inNetcdf = " << inNetcdf << endl;
+          cerr << "outNetcdf = " << outNetcdf << endl;
+          cerr << "outNetcdfFile = " << outNetcdfFile << endl;
+#endif
        }
 
        // convert from hours to day fraction (i.e., model time)
@@ -687,6 +884,14 @@ std::cerr << "Doing a serial process group" << std::endl;
        }
 
     }    
+    
+    // parse any met options into keywords and values
+    metopt_keys.clear();
+    metopt_vals.clear();
+    if ( parse_met_options( metoptions, metopt_keys, metopt_vals ) ) {  
+       std::cerr << "Met Options '" << metoptions << "' has a syntax error." << std::endl;
+       status = 1;
+    }
     
     // check that we have a legal met source
     if ( status == 0 ) {
@@ -704,15 +909,66 @@ std::cerr << "Doing a serial process group" << std::endl;
        
     }
 
-    conv_parcel_coords = false;
+#ifdef USE_NETCDF
     if ( status == 0 ) {
-       conv_parcel_coords = ( parcelVertical != "" && parcelVertical != vertical );
+       if ( inNetcdf ) {
+          in_netcdf = new PGenNetcdf();
+          if ( ifmt != "" ) {
+             in_netcdf->format( ifmt );
+          }
+          if ( spec_parcelvertical ) {
+             in_netcdf->vertical( parcelVertical );
+          } else if ( spec_vertical ) {
+             in_netcdf->vertical( vertical );
+          }
+          
+          in_netcdf->open(parcelsource);
+
+          if ( ! spec_parcelvertical ) {
+             parcelVertical = in_netcdf->vertical();
+          } else {
+          
+              
+          
+             if ( parcelVertical == in_netcdf->vertical() ) {
+                // even if this is not specified in the cmd line,
+                // it is specified in the file
+                spec_parcelvertical = true;
+                
+             } else {
+                // should never get here
+                std::cerr << "Parcel vertical coord " << in_netcdf->vertical() 
+                          << " from file does not match that specified " << parcelVertical << std::endl;
+                status = 100;
+             }
+          }
+
+       }
     }
+#endif
+
+    conv_parcel_coords = false;
 
     if ( status == 0 ) {
+
+       if ( spec_parcelvertical && ( ! spec_vertical ) ) {
+          vertical = parcelVertical;
+       }
+
+       conv_parcel_coords = ( spec_parcelvertical 
+                            && spec_vertical 
+                            && (parcelVertical != vertical) );
+
 
        // create a met source of the desired type
        metsource = dynamic_cast<MetGridLatLonData*>(metPick.source( metsrc_name ));
+
+       // set any options that we need
+       if ( metoptions != "" ) {
+          for ( int i=0; i < metopt_keys.size(); i++ ) {
+             metsource->setOption( metopt_keys[i], metopt_vals[i] );
+          }
+       }
 
        // set a native time spacing for the data 
        metsource->impose_times( tbase, tspace );
@@ -799,6 +1055,16 @@ std::cerr << "Doing a serial process group" << std::endl;
        
        pcl.setMet( *metsource);
        
+       if ( integratorName == "RK4" ) {
+          integrator = new IntegRK4;
+          pcl.integrator( integrator );
+       } else if ( integratorName == "RK4a" ) {
+          integrator = new IntegRK4a;
+          pcl.integrator( integrator );
+       } else { 
+          integrator = NULLPTR;
+       }
+       
        // the default time step for the integration is 15 minutes
        //tdelta = 15.0/60.0/24.0 ; 
        tdelta = tstep/60.0/24.0 ; 
@@ -823,25 +1089,52 @@ std::cerr << "Doing a serial process group" << std::endl;
        
        if ( do_restore == 0 ) {  
               
-          // read in the parcels
-          if ( parcelsource != "-" ) {
-             // from a file
-             infile.open(parcelsource);
-             input = &infile;
-          } else {
-             // from stdin
-             input = &std::cin;
+#ifdef USE_NETCDF
+          if ( ! inNetcdf ) {
+#endif
+             // reading the parcels in from a text file or stdin
+                 
+             // read in the parcels                                        
+             if ( parcelsource != "-" ) {
+                // from a file
+                infile.open(parcelsource);
+                input = &infile;
+             } else {
+                // from stdin
+                input = &std::cin;
+             }
+             if ( ifmt != "" ) {
+                parcelFactory.format( ifmt );
+             }
+          
+             swarm = parcelFactory.create_Swarm( pcl, input, pgrp, mcsr );
+          
+             if ( parcelsource != "-" ) {
+                // close the input file if we are not using stdin.
+                infile.close();
+             }
+#ifdef USE_NETCDF
+          } else {  
+             // read the parcels in from a netcdf file
+             
+             if ( verbose ) {
+                std::cerr << " netcdf input: using " << vertical << " for vert and " 
+                         << parcelVertical << " for parcel vert" << std::endl; 
+             }
+             
+             swarm = in_netcdf->create_Swarm( pcl, parcelsource, pgrp, mcsr ); 
+             delete in_netcdf;
+             // The Parcels read in from the file have the time from the file.
+             // We need to change the times to out starting time.
+             for ( Swarm::iterator fi=swarm->begin(); fi != swarm->end(); fi++ ) {
+                 fi->setTime( begtime );
+             }
+          }   
+#endif
+          if ( verbose ) {
+             std::cerr << "Parcels have been read from input " << std::endl; 
           }
-          if ( ifmt != "" ) {
-             parcelFactory.format( ifmt );
-          }
-
-          swarm = parcelFactory.create_Swarm( pcl, input, pgrp, mcsr );
-
-          if ( parcelsource != "-" ) {
-             // close the input file if we are not using stdin.
-             infile.close();
-          }
+          
           // Note: pcl was initialized w/ time 0.0.
           // and so every Parcel in the swarm has its time set to 0.0
           // which is fine, since we just equivalenced the calendar starting time
@@ -920,7 +1213,7 @@ std::cerr << "Doing a serial process group" << std::endl;
 
     //-------------- trace parcel trajectories
     
-    // We only do this if we have a valid met source and prcels
+    // We only do this if we have a valid met source and parcels
     if ( status == 0 ) {
     
        // set this to 1 if you want copious output for debugging
@@ -943,7 +1236,27 @@ std::cerr << "Doing a serial process group" << std::endl;
        }    
 
        // output initial parcel data
-       Out << *swarm;
+#ifdef USE_NETCDF
+       if ( ! outNetcdf ) {
+#endif
+          Out << *swarm;
+#ifdef USE_NETCDF
+       } else {
+          out_netcdf = new NetcdfOut();
+          out_netcdf->filename( outNetcdfFile );
+          out_netcdf->contents("gigatraj trajectories");
+          if ( vertical != "" ) {
+             out_netcdf->vertical( vertical );
+          }
+          if ( conv_parcel_coords ) {
+             out_netcdf->addQuantity( parcelVertical );
+          }
+          out_netcdf->format( fmt );
+          out_netcdf->init( &pcl, swarm->size() );
+          out_netcdf->open();
+          out_netcdf->apply( *swarm );
+       }
+#endif
 
        if ( verbose ) {
           cerr << "STARTING : " << endl;
@@ -1011,7 +1324,7 @@ std::cerr << "Doing a serial process group" << std::endl;
            
            if ( verbose ) {
               cerr << "Time = " << metsource->time2Cal(time) << " : ";
-              //cerr << " = " << time << " : " << ", delta=" << tdelta;
+              //cerr << " = " << time << " : " << ", delta=" << tdelta << " : ";
               //cerr << endl;
            }
 
@@ -1048,7 +1361,15 @@ std::cerr << "Doing a serial process group" << std::endl;
               }
               
               // do printout here
-              Out << *swarm ;
+#ifdef USE_NETCDF
+              if ( ! outNetcdf ) {
+#endif
+                 Out << *swarm ;
+#ifdef USE_NETCDF
+              } else {
+                 out_netcdf->apply( *swarm );
+              }
+#endif
 
               accumul_time = 0.0;
 
@@ -1066,14 +1387,23 @@ std::cerr << "Doing a serial process group" << std::endl;
        swarm->sync();
        
        // All done.  Destroy the things we created
+#ifdef USE_NETCDF
+       if ( outNetcdf ) {
+          out_netcdf->close();
+          delete out_netcdf;
+       }
+#endif
        delete swarm;
        delete metsource;
+       if ( integrator != NULLPTR ) {
+          delete integrator;
+       }
     }
 
-    /* Shut downany multiprocesing */
+    /* Shut down any multiprocesing */
     pgrp->shutdown();
     
-    /* since we go there without craching, remove any savefiles */
+    /* since we go there without crashing, remove any savefiles */
     if ( ! keep_save ) {
        remove( save_file.c_str() );
     }

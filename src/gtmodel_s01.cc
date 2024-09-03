@@ -18,18 +18,19 @@ a text file and traces their histories. This model does not use
 multiprocessing, but it can use cached data, if a cache directory is defined.
 
 
-The calling secuence is:
+The calling sequence is:
 \code
 gtmodel_s01 [ --help|-h ] [ --list ] [ --verbose ] [--debug level] [ --config|-c configFile ] [ --rc|-r resourcefile ] \\
                [--cachedir|-d directory ] [ --source|-s metsource ] \\
                [ --begdate|-b yyyy-mm-ddThh:mm:ss ] [ --enddate|-e yyyy-mm-ddThh:mm:ss ] --zerodate|-z yymmddThh:mm:ss\\
-               [ --tstep|-t timeDelta ] [ --frequency|-f outputfreq ]] \\
+               [ --tstep|-t timeDelta ] [ --frequency|-f outputfreq ] \\
                [ --vertical|-v verticalCoord ] [ --iso|-i ] [ --parcelvertical pVerticalCoord ] \\
                [ --thin thinfactor [ --thinoff thinoffset ] ] \\
                [ --metbasehr metDataBaseHour] \\
                [ --metspacinghr metDataSpacingHour] \\
-               [ --conformal adjvalue ] \\
-               [ --parcels|p parcelfile ] [inputnetcdf] \\
+               [ --conformal adjvalue ] [ --integrator=integName ] \\
+               [ --parcels|p parcelfile ] \\
+               [--netcdf_out] [--inputnetcdf] \\
                [ --format fmt ] [ --noBadOutput ] [ --input_format fmt ] \\
                [--delay opentime ] [--mpi] [--met_server_ratio m ] \\
                [--save_to savefile ] [ --restore_from savefile ] [ --save_steps nsteps ] [[--keep-save]
@@ -128,6 +129,15 @@ begdate=2007-10-23T13
                      Zero means apply no adjustment. A negative value means use the default
                      for the integrator. A positive value's effect depends on the integrator
                      being used.
+
+  \li \c integrator  specifies the name of the integrator to be used. (e.g., "RK4", "RK4a").
+                     (The default value, RK4a, is usually the best.)
+  
+  \li \c metoptions ; specifies a string of ";"-separated options for the met data source.
+                      Each option consists of a keyword followed by an equals sign and a value;
+                      (for example "optionA=value1;OptionB=value2") The values are passed as
+                      strings to the Met data source's setOption() method; the object is free
+                      to ignore any options that is does not recognize.
    
   \li \c thinoff : an offset (default 0) into the longitude index, used when thinning. If
                    thinfactor is 2 and thinoffset is 0, then the longitudes 0, 2, 4,... are
@@ -199,6 +209,9 @@ Finally, settings from the command-line options are loaded, overwriting any prev
 #ifdef USE_MPI
 #include "gigatraj/MPIGrp.hh"
 #endif
+
+#include "gigatraj/IntegRK4a.hh"
+#include "gigatraj/IntegRK4.hh"
 
 #include "gigatraj/Parcel.hh"
 #include "gigatraj/Flock.hh"
@@ -320,7 +333,12 @@ int getconfig(int argc, char * const argv[], Configuration& conf, MetSelector &m
     usage +=  " [--thin thinfactor [ --thinoff thinoffset ] ]";
     conf.add("thin"      , cInt,  "1"                   , "" , 0, "horizontal thinning factor" );
     conf.add("thinoff"   , cInt,  "0"                   , "" , 0, "horizontal thinning offset" );
+    usage +=  " [--metoptions 'optionA=value1;optionb=value2']";
+    conf.add("metoptions"  , cString , ""                 , "", 0, "met data option settings" );
+    usage +=  " [--conformal flagValue ]";
     conf.add("conformal" , cInt,  "-1"                  , "" , 0, "conformal wind vector adjustments" );
+    usage +=  " [--integrator integratorName ]";
+    conf.add("integrator"    , cString,"", "", 0, "Non-default Integrator to be used" );
     usage +=  " [--format fmt]";
     conf.add("format"    , cString,"%t, %i, %o, %a, %v", "", 0, "StreamPrint parcel output format string" );
 #ifdef USE_NETCDF
@@ -466,6 +484,124 @@ void save( std::string &save_file, double time, double accumul_time, Flock*  flo
 }
 
 
+std::string trim_string( std::string& str )
+{
+     std::string result;
+     size_t istart;
+     size_t iend;
+     size_t slen;
+     char cc;
+     
+     result = "";
+
+     slen = str.size(); 
+     if ( slen > 0 ) {
+        istart = 0;
+     
+        cc = str[istart];
+        while ( ( istart < slen) && (cc == ' ' || cc == '\t' || cc == '\n' ) ) {
+           istart++;
+           cc = str[istart];
+        }
+        if ( istart < slen ) {
+           iend = slen - 1;
+           while ( ( iend >= 0 ) && (cc == ' ' || cc == '\t' || cc == '\n' ) ) {
+              iend--;
+              cc = str[iend];
+           }
+           if ( iend >= istart ) {
+              result = str.substr( istart, iend - istart + 1 );
+           }
+           
+        }
+     }
+     
+     return result;
+}
+
+int parse_met_options( const std::string& options, std::vector<std::string>& keys, std::vector<std::string>& values )
+{
+      int result = 0;
+      bool more;
+      size_t istart;
+      size_t iend;
+      size_t optslen;
+      std::string pair;
+      std::string key;
+      std::string val;
+      size_t equals;
+      
+      keys.clear();
+      values.clear();
+      
+      optslen = options.size();
+      if ( optslen == 0 ) {
+         return result;
+      }
+      
+     // std::cerr << "parse_met_options: <<" << options << ">>" << std::endl; 
+      
+      more = true;
+      istart = 0;
+      while (more) {
+          // std::cerr << "   istart=" << istart << std::endl;
+          // search for the delimieter between key=value pairs.
+          iend = options.find( ";", istart );
+          if ( iend == std::string::npos ) {
+             iend = optslen;
+          }
+          // we end on the character just before the ';'
+          // or on the string's ;last character
+          iend --;
+          //std::cerr << "   istart=" << istart <<", iend=" << iend << std::endl;
+          
+          if ( istart < iend ) {
+             // extact this key=value pair form the string of options
+             pair = options.substr( istart, iend - istart + 1 );
+             //std::cerr << "     keyval pair: <<" << pair << ">>" << std::endl; 
+             
+             // now look for the equals sign
+             equals = pair.find( "=" );
+             if ( equals != std::string::npos ) {
+                //std::cerr << "     found equals at " << equals << std::endl;
+                
+                if ( (equals > 0) && ( equals < (pair.size()) - 1) ) { 
+                   key = pair.substr(0, equals );
+                   val = pair.substr(equals + 1, pair.size() - equals );
+                   //std::cerr << "     key=<<" << key << ">>, value=<<" << val << ">>" << std::endl; 
+                   
+                   key = trim_string( key );
+                   val = trim_string( val );
+                   
+                   //std::cerr << "    *key=<<" << key << ">>, value=<<" << val << ">>" << std::endl; 
+                   
+                   keys.push_back(key);
+                   values.push_back( val );
+                   
+                   istart = iend + 2;
+                   if ( iend >= optslen ) {
+                      more = false;
+                   } 
+                } else {
+                   // "+" is the first or the last charectsr? Error!
+                   result = 1;
+                   more = false;
+                }           
+             } else {
+                 // no "="? that's an error
+                 result = 1;
+                 more = false;
+             }
+          } else {
+              more = false;
+          }
+      
+      }
+      
+
+      return result;
+}
+
 /*------------------------------------------------------------------------------------------*/
 
 int main( int argc, char * argv[] ) 
@@ -544,7 +680,7 @@ int main( int argc, char * argv[] )
     // of rwriting to a netcdf file
     NetcdfOut* out_netcdf;
 #endif
-
+    
     // a comma-separated list (no spaces!) of quantities to be read and cached
     // by the meteorological data source
     string quantities;
@@ -607,13 +743,19 @@ int main( int argc, char * argv[] )
     int delay = 0;
     // wind vector adjustment for spatial interpolation
     int confml;
+    // met data source options
+    std::string metoptions;
+    std::vector<std::string> metopt_keys, metopt_vals;
     // indicates whether cooridnate conversions are needed
     bool conv_parcel_coords;
     // was the vertical coord set by the user?
     bool spec_vertical;
     // was the parcel vertical coordinate set by the user?
     bool spec_parcelvertical;
-
+    // the name of a non-default integrator
+    std::string integratorName;
+    // A non-default integrator
+    Integrator* integrator;
 
     // we assume all will go well (until it doesn't)    
     status = 0;
@@ -643,6 +785,8 @@ int main( int argc, char * argv[] )
        config.fetchParam("thin", thin);
        config.fetchParam("thinoff", thinoffset);
        config.fetchParam("conformal", confml);
+       config.fetchParam("integrator", integratorName );
+       config.fetchParam("metoptions", metoptions);
        debug = config.str2int( config.get("debug") );
        fmt = config.get("format");
        config.fetchParam("noBadOutput", nobad);
@@ -709,6 +853,8 @@ int main( int argc, char * argv[] )
           cerr << "thin = " << thin << endl;
           cerr << "thinoff = " << thinoffset << endl;
           cerr << "conformal = " << confml << endl;
+          cerr << "integrator = " << integratorName << endl;
+          cerr << "metoptions = " << metoptions << endl;
           cerr << "format = " << fmt << endl;
           cerr << "noBadOutput = " << nobad << endl;
           cerr << "inputformat = " << ifmt << endl;
@@ -734,7 +880,15 @@ int main( int argc, char * argv[] )
           status = 1;
        }
 
-    }    
+    }   
+    
+    // parse any met options into keywords and values
+    metopt_keys.clear();
+    metopt_vals.clear();
+    if ( parse_met_options( metoptions, metopt_keys, metopt_vals ) ) {  
+       std::cerr << "Met Options '" << metoptions << "' has a syntax error." << std::endl;
+       status = 1;
+    }
     
     // check that we have a legal met source
     if ( status == 0 ) {
@@ -805,9 +959,16 @@ int main( int argc, char * argv[] )
        // create a met source of the desired type
        metsource = dynamic_cast<MetGridLatLonData*>(metPick.source( metsrc_name ));
 
+       // set any options that we need
+       if ( metoptions != "" ) {
+          for ( int i=0; i < metopt_keys.size(); i++ ) {
+             metsource->setOption( metopt_keys[i], metopt_vals[i] );
+          }
+       }
+       
        // set a native time spacing for the data 
        metsource->impose_times( tbase, tspace );
-       
+
        // set a pre-open wait time
        if ( delay != 0 ) {
           metsource->setOption("Delay", delay );
@@ -890,6 +1051,16 @@ int main( int argc, char * argv[] )
        
        pcl.setMet( *metsource);
        
+       if ( integratorName == "RK4" ) {
+          integrator = new IntegRK4;
+          pcl.integrator( integrator );
+       } else if ( integratorName == "RK4a" ) {
+          integrator = new IntegRK4a;
+          pcl.integrator( integrator );
+       } else { 
+          integrator = NULLPTR;
+       }
+       
        // the default time step for the integration is 15 minutes
        //tdelta = 15.0/60.0/24.0 ; 
        tdelta = tstep/60.0/24.0 ; 
@@ -951,7 +1122,7 @@ int main( int argc, char * argv[] )
              
              flock = in_netcdf->create_Flock( pcl, parcelsource, pgrp, mcsr ); 
              delete in_netcdf;
-             // The Parcels read in form the file have the time from the file.
+             // The Parcels read in from the file have the time from the file.
              // We need to change the times to out starting time.
              for ( Flock::iterator fi=flock->begin(); fi != flock->end(); fi++ ) {
                  fi->setTime( begtime );
@@ -1219,6 +1390,9 @@ int main( int argc, char * argv[] )
 #endif
        delete flock;
        delete metsource;
+       if ( integrator != NULLPTR ) {
+          delete integrator;
+       }
     }
 
     /* Shut down any multiprocesing */
