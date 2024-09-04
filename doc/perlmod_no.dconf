@@ -1,0 +1,12 @@
+#---------------------------------------------------------------------------
+# configuration options related to the Perl module output
+#---------------------------------------------------------------------------
+
+# If the GENERATE_PERLMOD tag is set to YES Doxygen will 
+# generate a Perl module file that captures the structure of 
+# the code including all documentation. Note that this 
+# feature is still experimental and incomplete at the 
+# moment.
+
+GENERATE_PERLMOD       = NO
+
