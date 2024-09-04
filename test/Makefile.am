@@ -413,44 +413,48 @@ test_traj001_DEPENDENCIES = ../lib/libgigatraj.a
 test_traj010_SOURCES = test_traj010.cc test_utils.cc test_utils.hh
 test_traj010_DEPENDENCIES = ../lib/libgigatraj.a
 
+# We need the following if the build directory is 
+# not the same asthe source directory.
+# (If they are the same, then the link fails and true is executed.)
+
 test_MPIGrp.sh: test_MPI.sh
-	ln -s test_MPI.sh $@
+	ln -s test_MPI.sh $@  || true
 
 test_BilinearHinterp_MPI.sh: test_MPI.sh
-	ln -s test_MPI.sh $@
+	ln -s test_MPI.sh $@  || true
 
 test_FileLock_MPI.sh: test_MPI.sh
-	ln -s test_MPI.sh $@
+	ln -s test_MPI.sh $@  || true
 
 test_FlockMPI.sh: test_MPI.sh
-	ln -s test_MPI.sh $@
+	ln -s test_MPI.sh $@  || true
 
 test_GridLatLonField3D_MPI.sh: test_MPI.sh
-	ln -s test_MPI.sh $@
+	ln -s test_MPI.sh $@  || true
 
 test_GridLatLonFieldSfc_MPI.sh: test_MPI.sh
-	ln -s test_MPI.sh $@
+	ln -s test_MPI.sh $@  || true
 
 test_MetGridSBRot_MPI.sh: test_MPI.sh
-	ln -s test_MPI.sh $@
+	ln -s test_MPI.sh $@  || true
 
 test_MetSBRot_MPI.sh: test_MPI.sh
-	ln -s test_MPI.sh $@
+	ln -s test_MPI.sh $@  || true
 
 test_NetcdfInMPI.sh: test_MPI.sh
-	ln -s test_MPI.sh $@
+	ln -s test_MPI.sh $@  || true
 
 test_NetcdfOutMPI.sh: test_MPI.sh
-	ln -s test_MPI.sh $@
+	ln -s test_MPI.sh $@  || true
 
 test_StreamPrintMPI.sh: test_MPI.sh
-	ln -s test_MPI.sh $@
+	ln -s test_MPI.sh $@  || true
 
 test_StreamReadMPI.sh: test_MPI.sh
-	ln -s test_MPI.sh $@
+	ln -s test_MPI.sh $@  || true
 
 test_SwarmMPI.sh: test_MPI.sh
-	ln -s test_MPI.sh $@
+	ln -s test_MPI.sh $@  || true
 
 
         
