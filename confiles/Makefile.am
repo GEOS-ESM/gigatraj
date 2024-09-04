@@ -14,6 +14,7 @@ endif
 if GEOSFP
    dist_data_DATA += GEOSfpAssim.cat 
    dist_data_DATA += GEOSfpFcast.cat 
+   dist_data_DATA += GEOSfp.cat 
 endif
 
 
