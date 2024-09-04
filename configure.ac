@@ -59,14 +59,17 @@ CLIST_CC="gcc cl cc"
 CLIST_CXX="g++ c++"
 
 #------- MPI ----------
+#   where the MPI stuff can be found.
 g_path_mpi_pfx=""
+# are we going to try to use MPI?
 AC_MSG_CHECKING(--with-mpi)
 AC_ARG_WITH([mpi],
 [  --with-mpi=path     Construct a version of the library that uses MPI for parallel processing ],
 [case "${with_mpi}" in
- yes) do_mpi=true 
-      g_path_mpi_pfx="/usr"
+ yes) do_mpi=true
+      # do we get the MPI location from this environment variable? 
       if test "X${MPI_PREFIX}" != "X" ; then
+         # sure, it's defined, but is it real?
          if test -d "${MPI_PREFIX}/" ; then
             g_path_mpi_pfx="${MPI_PREFIX}"
          else
@@ -75,6 +78,8 @@ AC_ARG_WITH([mpi],
       fi ;;
  no)  do_mpi=false ;;
  *)   do_mpi=true
+      # if the argument is not "yes" or "no", 
+      # then this must be the MPI location
       if test -d "${withval}/" ; then
           g_path_mpi_pfx="${withval}"
       else
@@ -83,14 +88,15 @@ AC_ARG_WITH([mpi],
  esac], [do_mpi=false])
 AC_MSG_RESULT($do_mpi)
 
+# At this point, the location of the MPI stuff, g_path_mpi_pfx,
+# may be defined. But some installations break out the binary
+# executables into another, separate location.
+# So check for that.
 g_path_mpi_bin=""
 AC_MSG_CHECKING(--with-mpi-bin)
 AC_ARG_WITH([mpi-bin],
 [  --with-mpi-bin=path     Specify the path of the MPI binaries (e.g., mpirun) ],
 [ do_mpi=true 
-  #if test "x$g_path_mpi_pfx}" = "x" ; then
-  #   g_path_mpi_pfx="/usr"
-  #fi
   if test "x${withval}" != "x" ; then
      if test -d "${withval}/" ; then
         g_path_mpi_bin="${withval}"
@@ -99,35 +105,29 @@ AC_ARG_WITH([mpi-bin],
      fi
   fi 
 ], )
+# Now, if we are doing MPI...
 if test "x${do_mpi}" = "xtrue" ; then
+   # ... and if the binary path is undefined...
    if test "x${g_path_mpi_bin}" = "x" ; then
-      as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-      for as_dir in $PATH
-      do
-          if test -x $as_dir/mpirun ; then
-             g_path_mpi_bin=$as_dir
-             break
-          fi
-      done
-      IFS=$as_save_IFS
-      if test "x$g_path_mpi_pfx}" = "x" ; then
-         g_path_mpi_pfx=`dirname $g_path_mpi_bin`
-      fi
-      #if test -d "${g_path_mpi_pfx}/bin/" ; then
-      #   g_path_mpi_bin="${g_path_mpi_pfx}/bin"
-      #fi   
+      # ... and if if MPI location is defined
+      if test "x${g_path_mpi_pfx}" != "x" ; then
+         # then try the bin subdir of the MPI location
+         if test -d "${g_path_mpi_pfx}/bin/" ; then
+            g_path_mpi_bin="${g_path_mpi_pfx}/bin"
+         fi
+      fi   
    fi
 fi
 AC_MSG_RESULT($g_path_mpi_bin)
 
+# and some installations put the libraries in a different location
+# than the test of the MPI stuff. 
+# So check for that.
 g_path_mpi_lib=""
 AC_MSG_CHECKING(--with-mpi-lib)
 AC_ARG_WITH([mpi-lib],
 [  --with-mpi-lib=path     Specify the path of the MPI libraries ],
 [ do_mpi=true 
-  if test "x$g_path_mpi_pfx}" = "x" ; then
-     g_path_mpi_pfx="/usr"
-  fi
   if test "x${withval}" != "x" ; then
      if test -d "${withval}/" ; then
         g_path_mpi_lib="${withval}"
@@ -136,23 +136,29 @@ AC_ARG_WITH([mpi-lib],
      fi
   fi 
 ], )
+# If we are using MPI...
 if test "x${do_mpi}" = "xtrue" ; then
+   # and if the library location is not defined
    if test "x${g_path_mpi_lib}" = "x" ; then
-      if test -d "${g_path_mpi_pfx}/lib/" ; then
-         g_path_mpi_lib="${g_path_mpi_pfx}/lib"
+      # and if the MPI location is defined
+      if test "x${g_path_mpi_pfx}" != "x" ; then
+         # then define the library location as a subdir of that
+         if test -d "${g_path_mpi_pfx}/lib/" ; then
+            g_path_mpi_lib="${g_path_mpi_pfx}/lib"
+         fi   
       fi   
    fi
 fi
 AC_MSG_RESULT($g_path_mpi_lib)
 
+# aaaand some installations break the MPI include files out from
+# the rest of the MPI stuff and put them in their own location.
+# So check for that, too. (sigh)
 g_path_mpi_incl=""
 AC_MSG_CHECKING(--with-mpi-include)
 AC_ARG_WITH([mpi-include],
 [  --with-mpi-include=path     Specify the path of the MPI include files ],
 [ do_mpi=true 
-  if test "x$g_path_mpi_pfx}" = "x" ; then
-     g_path_mpi_pfx="/usr"
-  fi
   if test "x${withval}" != "x" ; then
      if test -d "${withval}/" ; then
         g_path_mpi_incl="${withval}"
@@ -161,14 +167,21 @@ AC_ARG_WITH([mpi-include],
      fi
   fi 
 ], )
+# If we are using MPI...
 if test "x${do_mpi}" = "xtrue" ; then
+   # and if the include files location is not defined
    if test "x${g_path_mpi_incl}" = "x" ; then
-      if test -d "${g_path_mpi_pfx}/include/" ; then
-         g_path_mpi_incl="${g_path_mpi_pfx}/include"
+      # and if the MPI location is defined
+      if test "x${g_path_mpi_pfx}" != "x" ; then
+         # then define the includes location as a subdir of that
+         if test -d "${g_path_mpi_pfx}/include/" ; then
+            g_path_mpi_incl="${g_path_mpi_pfx}/include"
+         fi   
       fi   
    fi
 fi
 AC_MSG_RESULT($g_path_mpi_incl)
+
 
 #------- NETCDF ----------
 g_path_ncdf_pfx=""
@@ -252,24 +265,88 @@ save_path="${PATH}"
 
 if test "X${do_mpi}" = "Xtrue" ; then
 
-   if test "X${g_path_mpi_bin}" != "X" ; then
-      MPI_PATH="${g_path_mpi_bin}/"
-      PATH="${PATH}:${MPI_PATH}"
+   # We may have the MPI binaries location undefined.
+   # Or it may be wrong. This is the time to find out.
+   g_need_mpi_bin=1
+   if test "x${g_path_mpi_bin}" != "x" ; then
+      # this has to be there
+      if test -x "${g_path_mpi_bin}/mpirun" ; then
+         g_need_mpi_bin=0
+      fi
    fi
    
-   # openMPI wants us to use mpicc instead of cc or gcc, so we test for its presence
-   AC_CHECK_PROG([use_mpicc], [mpicc], [yes], [no])
-   # this is actually more of a check for whether the MPI C++ bindings 
-   # are present in this site's openmpi installation
-   AC_CHECK_PROG([use_mpicxx], [mpicxx], [yes], [no])
-   if test x$use_mpicc = xyes ; then
-      CLIST_CC="mpicc ${CLIST_CC}"
+   if test $g_need_mpi_bin = 1 ; then
+      # Look through the PATH for it.
+      as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+      for as_dir in $PATH
+      do
+          if test -x $as_dir/mpirun ; then
+             g_path_mpi_bin=$as_dir
+             # and derive the MPI path from it if we need to
+             if test "x$g_path_mpi_pfx}" = "x" ; then
+                g_path_mpi_pfx=`dirname $g_path_mpi_bin`
+             fi
+             break
+          fi
+      done
+      IFS=$as_save_IFS
    fi
-   if test x$use_mpicxx = xyes ; then
-      CLIST_CXX="mpicxx ${CLIST_CXX}"
+   
+   if test "x${g_path_mpi_bin}" != "x" ; then
+      MPI_PATH="${g_path_mpi_bin}/"
+      # this holds only for the rest of this script,
+      # but it is useful
+      PATH="${PATH}:${MPI_PATH}"
    fi
 
-   # now the MPI library
+#   # We may have the MPI libraries location undefined.
+#   if test "x${g_path_mpi_lib" = "x" ; then
+#      # Look through the LD_LIBRARY list for it.
+#      as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+#      for as_dir in $LD_LIBRARY
+#      do
+#          # ugly, but the file names may vary depending on the OS.
+#          g_anything_matches=`ls -1 $as_dir/libmpi*`
+#          if test "x${g_anything_matches}" != "x" ; then
+#             g_path_mpi_lib=$as_dir
+#             # and derive the MPI path from it if we need to
+#             if test "x$g_path_mpi_pfx}" = "x" ; then
+#                g_path_mpi_pfx=`dirname $g_path_mpi_lib`
+#             fi
+#             break
+#          fi
+#      done
+#      IFS=$as_save_IFS
+#   fi
+
+#   # We may have the MPI includes location undefined.
+#   # or it may be wrong.
+#   g_need_mpi_incl=1
+#   if test "x${g_path_mpi_incl}" != "x" ; then
+#      # this has to be there
+#      if test -s "${g_path_mpi_incl}/mpi.h" ; then
+#         g_need_mpi_incl=0
+#      fi
+#   fi
+#   
+#   if test $g_need_mpi_incl = 1 ; then
+#      # Look through the INCLUDE list for it.
+#      as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+#      for as_dir in $INCLUDE
+#      do
+#          if test -s "${as_dir}/mpi.h" ; then
+#             g_path_mpi_incl=$as_dir
+#             # and derive the MPI path from it if we need to
+#             if test "x$g_path_mpi_pfx}" = "x" ; then
+#                g_path_mpi_pfx=`dirname $g_path_mpi_incl`
+#             fi
+#             break
+#          fi
+#      done
+#      IFS=$as_save_IFS
+#   fi
+   
+   # now add the MPI library location to our library
    if test "X${g_path_mpi_lib}" != "X" ; then
       MPI_LIBS="-L${g_path_mpi_lib}/"
       LIBS="${LIBS} ${MPI_LIBS} "
@@ -278,12 +355,15 @@ if test "X${do_mpi}" = "Xtrue" ; then
    # We are using MPI C bindings in gigatraj, even
    # though gigatraj is written in C++.
    # (So sue us.)
+   # Anyway, we need to turn off C++ bindings for gigatraj
    MPI_CFLAGS="-DOMPI_SKIP_MPICXX  "
-   # now the MPI include files
+
+   # now add the MPI include files to our CFLAGS
    if test "X${g_path_mpi_incl}" != "X" ; then
       MPI_CFLAGS="${MPI_CFLAGS} -I${g_path_mpi_incl}/"
    fi
    CFLAGS="${CFLAGS} ${MPI_CFLAGS} "
+
 fi
 
 if test "X${do_ncdf}" = "Xtrue" ; then
@@ -302,6 +382,7 @@ if test "X${do_ncdf}" = "Xtrue" ; then
    CFLAGS="${CFLAGS} ${NCDF_CFLAGS} "
 fi
 
+# (for debugging)
 #AC_MSG_WARN([MPI_PATH=${MPI_PATH}])
 #AC_MSG_WARN([MPI_LIBS=${MPI_LIBS}])
 #AC_MSG_WARN([MPI_CFLAGS=${MPI_CFLAGS}])
@@ -309,7 +390,8 @@ fi
 #AC_MSG_WARN([CLIST_CXX=${CLIST_CXX}])
 #AC_MSG_WARN([NCDF_LIBS=${NCDF_LIBS}])
 #AC_MSG_WARN([NCDF_CFLAGS=${NCDF_CFLAGS}])
- 
+
+# define stuff for the Makefiles 
 AM_CONDITIONAL([MPI], [test x$do_mpi = xtrue])
 AC_SUBST([DO_MPI],[0])
 if test x$do_mpi = xtrue ; then
@@ -317,6 +399,7 @@ AC_SUBST([DO_MPI], [1])
 AC_SUBST([MPIPATH], [${MPI_PATH}])
 AC_SUBST([MPICFLAGS], [${MPI_CFLAGS}])
 AC_SUBST([MPILIBS], [${MPI_LIBS}])
+
 # openMPI wants us to use mpicc instead of cc or gcc, so we test for its presence
 AC_CHECK_PROG([use_mpicc], [mpicc], [yes], [no])
 # this is actually more of a check for whether the MPI C++ bindings 
@@ -354,6 +437,7 @@ AM_CONDITIONAL([MERRA], [test x$do_merra = xtrue])
 AC_SUBST([DO_MERRA],[0])
 if test x$do_merra = xtrue ; then
 do_ncdf=true
+do_mygeos=true
 AC_SUBST([DO_MERRA], [1])
 fi
 
@@ -371,6 +455,7 @@ AM_CONDITIONAL([MERRA2], [test x$do_merra2 = xtrue])
 AC_SUBST([DO_MERRA2],[0])
 if test x$do_merra2 = xtrue ; then
 do_ncdf=true
+do_mygeos=true
 AC_SUBST([DO_MERRA2], [1])
 fi
 
@@ -388,6 +473,7 @@ AM_CONDITIONAL([GEOSFP], [test x$do_geosfp = xtrue])
 AC_SUBST([DO_GEOSFP],[0])
 if test x$do_geosfp = xtrue ; then
 do_ncdf=true
+do_mygeos=true
 AC_SUBST([DO_GEOSFP], [1])
 fi
 
@@ -422,8 +508,8 @@ fi
 ###### Enough with specifications. Let's start checking for stuff.
 
 
-AC_MSG_WARN([CLIST_CC=${CLIST_CC}])
-AC_MSG_WARN([CLIST_CXX=${CLIST_CXX}])
+#AC_MSG_WARN([CLIST_CC=${CLIST_CC}])
+#AC_MSG_WARN([CLIST_CXX=${CLIST_CXX}])
  
 AC_PROG_CC( [ ${CLIST_CC} ] )
 if test x$CC = xmpicc ; then

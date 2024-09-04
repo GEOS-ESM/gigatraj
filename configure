@@ -699,14 +699,14 @@ MERRA2_TRUE
 DO_MERRA
 MERRA_FALSE
 MERRA_TRUE
+use_mpicxx
+use_mpicc
 MPILIBS
 MPICFLAGS
 MPIPATH
 DO_MPI
 MPI_FALSE
 MPI_TRUE
-use_mpicxx
-use_mpicc
 DOXYGEN_FALSE
 DOXYGEN_TRUE
 DO_WRAP180
@@ -3030,7 +3030,9 @@ CLIST_CC="gcc cl cc"
 CLIST_CXX="g++ c++"
 
 #------- MPI ----------
+#   where the MPI stuff can be found.
 g_path_mpi_pfx=""
+# are we going to try to use MPI?
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking --with-mpi" >&5
 $as_echo_n "checking --with-mpi... " >&6; }
 
@@ -3038,8 +3040,9 @@ $as_echo_n "checking --with-mpi... " >&6; }
 if test "${with_mpi+set}" = set; then :
   withval=$with_mpi; case "${with_mpi}" in
  yes) do_mpi=true
-      g_path_mpi_pfx="/usr"
+      # do we get the MPI location from this environment variable?
       if test "X${MPI_PREFIX}" != "X" ; then
+         # sure, it's defined, but is it real?
          if test -d "${MPI_PREFIX}/" ; then
             g_path_mpi_pfx="${MPI_PREFIX}"
          else
@@ -3048,6 +3051,8 @@ if test "${with_mpi+set}" = set; then :
       fi ;;
  no)  do_mpi=false ;;
  *)   do_mpi=true
+      # if the argument is not "yes" or "no",
+      # then this must be the MPI location
       if test -d "${withval}/" ; then
           g_path_mpi_pfx="${withval}"
       else
@@ -3061,6 +3066,10 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $do_mpi" >&5
 $as_echo "$do_mpi" >&6; }
 
+# At this point, the location of the MPI stuff, g_path_mpi_pfx,
+# may be defined. But some installations break out the binary
+# executables into another, separate location.
+# So check for that.
 g_path_mpi_bin=""
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking --with-mpi-bin" >&5
 $as_echo_n "checking --with-mpi-bin... " >&6; }
@@ -3068,9 +3077,6 @@ $as_echo_n "checking --with-mpi-bin... " >&6; }
 # Check whether --with-mpi-bin was given.
 if test "${with_mpi_bin+set}" = set; then :
   withval=$with_mpi_bin;  do_mpi=true
-  #if test "x$g_path_mpi_pfx}" = "x" ; then
-  #   g_path_mpi_pfx="/usr"
-  #fi
   if test "x${withval}" != "x" ; then
      if test -d "${withval}/" ; then
         g_path_mpi_bin="${withval}"
@@ -3081,28 +3087,25 @@ if test "${with_mpi_bin+set}" = set; then :
 
 fi
 
+# Now, if we are doing MPI...
 if test "x${do_mpi}" = "xtrue" ; then
+   # ... and if the binary path is undefined...
    if test "x${g_path_mpi_bin}" = "x" ; then
-      as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-      for as_dir in $PATH
-      do
-          if test -x $as_dir/mpirun ; then
-             g_path_mpi_bin=$as_dir
-             break
-          fi
-      done
-      IFS=$as_save_IFS
-      if test "x$g_path_mpi_pfx}" = "x" ; then
-         g_path_mpi_pfx=`dirname $g_path_mpi_bin`
+      # ... and if if MPI location is defined
+      if test "x${g_path_mpi_pfx}" != "x" ; then
+         # then try the bin subdir of the MPI location
+         if test -d "${g_path_mpi_pfx}/bin/" ; then
+            g_path_mpi_bin="${g_path_mpi_pfx}/bin"
+         fi
       fi
-      #if test -d "${g_path_mpi_pfx}/bin/" ; then
-      #   g_path_mpi_bin="${g_path_mpi_pfx}/bin"
-      #fi
    fi
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $g_path_mpi_bin" >&5
 $as_echo "$g_path_mpi_bin" >&6; }
 
+# and some installations put the libraries in a different location
+# than the test of the MPI stuff.
+# So check for that.
 g_path_mpi_lib=""
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking --with-mpi-lib" >&5
 $as_echo_n "checking --with-mpi-lib... " >&6; }
@@ -3110,9 +3113,6 @@ $as_echo_n "checking --with-mpi-lib... " >&6; }
 # Check whether --with-mpi-lib was given.
 if test "${with_mpi_lib+set}" = set; then :
   withval=$with_mpi_lib;  do_mpi=true
-  if test "x$g_path_mpi_pfx}" = "x" ; then
-     g_path_mpi_pfx="/usr"
-  fi
   if test "x${withval}" != "x" ; then
      if test -d "${withval}/" ; then
         g_path_mpi_lib="${withval}"
@@ -3123,16 +3123,25 @@ if test "${with_mpi_lib+set}" = set; then :
 
 fi
 
+# If we are using MPI...
 if test "x${do_mpi}" = "xtrue" ; then
+   # and if the library location is not defined
    if test "x${g_path_mpi_lib}" = "x" ; then
-      if test -d "${g_path_mpi_pfx}/lib/" ; then
-         g_path_mpi_lib="${g_path_mpi_pfx}/lib"
+      # and if the MPI location is defined
+      if test "x${g_path_mpi_pfx}" != "x" ; then
+         # then define the library location as a subdir of that
+         if test -d "${g_path_mpi_pfx}/lib/" ; then
+            g_path_mpi_lib="${g_path_mpi_pfx}/lib"
+         fi
       fi
    fi
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $g_path_mpi_lib" >&5
 $as_echo "$g_path_mpi_lib" >&6; }
 
+# aaaand some installations break the MPI include files out from
+# the rest of the MPI stuff and put them in their own location.
+# So check for that, too. (sigh)
 g_path_mpi_incl=""
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking --with-mpi-include" >&5
 $as_echo_n "checking --with-mpi-include... " >&6; }
@@ -3140,9 +3149,6 @@ $as_echo_n "checking --with-mpi-include... " >&6; }
 # Check whether --with-mpi-include was given.
 if test "${with_mpi_include+set}" = set; then :
   withval=$with_mpi_include;  do_mpi=true
-  if test "x$g_path_mpi_pfx}" = "x" ; then
-     g_path_mpi_pfx="/usr"
-  fi
   if test "x${withval}" != "x" ; then
      if test -d "${withval}/" ; then
         g_path_mpi_incl="${withval}"
@@ -3153,15 +3159,22 @@ if test "${with_mpi_include+set}" = set; then :
 
 fi
 
+# If we are using MPI...
 if test "x${do_mpi}" = "xtrue" ; then
+   # and if the include files location is not defined
    if test "x${g_path_mpi_incl}" = "x" ; then
-      if test -d "${g_path_mpi_pfx}/include/" ; then
-         g_path_mpi_incl="${g_path_mpi_pfx}/include"
+      # and if the MPI location is defined
+      if test "x${g_path_mpi_pfx}" != "x" ; then
+         # then define the includes location as a subdir of that
+         if test -d "${g_path_mpi_pfx}/include/" ; then
+            g_path_mpi_incl="${g_path_mpi_pfx}/include"
+         fi
       fi
    fi
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $g_path_mpi_incl" >&5
 $as_echo "$g_path_mpi_incl" >&6; }
+
 
 #------- NETCDF ----------
 g_path_ncdf_pfx=""
@@ -3262,98 +3275,88 @@ save_path="${PATH}"
 
 if test "X${do_mpi}" = "Xtrue" ; then
 
-   if test "X${g_path_mpi_bin}" != "X" ; then
+   # We may have the MPI binaries location undefined.
+   # Or it may be wrong. This is the time to find out.
+   g_need_mpi_bin=1
+   if test "x${g_path_mpi_bin}" != "x" ; then
+      # this has to be there
+      if test -x "${g_path_mpi_bin}/mpirun" ; then
+         g_need_mpi_bin=0
+      fi
+   fi
+
+   if test $g_need_mpi_bin = 1 ; then
+      # Look through the PATH for it.
+      as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+      for as_dir in $PATH
+      do
+          if test -x $as_dir/mpirun ; then
+             g_path_mpi_bin=$as_dir
+             # and derive the MPI path from it if we need to
+             if test "x$g_path_mpi_pfx}" = "x" ; then
+                g_path_mpi_pfx=`dirname $g_path_mpi_bin`
+             fi
+             break
+          fi
+      done
+      IFS=$as_save_IFS
+   fi
+
+   if test "x${g_path_mpi_bin}" != "x" ; then
       MPI_PATH="${g_path_mpi_bin}/"
+      # this holds only for the rest of this script,
+      # but it is useful
       PATH="${PATH}:${MPI_PATH}"
    fi
 
-   # openMPI wants us to use mpicc instead of cc or gcc, so we test for its presence
-   # Extract the first word of "mpicc", so it can be a program name with args.
-set dummy mpicc; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_use_mpicc+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$use_mpicc"; then
-  ac_cv_prog_use_mpicc="$use_mpicc" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_use_mpicc="yes"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
+#   # We may have the MPI libraries location undefined.
+#   if test "x${g_path_mpi_lib" = "x" ; then
+#      # Look through the LD_LIBRARY list for it.
+#      as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+#      for as_dir in $LD_LIBRARY
+#      do
+#          # ugly, but the file names may vary depending on the OS.
+#          g_anything_matches=`ls -1 $as_dir/libmpi*`
+#          if test "x${g_anything_matches}" != "x" ; then
+#             g_path_mpi_lib=$as_dir
+#             # and derive the MPI path from it if we need to
+#             if test "x$g_path_mpi_pfx}" = "x" ; then
+#                g_path_mpi_pfx=`dirname $g_path_mpi_lib`
+#             fi
+#             break
+#          fi
+#      done
+#      IFS=$as_save_IFS
+#   fi
 
-  test -z "$ac_cv_prog_use_mpicc" && ac_cv_prog_use_mpicc="no"
-fi
-fi
-use_mpicc=$ac_cv_prog_use_mpicc
-if test -n "$use_mpicc"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $use_mpicc" >&5
-$as_echo "$use_mpicc" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
+#   # We may have the MPI includes location undefined.
+#   # or it may be wrong.
+#   g_need_mpi_incl=1
+#   if test "x${g_path_mpi_incl}" != "x" ; then
+#      # this has to be there
+#      if test -s "${g_path_mpi_incl}/mpi.h" ; then
+#         g_need_mpi_incl=0
+#      fi
+#   fi
+#
+#   if test $g_need_mpi_incl = 1 ; then
+#      # Look through the INCLUDE list for it.
+#      as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+#      for as_dir in $INCLUDE
+#      do
+#          if test -s "${as_dir}/mpi.h" ; then
+#             g_path_mpi_incl=$as_dir
+#             # and derive the MPI path from it if we need to
+#             if test "x$g_path_mpi_pfx}" = "x" ; then
+#                g_path_mpi_pfx=`dirname $g_path_mpi_incl`
+#             fi
+#             break
+#          fi
+#      done
+#      IFS=$as_save_IFS
+#   fi
 
-
-   # this is actually more of a check for whether the MPI C++ bindings
-   # are present in this site's openmpi installation
-   # Extract the first word of "mpicxx", so it can be a program name with args.
-set dummy mpicxx; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_use_mpicxx+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$use_mpicxx"; then
-  ac_cv_prog_use_mpicxx="$use_mpicxx" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_use_mpicxx="yes"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  test -z "$ac_cv_prog_use_mpicxx" && ac_cv_prog_use_mpicxx="no"
-fi
-fi
-use_mpicxx=$ac_cv_prog_use_mpicxx
-if test -n "$use_mpicxx"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $use_mpicxx" >&5
-$as_echo "$use_mpicxx" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-   if test x$use_mpicc = xyes ; then
-      CLIST_CC="mpicc ${CLIST_CC}"
-   fi
-   if test x$use_mpicxx = xyes ; then
-      CLIST_CXX="mpicxx ${CLIST_CXX}"
-   fi
-
-   # now the MPI library
+   # now add the MPI library location to our library
    if test "X${g_path_mpi_lib}" != "X" ; then
       MPI_LIBS="-L${g_path_mpi_lib}/"
       LIBS="${LIBS} ${MPI_LIBS} "
@@ -3362,12 +3365,15 @@ fi
    # We are using MPI C bindings in gigatraj, even
    # though gigatraj is written in C++.
    # (So sue us.)
+   # Anyway, we need to turn off C++ bindings for gigatraj
    MPI_CFLAGS="-DOMPI_SKIP_MPICXX  "
-   # now the MPI include files
+
+   # now add the MPI include files to our CFLAGS
    if test "X${g_path_mpi_incl}" != "X" ; then
       MPI_CFLAGS="${MPI_CFLAGS} -I${g_path_mpi_incl}/"
    fi
    CFLAGS="${CFLAGS} ${MPI_CFLAGS} "
+
 fi
 
 if test "X${do_ncdf}" = "Xtrue" ; then
@@ -3386,6 +3392,7 @@ if test "X${do_ncdf}" = "Xtrue" ; then
    CFLAGS="${CFLAGS} ${NCDF_CFLAGS} "
 fi
 
+# (for debugging)
 #AC_MSG_WARN([MPI_PATH=${MPI_PATH}])
 #AC_MSG_WARN([MPI_LIBS=${MPI_LIBS}])
 #AC_MSG_WARN([MPI_CFLAGS=${MPI_CFLAGS}])
@@ -3394,6 +3401,7 @@ fi
 #AC_MSG_WARN([NCDF_LIBS=${NCDF_LIBS}])
 #AC_MSG_WARN([NCDF_CFLAGS=${NCDF_CFLAGS}])
 
+# define stuff for the Makefiles
  if test x$do_mpi = xtrue; then
   MPI_TRUE=
   MPI_FALSE='#'
@@ -3412,6 +3420,7 @@ MPIPATH=${MPI_PATH}
 MPICFLAGS=${MPI_CFLAGS}
 
 MPILIBS=${MPI_LIBS}
+
 
 # openMPI wants us to use mpicc instead of cc or gcc, so we test for its presence
 # Extract the first word of "mpicc", so it can be a program name with args.
@@ -3540,6 +3549,7 @@ DO_MERRA=0
 
 if test x$do_merra = xtrue ; then
 do_ncdf=true
+do_mygeos=true
 DO_MERRA=1
 
 fi
@@ -3570,6 +3580,7 @@ DO_MERRA2=0
 
 if test x$do_merra2 = xtrue ; then
 do_ncdf=true
+do_mygeos=true
 DO_MERRA2=1
 
 fi
@@ -3600,6 +3611,7 @@ DO_GEOSFP=0
 
 if test x$do_geosfp = xtrue ; then
 do_ncdf=true
+do_mygeos=true
 DO_GEOSFP=1
 
 fi
@@ -3659,10 +3671,8 @@ fi
 ###### Enough with specifications. Let's start checking for stuff.
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: CLIST_CC=${CLIST_CC}" >&5
-$as_echo "$as_me: WARNING: CLIST_CC=${CLIST_CC}" >&2;}
-{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: CLIST_CXX=${CLIST_CXX}" >&5
-$as_echo "$as_me: WARNING: CLIST_CXX=${CLIST_CXX}" >&2;}
+#AC_MSG_WARN([CLIST_CC=${CLIST_CC}])
+#AC_MSG_WARN([CLIST_CXX=${CLIST_CXX}])
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
