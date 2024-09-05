@@ -1,3 +1,49 @@
+
+The standalone Gigatraj library uses the GNU Autotools as its
+build system.
+
+The gigatraj module for the GEOS model uses the Cmake build system.
+
+Either way, to build and run gigatraj, you will be using the command line
+interface in a Unix-like shell.
+
+For the standalone library, you should be able to get started quickly 
+by changing to the source code directory, then using these commands:
+
+   ./configure --prefix=${HOME}/root/  --with-netcdf --enable-allmet
+
+If you are going to install gigatraj after compiling it, its files
+will go into your $HOME/root/ directory. (We are assuming that you
+are a scientist will no permissions to install gigatraj system-wide.
+If you are installing system-wide, then omit this --prefix option.)
+
+If you want to use parallel processing, then add the "--with-mpi" option.
+
+If your OpenMPI or netcdf files are in weird places, then specify
+those locations in the --with options. (For example, "--with-netcdf=/some/strange/place/netcdf")
+
+After running configure, build the software:
+     make
+Then verify that it is running correctly:
+     make check     
+
+Note that the "--enable-allmet" optn causes the MERRA, MERRA2, and GEOSfp 
+modules to be built. These all get their data from NASA OPeNDAP servers that require
+authentication. See https://www.earthdata.nasa.gov/ for more information.
+Once you have received your authentication information from NASA, you will 
+need to put that information into a place where the netcdf library can find it.
+See https://docs.opendap.org/index.php/DAP_Clients_-_Authentication#Earth_Data_Login_(URS)
+for more information.
+
+Once you are satisfied that gigatraj is working (i.e., it passes its test suite),
+then you can install it with:
+   make install
+
+
+
+What follows in the standard GNU Autotools installation description of how
+to build a software package with their system:
+
 Installation Instructions
 *************************
 
