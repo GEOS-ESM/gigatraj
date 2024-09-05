@@ -1,6 +1,7 @@
 #---------------------------------------------------------------------------
 # Configuration options related to the man page output
 #---------------------------------------------------------------------------
+
 # If the GENERATE_MAN tag is set to YES, doxygen will generate man pages for
 # classes and files.
 # The default value is: NO.

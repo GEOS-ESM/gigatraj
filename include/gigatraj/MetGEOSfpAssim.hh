@@ -10,9 +10,8 @@
 #include <sstream>
 
 #include "gigatraj/gigatraj.hh"
-#include "gigatraj/MetGEOSfp.hh"
+#include "gigatraj/MetMyGEOS.hh"
 #include "gigatraj/CalGregorian.hh"
-#include "gigatraj/GEOSfpAssim_Directory.hh"
 #include "gigatraj/ThetaOTF.hh"
 #include "gigatraj/PressOTF.hh"
 #include "gigatraj/ThetaDotOTF.hh"
@@ -48,20 +47,18 @@ and forecasts for the future), see the GEOSfp class.
 
 */
 
-class MetGEOSfpAssim : public MetGEOSfp {
+class MetGEOSfpAssim : public MetMyGEOS {
 
    public:
-
-      /// An exception for an attmepted forecast-related opteration
-      class badNoForecasts {};
 
       /// Default constructor
       /*! This is the default constructor. 
       */
       MetGEOSfpAssim( );
       
-      /// Constructor with the base date specified
-      /*! In this version of the constructor, the model run is explicitly given
+      /// Constructor with base date specified
+      /*! In this version of the constructor, the base date is specified that is equivalent to internal model time zero
+       is explicitly given
 
           \param date a string containing a date in ISO8601 format (e.g., "2005-04-25")
                       that will serve as the base time from which all model times
@@ -70,291 +67,72 @@ class MetGEOSfpAssim : public MetGEOSfp {
       MetGEOSfpAssim( std::string& date );                
 
       
-      /// Constructor with base date specified
-      /*! This version of the constructor overrides that of the parent class and throws an error,
-          since there are no model runs in the assimilation.
+
+      /// destructor
+      /*! This is the destructor. 
       */
-      MetGEOSfpAssim( std::string& date, std::string& mrun );                
+      ~MetGEOSfpAssim();
 
       
-
-      /// return the model run
-      /*! This method overrides that of the parent class and throws an error,
-          since there are no model runs in the assimilation.
-      
-          \return nothing
-      */    
-      std::string model_run();
-
-      /// return the model run
-      /*! This method overrides that of the parent class and throws an error,
-          since there are no model runs in the assimilation.
-      
-          \return nothing
-      */    
-      std::string model_run_cal();
-
-      /// set the model run
-      /*! This method overrides that of the parent class and throws an error,
-          since there are no model runs in the assimilation.
-      
-          \param mrun unused
-      */    
-      void set_model_run(std::string &mrun);
-
-      /// return whether assimilation or forecast data are being used
-      /*! This method returns -1 to indicate that only assimilation data are being used.
-          
-          \return -1 
-      
+      /// copy constructor
+      /*! This is the copy constructor. 
       */
-      int which_src();
-      
-      /// return whether assimilation or forecast data are required to be used
-      /*! This method returns -1 to indicte that only assimilation data are used.
-          
-          \return -1 
-      
+      MetGEOSfpAssim( const MetGEOSfpAssim& src );
+
+      /// assignment operator
+      MetGEOSfpAssim& operator=(const MetGEOSfpAssim& src);
+
+     /// create a copy of a MetData subclass object, as a MetData superclass object
+     /*! This method creates a new copy of a specific MetData object, which 
+         ordinarily would mean that the copy would be of the same specific subclass
+         as the original. Which in turn would mean that it could not be used in
+         the generic, subclass-independent calling routines which know only about
+         the MetData superclass. To remedy this, the copy() method creates the copy
+         and retuns it as a MetData object.
+     
+           \return returns a MetData pointer to the copy. Note that the calling routine is 
+                   responsible for deleting the new object.
+     */
+     MetData *genericCopy();
+
+      /// returns a copy of the object, cast to the MetGridData class
+      /*!
+           Sometimes a routine that deals with objects of a MetGridData subclass
+           needs to make a copy of the object, but needs to do so in a way
+           that allows the copy to be made with no information about
+           the exact subclass being used.
+           
+           This method, implemented by hte various subclasses, will create
+           a copy of the object, cast the new object to the MetData class,
+           and then return the result.
+           
+           \return a pointer to a new MetData object. The calling routine is repsonsible for delteing the
+                   object when it is no longer needed 
       */
-      int which_forced_src();
-
-      /// sets whether assimilation or forecast data are required to be used
-      /*! This method overrides that of the parent class and throws an error,
-          since there are no model runs in the assimilation.
-          
-          \param which unused
-      
-      */
-      void set_forced_src( int which );
-
-
-
-      /// find the two met data source times that bracket the desired model time
-      /*! This method finds the two times from the meteorological data source that bracket the
-          desired model time. This assumes that the met data are available at discrete
-          snapshots in time. 
-
-         \param quantity the desired quantity (Some data sources have different
-                time spacings for different quantities)
-         \param time the desired model time
-         \param t1 the last data-valid time before or at the desired time
-         \param t2 the first data-valid time after or at the desired time.
-                   If t1 == t2, then the model time is exctly at a snapshot time.
-         \return true if the bracketing times are the same; false if they are different.
-      */   
-      bool bracket( const std::string &quantity, double time, double *t1, double *t2);
-
-
+      virtual MetGridData* MetGridCopy();
 
       /// return the type of MetData object this is
       /*! This method retuns a string that identifies the specific class of MetData this object is,.
       
-          \return the namne of the class 
+          \return the name of the class 
       */
       std::string id() const { return iam; };
 
-
-      /// configures the met source
-      /*! This method provides a means of setting options specific
-          to a subclass. In this way, objects of a subclass
-          that has special capabilities may be upcast to MetData
-          in a program that can use any of several met data sources,
-          and yet still be able to configure those special options
-          that apply to the subclass.
-
-          \param name the name of the option that is to be configured.
-                      Names that are not recognized by a specific subclass are
-                      silently ignored.
-                      
-          \param value the value to be applied to the named configuration option
-      
-      */
-      void setOption( const std::string &name, const std::string &value );
-
-      /// configures the met source
-      /*! This method provides a means of setting options specific
-          to a subclass. In this way, objects of a subclass
-          that has special capabilities may be upcast to MetData
-          in a program that can use any of several met data sources,
-          and yet still be able to configure those special options
-          that apply to the subclass.
-
-          \param name the name of the option that is to be configured.
-                      Names that are not recognized by a specific subclass are
-                      silently ignored.
-                      
-                      Allowed names are:
-                      * HorizontalGridThinning - the thining factor
-                      * HorizontalGrifOffset - the longititude offset specified w/ thinning
-                      
-          \param value the value to be applied to the named configuration option
-      
-      */
-      void setOption( const std::string &name, int value );
-
-      /// configures the met source
-      /*! This method provides a means of setting options specific
-          to a subclass. In this way, objects of a subclass
-          that has special capabilities may be upcast to MetData
-          in a program that can use any of several met data sources,
-          and yet still be able to configure those special options
-          that apply to the subclass.
-
-          \param name the name of the option that is to be configured.
-                      Names that are not recognized by a specific subclass are
-                      silently ignored.
-                      
-          \param value the value to be applied to the named configuration option
-      
-      */
-      void setOption( const std::string &name, float value );
-
-      /// configures the met source
-      /*! This method provides a means of setting options specific
-          to a subclass. In this way, objects of a subclass
-          that has special capabilities may be upcast to MetData
-          in a program that can use any of several met data sources,
-          and yet still be able to configure those special options
-          that apply to the subclass.
-
-          \param name the name of the option that is to be configured.
-                      Names that are not recognized by a specific subclass are
-                      silently ignored.
-                      
-          \param value the value to be applied to the named configuration option
-      
-      */
-      void setOption( const std::string &name, double value );
-
-      /// queries configuration of the met source
-      /*! This method provides a means of reading options specific
-          to a subclass. In this way, objects of a subclass
-          that has special capabilities may be upcast to MetData
-          in a program that can use any of several met data sources,
-          and yet still be able to configure those special options
-          that apply to the subclass.
-
-          \param name the name of the option that is to be obtained.
-                      Names that are not recognized by a specific subclass 
-                      will return an empty string.
-                      
-          \param value (output) the value to be obtained from the named configuration option
-      
-      */
-      bool getOption( const std::string &name, std::string &value );
-
-
-      /// queries configuration of the met source
-      /*! This method provides a means of reading options specific
-          to a subclass. In this way, objects of a subclass
-          that has special capabilities may be upcast to MetData
-          in a program that can use any of several met data sources,
-          and yet still be able to configure those special options
-          that apply to the subclass.
-
-          \param name the name of the option that is to be obtained.
-                      Names that are not recognized by a specific subclass 
-                      will return 0.
-                      
-                      Allowed names are:
-                      * HorizontalGridThinning - the thining factor
-                      * HorizontalGrifOffset - the longititude offset specified w/ thinning
-                      
-          \param value (output) the value to be obtained from the named configuration option
-      
-      */
-      bool getOption( const std::string &name, int &value );
-
-
-      /// queries configuration of the met source
-      /*! This method provides a means of reading options specific
-          to a subclass. In this way, objects of a subclass
-          that has special capabilities may be upcast to MetData
-          in a program that can use any of several met data sources,
-          and yet still be able to configure those special options
-          that apply to the subclass.
-
-          \param name the name of the option that is to be obtained.
-                      Names that are not recognized by a specific subclass 
-                      will return 0.
-                      
-          \param value (output) the value to be obtained from the named configuration option
-      
-      */
-      bool getOption( const std::string &name, float &value );
-
-
-      /// queries configuration of the met source
-      /*! This method provides a means of reading options specific
-          to a subclass. In this way, objects of a subclass
-          that has special capabilities may be upcast to MetData
-          in a program that can use any of several met data sources,
-          and yet still be able to configure those special options
-          that apply to the subclass.
-
-          \param name the name of the option that is to be obtained.
-                      Names that are not recognized by a specific subclass 
-                      will return 0.
-                      
-          \param value (output) the value to be obtained from the named configuration option
-      
-          \return true if the option was valid; false if the value returned is meaningless
-      */
-      bool getOption( const std::string &name, double &value );
-
-
-
    protected:
-
+       
        
        /// the type of object this is
        static const string iam;
 
-   
-      /// set up for data access
-      /*! Given a quantity and time, this method sets up any internal parameters that 
-          may be used repeatedly during the course of data access.
-
-           \param quantity the name of the quantity desired
-           \param time the valid-at datestamp string for which data is desired
-           \return  the number of dimensions of a data object (i.e, 2 or 3)
-      */
-      int setup(  const std::string quantity, const std::string &time );    
-
-       /// calculates an expiration time for the data returned by this object.
-       /*! This method calculates an expiration time from the model run,
-           for use with GridField objects created by this class.
-           The time at which the data should no longer be used depends on 
-           both the model run and the valid-at time of the data,
-           since the different GMAO model runs extend out to different
-           forecast periods.
-           
-           \param valid_at a string contaiing the valid-at time of the data
-                           whose expiration is to be calculated.
-          
-           \return the expiration timestamp beyond which the data should not be used,
-                   in Unix epoch format.
-       */
-       time_t expiration( const std::string &valid_at );
-
-
+       /// copy a given object into this object
+       /*! This method copies properties of a given MetaData object
+           into this object.
       
-
-       /// creates a new MetGEOSfpAssim object
-       /*! This method  duplicates the current object,
-           creating a new MetGEOSfpAssim object
-           with the same key characteristics and settings 
-           as the old. However, the new object has no open files
-           or met data held in memory cache.
-           
-           \return a pointer to the new object
-       */
-       MetGEOSfpAssim* myNew();
-       
-       
-   private:
-       
-       
+           \param src the object to be copied
+       */    
+       void assign( const MetGEOSfpAssim& src );
+ 
+     
 };
 }
 
@@ -364,9 +142,16 @@ class MetGEOSfpAssim : public MetGEOSfp {
 
 /******************************************************************************* 
 ***  Written by: 
-***     L. R. Lait (SSAI) 
+***     L. R. Lait (NASA Ames Research Center, Code SG) 
 ***     Code 614 
 ***     NASA Goddard Space Flight Center 
 ***     Greenbelt, MD 20771 
-***  (Please see the COPYING file for more information.) 
+*** 
+***  Copyright (c) 2023 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved. 
+*** 
+*** Disclaimer:
+*** No Warranty: THE SUBJECT SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY OF ANY KIND, EITHER EXPRESSED, IMPLIED, OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, ANY WARRANTY THAT THE SUBJECT SOFTWARE WILL CONFORM TO SPECIFICATIONS, ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR FREEDOM FROM INFRINGEMENT, ANY WARRANTY THAT THE SUBJECT SOFTWARE WILL BE ERROR FREE, OR ANY WARRANTY THAT DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE. THIS AGREEMENT DOES NOT, IN ANY MANNER, CONSTITUTE AN ENDORSEMENT BY GOVERNMENT AGENCY OR ANY PRIOR RECIPIENT OF ANY RESULTS, RESULTING DESIGNS, HARDWARE, SOFTWARE PRODUCTS OR ANY OTHER APPLICATIONS RESULTING FROM USE OF THE SUBJECT SOFTWARE.  FURTHER, GOVERNMENT AGENCY DISCLAIMS ALL WARRANTIES AND LIABILITIES REGARDING THIRD-PARTY SOFTWARE, IF PRESENT IN THE ORIGINAL SOFTWARE, AND DISTRIBUTES IT "AS IS." 
+*** Waiver and Indemnity:  RECIPIENT AGREES TO WAIVE ANY AND ALL CLAIMS AGAINST THE UNITED STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT.  IF RECIPIENT'S USE OF THE SUBJECT SOFTWARE RESULTS IN ANY LIABILITIES, DEMANDS, DAMAGES, EXPENSES OR LOSSES ARISING FROM SUCH USE, INCLUDING ANY DAMAGES FROM PRODUCTS BASED ON, OR RESULTING FROM, RECIPIENT'S USE OF THE SUBJECT SOFTWARE, RECIPIENT SHALL INDEMNIFY AND HOLD HARMLESS THE UNITED STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT, TO THE EXTENT PERMITTED BY LAW.  RECIPIENT'S SOLE REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL TERMINATION OF THIS AGREEMENT. 
+***  (Please see the NOSA_19110.pdf file for more information.) 
+*** 
 ********************************************************************************/

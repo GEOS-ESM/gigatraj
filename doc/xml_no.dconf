@@ -1,0 +1,9 @@
+#---------------------------------------------------------------------------
+# configuration options related to the XML output
+#---------------------------------------------------------------------------
+
+# If the GENERATE_XML tag is set to YES Doxygen will 
+# generate an XML file that captures the structure of 
+# the code including all documentation.
+
+GENERATE_XML           = NO

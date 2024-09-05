@@ -329,6 +329,12 @@ else
    DOX_DO_AUTOGEN=no
 endif
 
+if DOX_DOES_DOCBOOK
+   DOX_DO_DOCBOOK=yes
+else
+   DOX_DO_DOCBOOK=no
+endif
+
 # end DOXYGEN 
 endif
 
@@ -401,6 +407,8 @@ gigatraj.dconf: $(TRIGGER_DOCS_REMAKE) $(DOXFILES) gigatraj_base.dconf html_yes.
 	@cat xml_$(DOX_DO_XML).dconf >> gigatraj.dconf  
 	@echo " *** Generating perlmod? $(DOX_DO_PERLMOD)"
 	@cat perlmod_$(DOX_DO_PERLMOD).dconf >> gigatraj.dconf  
+	@echo " *** Generating DocBook? $(DOX_DO_DOCBOOK)"
+	@cat docbook_$(DOX_DO_DOCBOOK).dconf >> gigatraj.dconf 
 	@echo " *** Generating Autogen? $(DOX_DO_AUTOGEN)"
 	@cat autogen_$(DOX_DO_AUTOGEN).dconf >> gigatraj.dconf 
 
@@ -432,7 +440,7 @@ endif
 
 
 $(pdf_out):  $(DOX_TRIGGER)
-	if test "x$(DOX_RUN_LATEX)" != "x"  ; then cd latex && make >$(latex_log) 2>&1 && dvipdf refman && cp refman.pdf ../$(pdf_out) ; fi
+	if test "x$(DOX_DO_LATEX)" = "xyes"  ; then cd latex && make >$(latex_log) 2>&1 && dvipdf refman && cp refman.pdf ../$(pdf_out) ; fi
 
 $(rtf_out):  $(DOX_TRIGGER)
 	if test "x$(DOX_DO_RTF)" = "xyes"  ; then  cp rtf/refman.rtf $(rtf_out) ; fi

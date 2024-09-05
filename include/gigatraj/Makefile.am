@@ -47,28 +47,24 @@ pkginclude_HEADERS = gigatraj.hh \
 # should be included in the list only once
 # but for any of these conditionals.
 if GEOSFP
-   pkginclude_HEADERS +=  MetGEOSPortal.hh
+   pkginclude_HEADERS +=  MetMyGEOS.hh
 else
 if MERRA2
-   pkginclude_HEADERS +=  MetGEOSPortal.hh
+   pkginclude_HEADERS +=  MetMyGEOS.hh
 else
 if MERRA
-   pkginclude_HEADERS +=  MetGEOSPortal.hh
+   pkginclude_HEADERS +=  MetMyGEOS.hh
 endif
 endif
 endif
 
 if MERRA
-   pkginclude_HEADERS +=  MERRA_Directory.hh 
    pkginclude_HEADERS +=  MetMERRA.hh 
 endif
 if MERRA2
-   pkginclude_HEADERS +=  MERRA2_Directory.hh 
    pkginclude_HEADERS +=  MetMERRA2.hh 
 endif
 if GEOSFP
-   pkginclude_HEADERS +=  GEOSfpFcast_Directory.hh
-   pkginclude_HEADERS +=  GEOSfpAssim_Directory.hh
    pkginclude_HEADERS +=  MetGEOSfp.hh
    pkginclude_HEADERS +=  MetGEOSfpFcast.hh
    pkginclude_HEADERS +=  MetGEOSfpAssim.hh

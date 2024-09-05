@@ -971,35 +971,69 @@ class MetData {
       /// converts a string to an integer
       /*! This method converts a string to an integer
       
-            \param value a referecne to the string to be converted
+            \param value a reference to the string to be converted
             \param result a pointer to the output converted value
             \return true if the conversion was successful, false otherwise
       */
-      bool str2int(const std::string &value, int* result  );
+      bool str2int(const std::string &value, int* result  ) const;
       /// converts a string to a float
       /*! This method converts a string to a float
       
-            \param value a referecne to the string to be converted
+            \param value a reference to the string to be converted
             \param result a pointer to the output converted value
             \return true if the conversion was successful, false otherwise
       */
-      bool str2float(const std::string &value, float* result);
+      bool str2float(const std::string &value, float* result) const;
       /// converts a string to a double
       /*! This method converts a string to a double
       
-            \param value a referecne to the string to be converted
+            \param value a reference to the string to be converted
             \param result a pointer to the output converted value
             \return true if the conversion was successful, false otherwise
       */
-      bool str2dbl(const std::string &value, double* result);
+      bool str2dbl(const std::string &value, double* result) const;
       /// converts a string to a boolean
       /*! This method converts a string to a boolean
       
-            \param value a referecne to the string to be converted
+            \param value a reference to the string to be converted
             \param result a pointer to the output converted value
             \return true if the conversion was successful, false otherwise
       */
-      bool str2bool(const std::string &value, bool* result);
+      bool str2bool(const std::string &value, bool* result) const;
+
+      /// converts an integer to a string
+      /*! This method converts a integer to a string
+            \param value the int to be converted
+            \param result a reference to the output string
+            \return true if the conversion was successful, false otherwise
+      */
+      bool int2str( int value, std::string& result ) const;
+      
+      /// converts a float to a string
+      /*! This method converts a floating point number to a string
+            \param value the float to be converted
+            \param result a reference to the output string
+            \return true if the conversion was successful, false otherwise
+      */
+      bool float2str( float value, std::string& result ) const;
+      
+      /// converts a double to a string
+      /*! This method converts a double precision number to a string
+            \param value the double to be converted
+            \param result a reference to the output string
+            \return true if the conversion was successful, false otherwise
+      */
+      bool dbl2str( double value, std::string& result ) const;
+      
+      /// converts a boolean to a string
+      /*! This method converts a boolean to a string
+            \param value the boolean to be converted
+            \param result a reference to the output string
+            \return true if the conversion was successful, false otherwise
+      */
+      bool bool2str( bool value, std::string& result ) const;
+      
+
 };
 }
 
@@ -1009,9 +1043,16 @@ class MetData {
 
 /******************************************************************************* 
 ***  Written by: 
-***     L. R. Lait (SSAI) 
+***     L. R. Lait (NASA Ames Research Center, Code SG) 
 ***     Code 614 
 ***     NASA Goddard Space Flight Center 
 ***     Greenbelt, MD 20771 
-***  (Please see the COPYING file for more information.) 
+*** 
+***  Copyright (c) 2023 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved. 
+*** 
+*** Disclaimer:
+*** No Warranty: THE SUBJECT SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY OF ANY KIND, EITHER EXPRESSED, IMPLIED, OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, ANY WARRANTY THAT THE SUBJECT SOFTWARE WILL CONFORM TO SPECIFICATIONS, ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR FREEDOM FROM INFRINGEMENT, ANY WARRANTY THAT THE SUBJECT SOFTWARE WILL BE ERROR FREE, OR ANY WARRANTY THAT DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE. THIS AGREEMENT DOES NOT, IN ANY MANNER, CONSTITUTE AN ENDORSEMENT BY GOVERNMENT AGENCY OR ANY PRIOR RECIPIENT OF ANY RESULTS, RESULTING DESIGNS, HARDWARE, SOFTWARE PRODUCTS OR ANY OTHER APPLICATIONS RESULTING FROM USE OF THE SUBJECT SOFTWARE.  FURTHER, GOVERNMENT AGENCY DISCLAIMS ALL WARRANTIES AND LIABILITIES REGARDING THIRD-PARTY SOFTWARE, IF PRESENT IN THE ORIGINAL SOFTWARE, AND DISTRIBUTES IT "AS IS." 
+*** Waiver and Indemnity:  RECIPIENT AGREES TO WAIVE ANY AND ALL CLAIMS AGAINST THE UNITED STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT.  IF RECIPIENT'S USE OF THE SUBJECT SOFTWARE RESULTS IN ANY LIABILITIES, DEMANDS, DAMAGES, EXPENSES OR LOSSES ARISING FROM SUCH USE, INCLUDING ANY DAMAGES FROM PRODUCTS BASED ON, OR RESULTING FROM, RECIPIENT'S USE OF THE SUBJECT SOFTWARE, RECIPIENT SHALL INDEMNIFY AND HOLD HARMLESS THE UNITED STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT, TO THE EXTENT PERMITTED BY LAW.  RECIPIENT'S SOLE REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL TERMINATION OF THIS AGREEMENT. 
+***  (Please see the NOSA_19110.pdf file for more information.) 
+*** 
 ********************************************************************************/

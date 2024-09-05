@@ -40,5 +40,5 @@ fi
 # the shell script directory before removing the ".sh".
 PROG=`basename "${ME}" | sed -e 's/\.sh$//'`
 
-mpirun -np ${NPROCS} --tag-output ${LOGARG} "${PROG}"
+@MPIPATH@mpirun -np ${NPROCS} --tag-output ${LOGARG} "${PROG}"
 

@@ -1,0 +1,12 @@
+#---------------------------------------------------------------------------
+# configuration options for the AutoGen Definitions output
+#---------------------------------------------------------------------------
+
+# If the GENERATE_AUTOGEN_DEF tag is set to YES Doxygen will 
+# generate an AutoGen Definitions (see autogen.sf.net) file 
+# that captures the structure of the code including all 
+# documentation. Note that this feature is still experimental 
+# and incomplete at the moment.
+
+GENERATE_AUTOGEN_DEF   = NO
+

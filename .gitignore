@@ -10,7 +10,6 @@ note*
 aclocal.m4
 config.h.in
 config
-configure
 config.status
 config.h
 config.h.in
@@ -60,6 +59,8 @@ src/gt_fill_met_cache
 src/gt_generate_parcels
 src/gtmodel_s01
 src/gtmodel_s02
+src/gtmodel_m01
+src/gtmodel_m02
 test/Makefile.in
 test/.deps/
 test/junknotes
@@ -85,6 +86,7 @@ test/test_GridLatLonFieldSfc_MPI
 test/test_GridLatLonFieldSfc_serial
 test/test_LinearVinterp
 test/test_LogLinearVinterp
+test/test_MPI.sh
 test/test_MPIGrp
 test/test_MPIGrp.sh.O
 test/test_MetSBRot

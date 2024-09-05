@@ -445,7 +445,7 @@ class MetMyGEOS : public MetGridLatLonData {
       */
       void delay();
 
-      /// sets the debuggind level 
+      /// sets the debugging level 
       /*! This method sets foe debugging level of both the MetMyGEOS object and its Catalog member.
           The debugging level determined the verbosity of messages being printed out to stderr.
           
@@ -646,35 +646,6 @@ class MetMyGEOS : public MetGridLatLonData {
       std::string modelRun() const; 
       
 
-      /// retrieve the thinning factor for horizontal data
-      /*! This method returns the thinning factor that is applied to horizontal data.
-          This determines how many data points are to be skipped. A value
-          of 1 or less means that every point is used. A value of 2 means that
-          only every other longitude and latitude is retained. A value of three
-          means that only every third longitude and latitude is retained.
-          (All vertical levels are alays retained.)
-          
-          \param offset an in pointer to which, if non-NULL, is returned the starting index to be used in longitudes
-
-          \return the thinning factor
-
-      */
-      int thinning( int* offset=NULL );
-      
-      /// sets the thinning factor for horizontal data    
-      /*! This method sets the thinning factor that is applied to horizontal data.
-          This determines how many data points are to be skipped. A value
-          of 1 or less means that every point is used. A value of 2 means that
-          only every other longitude and latitude is retained. A value of three
-          means that only every third longitude and latitude is retained.
-          (All vertical levels are alays retained.)
-          
-          \param thin the thinning factor to be applied to subsequent data reads
-          \param offset a offset index used to determine the starting longitude value;
-          
-      */
-      void set_thinning( int thin, int offset=0 );
-
       /// return the default bad-or-missing data fill value
       /*! This method returns the default value used to fill in for bad or missing data values.
         
@@ -743,7 +714,7 @@ class MetMyGEOS : public MetGridLatLonData {
        int junkstuff;
 
 
-   private:
+//   private:
 
        /// holds horizontal grid specifications
        class HGridSpec {
@@ -845,8 +816,10 @@ class MetMyGEOS : public MetGridLatLonData {
            std::string quant;
            /// units of the quantity
            std::string units;
-           /// scale & offset to take these unjits into MKS
-           real mksScale, mksOffset;
+           /// scale to take these unjits into MKS
+           real mksScale;
+           /// offset to take these unjits into MKS
+           real mksOffset;
            
            /// the set of vertical levels
            std::vector<real> levs;
@@ -910,9 +883,6 @@ class MetMyGEOS : public MetGridLatLonData {
            double next;
            /// the delta between successive timesteps within the file, in days
            double delta;
-           
-
-
            /// the time of the last snapshot in the file, in day1900 format
            double end;
            /// the number of time snapshots in the file
@@ -924,6 +894,8 @@ class MetMyGEOS : public MetGridLatLonData {
                  0x01 = start
                  0x02 = next
                  0x04 = delta
+                 0x08 = n
+                 0x10 = end
            */
            int given;
            
@@ -945,12 +917,47 @@ class MetMyGEOS : public MetGridLatLonData {
                insofar as that is possible. If all data are specified, the set is
                tested for consistency.
            
-               \param tstart the day1900 starting time of the file. If NULLPTR, then it is unspecified
-               \param tnext the day1900 starting time of the next file. If NULLPTR, then it is unspecified
-               \param tdelta the day1900 interval between successive timestamps. If NULLPTR, then it is unspecified
+               \param tstart the day1900 starting time of the file. 
+               \param tnext the day1900 starting time of the next file. If < tstart, it is unspecified.
+               \param tdelta the day1900 interval between successive timestamps. If <= 0, it is unspecified
                \return true if the given specs are complete and consistent, false otherwise
            */    
            bool set( double tstart, double tnext, double tdelta );
+
+           /// sets time specs, computing missing ones where needed
+           /*! This method sets time specifications.
+           
+               Some specifications are redundant. For example, if a starting time,
+               delta time, and number of times are all given, then the ending time is
+               unneeded. This method uses whichever data are specified to compute the rest,
+               insofar as that is possible. If all data are specified, the set is
+               tested for consistency.
+           
+               \param tstart the day1900 starting time of the file. 
+               \param tend the day1900 ending time of the  file.  If < tstart, it is unspecified.
+               \param tn the number of time stamps in the file. If <= 0, then it is unspecified
+               \return true if the given specs are complete and consistent, false otherwise
+           */    
+           bool set( double tstart, double tend, int tn );
+
+           /// sets time specs, computing missing ones where needed
+           /*! This method sets time specifications.
+           
+               Some specifications are redundant. For example, if a starting time,
+               delta time, and number of times are all given, then the ending time is
+               unneeded. This method uses whichever data are specified to compute the rest,
+               insofar as that is possible. If all data are specified, the set is
+               tested for consistency.
+           
+               \param tstart the day1900 starting time of the file. 
+               \param tnext the day1900 starting time of the next file. If < tstart, it is unspecified.
+               \param tn the number of time stamps in the file. If <= 0, then it is unspecified
+               \param tdelta the day1900 interval between successive timestamps. If <= 0, it is unspecified
+               \param tend the day1900 ending time of the  file.  If < tstart, it is unspecified.
+               \return true if the given specs are complete and consistent, false otherwise
+           */    
+           bool set( double tstart, double tnext, int tn, double tdelta, double tend );
+
 
            /// tests whether a time grid spec is compatible with this time grid spec
            /*! This method checks whether a given TGridSpec object's settings 
@@ -961,6 +968,41 @@ class MetMyGEOS : public MetGridLatLonData {
            */    
            bool test( const TGridSpec& cmp ) const;
            
+           /// tests whether a given time is compatible with this time grid apec
+           /*! this method determines whether a given time can be contained
+               within the time grid specifications.
+               
+               \param t the time to be tested
+               \return true if the time is OK, false otherwise
+          */
+          bool inside( double t );     
+          
+          /// merges settings from another TGridSpec onject into this onw
+          /*! This method takes settings from a given TGridSpec object and merges them into this one.
+          
+              The merge takes place if and only if two two TGridSpec objects are comaptible, as givne
+              by the return value of the test() method. 
+              
+              This is used, for example, to take settigns read from a file and merge them into
+              the TGridSpec used to access that file.
+              
+              \param in a TGridSpec object
+              \return true of the merge was successful, false if the two were incompatible
+          */
+          bool merge( TGridSpec& in );    
+          
+          /// returns key information about where a desired time lies within the TGridSpec's time grid.
+          /*! Given a desired time, this method returns information about where in the time grid that desired time lies.
+              
+              \param desired_time the double precision time whose position is desired
+              \param myStart a reference to a double that will hold the starting time of the time grid
+              \param myN a reference to an integer that will hold the number of grid intervals before the desired time
+              \param myInc a reference to a double that will hold the increment between successive times in the grid
+              \return true if there was enough information to retrieve the time position, false otherwise
+              
+          */
+          bool get( double desired_time, double& myStart, int& myN, double& myInc ) const;
+
        };
        
 
@@ -979,10 +1021,10 @@ class MetMyGEOS : public MetGridLatLonData {
       /// set to true if the Catalog has been loaded
       bool ready;
       
-      // met base time -- this is the day1900 number that corresponds to intenral model time 0.0
+      /// met base time -- this is the day1900 number that corresponds to intenral model time 0.0
       double basetime;
       
-      // catalog basetime -- this is the offset between model time and catalog time
+      /// catalog basetime -- this is the offset between model time and catalog time
       double catTimeOffset;
       
       /// Object for dealing with Dates
@@ -1041,14 +1083,15 @@ class MetMyGEOS : public MetGridLatLonData {
       std::string opened_url;
       /// maximum number of data values to be read in with a single netcdf call
       size_t max_data; // useful when reading from a URL
+      /// a desired time to be tested against some dataset target
+      double target_time;
+      /// desired target date to be tested against some dataset target
+      std::string target_date;
+      /// true if the target time and date have been set
+      bool target_time_valid;
 
       /// the default bad-or-missing data fill value to be used
       real fillval;
-       
-      /// skip factor in the horizontal grid (0=use every point, 1=use every other point, etc.
-      int skip;
-      /// longitude offset factor to be used when skipping
-      int skoff;
        
        /// number of times to try a given netcdf/OPeNDAP operation 
        int ntries;
@@ -1129,9 +1172,10 @@ class MetMyGEOS : public MetGridLatLonData {
       HGridSpec hgrid;
       /// the specs of the vertical grid of the data source to be read
       VGridSpec vgrid;
-      /// the specs of the time grid of th edata source to be read
+      /// the specs of the time grid of the data source to be read
       TGridSpec tgrid;
-      
+      /// the trgrid spec for an open URL
+      TGridSpec url_tgrid;
 
       /// time to wait between tries (seconds)
       unsigned int waittry;
@@ -1253,6 +1297,18 @@ class MetMyGEOS : public MetGridLatLonData {
          
       */
       bool dsInit( const std::string& quantity="", const std::string& time = "" );     
+
+      /// \brief checks whether the vector of catalog data sources is valid for use
+      /*! This method checks whether the vector of data sources last returned
+          by a Catalog query, is still valid for a desired quantity and time.
+        
+          \param quant the name of he quantity. This is chacked against the current data source "name" field.
+          \param t the time MetMyGEOS time. This is checked against the range of times in the current data source.
+          
+          \return true if the data source vector is ok to use, false otherise
+      
+      */
+      bool DsValid( const std::string& quant, double t );
 
       /// \brief convert catalog time to met time (
       /*!  This method converts a numeric time used in the Catalog (number of days since 1899-12-31T00)
@@ -1437,17 +1493,57 @@ class MetMyGEOS : public MetGridLatLonData {
            attempted, in order starting with the zeroeth, until an open succeeds or an error is thrown.
            
 
-            \param pre true if the DataSource's pre-valid-at time snashot is to be used, false if the post- snapshot is ot be used
+            \param pre true if the DataSource's pre-valid-at time snapshot is to be used, false if the post- snapshot is to be used
             \param index the index into the current vector of DataSource objects, if overriding the default (i.e./, if not -1)
                          
        */
        void Source_open( bool pre=true, int index=-1 );
+
+       /// take care of housekeeping after openeing a url
+       /*! This method loads certain metadata immediately after
+           successfully opening a url. It is called from within Source_open().
+           
+           \param index the index into the current vector of DataSource objects, of th eobject just opened
+           
+           \return true if all went well, false otherise (in which case another URL should be opened)
+       */
+       bool Source_postOpen( int index );    
 
        /// close a GEOS Source url
        /*! This method closes an open GEOS source.
        */
        void Source_close();
 
+       /// sets a desired time
+       /*! This method sets a desired time that is used to check an opened url
+       
+            \param t the calendar time
+            
+       */
+       void Source_setDesiredTime( double t );
+       
+       /// sets a desired time
+       /*! This method sets a desired time that is used to check an opened url
+       
+            \param d the qeuivalent atestring corresponding to the time
+            
+       */
+       void Source_setDesiredTime( const std::string& d );
+       
+       /// clears the desired time
+       /*! This method ensures that no url will be checked for the presens of a desired time
+       */
+       void Source_clearDesiredTime();
+       
+       /// tests the open URL for the desired time
+       /*! This method checks an open uRL's metadata to ensure
+           that the currently-set desired time, if any,
+           is contained within the URL.
+           
+           \return true if the url contained the desired time, or if no desired time is currently set
+        */
+        bool Source_testDesiredTime();
+        
        /// load dimensional informaton from the GEOS source
        /*! This method loads dimensional informaton from the GEOS source.
            Dimensional information is stored in this object.
@@ -1821,9 +1917,16 @@ class MetMyGEOS : public MetGridLatLonData {
 
 /******************************************************************************* 
 ***  Written by: 
-***     L. R. Lait (SSAI) 
+***     L. R. Lait (NASA Ames Research Center, Code SG) 
 ***     Code 614 
 ***     NASA Goddard Space Flight Center 
 ***     Greenbelt, MD 20771 
-***  (Please see the COPYING file for more information.) 
+*** 
+***  Copyright (c) 2023 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved. 
+*** 
+*** Disclaimer:
+*** No Warranty: THE SUBJECT SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY OF ANY KIND, EITHER EXPRESSED, IMPLIED, OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, ANY WARRANTY THAT THE SUBJECT SOFTWARE WILL CONFORM TO SPECIFICATIONS, ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR FREEDOM FROM INFRINGEMENT, ANY WARRANTY THAT THE SUBJECT SOFTWARE WILL BE ERROR FREE, OR ANY WARRANTY THAT DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE. THIS AGREEMENT DOES NOT, IN ANY MANNER, CONSTITUTE AN ENDORSEMENT BY GOVERNMENT AGENCY OR ANY PRIOR RECIPIENT OF ANY RESULTS, RESULTING DESIGNS, HARDWARE, SOFTWARE PRODUCTS OR ANY OTHER APPLICATIONS RESULTING FROM USE OF THE SUBJECT SOFTWARE.  FURTHER, GOVERNMENT AGENCY DISCLAIMS ALL WARRANTIES AND LIABILITIES REGARDING THIRD-PARTY SOFTWARE, IF PRESENT IN THE ORIGINAL SOFTWARE, AND DISTRIBUTES IT "AS IS." 
+*** Waiver and Indemnity:  RECIPIENT AGREES TO WAIVE ANY AND ALL CLAIMS AGAINST THE UNITED STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT.  IF RECIPIENT'S USE OF THE SUBJECT SOFTWARE RESULTS IN ANY LIABILITIES, DEMANDS, DAMAGES, EXPENSES OR LOSSES ARISING FROM SUCH USE, INCLUDING ANY DAMAGES FROM PRODUCTS BASED ON, OR RESULTING FROM, RECIPIENT'S USE OF THE SUBJECT SOFTWARE, RECIPIENT SHALL INDEMNIFY AND HOLD HARMLESS THE UNITED STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT, TO THE EXTENT PERMITTED BY LAW.  RECIPIENT'S SOLE REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL TERMINATION OF THIS AGREEMENT. 
+***  (Please see the NOSA_19110.pdf file for more information.) 
+*** 
 ********************************************************************************/
