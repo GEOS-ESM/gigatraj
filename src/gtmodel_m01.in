@@ -21,6 +21,8 @@
 #     -w 
 #        If specified, then all stdout and stderr output is tagged by mpirun
 #        with the processor and file ID. (E.g., "[1,3]stderr:")
+#     -m file
+#        If given, then the named file is given to mpirun as a hostfile
 #
 #
 # Note that gtmodel_s00 is run with the "--mpi" option, which causes
@@ -76,6 +78,14 @@ do
           LOG="$1"
           ;;
     '-w') LABL="${LABL} --tag-output"
+          ;;
+    '-m') shift
+          HFILE="$1"
+          if [ ! -f "${HFILE}" ] ; then
+             echo "MPI hostfile ${HFILE} not found" >&2
+             exit 1
+          fi
+          LABL="${LABL} --hostfile ${HFILE}"
           ;;
     '-u') LABL="${LABL} --timestamp-output"
           ;;
