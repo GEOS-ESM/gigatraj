@@ -2052,7 +2052,7 @@ bool Catalog::s2eString( const std::string& str, std::string& result, int wid, i
         }
         result.push_back( str[i] );
     }
-    if ( wid > 0 ) {
+    if ( (wid > 0) && (result.size() >= start) ) {
        result = result.substr( start, wid );
     }
     
