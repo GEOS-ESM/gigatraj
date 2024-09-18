@@ -350,7 +350,7 @@ std::string Configuration::strwht( const std::string input )
           value.erase( value.begin() );
      }
      // strip off the end
-     while ( value[value.size()-1] == ' ' || value[value.size()-1] == '\t' ) {
+     while ( value.size() > 0 && (value[value.size()-1] == ' ' || value[value.size()-1] == '\t' ) ) {
           value.erase( value.end() );
      }
      
