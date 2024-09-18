@@ -32,13 +32,13 @@ const std::string MetGEOSfpAssim::iam = "MetGEOSfpAssim";
 // default constructor
 MetGEOSfpAssim::MetGEOSfpAssim() : MetMyGEOS() 
 {    
-     metTag("GEOSfpAssim"); 
+     metTag("MetGEOSfpAssim"); 
 }
 
 MetGEOSfpAssim::MetGEOSfpAssim( std::string& date ) : MetMyGEOS() 
 {
     
-    metTag("GEOSfpAssim"); 
+    metTag("MetGEOSfpAssim"); 
     basetime = cal.day1900( date );
 
 }

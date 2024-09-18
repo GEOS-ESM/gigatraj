@@ -32,13 +32,13 @@ const std::string MetMERRA::iam = "MetMERRA";
 // default constructor
 MetMERRA::MetMERRA() : MetMyGEOS() 
 {    
-     metTag("MERRA"); 
+     metTag("MetMERRA"); 
 }
 
 MetMERRA::MetMERRA( std::string& date ) : MetMyGEOS() 
 {
     
-    metTag("MERRA"); 
+    metTag("MetMERRA"); 
     basetime = cal.day1900( date );
 
 }

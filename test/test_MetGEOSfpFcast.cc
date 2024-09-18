@@ -56,7 +56,7 @@ int main()
     std::string test_date;
 
     // the met catalog to be used
-    std::string metCatalog = "GEOSfpFcast";
+    std::string metCatalog = "MetGEOSfpFcast";
     // corresponds to the zero mode time
     std::string basedate   = "2000-03-15T12:13";
     // 1.5 days ahead of the basetime

@@ -6,15 +6,15 @@ datadir=$(prefix)/share/$(PACKAGE)/cat
 dist_data_DATA =  example_Catalog.cat
 
 if MERRA
-   dist_data_DATA += MERRA.cat
+   dist_data_DATA += MetMERRA.cat
 endif
 if MERRA2
-   dist_data_DATA += MERRA2.cat 
+   dist_data_DATA += MetMERRA2.cat 
 endif
 if GEOSFP
-   dist_data_DATA += GEOSfpAssim.cat 
-   dist_data_DATA += GEOSfpFcast.cat 
-   dist_data_DATA += GEOSfp.cat 
+   dist_data_DATA += MetGEOSfpAssim.cat 
+   dist_data_DATA += MetGEOSfpFcast.cat 
+   dist_data_DATA += MetGEOSfp.cat 
 endif
 
 

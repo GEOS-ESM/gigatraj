@@ -49,7 +49,7 @@ int main()
     std::string test_date;
 
     // the met catalog to be used
-    std::string metCatalog = "MERRA";
+    std::string metCatalog = "MetMERRA";
     // corresponds to the zero mode time
     std::string basedate   = "2000-03-15T12:13";
     // 1.5 days ahead of the basetime
