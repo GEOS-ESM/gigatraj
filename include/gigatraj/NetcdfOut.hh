@@ -104,7 +104,7 @@ class NetcdfOut : public ParcelReporter {
           \param units the units of the verticla coordinate quantity
           \param dir +1 if the vertical quantity increases with altitude, -1 if it decreases with altitude
       */
-      void vertical( const std::string& vert, const std::string& units="", int dir=0 );
+      void vertical( const std::string& vert, const std::string& units="UNKNOWN", int dir=0 );
    
       /// returns the name of the vertical coordinate to be used
       /*! This method returns the name of variable in the netcdf file that is to be used
@@ -167,7 +167,7 @@ class NetcdfOut : public ParcelReporter {
           \param desc a string holding a descriptive name of the tag quantity
 
       */
-      void writeTag( bool doit, const std::string& quant="", const std::string& units="", const std::string& desc="" );
+      void writeTag( bool doit, const std::string& quant="", const std::string& units="UNKNOWN", const std::string& desc="" );
       
       /// returns whether the Parcel tag is written
       /*! This method returns whether the Parcel tag is being written to the netcdf file
@@ -288,7 +288,7 @@ class NetcdfOut : public ParcelReporter {
           \param units a string holding the units of the quantity.
           \param desc a string that holds a descriptive name for the quantity
       */
-      void addQuantity( const std::string& quantity, const std::string& units="", const std::string& desc="" );
+      void addQuantity( const std::string& quantity, const std::string& units="UNKNOWN", const std::string& desc="" );
       
       /// removes a meteorological variable from being written out
       /*! This method deletes a meteorological variable from the list of those to be written out to the netcdf file.
@@ -585,7 +585,26 @@ class NetcdfOut : public ParcelReporter {
            
       */
       void apply( Swarm& p ); 
-
+      
+      /// set the SI unjits flag
+      /*! This method sets or clears the flag that determines whether
+          output quantities are written in SI units or default units.
+          Note: it is an error to try to set this while the output file
+          is open.
+          
+          \param value true if SI units are to be used, false if the default units are to be used
+          
+       */
+       void si( bool value );
+       
+       /// returns the current SI units flag value
+       /*! This method returns the current setting of the flag that determines whether
+           output quantities are to be written in SI units.
+           
+           \return true if SI units are used, false otherwise
+      */
+      bool si() const;     
+       
     
    private:
    
@@ -612,6 +631,11 @@ class NetcdfOut : public ParcelReporter {
       int vdir;
       /// the vertical coordinate long name
       std::string vdesc;
+      /// factor by which to multiply the vertical coorindaste to put it in SI units
+      real vfactor;
+      
+      /// flag for converting output quantities to SI units before writing them out
+      bool do_si;
       
       /// the base (model) time of the simulation
       double t0;
@@ -638,6 +662,8 @@ class NetcdfOut : public ParcelReporter {
       std::vector<std::string> other_units;
       /// descriptive string of the "other" quantities
       std::vector<std::string> other_desc;
+      /// factor by which the "other" quantities should be multiplied to get SI units
+      std::vector<real> other_factor;
       
       /// should we be writing Parcel status?
       bool do_status;
@@ -784,6 +810,12 @@ class NetcdfOut : public ParcelReporter {
      */
      std::string tunits();
      
+     /// tweaks the verticla units to produce SI output
+     /*! This method sets up to output the vertical coordinate in SI units,
+         if the do_si flag has been set that way.
+        
+     */
+     void tweakUnits();
 };
 }
 

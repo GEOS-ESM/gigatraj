@@ -27,9 +27,12 @@ NetcdfOut::NetcdfOut()
     dir = 0;
     
     vcoord = "";
-    vunits = "";
+    vunits = "UNKNOWN";
     vdesc = "";
     vdir = 0;
+    vfactor = 1.0;
+    
+    do_si = false;
     
     tagquant = "";
     tagunits = "";
@@ -114,6 +117,21 @@ std::string& NetcdfOut::filename()
     return fname;
 }
 
+void NetcdfOut::si( bool value )
+{
+    if ( ! is_open ) {
+       do_si = value;
+       tweakUnits();
+    } else {
+       throw new badNetcdfTooLate();
+    }
+}
+       
+bool NetcdfOut::si() const
+{
+     return do_si;
+}
+
 void NetcdfOut::vertical( const std::string& vert, const std::string& units, int dir )
 {
 
@@ -125,6 +143,8 @@ void NetcdfOut::vertical( const std::string& vert, const std::string& units, int
        
        vunits = units;
        
+       tweakUnits();
+       
        vdir = dir;
        // common case we may as well try to handle here
        if ( vcoord == "P" || vunits == "mb" || vunits == "hPa" ) {
@@ -134,6 +154,21 @@ void NetcdfOut::vertical( const std::string& vert, const std::string& units, int
        
     } else {
        throw new badNetcdfTooLate();
+    }
+
+}
+
+void NetcdfOut::tweakUnits() {
+
+    vfactor = 1.0;
+    if ( do_si ) {
+       if ( vunits == "km" ) {
+          vfactor = 1000.0;
+          vunits = "m";
+       } else if  ( vunits == "hPa" || vunits == "mb" ) {
+          vfactor = 100.0;
+          vunits = "Pa";
+       }
     }
 
 }
@@ -221,6 +256,7 @@ void NetcdfOut::addQuantity(  const std::string& quantity, const std::string& un
        other.push_back( quantity );
        other_units.push_back( units );
        other_desc.push_back( desc );
+       other_factor.push_back( 1.0 );
        vid_other.push_back( -1 );
        vtyp_other.push_back( NC_REEL );
 
@@ -661,17 +697,14 @@ void NetcdfOut::init( MetData *metsrc, unsigned int n)
           vcoord = met->vertical();
           vunits = met->vunits();
           vdesc = vcoord;
-       } else {
-          if ( vunits == "" ) {
-             vunits = met->units( vcoord );
-          }
+       }
+       if ( (vunits == "") || (vunits == "UNKNOWN") ) {
+          vunits = met->units( vcoord );
        }
      
        if ( do_tag ) {
           if ( tagquant != "" ) {
-             if ( tagquant == "" ) {
-                tagquant = met->units( tagquant );
-             }   
+             tagquant = met->units( tagquant );
           }
        }
        
@@ -1394,8 +1427,20 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
             }
          }
          val = other_units[i];
-         if ( val != "" ) {
+         if ( val == "UNKNOWN" ) {
+            val = met->units( other[i] );
+         }
+         if ( val != "UNKNOWN" ) {
             // define units attribute
+            if ( do_si ) {
+               if ( val == "km" ) {
+                  val = "m";
+                  other_factor[i] = 1000.0;
+               } else if ( val == "hPa" ) {
+                  val = "Pa";
+                  other_factor[i] = 100.0;
+               }
+            }
             aname = "units";
             aval = val.c_str();
             if ( i_am_root ) {
@@ -1408,7 +1453,7 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
      }
      
      
-     // end definitoin mode
+     // end definition mode
      if ( i_am_root ) {
         err = nc_enddef( ncid );
         if ( err != NC_NOERR ) {
@@ -1491,6 +1536,8 @@ void NetcdfOut::writeout( double t, unsigned int n, real *lons, real *lats, real
    const char *aval;
    bool i_am_root;
    double netcdf_time;
+   real* znew;
+   real* newstuff;
 
    i_am_root = is_root();
 
@@ -1607,11 +1654,23 @@ void NetcdfOut::writeout( double t, unsigned int n, real *lons, real *lats, real
        }
 
        if ( i_am_root) {
+          if ( vfactor != 1.0 ) {
+             znew = new real[n];
+             for ( int i=0; i < n; i++ ) {
+                 znew[i] = zs[i]*vfactor;
+             }
+          } else {
+             znew = zs;
+          }
 #ifdef USE_DOUBLE   
-          err = nc_put_vars_double( ncid, vid_z, put_start, put_count, put_stride, zs );
+          err = nc_put_vars_double( ncid, vid_z, put_start, put_count, put_stride, znew );
 #else
-          err = nc_put_vars_float( ncid, vid_z, put_start, put_count, put_stride, zs );
+          err = nc_put_vars_float( ncid, vid_z, put_start, put_count, put_stride, znew );
 #endif
+          if ( vfactor != 1.0 ) {
+             delete[] znew;
+          }
+
           if ( err != NC_NOERR ) {
              throw(badNetcdfError(err));
           }
@@ -1646,13 +1705,25 @@ void NetcdfOut::writeout( double t, unsigned int n, real *lons, real *lats, real
           for ( int i=0; i< nstuff; i++ ) {
               vid = vid_other[i];
               if ( i_am_root) {
+                 real fctr = other_factor[i];
+                 if ( fctr == 1.0 ) {
+                    newstuff = stuff[i];
+                 } else {
+                    newstuff = new real[n];
+                    for ( int k=0; k<n; k++ ) {
+                       newstuff[k] = stuff[i][k]*fctr;
+                    }
+                 }
 #ifdef USE_DOUBLE   
-                 err = nc_put_vars_double( ncid, vid, put_start, put_count, put_stride, stuff[i] );
+                 err = nc_put_vars_double( ncid, vid, put_start, put_count, put_stride, newstuff );
 #else
-                 err = nc_put_vars_float( ncid, vid, put_start, put_count, put_stride, stuff[i] );
+                 err = nc_put_vars_float( ncid, vid, put_start, put_count, put_stride, newstuff );
 #endif
                  if ( err != NC_NOERR ) {
                     throw(badNetcdfError(err));
+                 }
+                 if ( fctr == 1.0 ) {
+                    delete[] newstuff;
                  }
               }
           
