@@ -559,9 +559,17 @@ class MetData {
           to follow.
           
           \param quantity the quantity whose units are desired
-          \return the units of the quantity
+          \param time the model time for which data is valid. (This is used if a data file has ot be read in order to determine the units)
+          \param flags flag values:
+                  METDATA_MKS = return the units of the quantity if converted to MKS units
+                  METDATA_FAILBAD =(ignored)
+                  METDATA_NANBAD = (ignored)
+                  METDATA_INFBAD = (ignored)
+                  METDATA_KEEPBAD = (ignored)
+          \return a string with the units. An empty string "" indicates a unitless quantity. If the units
+                  cannot be determined, then "UNKNOWN" is returned.
       */
-      virtual std::string units( const std::string quantity ) { return ""; };    
+      virtual std::string units( const std::string& quantity, double time=0, int flags=0  ) { return "UNKNOWN"; };    
 
       /// obtain the value of a meteorological field at a given point 
       /*! this mwthod obtain the value of a meteorological field at a given point. 
@@ -611,12 +619,6 @@ class MetData {
 
       */
       virtual void getData( string quantity, double time, int n, real* lons, real* lats, real* zs, real* values, int flags=0 );
-
-
-
-
-
-
 
       /// (parallel processing) returns the process group to which this processor and MetData belong
       /*!  This method returns the process group to which the processor that

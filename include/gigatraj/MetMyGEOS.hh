@@ -701,6 +701,24 @@ class MetMyGEOS : public MetGridLatLonData {
       GridLatLonFieldSfc* GetSfc( const std::string quantity, const std::string time );
 
 
+      /// obtain the units of a quantity provided by the data source
+      /*! This method provides the units of a quantity that the meteorological data soirce
+          provides. The meaning of the returned string is determined solely
+          by the data source itself, according to whatever conventions is happens
+          to follow.
+          
+          \param quantity the quantity whose units are desired
+          \param time the model time for which data is valid. (This is used if a data file has ot be read in order to determine the units)
+          \param flags flag values:
+                  METDATA_MKS = return the units of the quantity if converted to MKS units
+                  METDATA_FAILBAD =(ignored)
+                  METDATA_NANBAD = (ignored)
+                  METDATA_INFBAD = (ignored)
+                  METDATA_KEEPBAD = (ignored)
+          \return a string with the units. An empty string "" indicates a unitless quantity. If the units
+                  cannot be determined, then "UNKNOWN" is returned.
+      */
+      virtual std::string units( const std::string& quantity, double time=0, int flags=0 );
 
       
           

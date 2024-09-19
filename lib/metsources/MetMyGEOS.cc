@@ -98,6 +98,8 @@ MetMyGEOS::MetMyGEOS( const MetMyGEOS&  src) : MetGridLatLonData(src)
      legalDims = src.legalDims;
      otfIDs = src.otfIDs;
      
+// to do: set thetaOTF, PRessOTF, PALTOTD, etc. from these names
+     
      skip = src.skip;
      skoff = src.skoff;
      waittry = src.waittry;
@@ -141,6 +143,8 @@ void MetMyGEOS::assign(const MetMyGEOS& src)
      verticalWinds = src.verticalWinds;
      legalDims = src.legalDims;
      otfIDs = src.otfIDs;
+
+// to do: set thetaOTF, PRessOTF, PALTOTD, etc. from these names
      
      skip = src.skip;
      skoff = src.skoff;
@@ -1531,6 +1535,69 @@ GridLatLonFieldSfc* MetMyGEOS::GetSfc( const std::string quantity, const std::st
     return new_directGridSfc( quantity, time );
 }         
 
+std::string MetMyGEOS::units( const std::string& quantity, double time, int flags )
+{
+    std::string result;
+    std::string ctime;
+    size_t pos;
+    std::string quantname;
+    double preTime, postTime;
+    bool junk;
+    int ndims;
+    
+    result = "UNKNOWN";
+    
+    // if a surface quantity has been specified, then
+    // split the quantity name into quantity and surface
+    pos = quantity.find("@");
+    if ( pos != string::npos ) {
+       quantname = quantity.substr(0, pos);
+    } else {
+       //todo:  put in switch block here
+       quantname = quantity;
+    }
+ 
+    if ( quantname == pressure_name ) {
+       result = "hPa";
+       if ( flags & METDATA_MKS ) {
+          result = "Pa";
+       }
+    } else if ( (quantname == palt_name) || (quantname == altitude_name ) ) {
+       result = "km";
+       if ( flags & METDATA_MKS ) {
+          result = "m";
+       }        
+    } else if ( quantname == pottemp_name ) {
+       result = "K";
+    } else if ( quantname == pressureDot_name ) {
+       result = "Ps/s";
+    } else if ( (quantname == paltDot_name) || (quantname == altDot_name ) ) {
+       result = "km/s";
+       if ( flags & METDATA_MKS ) {
+          result = "m/s";
+       }        
+    } else if ( quantname == thetaDot_name ) {
+       result = "K/s";
+    } else {
+
+       // translate the internal model time to a calendar time string
+       ctime = time2Cal( time );
+    
+       init();
+           
+       Source_setDesiredTime( time );
+    
+       junk = bracket( quantity, time, &preTime, &postTime );
+    
+       ndims = setup( quantname, ctime );
+    
+       if ( test_dsrc >= 0 ) {
+          result = ds[test_dsrc].units;
+       }
+    }
+    
+    return result;
+}
 
 /////////////////////////////////////////////
 
@@ -1861,6 +1928,10 @@ MetMyGEOS* MetMyGEOS::myNew()
    dup->catTimeOffset = this->catTimeOffset;
    dup->basetime = this->basetime;
      
+   dup->wind_ew_name     = this->wind_ew_name;
+   dup->wind_ns_name     = this->wind_ns_name;
+   dup->wind_vert_name   = this->wind_vert_name;  
+
    dup->timeName = this->timeName;
    dup->lonName = this->lonName;
    dup->latName = this->latName;
@@ -1871,6 +1942,7 @@ MetMyGEOS* MetMyGEOS::myNew()
    dup->palt_name = this->palt_name;
    dup->pottemp_name = this->pottemp_name;
    dup->modellevel_name = this->modellevel_name;
+   dup->modeledge_name = this->modeledge_name;
 
    dup->altDot_name = this->altDot_name;
    dup->pressureDot_name = this->pressureDot_name;
@@ -2054,7 +2126,7 @@ std::string MetMyGEOS::queryUnits( int index )
     std::string result;
     bool ok;
     
-    result = "";
+    result = "UNKNOWN";
     
     ok =  dsInit();
     if ( ok ) {
