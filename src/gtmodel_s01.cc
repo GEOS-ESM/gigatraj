@@ -40,6 +40,7 @@ gtmodel_s01 [ --help|-h ] [ --list ] [ --verbose ] [--debug level] [ --config|-c
                [--netcdf_out] [--inputnetcdf] \\
                [ --format fmt ] [ --noBadOutput ] [ --input_format fmt ] \\
                [--delay opentime ] [--mpi] [--met_server_ratio m ] \\
+               [--si] \\
                [--save_to savefile ] [ --restore_from savefile ] [ --save_steps nsteps ] [[--keep-save]
 \endcode
               
@@ -109,7 +110,9 @@ begdate=2007-10-23T13
   \li \c noBadOutput : prevents parcels which are not being traced (e.g., parcels which have hit 
                        the ground) from being output
   
-  \li \c netcdf_out : sends output to 
+  \li \c netcdf_out : sends output to the given netcdf file
+  
+  \li \c si   writes (to netcdf )at least the vertical coordinates in SI units (i.e., m instead of km, Pa instead of hPa)
   
   \li \c inputformat : an initialization input format specifier, as described in the StreamRead class.
                    The codes are basically the same as for the --format option. Any input fields
@@ -351,6 +354,8 @@ int getconfig(int argc, char * const argv[], Configuration& conf, MetSelector &m
 #ifdef USE_NETCDF
     usage +=  " [--netcdf_out outputfile]";
     conf.add("netcdf_out"    , cString,""              , "", 0, "The output is to be sent to the netcdf file specified" );
+    usage +=  " [--si]";
+    conf.add("si"    , cBoolean,"N"              , "", 0, "Writes at least the vertical coordinate to netcdf iwth SI units instead of default (km, hPa)" );
     usage +=  " [--inputnetcdf]";
     conf.add("input_netcdf", cBoolean,"N"               , "", 0, "Parcel input file is a netcdf file" );
 #endif
@@ -763,6 +768,8 @@ int main( int argc, char * argv[] )
     std::string integratorName;
     // A non-default integrator
     Integrator* integrator;
+    // do SI units to netcdf?
+    bool si = false;
 
     // we assume all will go well (until it doesn't)    
     status = 0;
@@ -812,6 +819,7 @@ int main( int argc, char * argv[] )
        config.fetchParam("input_netcdf", inNetcdf );
        outNetcdfFile = config.get("netcdf_out");
        outNetcdf = ( outNetcdfFile != "" );
+       config.fetchParam("si", si );
 #endif
        
        do_save = ( save_file != "" ) && ( sinterval > 0 );
@@ -874,6 +882,7 @@ int main( int argc, char * argv[] )
           cerr << "inNetcdf = " << inNetcdf << endl;
           cerr << "outNetcdf = " << outNetcdf << endl;
           cerr << "outNetcdfFile = " << outNetcdfFile << endl;
+          cerr << "si = " << si << endl;
 #endif
        }
 
@@ -1246,6 +1255,7 @@ int main( int argc, char * argv[] )
        } else {
           out_netcdf = new NetcdfOut();
           out_netcdf->filename( outNetcdfFile );
+          out_netcdf->si(si);
           out_netcdf->contents("gigatraj trajectories");
           if ( vertical != "" ) {
              out_netcdf->vertical( vertical );
