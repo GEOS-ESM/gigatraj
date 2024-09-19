@@ -32,7 +32,7 @@ The file must also have data variables "lon" and "lat".
 If must also have at least one variable with the "positive" attribute, which
 denotes a vertical level. There should be one of these variables
 with the attribute :"vertical _coordinate", and that attribute should
-be set to "yes". That data varibale is taken as the vertical cooridnate
+be set to "yes". That data varibale is taken as the vertical coordinate
 of the Parcels.
 
 The file may have a second dimensional variable, "time". If so, then each of 
@@ -397,7 +397,7 @@ class NetcdfIn : public ParcelInitializer {
         the input file was prepared for a different meteorological dataset that does
         not use the same names for quantities.
         
-        The vertical cooridnate is found by looking at each varibale's attributes.
+        The vertical coordinate is found by looking at each varibale's attributes.
         The variable that has the "vertical_coordinate" attribute set to "yes" is
         the vertical coordinate.
         
@@ -472,6 +472,12 @@ class NetcdfIn : public ParcelInitializer {
       // vertical coordinate
       std::string vcoord;
    
+      // vertical coordinate units
+      std::string vunits;
+  
+      // factor by which to multiply vertical coordinate for get desired units
+      real vfactor;
+       
       // is the file open or not?
       bool is_open;
    
@@ -630,6 +636,17 @@ class NetcdfIn : public ParcelInitializer {
      */       
      void parseTimeUnits( std::string tunits );
      
+     /// findhe the vertical coordinate units
+     /*! This method finds the vnits of the   vertical cooordinate, givne the
+         netcdf variable Id of that coordinate..It first looks for the "units"
+         attribute of the variable. and if that is not found then it makes a guess,
+         based on the name of the variable.
+         
+         \param vid the netcdf variable ID of the vertical coordinate variable
+         \return a string containing the units
+     */
+     std::string findVunits( int vid );
+         
 };
 }
 

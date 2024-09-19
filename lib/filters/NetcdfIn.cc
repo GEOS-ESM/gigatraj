@@ -8,6 +8,8 @@ NetcdfIn :: NetcdfIn()
 {
     fname = "";
     vcoord = "";
+    vunits = "";
+    vfactor = 1.0;
     is_open = false;
     
     time0 = "";
@@ -98,7 +100,7 @@ void NetcdfIn::at_end( bool select )
     if ( ! isOpen() ){
        end = select;
     } else {
-       std::cerr << "at_end() can be calle donly before open()" << std::endl;
+       std::cerr << "at_end() can be called only before open()" << std::endl;
        throw(badNetcdfTooLate()); 
     }
 }
@@ -245,6 +247,75 @@ std::string NetcdfIn::findVertical()
     return result;
 }   
 
+std::string NetcdfIn::findVunits( int vid )
+{
+    std::string result;
+    int err;
+    int nattrs;
+    int attr_id;
+    char c_varname[NC_MAX_NAME + 1];
+    char c_aname[NC_MAX_NAME + 1];
+    char* c_avalue;
+    nc_type atype;
+    size_t alen;
+    std::string aname;
+    std::string varname;
+    
+    
+    result = "";
+
+    err = nc_inq_varnatts( ncid, vid, &nattrs );
+    if ( err == NC_NOERR ) {
+       for ( attr_id = 0; attr_id < nattrs; attr_id++ ) {
+           err = nc_inq_attname( ncid, vid, attr_id, c_aname );
+           if ( err == NC_NOERR ) {
+              aname = std::string(c_aname);
+              if ( aname == "units" ) {
+                 err = nc_inq_atttype( ncid, vid, c_aname, &atype );
+                 if ( err == NC_NOERR ) {
+                    err = nc_inq_attlen( ncid, vid, c_aname, &alen );
+                    if ( err == NC_NOERR ) {                    
+                       if ( atype == NC_STRING ) {
+                          err = nc_get_att_string( ncid, vid, c_aname, &c_avalue );
+                          if ( err == NC_NOERR ) {
+                             result = std::string(c_avalue);
+                             break;
+                          }
+                       } else if ( atype == NC_CHAR ) {
+                          c_avalue = new char[alen + 1];
+                          err = nc_get_att_text( ncid, vid, c_aname, c_avalue );
+                          if ( err == NC_NOERR ) {
+                             c_avalue[alen] = 0;
+                             result = std::string(c_avalue);
+                             break;
+                          }   
+                          
+                       }
+                    }
+                 }
+              }
+           } 
+       }
+    }
+
+    if ( result == "" ) {
+       err = nc_inq_varname( ncid, vid, c_varname );
+       if ( err == NC_NOERR ) {
+          varname = std::string( c_varname );
+          if ( varname == "p" || varname == "P" ) {
+             result = "hPa";
+          } else if ( varname == "PAlt" ) {
+             result = "km";
+          } else if ( varname == "Theta" ) {
+             result = "K";
+          }
+       }
+    }    
+    
+    return result;
+
+
+}
 
 void NetcdfIn::format( std::string fmt )
 {
@@ -512,6 +583,7 @@ void NetcdfIn::open( std::string file )
      int ndimens;
      int unlimdim_idx;
      char c_vname[NC_MAX_NAME + 1];
+     char c_vunits[NC_MAX_NAME + 1];
      double tt0;
      std::string alt_vertname;
      
@@ -746,8 +818,18 @@ void NetcdfIn::open( std::string file )
            throw(badNetcdfError(err));
         }
         vcoord.assign( c_vname);
+        vunits = findVunits( vid_z );
+        vfactor = 1.0;
+        if ( vunits == "m" ) {
+           // convert meters to kilometers
+           vfactor = 1.0/1000.0;
+           vunits = "km";
+        } else if ( vunits == "Pa" ) {
+           vfactor = 1.0/100.0;
+           vunits = "hPa";
+        }
         if ( dbug > 1 ) {
-           std::cerr << "NetcdfIn::open: Found a vertical coordinate " << vcoord <<  std::endl;
+           std::cerr << "NetcdfIn::open: Found a vertical coordinate " << vcoord <<  " [ " << vunits <<  "]" << std::endl;
         }
      }
      if ( vid_z < 0 ) {
@@ -766,12 +848,12 @@ void NetcdfIn::open( std::string file )
         err = nc_get_att_double( ncid, vid_z, "_FillValue", &badvert);
 #else
         err = nc_get_att_float( ncid, vid_z, "_FillValue", &badvert);
-#endif      
+#endif  
+            
         if ( err != NC_NOERR ) {
            badvert = ACOS(2.0); // i.e., NaN
         }
      }    
-     
      
      if ( do_status != 0 ) {   
         vid_status = get_var_id( "status", false, "", &vtyp_status );
@@ -1206,6 +1288,7 @@ void NetcdfIn::apply( Parcel& p )
 
     z = 0.0;
     rd_real( vid_z, vtyp_z, 1, &z );
+    z = z*vfactor;
 
     p.setTime( t0 );
     
