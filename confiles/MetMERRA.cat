@@ -9,11 +9,11 @@
 
 # Dimensions
 #
-MRLON ~ XDim; degrees_east ; LHN; -180.0, 179.333333333333, 540
-MRLAT ~ YDim; degrees_north; LHN; -90.0, 90.0, 361
-MRPRS ~ P; hPa; V; 1000, 975, 950, 925, 900, 875, 850, 825, 800, 775, 750, 725, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100, 70, 50, 40, 30, 20, 10, 7, 5, 4, 3, 2, 1, 0.7, 0.5, 0.4, 0.3, 0.1
-MRLEV ~ Model-Levels;; LHN; 0, 71, 72
-MREDG ~ Model-Levels;; LHN; 0, 72, 73
+LONMR ~ XDim; degrees_east ; LHN; -180.0, 179.333333333333, 540
+LATMR ~ YDim; degrees_north; LHN; -90.0, 90.0, 361
+PRSMR ~ P; hPa; V; 1000, 975, 950, 925, 900, 875, 850, 825, 800, 775, 750, 725, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100, 70, 50, 40, 30, 20, 10, 7, 5, 4, 3, 2, 1, 0.7, 0.5, 0.4, 0.3, 0.1
+LEVMR ~ Model-Levels;; LHN; 0, 71, 72
+EDGMR ~ Model-Levels;; LHN; 0, 72, 73
 
 
 
@@ -36,30 +36,30 @@ RUNSETX/S = "${RUNSET}"
 
 
 # Targets
-target0:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAT1NXINT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_int_Nx.${YEAR}${MONTH}${DOM}.hdf
-target1:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAT1NXLND.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_lnd_Nx.${YEAR}${MONTH}${DOM}.hdf
-target2:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;6;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAI6NPANA.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst6_3d_ana_Np.${YEAR}${MONTH}${DOM}.hdf
-target3:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAI3CPASM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst3_3d_asm_Cp.${YEAR}${MONTH}${DOM}.hdf
-target4:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;6;0;MRLON;MRLAT;MRLEV;${BASEURL1}/MAI6NVANA.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst6_3d_ana_Nv.${YEAR}${MONTH}${DOM}.hdf
-target5:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRLEV;${BASEURL2}/MAT3FVCHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_chm_Fv.${YEAR}${MONTH}${DOM}.hdf
-target6:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAT1NXRAD.5.2.0/${YEAR}/${MONTH}/${RUNSETX}.prod.assim.tavg1_2d_rad_Nx.${YEAR}${MONTH}${DOM}.hdf
-target7:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAI1NXINT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst1_2d_int_Nx.${YEAR}${MONTH}${DOM}.hdf
-target8:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPODT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_odt_Cp.${YEAR}${MONTH}${DOM}.hdf
-target9:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPQDT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_qdt_Cp.${YEAR}${MONTH}${DOM}.hdf
-target10:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAT1NXFLX.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_flx_Nx.${YEAR}${MONTH}${DOM}.hdf
-target11:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;2;${BASEURL2}/MAT3FXCHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_2d_chm_Fx.${YEAR}${MONTH}${DOM}.hdf
-target12:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAT1NXSLV.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_slv_Nx.${YEAR}${MONTH}${DOM}.hdf
-target13:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPTRB.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_trb_Cp.${YEAR}${MONTH}${DOM}.hdf
-target14:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPCLD.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_cld_Cp.${YEAR}${MONTH}${DOM}.hdf
-target15:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPMST.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_mst_Cp.${YEAR}${MONTH}${DOM}.hdf
-target16:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPRAD.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_rad_Cp.${YEAR}${MONTH}${DOM}.hdf
-target17:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPTDT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_tdt_Cp.${YEAR}${MONTH}${DOM}.hdf
-target18:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRPRS;${BASEURL1}/MAT3CPUDT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_udt_Cp.${YEAR}${MONTH}${DOM}.hdf
-target19:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MRLEV;${BASEURL2}/MAT3NVCHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_chm_Nv.${YEAR}${MONTH}${DOM}.hdf
-target20:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;MRLON;MRLAT;2;${BASEURL0}/MAT1NXOCN.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_ocn_Nx.${YEAR}${MONTH}${DOM}.hdf
-target21:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;3;0;MRLON;MRLAT;MREDG;${BASEURL2}/MAI3NECHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst3_3d_chm_Ne.${YEAR}${MONTH}${DOM}.hdf
-target22:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MREDG;${BASEURL2}/MAT3FECHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_chm_Fe.${YEAR}${MONTH}${DOM}.hdf
-target23:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;MRLON;MRLAT;MREDG;${BASEURL2}/MAT3NECHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_chm_Ne.${YEAR}${MONTH}${DOM}.hdf
+target0:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;LONMR;LATMR;2;${BASEURL0}/MAT1NXINT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_int_Nx.${YEAR}${MONTH}${DOM}.hdf
+target1:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;LONMR;LATMR;2;${BASEURL0}/MAT1NXLND.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_lnd_Nx.${YEAR}${MONTH}${DOM}.hdf
+target2:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;6;0;LONMR;LATMR;PRSMR;${BASEURL1}/MAI6NPANA.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst6_3d_ana_Np.${YEAR}${MONTH}${DOM}.hdf
+target3:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;3;0;LONMR;LATMR;PRSMR;${BASEURL1}/MAI3CPASM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst3_3d_asm_Cp.${YEAR}${MONTH}${DOM}.hdf
+target4:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;6;0;LONMR;LATMR;LEVMR;${BASEURL1}/MAI6NVANA.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst6_3d_ana_Nv.${YEAR}${MONTH}${DOM}.hdf
+target5:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;LONMR;LATMR;LEVMR;${BASEURL2}/MAT3FVCHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_chm_Fv.${YEAR}${MONTH}${DOM}.hdf
+target6:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;LONMR;LATMR;2;${BASEURL0}/MAT1NXRAD.5.2.0/${YEAR}/${MONTH}/${RUNSETX}.prod.assim.tavg1_2d_rad_Nx.${YEAR}${MONTH}${DOM}.hdf
+target7:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;1;0;LONMR;LATMR;2;${BASEURL0}/MAI1NXINT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst1_2d_int_Nx.${YEAR}${MONTH}${DOM}.hdf
+target8:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;LONMR;LATMR;PRSMR;${BASEURL1}/MAT3CPODT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_odt_Cp.${YEAR}${MONTH}${DOM}.hdf
+target9:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;LONMR;LATMR;PRSMR;${BASEURL1}/MAT3CPQDT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_qdt_Cp.${YEAR}${MONTH}${DOM}.hdf
+target10:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;LONMR;LATMR;2;${BASEURL0}/MAT1NXFLX.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_flx_Nx.${YEAR}${MONTH}${DOM}.hdf
+target11:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;LONMR;LATMR;2;${BASEURL2}/MAT3FXCHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_2d_chm_Fx.${YEAR}${MONTH}${DOM}.hdf
+target12:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;LONMR;LATMR;2;${BASEURL0}/MAT1NXSLV.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_slv_Nx.${YEAR}${MONTH}${DOM}.hdf
+target13:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;LONMR;LATMR;PRSMR;${BASEURL1}/MAT3CPTRB.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_trb_Cp.${YEAR}${MONTH}${DOM}.hdf
+target14:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;LONMR;LATMR;PRSMR;${BASEURL1}/MAT3CPCLD.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_cld_Cp.${YEAR}${MONTH}${DOM}.hdf
+target15:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;LONMR;LATMR;PRSMR;${BASEURL1}/MAT3CPMST.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_mst_Cp.${YEAR}${MONTH}${DOM}.hdf
+target16:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;LONMR;LATMR;PRSMR;${BASEURL1}/MAT3CPRAD.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_rad_Cp.${YEAR}${MONTH}${DOM}.hdf
+target17:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;LONMR;LATMR;PRSMR;${BASEURL1}/MAT3CPTDT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_tdt_Cp.${YEAR}${MONTH}${DOM}.hdf
+target18:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;LONMR;LATMR;PRSMR;${BASEURL1}/MAT3CPUDT.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_udt_Cp.${YEAR}${MONTH}${DOM}.hdf
+target19:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;LONMR;LATMR;LEVMR;${BASEURL2}/MAT3NVCHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_chm_Nv.${YEAR}${MONTH}${DOM}.hdf
+target20:= [${YEAR}-${MONTH}-${DOM}T00:30];P1D;1;0;LONMR;LATMR;2;${BASEURL0}/MAT1NXOCN.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg1_2d_ocn_Nx.${YEAR}${MONTH}${DOM}.hdf
+target21:= [${YEAR}-${MONTH}-${DOM}T00:00];P1D;3;0;LONMR;LATMR;EDGMR;${BASEURL2}/MAI3NECHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.inst3_3d_chm_Ne.${YEAR}${MONTH}${DOM}.hdf
+target22:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;LONMR;LATMR;EDGMR;${BASEURL2}/MAT3FECHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_chm_Fe.${YEAR}${MONTH}${DOM}.hdf
+target23:= [${YEAR}-${MONTH}-${DOM}T01:30];P1D;3;0;LONMR;LATMR;EDGMR;${BASEURL2}/MAT3NECHM.5.2.0/${YEAR}/${MONTH}/${RUNSET}.prod.assim.tavg3_3d_chm_Ne.${YEAR}${MONTH}${DOM}.hdf
 
 
 # Quantities
