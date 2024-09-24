@@ -1371,6 +1371,16 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
         }
      }
 
+     std::string pressure_name;
+     std::string palt_name;
+     std::string altitude_name;
+     std::string theta_name;
+     
+     bool junk;
+     junk = met->getOption("PressureName", pressure_name );
+     junk = met->getOption("AltitudeName", altitude_name );
+     junk = met->getOption("PressureAltitudeName", palt_name );
+     junk = met->getOption("PotentialTemperatureName", theta_name );
      
      for ( int i=0; i < other.size(); i++ ) {
          //// define other variable
@@ -1449,7 +1459,31 @@ void NetcdfOut::open( std::string file, Parcel* p, unsigned int n )
                   throw(badNetcdfError(err));
                }
             }
-         }   
+         }
+         std::string qdir = "";
+         
+         if ( other[i] == pressure_name ) {
+            qdir = "down";
+         } else if ( (other[i] == altitude_name) 
+                  || (other[i] == palt_name) 
+                  || (other[i] == theta_name) ) {
+         
+             qdir = "up";
+         
+         }  
+         
+         if ( qdir != "" ) {
+            aname = "positive";
+            aval = qdir.c_str();
+            if ( i_am_root ) {
+               err = nc_put_att_string( ncid, vid, aname.c_str(), 1, &aval );
+               if ( err != NC_NOERR ) {
+                  throw(badNetcdfError(err));
+               }
+            }
+         
+         }       
+        
      }
      
      
@@ -1722,7 +1756,7 @@ void NetcdfOut::writeout( double t, unsigned int n, real *lons, real *lats, real
                  if ( err != NC_NOERR ) {
                     throw(badNetcdfError(err));
                  }
-                 if ( fctr == 1.0 ) {
+                 if ( fctr != 1.0 ) {
                     delete[] newstuff;
                  }
               }
