@@ -46,6 +46,7 @@ libgigatraj_a_SOURCES = ../include/gigatraj/RandomSrc.hh        RandomSrc.cc \
                         ../include/gigatraj/Catalog.hh          metsources/Catalog.cc \
                         ../include/gigatraj/GridField.hh        metsources/GridField.cc \
                         ../include/gigatraj/GridFieldSfc.hh     metsources/GridFieldSfc.cc \
+                        ../include/gigatraj/GridFieldProfile.hh     metsources/GridFieldProfile.cc \
                         ../include/gigatraj/GridLatLonFieldSfc.hh   metsources/GridLatLonFieldSfc.cc \
                         ../include/gigatraj/GridField3D.hh      metsources/GridField3D.cc \
                         ../include/gigatraj/GridLatLonField3D.hh    metsources/GridLatLonField3D.cc \
