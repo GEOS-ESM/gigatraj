@@ -14,7 +14,7 @@ namespace gigatraj {
 
   \brief Holds a surface grid of meteorological data
   
-  These clases define objects that hold meteorological fields
+  These classes define objects that hold meteorological fields
   that are defined in two (quasi-)horizontal spatial dimensions.
 
 */
@@ -153,7 +153,7 @@ class GridFieldSfc : public GridField {
       real& operator()( int i, int j );
       
       /// returns the name of the surface
-      /*! This method returns the name of the surface represwented by this object e.e., "tropopause").
+      /*! This method returns the name of the surface represwented by this object; e.g., "tropopause").
       
           \return the name of the surface
       */    
@@ -238,7 +238,7 @@ class GridFieldSfc : public GridField {
           an existing object of a GridFieldSfc subclass (with its gridding and coordinate
           scheme), upcasting it to GridFieldSfc, and returning a pointer to that.
           
-          \return a ppionter to the new object. The calling routine is responsible for deleting the newly-created object.
+          \return a pointer to the new object. The calling routine is responsible for deleting the newly-created object.
       */
       virtual GridFieldSfc* duplicate() const = 0;
 
@@ -466,7 +466,7 @@ class GridFieldSfc : public GridField {
            const_iterator& operator=(const const_iterator& src); 
      
            /// returns the two indices of the gridpoint the interator points to
-           /*! This method returns the three indices into the GridFieldSfc object's data
+           /*! This method returns the two indices into the GridFieldSfc object's data
                of the grid point at which the iterator is pointing.
                
                \param i a pointer to the first index
