@@ -1110,8 +1110,6 @@ void GridLatLonFieldSfc::receive_meta()
          pgroup->receive_ints( metproc, 1, &nlats, PGR_TAG_GMETA );  // number of lats
          //- std::cerr << "   GridLatLonFieldSfc::receive_meta: r-180 from " << metproc  << std::endl;
          pgroup->receive_string( metproc, &sfc, PGR_TAG_GMETA ); // quantity
-         //- std::cerr << "   GridLatLonFieldSfc::receive_meta: r-190 from " << metproc  << std::endl;
-         pgroup->receive_ints( metproc, 1, &wraps, PGR_TAG_GMETA );  // do lons wrap?
          //- std::cerr << "   GridLatLonFieldSfc::receive_meta: r-200 from " << metproc  << std::endl;
 
          set_nodata();  // there are no data
@@ -1127,7 +1125,7 @@ void GridLatLonFieldSfc::receive_meta()
          for ( i=0; i<nlons; i++ ) {
              lons.push_back(dimvals[i]);
          }    
-         delete dimvals;
+         delete[] dimvals;
          if ( nlons > 1 ) {
              if ( lons[1] > lons[0] ) {
                 londir = 1;
@@ -1208,8 +1206,6 @@ void GridLatLonFieldSfc::svr_send_meta(int id) const
          pgroup->send_ints( id, 1, &nlats, PGR_TAG_GMETA );  // number of lats
          //- std::cerr << "   GridLatLonFieldSfc::svr_send_meta: s-180 to " << id << std::endl;
          pgroup->send_string( id, sfc, PGR_TAG_GMETA ); // surface quantity
-         //- std::cerr << "   GridLatLonFieldSfc::svr_send_meta: s-190 to " << id << std::endl;
-         pgroup->send_ints( id, 1, &wraps, PGR_TAG_GMETA );  // do lons wrap?
          //- std::cerr << "   GridLatLonFieldSfc::svr_send_meta: s-200 to " << id << std::endl;
 
          // send the longitudes

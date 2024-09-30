@@ -1124,8 +1124,6 @@ void GridLatLonField3D::receive_meta()
          pgroup->receive_string( metproc, &vquant, PGR_TAG_GMETA );  // vertical coordinate quantity
          //- std::cerr << "   GridLatLonField3D::receive_meta: r-200 from " << metproc  << std::endl;
          pgroup->receive_string( metproc, &vuu, PGR_TAG_GMETA );  // vertical coordinate units
-         //- std::cerr << "   GridLatLonField3D::receive_meta: r-210 from " << metproc << std::endl;
-         pgroup->receive_ints( metproc, 1, &wraps, PGR_TAG_GMETA );  // do lons wrap?
          //- std::cerr << "   GridLatLonField3D::receive_meta: r-220 from " << metproc << std::endl;
 
          set_nodata();  // there are no data
@@ -1255,8 +1253,6 @@ void GridLatLonField3D::svr_send_meta(int id) const
          pgroup->send_string( id, vquant, PGR_TAG_GMETA ); // vertical coordinate quantity
          //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-200 to " << id << std::endl;
          pgroup->send_string( id, vuu, PGR_TAG_GMETA ); // vertical coordinate units
-         //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-210 to " << id << std::endl;
-         pgroup->send_ints( id, 1, &wraps, PGR_TAG_GMETA );  // do lons wrap?
          //- std::cerr << "   GridLatLonField3D::svr_send_meta: s-220 to " << id << std::endl;
 
          // send the longitudes
