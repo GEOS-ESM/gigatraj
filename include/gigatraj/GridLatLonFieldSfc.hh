@@ -267,7 +267,7 @@ class GridLatLonFieldSfc : public GridFieldSfc {
       bool compatible( const GridFieldSfc& obj, int compatFlags = METCOMPAT_STRICT ) const;
 
       /// checks for metadata compatibility with a given GridLatLonFieldSfc object
-      /*! This mthod checks whether another GridLatLonFieldSfc object has the same metadata as this one.
+      /*! This method checks whether another GridLatLonFieldSfc object has the same metadata as this one.
           Metadata include the quantity name and units, and the vertical coordinate
           name and units.
           

@@ -249,9 +249,11 @@ class GridFieldSfc : public GridField {
            \param is n-element array of first-indices into the data array
            \param js n-element array of second-indices into the data array
            \param vals n-element array of reals to hold the results
-           \param local a flag which if non-zero, will ignore any multiprocessing and fetch the gridpoints locally
+           \param flags a set of bitwise flags that control the behavior of the method:
+                   0x01 = ignore any multiprocessing and fetch the gridpoints locally
+                   0x02 = call svr_done once the gridpoints have been obtained.
       */
-      virtual void gridpoints( int n, int* is, int* js, real* vals, int local=0) const = 0;
+      virtual void gridpoints( int n, int* is, int* js, real* vals, int flags=0) const = 0;
 
       /// (parallel processing) receives metadata from a central met processor
       /*! This method receives metadata from a central met processor, if
