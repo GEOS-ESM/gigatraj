@@ -153,6 +153,9 @@ class GridField {
       /// An exception for missing attribute
       class badMissingAttr {};
 
+      /// An exception for mismatched grid dimensions
+      class badDimensionMismatch {};
+
 
       
       /// Default constructor

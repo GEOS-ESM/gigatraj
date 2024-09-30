@@ -46,9 +46,6 @@ class GridField3D : public GridField {
 
    public:
    
-      /// An exception for mismatched grid dimensions
-      class badDimensionMismatch {};
-
       /// Default constructor
       /*!
          This is the default contructor for the GridField3D class.
@@ -158,7 +155,7 @@ class GridField3D : public GridField {
       */    
       real& operator()( int i, int j, int k );
       
-      /// returns the name of the vertical cooridnate
+      /// returns the name of the vertical coordinate
       /*! This method returns the name of the vertical coordinate (that is, the name
           of the physical quantity which is being used as the vertical 
           coordinate).
@@ -181,7 +178,7 @@ class GridField3D : public GridField {
       /// returns the units of the vertical coordinate quantity
       /*! This method returns the units of the vertical coordinate quantity.
       
-          \param scale a pointer to a real that will hold the scaling value to take a vertical cooridnate value to MKS units
+          \param scale a pointer to a real that will hold the scaling value to take a vertical coordinate value to MKS units
           \param offset a pointer to a real that will hold the offset value to take a vertical cooridmate value to MKS units
           \return the units of the vertical coordinate
       */    
