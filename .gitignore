@@ -85,6 +85,9 @@ test/test_GridLatLonField3D_serial
 test/test_GridLatLonFieldSfc
 test/test_GridLatLonFieldSfc_MPI
 test/test_GridLatLonFieldSfc_serial
+test/test_GridFieldProfile
+test/test_GridFieldProfile_MPI
+test/test_GridFieldProfile_serial
 test/test_LinearVinterp
 test/test_LogLinearVinterp
 test/test_MPI.sh

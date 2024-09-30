@@ -9,30 +9,38 @@
 
 namespace gigatraj {
 
-/*! \defgroup gridsfc Surface Gridded Field
-\ingroup gridfield
-
-  \brief Holds a vertical profile grid of meteorological data
-  
-  These classes define objects that hold meteorological fields
-  that are defined in the vertical spatial dimension.
-
-*/
-
 /*!
-\brief abstract class for a gridded meteorological data field
+\ingroup gridfield
+\brief class for a gridded meteorological data field
 in a one-dimensional vertical profile
 
- \ingroup gridprofile
 
-The GridFieldProfile class provides a way of holding in one object all of the
-information that is needed to deal with such data.
-
+The GridFieldProfile class provides a means of holding all of the information
+associarted with a vertical profile of data: not only its data values, but 
+the name of the quanity, its units, etc.
 
 */
 class GridFieldProfile : public GridField {
 
    typedef std::vector<real> realvec;
+
+
+   /// \brief overlays the << operator for writing a GridLatLonFieldSSfc object
+   /*! This method serializes the GridFieldProfile object and sends it to an ostream.
+   
+        \param os the output stream (ostream) object to which the serialized object is to be sent
+        \param p the GridFieldProfile object to be serialized and output
+   */
+   friend std::ostream& operator<<( std::ostream& os, const GridFieldProfile& p);
+
+   /// \brief overlays the >> operator for reading a GridFieldProfile object
+   /*! This method reads a GridFieldProfile object's serialzied data from 
+        an istream and deserializes it.
+   
+        \param is the input stream (istream) object from which the serialized object is to be read
+        \param p the GridFieldProfile object to be input and deserialzied
+   */
+   friend std::istream& operator>>( std::istream& is, GridFieldProfile& p);
 
 
    public:
@@ -60,7 +68,49 @@ class GridFieldProfile : public GridField {
       /*! This method clears the contents of the object, except for information
           related to the process group
       */    
-      virtual void clear() = 0;
+      void clear();
+      
+      /// returns the name of the vertical coordinate
+      /*! This method returns the name of the vertical coordinate (that is, the name
+          of the physical quantity which is being used as the vertical 
+          coordinate).
+          
+          \return the name of the vertical coordinate
+      */    
+      std::string vertical() const;
+      
+      /// set the name of the vertical coordinate
+      /*! This method sets the name of the physical quantity to be used as the vertical coordinate.
+          As a side effect, this also resets 
+          mksVScale and mksVOffset to 1.0 and 0.0, respectively.
+          
+          \param vq the name of the quantity to be used as the vertical coordinate
+                    (This can be any string, but using the cf conventions is
+                    strongly suggested.)
+      */
+      void set_vertical( const std::string vq );    
+
+      /// returns the units of the vertical coordinate quantity
+      /*! This method returns the units of the vertical coordinate quantity.
+      
+          \param scale a pointer to a real that will hold the scaling value to take a vertical cooridnate value to MKS units
+          \param offset a pointer to a real that will hold the offset value to take a vertical cooridmate value to MKS units
+          \return the units of the vertical coordinate
+      */    
+      std::string vunits(real *scale=NULLPTR, real *offset=NULLPTR) const;
+      
+      /// sets the units of the vertical coordinate
+      /*! This method sets the units of the physical quantity to be used as the vertical 
+          coordinate.  
+          
+          \param vu the new units (This can be any string, but using the uunits conventions
+          is strongly suggested.)
+          \param scale scaling factor to take the vertical quantity from the givenunits to MKS units.  Defaults to 1.0.
+          \param offset scaling factor to take the vertical quantity from the givenunits to MKS units. Defaults to 0.0.
+               The transformation applied is mks = given * scale + offset.
+      */
+      void set_vunits( const std::string vu, real scale=1.0, real offset=0.0 );
+
 
       /// returns the readiness status
       /*! This object returns the readiness status: whether the object
@@ -68,14 +118,14 @@ class GridFieldProfile : public GridField {
       
           \return returns 0 if the object is ready to be used, non-zero otherwise
       */
-      virtual int status() const = 0;
+      int status() const;
 
 
       /// returns the size of the grid's single dimension
       /*! This method returns the size of the grid's single dimension
           \param nx the number of values
       */
-      virtual void dims( int* nx ) const = 0;
+      void dims( int* nx ) const;
 
 
       /// returns a single data value
@@ -83,7 +133,7 @@ class GridFieldProfile : public GridField {
            \param i the index of the gridpoint
            \return the value of the ith element of the data grid
       */     
-      virtual real value( int i ) const = 0;
+      real value( int i ) const;
       
 
       /// returns an array of data values
@@ -98,7 +148,7 @@ class GridFieldProfile : public GridField {
            \return a pointer to the vals array. If the input vals is not NULLPTR, then this is the same
                    as the input vals. otherwise, it points to the newly-created array of values.                          
       */     
-      virtual real* values( int n, real* vals, int* indices ) const = 0;
+      real* values( int n, real* vals, int* indices ) const;
       
 
       /// returns a reference to a single data value
@@ -106,7 +156,7 @@ class GridFieldProfile : public GridField {
            \param i the index of the coordinate gridpoint
            \return a reference to the [i,j]th element of the data grid
       */     
-      virtual real& valueref( int i ) = 0;
+      real& valueref( int i );
       
       /// operator overlay allowing for a = obj(i) syntax      
       /*! This operator overlay for () allows 
@@ -129,16 +179,54 @@ class GridFieldProfile : public GridField {
           \return a reference to the ith data value
       */    
       real& operator()( int i );
+
+
+      /// returns the vector of vertical levels
+      /*! This method returns the vector of the values of the vertical levels of the data.
+      
+          \return a vector of the values 
+      */
+      std::vector<real> levels() const;
+
+      /// sets/replaces the vector of vertical levels
+      /*! This method sets or replaces the vector of the values of the vertical levels of the data.
+      
+          \param newvert a vector of the values. If a vector is already defined, this
+                         new vector must be of the same length. The intention is
+                         to swap out one vertical cooridinate for another that
+                         is its exact analyticial equivalent (for example, replacing
+                         pressure levels with pressure altitudes on the equivalent
+                         surfaces).
+      */
+      void levels( const std::vector<real> &newvert );
+
+      /// returns a single vertical level gridpoint value
+      /*! This method returns a single vertical level gridpoint value, given its index.
+      
+          \param k index of the vertical coordinate value to be returned
+          \return the value of the vertical coordinate at the given level
+      */
+      real level( const int k ) const;
+
+      /// returns the two indices which straddle a given vertical level value
+      /*! This method returns the two indices which straddle a given vertical level value.
+      
+           \param z the input vertical level value
+           \param i1 returns the index that lies lower than the vertical level
+           \param i2 returns the index that lies higher than the vertical level
+      */     
+      void zindex( real z, int* i1, int* i2 ) const;
+
       
       /// returns the name of the profile
       /*! This method returns the name of the profile represwented by this object ).
       
-          \return the name of the surface
+          \return the name of the profile
       */    
       std::string profile() const;
       
       /// sets the name of the profile
-      /*! This method sets the name of the profile represwented by this object).
+      /*! This method sets the name of the profile represented by this object).
           (This can be any string, but using the cf conventions is
           strongly suggested.)
           
@@ -166,42 +254,53 @@ class GridFieldProfile : public GridField {
       ///  loads data and dimensions into this object
       /*!  This method loads data and dimensions into this object.
       
-           \param inx vector of x coordinates
+           \param inx vector of coordinates
            \param indata vector of data values
            \param flags bitwise flags:
       */
-      virtual void load( const realvec& inx, const realvec& indata, const int flags=0  ) = 0;
-
-      ///  loads dimensions only into this object
-      /*!  This method loads dimensions only into this object.
-           \param inx vector of coordinates
-           \param flags bitwise flags:
-                   - GFL_PREFILL if the data grid is to be pre-filled with bad-data flags
-                                     (the default is to leave the data undefined)
-      */
-      virtual void loaddim( const realvec& inx, const int flags=0  ) = 0;
+      void load( const realvec& inx, const realvec& indata, const int loadFlags=0  );
 
       ///  loads data only into this object
       /*!  This method loads data only into this object.
            \param indata vector of data values
-           \param flags bitwise flags:
+           \param loadFlags bitwise flags:
       */
-      virtual void load( const realvec& indata, const int flags=0  ) = 0;
+      void load( const realvec& indata, const int loadFlags=0  );
+
+      ///  loads dimensions only into this object
+      /*!  This method loads dimensions only into this object.
+           \param inx vector of coordinates
+           \param loadFlags bitwise flags:
+                   - GFL_PREFILL if the data grid is to be pre-filled with bad-data flags
+                                     (the default is to leave the data undefined)
+      */
+      void loaddim( const realvec& inx, const int loadFlags=0  );
 
 
       /// checks whether the dimensions and time of a given GridFieldProfile object are compatible with this object.
       /*! This method checks another GridFieldProfile object for compatibility with this one.
           
           \param obj the GridFieldProfile object with which this object is to be compared
-          \param flags bitwise flags:
+          \param loadFlags bitwise flags:
                 - METCOMPAT_STRICT if strict compatibility in all aspects is required (default)
                 - METCOMPAT_VERT if vertical compatibility is required
                 - METCOMPAT_TIME if time compatibility is required 
 
           \return true if the dimensions and the times match, false otherwise
       */
-      virtual bool compatible( const GridFieldProfile& obj, int flags = METCOMPAT_STRICT ) const = 0;
+      bool compatible( const GridFieldProfile& obj, int flags = METCOMPAT_STRICT ) const;
 
+
+      /// checks for metadata compatibility with a given GridFieldProfile object
+      /*! This method checks whether another GridFieldProfile object has the same metadata as this one.
+          Metadata include the quantity name and units, and the vertical coordinate
+          name and units.
+          
+          \param obj the GridFieldProfile object with which this object is to be compared
+
+          \return true if the metadata are the same, false otherwise
+      */
+      bool match( const GridFieldProfile& obj ) const;
 
       /// duplicates the current object.
       /*! This method creates a duplicate of the current object.
@@ -215,7 +314,16 @@ class GridFieldProfile : public GridField {
           
           \return a pointer to the new object. The calling routine is responsible for deleting the newly-created object.
       */
-      virtual GridFieldProfile* duplicate() const = 0;
+      GridFieldProfile* duplicate() const;
+
+      /// returns the number of possible data points in the grid.
+      /*! This method returns the number of possible data points in the grid.
+          
+          \return the total number of gridpoints, or zero
+          if the grid has been specified but no data have been loaded.
+          
+      */
+      int dataSize() const;   
 
       ///  returns a set of gridpoint values
       /*!  This method returns a set of gridpoint values.
@@ -223,9 +331,11 @@ class GridFieldProfile : public GridField {
            \param n the number of gridpoint values desired
            \param is n-element array of indices into the data array
            \param vals n-element array of reals to hold the results
-           \param local a flag which if non-zero, will ignore any multiprocessing and fetch the gridpoints locally
+           \param flags a set of bitwise flags that control the behavior of the method:
+                   0x01 = ignore any multiprocessing and fetch the gridpoints locally
+                   0x02 = call svr_done once the gridpoints have been obtained.
       */
-      virtual void gridpoints( int n, int* is, real* vals, int local=0) const = 0;
+      void gridpoints( int n, int* is, real* vals, int flags=0) const;
 
       /// (parallel processing) receives metadata from a central met processor
       /*! This method receives metadata from a central met processor, if
@@ -235,7 +345,7 @@ class GridFieldProfile : public GridField {
          except for the actual data values will be present in the current
          object.
       */   
-      virtual void receive_meta() = 0;
+      void receive_meta();
       
       /// (parallel processing) handles the server side of the gridpoints transaction
       /*! This method handles the server side of the gridpoints transaction, for multi-processing
@@ -256,7 +366,10 @@ class GridFieldProfile : public GridField {
          \param id the ID of the processor to which we are sending the metadata
          
       */      
-      virtual void svr_send_meta(int id) const = 0;
+      void svr_send_meta(int id) const;
+
+      /// the type of object this is
+      static const string iam;
 
       /// returns a string with the specific type of object this is
       /*! This method returns the kind of object this is.
@@ -264,14 +377,14 @@ class GridFieldProfile : public GridField {
           \return the class name
       
       */
-      virtual std::string id() const = 0;
+      std::string id() const { return iam; };
 
       /// writes the current object to an ostream
       /*! This method serializes the object and writes the serialization to an ostream.
 
           \param os the output ostream
       */
-      virtual void serialize(std::ostream& os) const = 0;
+       void serialize(std::ostream& os) const;
 
       /// reads the current object from an istream.
       /*!  This method reads a GridField serialization from an istream, and
@@ -279,7 +392,20 @@ class GridFieldProfile : public GridField {
             
           \param is the input ostream
       */
-      virtual void deserialize(std::istream& is) = 0;
+      void deserialize(std::istream& is);
+
+
+      /// scale factor for converting the vertical coordinate to MKS units
+      /*! This is the scale factor for converting the physical quantity's units to standard MKS units.
+          It is applied using the equation:   quantityMKS = quantityCurrent * mksVScale + mksVOffset
+      */
+      real mksVScale;
+      
+      /// offset for converting the vertical coordinate to MKS units
+      /*! This is the offfset for converting the vertical coordinate's units to standard MKS units.
+          It is applied using the equation:   quantityMKS = quantityCurrent * mksVScale + mksVOffset
+      */ 
+      real mksVOffset;   
 
 
 
@@ -454,9 +580,33 @@ class GridFieldProfile : public GridField {
 
       /// identifies what the vertical coordinate is for this grid
       std::string prof;
+      
+
+      /// identifies what the vertical coordinate is for this grid
+      std::string vquant;
+      
+      /// the units of the vertical coordinate
+      std::string vuu;
+
+      
+      /// vector of coordinates
+      std::vector<real> zs;
+      // how many coord values
+      int nzs;    
+      /// +1 if coordinate values increase with index, -1 if they decrease, 0 if undefined
+      int zdir;
+      ///  sets the cooridnate direction
+      /*! This method sets the coordinate direction, based on whether the coordinates increase
+          or decrease with array index number.
+            \param loadFlags (reserved for future expension)  
+      */
+      void setZDir( const int loadFlags=0 ); 
             
       /// used by child classes for operator= overriding methods
       void assign( const GridFieldProfile& src);
+
+      /// checms dimensional values ot ensure they are monotonic
+      bool checkdim( const realvec& inx ) const;
 
 };
 }
