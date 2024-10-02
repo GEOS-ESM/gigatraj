@@ -39,6 +39,10 @@ GridField::GridField() {
    mksScale = 1.0;
    mksOffset = 0.0;
    expiration = 0;
+   
+   use_array = false;
+   nd = 0;
+   dater = NULLPTR;
 
 };
 
