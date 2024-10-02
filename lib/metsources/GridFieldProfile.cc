@@ -539,18 +539,6 @@ bool GridFieldProfile::match( const GridFieldProfile& obj ) const
        
 }
 
-GridFieldProfile* GridFieldProfile::duplicate() const
-{
-    GridFieldProfile* newgrid;
-   
-    newgrid = new GridFieldProfile();
-    
-    *newgrid = *this;
-
-    return newgrid;
-
-}
-
 int GridFieldProfile::dataSize() const
 {
     if ( nzs <= 0  ) {

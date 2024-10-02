@@ -258,7 +258,7 @@ class GridFieldProfile : public GridField {
            \param indata vector of data values
            \param flags bitwise flags:
       */
-      void load( const realvec& inx, const realvec& indata, const int loadFlags=0  );
+      void load( const realvec& inx, const realvec& indata, const int flags=0  );
 
       ///  loads data only into this object
       /*!  This method loads data only into this object.
@@ -281,7 +281,7 @@ class GridFieldProfile : public GridField {
       /*! This method checks another GridFieldProfile object for compatibility with this one.
           
           \param obj the GridFieldProfile object with which this object is to be compared
-          \param loadFlags bitwise flags:
+          \param flags bitwise flags:
                 - METCOMPAT_STRICT if strict compatibility in all aspects is required (default)
                 - METCOMPAT_VERT if vertical compatibility is required
                 - METCOMPAT_TIME if time compatibility is required 
@@ -301,20 +301,6 @@ class GridFieldProfile : public GridField {
           \return true if the metadata are the same, false otherwise
       */
       bool match( const GridFieldProfile& obj ) const;
-
-      /// duplicates the current object.
-      /*! This method creates a duplicate of the current object.
-          There are many routines that can operate on the abstract GridFieldProfile
-          class, since they do not depend on the exact nature of how the data
-          are gridded (see the iterators).  We do not use a factory class 
-          to generate the various kinds of grids because of the great
-          number of very many minor variations; instead, we rely on copying
-          an existing object of a GridFieldProfile subclass (with its gridding and coordinate
-          scheme), upcasting it to GridFieldProfile, and returning a pointer to that.
-          
-          \return a pointer to the new object. The calling routine is responsible for deleting the newly-created object.
-      */
-      GridFieldProfile* duplicate() const;
 
       /// returns the number of possible data points in the grid.
       /*! This method returns the number of possible data points in the grid.
@@ -591,7 +577,7 @@ class GridFieldProfile : public GridField {
       
       /// vector of coordinates
       std::vector<real> zs;
-      // how many coord values
+      /// how many coord values
       int nzs;    
       /// +1 if coordinate values increase with index, -1 if they decrease, 0 if undefined
       int zdir;
