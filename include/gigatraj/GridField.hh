@@ -156,6 +156,11 @@ class GridField {
       /// An exception for mismatched grid dimensions
       class badDimensionMismatch {};
 
+      /// An exception for attempting an invalid operation
+      class badInvalidOp {};
+      
+      /// An exception for non-monotonic dimension values
+      class badNonmonotonic {};
 
       
       /// Default constructor
@@ -184,7 +189,7 @@ class GridField {
           
           \return the data time 
       */
-      double time() const 
+      virtual double time() const 
       {
          return mtime;
       };
@@ -196,7 +201,7 @@ class GridField {
       
           \return the valid-at timestamp of the data
       */    
-      std::string met_time()  const
+      virtual std::string met_time()  const
       {
          return ctime;
       };
@@ -221,7 +226,7 @@ class GridField {
          \param caltag the real-world calendar-oriented date+time stamp
       
       */     
-      void set_time( const double tyme, const std::string caltag )
+      virtual void set_time( const double tyme, const std::string caltag )
       {
           mtime = tyme;
           ctime = caltag;
@@ -234,7 +239,7 @@ class GridField {
       
           \return the fill value
       */    
-      real fillval() const 
+      virtual real fillval() const 
       {
          return fill_value;
       };
@@ -245,7 +250,7 @@ class GridField {
           
           \param val the fill value
       */
-      void set_fillval(const real val);
+      virtual void set_fillval(const real val);
       
       
       /// returns the name of the quantity
@@ -635,6 +640,13 @@ class GridField {
              
       /// vector containing the gridded data values (in row-major order)
       std::vector<real> data;
+      
+      /// flag to use arrays instead of vectors
+      bool use_array;
+      /// number of data 
+      int nd;
+      /// data array
+      real* dater;
 
       /// returns the data as a single vector (in row-major order)
       std::vector<real> dump() const;
