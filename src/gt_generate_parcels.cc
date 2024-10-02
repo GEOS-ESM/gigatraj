@@ -40,7 +40,7 @@ gt_generatge_parcels [ [--clon center_longitude ] [--clat center_latitude ] [--r
                      | [ [--LLlon lower_left_longitude] [--LLlat lower_left_latitude ] \
                          [--URlon upper_right_longitude] [--URlat upper_right_latitude ] ] \
                      [--zlow lower_vertical ] [--zhigh higer_vertical] \
-                     [ --vertical vcoord ] \\
+                     [ --vertical vcoord ] [ --vunits units ] \\
                      [-n|--number n_parcels ] \
                      [ --random | --grid ] \
                      [ --format output_format ] \
@@ -60,6 +60,7 @@ The command-line options are:
   \li \c zlow: the lower vertical lmit of the specified region
   \li \c zhigh: the upper verticla limit of the specified region
   \li \c vertical: the name of the vertical coordinate
+  \li \c vunits: the units of the vertical coordinate
   \li \c clon: for a cyclindrical region, the center longitude
   \li \c clat: for a cylindrical region, the center latitude
   \li \c radius: for a cylindrical region, the cylinder radius
@@ -172,6 +173,9 @@ int getconfig(int argc, char * const argv[], Configuration& conf )
 
     usage +=  " [--vertical quantiry]";
     conf.add("vertical", cString,"P"                 , "", 0, "vertical coordinate quantity string" );
+
+    usage +=  " [--vunits units]";
+    conf.add("vunits", cString,""                 , "", 0, "vertical coordinate units string" );
 
     usage +=  " [--clat center_lat ]";
     conf.add("clat"     , cFloat  , ""             , "", 0, "latitude of cylinder center" );
@@ -375,8 +379,19 @@ int main( int argc, char * argv[] )
        config.fetchParam("zlow", zlow);
        config.fetchParam("zhigh", zhigh);
        vert = config.get("vertical");
+       vunits = config.get("vunits");
        initTime = config.get("time");
        config.fetchParam("number", n);
+       
+       if ( vunits == "" ) {
+          if ( vert == "P" || vert == "p" ) {
+             vunits = "hPa";
+          } else if ( vert == "PAlt" ) {
+             vunits = "km";
+          } else if ( vert == "Theta" ) {
+             vunits = "K";
+          }
+       }
 
        if ( config.get("grid") == "Y" ) {
           distrib = 0;
@@ -409,7 +424,8 @@ int main( int argc, char * argv[] )
           cerr << "  URlat = " << URlat << endl;
           cerr << "zlow = " << zlow << endl;
           cerr << "zhigh = " << zhigh << endl;
-          cerr << "vertiical = " << vert << endl;
+          cerr << "vertical = " << vert << endl;
+          cerr << "vunits = " << vunits << endl;
           cerr << "number = " << n << endl;
           cerr << "distrib = " << distrib << endl;
           cerr << "format = '" << outform << "'" << endl;
@@ -588,7 +604,7 @@ int main( int argc, char * argv[] )
           out_netcdf = new NetcdfOut();
           out_netcdf->filename( outNetcdfFile );
           out_netcdf->contents("gigatraj trajectories");
-          out_netcdf->vertical( vert );
+          out_netcdf->vertical( vert, vunits );
           out_netcdf->format( outform );
           out_netcdf->init( &p, result->size() );
           out_netcdf->open();
