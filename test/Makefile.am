@@ -55,13 +55,19 @@ EXTRA_DIST += test_MPI.sh \
 
 ##### Meteorological data stuff
 
-TESTS += test_GridFieldProfile  \
+TESTS += test_GridFieldDim test_GridFieldDim_serial \
+         test_GridFieldProfile test_GridFieldProfile_serial \
          test_GridLatLonFieldSfc test_GridLatLonFieldSfc_serial \
          test_GridLatLonField3D  test_GridLatLonField3D_serial
-check_PROGRAMS += test_GridFieldProfile  test_GridFieldProfile_serial \
+check_PROGRAMS += test_GridFieldDim  test_GridFieldDim_serial \
+         test_GridFieldProfile  test_GridFieldProfile_serial \
          test_GridLatLonField3D test_GridLatLonField3D_serial \
-          test_GridLatLonFieldSfc test_GridLatLonFieldSfc_serial 
+         test_GridLatLonFieldSfc test_GridLatLonFieldSfc_serial 
 if MPI
+   TESTS += test_GridFieldDim_MPI.sh  
+   check_PROGRAMS += test_GridFieldDim_MPI
+   test_GridFieldDim_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
+
    TESTS += test_GridFieldProfile_MPI.sh  
    check_PROGRAMS += test_GridFieldProfile_MPI
    test_GridFieldProfile_MPI_CPPFLAGS = $(AM_CPPFLAGS) -DUSING_MPI
@@ -76,7 +82,8 @@ if MPI
 endif  
 EXTRA_DIST += test_GridLatLonField3D_MPI.sh \
               test_GridLatLonFieldSfc_MPI.sh \
-              test_GridFieldProfile_MPI.sh 
+              test_GridFieldProfile_MPI.sh \
+              test_GridFieldDim_MPI.sh 
 
 TESTS          += test_LinearVinterp test_LogLinearVinterp test_BilinearHinterp
 check_PROGRAMS += test_LinearVinterp test_LogLinearVinterp test_BilinearHinterp
@@ -249,6 +256,9 @@ test_SerialGrp_DEPENDENCIES = ../lib/libgigatraj.a
 test_MPIGrp_SOURCES = test_MPIGrp.cc test_utils.cc test_utils.hh
 test_MPIGrp_DEPENDENCIES = ../lib/libgigatraj.a
 
+test_GridFieldDim_SOURCES = test_GridFieldDim.cc test_utils.cc test_utils.hh
+test_GridFieldDim_DEPENDENCIES = ../lib/libgigatraj.a
+
 test_GridFieldProfile_SOURCES = test_GridFieldProfile.cc test_utils.cc test_utils.hh
 test_GridFieldProfile_DEPENDENCIES = ../lib/libgigatraj.a
 
@@ -258,8 +268,14 @@ test_GridLatLonFieldSfc_DEPENDENCIES = ../lib/libgigatraj.a
 test_GridLatLonField3D_SOURCES = test_GridLatLonField3D.cc test_utils.cc test_utils.hh
 test_GridLatLonField3D_DEPENDENCIES = ../lib/libgigatraj.a
 
+test_GridFieldDim_serial_SOURCES = test_GridFieldDim_PGrp.cc test_utils.cc
+test_GridFieldDim_serial_DEPENDENCIES = ../lib/libgigatraj.a
+
 test_GridFieldProfile_serial_SOURCES = test_GridFieldProfile_PGrp.cc test_utils.cc
 test_GridFieldProfile_serial_DEPENDENCIES = ../lib/libgigatraj.a
+
+test_GridFieldDim_MPI_SOURCES = test_GridFieldDim_PGrp.cc test_utils.cc
+test_GridFieldDim_MPI_DEPENDENCIES = ../lib/libgigatraj.a
 
 test_GridFieldProfile_MPI_SOURCES = test_GridFieldProfile_PGrp.cc test_utils.cc
 test_GridFieldProfile_MPI_DEPENDENCIES = ../lib/libgigatraj.a
