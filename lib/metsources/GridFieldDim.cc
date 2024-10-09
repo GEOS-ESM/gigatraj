@@ -37,6 +37,8 @@ GridFieldDim::GridFieldDim() : GridField()
    ctime = "N/A";
    mtime = 0.0;
    
+   use_array = 1;
+   
 }
 
 
@@ -54,6 +56,13 @@ GridFieldDim::GridFieldDim(const GridFieldDim& src) : GridField(src)
 
 }
 
+// copy assignment
+GridFieldDim& GridFieldDim::operator=(const GridFieldDim& src)
+{
+    this->assign( src ) ;
+    
+    return *this;
+}
 
 
 void GridFieldDim::assign( const GridFieldDim& src )
@@ -86,7 +95,7 @@ int GridFieldDim::status() const
     if ( nzs <= 0 ) {
        result = result | GFS_NODIMS;
     }
-    if ( data.size() != nzs ) {
+    if ( nd != nzs ) {
        result = result | GFS_GRIDERR;
     }
     
@@ -109,9 +118,9 @@ void GridFieldDim::index( real z, int* i1, int* i2 ) const
         // find the highest-indexed z that is below the test z
         i = 0;
         *i1 = -1;
-        while ( i < nzs && data[i] < z ) {
+        while ( i < nzs && dater[i] < z ) {
         
-           if ( data[i] < z ) {
+           if ( dater[i] < z ) {
               *i1 = i;
            } 
            i++;
@@ -123,7 +132,7 @@ void GridFieldDim::index( real z, int* i1, int* i2 ) const
            if ( *i1 < (nzs-1) ) {
               *i2 = *i1 + 1;
            } else {
-              if ( ABS( data[nzs-1] - z ) > 0.0001 ) {
+              if ( ABS( dater[nzs-1] - z ) > 0.0001 ) {
                  // test val lies above range of zs
                  throw (baddataindex());
               } else {
@@ -133,7 +142,7 @@ void GridFieldDim::index( real z, int* i1, int* i2 ) const
               }           
            }   
         } else {
-              if ( ABS( data[0] - z ) > 0.0001 ) {
+              if ( ABS( dater[0] - z ) > 0.0001 ) {
                  // test z lies below the range of zs
                  throw (baddataindex());
               } else {
@@ -147,9 +156,9 @@ void GridFieldDim::index( real z, int* i1, int* i2 ) const
         // find the lowest-indexed z that is below the test z
         i = nzs-1;
         *i2 = -1;
-        while ( i >= 0 && data[i] < z ) {
+        while ( i >= 0 && dater[i] < z ) {
         
-           if ( data[i] < z ) {
+           if ( dater[i] < z ) {
               *i2 = i;
            } 
         
@@ -162,7 +171,7 @@ void GridFieldDim::index( real z, int* i1, int* i2 ) const
            if ( *i2 > 0 ) {
               *i1 = *i2 - 1;
            } else {
-              if ( ABS( data[0] - z ) > 0.0001 ) {
+              if ( ABS( dater[0] - z ) > 0.0001 ) {
                  // test val lies above range of zs
                  throw (baddataindex());
               } else {
@@ -172,7 +181,7 @@ void GridFieldDim::index( real z, int* i1, int* i2 ) const
               }           
            }   
         } else {
-              if ( ABS( data[nzs-1] - z ) > 0.0001 ) {
+              if ( ABS( dater[nzs-1] - z ) > 0.0001 ) {
                  // test z lies below the range of zs
                  throw (baddataindex());
               } else {
@@ -198,7 +207,7 @@ real GridFieldDim::value( int i )  const
         throw (baddatareq());
     }    
     
-    return data[i];
+    return dater[i];
 };
 
 void GridFieldDim::set_value( int i, real val )
@@ -212,24 +221,41 @@ void GridFieldDim::set_value( int i, real val )
         throw (baddatareq());
     }    
     if ( i > 0 ) {
-       if (  (zdir > 0) && (data[i - 1] >= val) ) {
+       if (  (zdir > 0) && (dater[i - 1] >= val) ) {
           throw (badNonmonotonic());
-       } else if ( (zdir < 0) && (data[i - 1] <= val) ) {
+       } else if ( (zdir < 0) && (dater[i - 1] <= val) ) {
           throw (badNonmonotonic());
        }    
     }
     if ( i < (nzs - 1) ) {
-       if (  (zdir > 0) && (data[i + 1] <= val) ) {
+       if (  (zdir > 0) && (dater[i + 1] <= val) ) {
           throw (badNonmonotonic());
-       } else if ( (zdir < 0) && (data[i + 1] >= val) ) {
+       } else if ( (zdir < 0) && (dater[i + 1] >= val) ) {
           throw (badNonmonotonic());
        }    
     }
 
-    data[i] = val;
+    dater[i] = val;
 
 }    
 
+void GridFieldDim::absorb( int n, real* vals )
+{
+     
+     if ( checkdim( n, vals ) ) {
+        clear();
+     
+        nd = n;
+        dater = vals;
+        
+        setDir();
+        clear_nodata();
+
+   } else {
+     throw (badNonmonotonic());   
+   }
+
+}
 
 real* GridFieldDim::values( int n, real* vals, int *indices ) const
 {
@@ -249,17 +275,24 @@ real* GridFieldDim::values( int n, real* vals, int *indices ) const
         }
    
         for ( indx=0; indx < n; indx++ ) {
-            vals[indx] = data[indices[indx]];
+            vals[indx] = dater[indices[indx]];
 	    }
      }
         
      return vals;
 };
 
-int GridFieldDim::size()  const
+
+std::vector<real> GridFieldDim::dimension() const 
 {
-   return nzs;
-};
+    std::vector<real> result;
+    
+    for ( int i=0; i < nd; i++ ) {
+        result.push_back( dater[i] );
+    }
+    
+    return result;
+}
 
 real GridFieldDim::operator()( int i ) const 
 {
@@ -283,7 +316,7 @@ void GridFieldDim::transform( const std::string unyts, real scale, real offset )
     
     // apply the scaling
     for ( i=0; i < nzs; i++ ) {
-        data[i] = data[i]*s + o;
+        dater[i] = dater[i]*s + o;
     }    
 
     mksOffset = offset;
@@ -332,12 +365,52 @@ bool GridFieldDim::checkdim( const realvec& inx ) const
 
 }
 
+bool GridFieldDim::checkdim( int n, const real* inx ) const
+{
+    bool result;
+    int i;
+    real val;
+    
+    result = false;
+    
+    if ( n > 0 ) {
+       result = true;
+       
+       if ( n > 1 ) {
+          val = inx[0];
+          if ( inx[1] > inx[0] ) {
+              for ( i = 1; i < n; i++ ) {
+                  if ( val >= inx[i] ) {
+                     result = false;
+                     break;
+                  }
+                  val = inx[i];
+              } 
+          } else {
+              for ( i = 1; i < n; i++ ) {
+                  if ( val <= inx[i] ) {
+                     result = false;
+                     break;
+                  }
+                  val = inx[i];
+              } 
+          
+          }
+          
+       }
+    }   
+    
+    return result;
+
+}
+
+
 void GridFieldDim::setDir( const int loadFlags )
 {
      zdir = 0;
      
      if ( nzs > 1 ) {
-        zdir = ( data[1] > data[0] );
+        zdir = ( dater[1] > dater[0] );
      }
      
 }
@@ -351,7 +424,12 @@ void GridFieldDim::load( const realvec& inx, const int loadFlags  )
    checkdim(inx);
    
    nzs = inx.size();  
-   data = inx;
+   flushData();
+   nd = inx.size();
+   dater = new real[nd];
+   for ( int i=0; i < nd; i++ ) {
+      dater[i] = inx[i];
+   }
       
    clear_nodata();   
    
@@ -369,7 +447,7 @@ bool GridFieldDim::compatible( const GridFieldDim& obj, int flags ) const
     if ( obj.size() == nzs ) {
 
        for ( int i=0; i < nzs ; i++ ) {
-           if ( data[i] != obj.value(i) ) {
+           if ( dater[i] != obj.value(i) ) {
               result = false;
            }
        }
@@ -484,17 +562,15 @@ void GridFieldDim::receive_meta()
          set_nodata();  // there are no data
    
          // get the coordinates
+         flushData();
+         nd = nzs;
          try {
-            dimvals = new real[nzs];
+            dater = new real[nd];
          } catch(...) {
             throw (badmemreq());
          }
-         pgroup->receive_reals( metproc, nzs, dimvals, PGR_TAG_GDIMS ); 
-         data.clear();
-         for ( i=0; i<nzs; i++ ) {
-             data.push_back(dimvals[i]);
-         }    
-         delete[] dimvals;
+         pgroup->receive_reals( metproc, nzs, dater, PGR_TAG_GDIMS ); 
+
          setDir();
 
          metaID = 0;
@@ -538,16 +614,7 @@ void GridFieldDim::svr_send_meta(int id) const
          //- std::cerr << "   GridFieldDim::svr_send_meta: s-200 to " << id << std::endl;
 
          // send the coordinates
-         try  {
-            dimvals = new real[nzs];
-         } catch(...)  {
-            throw (badmemreq());
-         }
-         for ( i=0; i<nzs; i++ ) {
-             dimvals[i] = data[i];
-         }    
-         pgroup->send_reals( id, nzs, dimvals, PGR_TAG_GDIMS ); 
-         delete[] dimvals;
+         pgroup->send_reals( id, nd, dater, PGR_TAG_GDIMS ); 
    
      }
 
@@ -579,7 +646,7 @@ void GridFieldDim::serialize(std::ostream& os) const
   
       // output the data
       for ( i=0; i<nzs; i++ ) {
-          val = data[i];
+          val = dater[i];
           os.write( reinterpret_cast<char *>( &val), static_cast<std::streamsize>( sizeof(real)));
       }
     
@@ -617,14 +684,20 @@ void GridFieldDim::deserialize(std::istream& is)
        is.read( reinterpret_cast<char *>(&nxzs), static_cast<std::streamsize>( sizeof(int)) );
        
        // read the coordinates
-       xdata.reserve(nxzs);
-       for ( i=0; i<nxzs; i++ ) {
-           is.read( reinterpret_cast<char *>(&val), static_cast<std::streamsize>( sizeof(real) ));
-           xdata.push_back(val);
-       }    
+       flushData();
+       nd = nxzs;
+       if ( nd > 0 ) {
+          dater = new real[nd];
+          for ( i=0; i<nxzs; i++ ) {
+              is.read( reinterpret_cast<char *>(&val), static_cast<std::streamsize>( sizeof(real) ));
+              dater[i] = val;
+          }
+          clear_nodata();
+       }  
+       nzs = nd;  
               
        // call the load method for checking, setting nlats, latdir, etc.
-       load( xdata );
+       setDir( );
 
    } catch (...) {
        throw;
@@ -706,8 +779,8 @@ GridFieldDim::iterator& GridFieldDim::iterator::operator=(const GridFieldDim::it
 real GridFieldDim::iterator::operator*() const 
 {
 
-   if ( my_index >= 0 && my_index < my_grid->data.size() ) {
-      return (my_grid->data)[my_index];
+   if ( my_index >= 0 && my_index < my_grid->nd ) {
+      return (my_grid->dater)[my_index];
    } else {
       throw (baddataindex());
    }
@@ -736,20 +809,20 @@ GridFieldDim::iterator& GridFieldDim::iterator::operator++(int n)
 void GridFieldDim::iterator::assign( real val )
 {  
   if ( my_index > 0 ) {
-     if ( ( my_grid->zdir > 0 ) && ( (my_grid->data)[my_index - 1] >= val ) ) {
+     if ( ( my_grid->zdir > 0 ) && ( (my_grid->dater)[my_index - 1] >= val ) ) {
         throw (badNonmonotonic());
-     } else if ( ( my_grid->zdir < 0 ) && ( (my_grid->data)[my_index - 1] <= val ) ) {
-        throw (badNonmonotonic());
-     }   
-  }
-  if ( my_index < ( (my_grid->data).size() - 1 ) ) {
-     if ( ( my_grid->zdir > 0 ) && ( (my_grid->data)[my_index + 1] <= val ) ) {
-        throw (badNonmonotonic());
-     } else if ( ( my_grid->zdir < 0 ) && ( (my_grid->data)[my_index + 1] >= val ) ) {
+     } else if ( ( my_grid->zdir < 0 ) && ( (my_grid->dater)[my_index - 1] <= val ) ) {
         throw (badNonmonotonic());
      }   
   }
-  (my_grid->data).at(my_index) = val;
+  if ( my_index < ( my_grid->nd - 1 ) ) {
+     if ( ( my_grid->zdir > 0 ) && ( (my_grid->dater)[my_index + 1] <= val ) ) {
+        throw (badNonmonotonic());
+     } else if ( ( my_grid->zdir < 0 ) && ( (my_grid->dater)[my_index + 1] >= val ) ) {
+        throw (badNonmonotonic());
+     }   
+  }
+  (my_grid->dater)[my_index] = val;
 }
 
 void GridFieldDim::iterator::indices( int* i ) const 
@@ -767,7 +840,7 @@ GridFieldDim::iterator GridFieldDim::begin()
 GridFieldDim::iterator GridFieldDim::end()
 {
    
-   return GridFieldDim::iterator( this, data.size() );
+   return GridFieldDim::iterator( this, nd );
 
 }
 
@@ -801,8 +874,8 @@ GridFieldDim::const_iterator& GridFieldDim::const_iterator::operator=(const Grid
 real GridFieldDim::const_iterator::operator*() const 
 {
 
-   if ( my_index >= 0 && my_index < my_grid->data.size() ) {
-      return (my_grid->data)[my_index];
+   if ( my_index >= 0 && my_index < my_grid->nd ) {
+      return (my_grid->dater)[my_index];
    } else {
       throw (baddataindex());
    }
@@ -843,7 +916,7 @@ GridFieldDim::const_iterator GridFieldDim::begin() const
 GridFieldDim::const_iterator GridFieldDim::end() const
 {
    
-   return GridFieldDim::const_iterator( this, data.size() );
+   return GridFieldDim::const_iterator( this, nd );
 
 }
 

@@ -50,6 +50,10 @@ GridField::GridField() {
 GridField::~GridField()
 {
     attrs.clear();
+    
+    if ( dater != NULLPTR ) {
+       delete[] dater;
+    }
 };
 
 // copy constructor
@@ -71,11 +75,32 @@ GridField::GridField(const GridField& src)
      mksScale = src.mksScale;
     mksOffset = src.mksOffset;
    expiration = src.expiration;
-    // copy only if we have data
-    if ( src.data.size() > 0 ) {
-         data = src.dump();
-    }
         attrs = src.attrs;
+    use_array = src.use_array;    
+
+    // copy only if we have data
+    if ( use_array ) {
+       flushData();
+       if ( nd > 0 ) {
+          if ( dater != NULLPTR ) {
+             delete[] dater;
+          }
+       }   
+       nd = src.nd;
+       if ( nd > 0 ) {
+          dater = new real[nd];
+          for ( int i=0; i < nd; i++ ) {
+             dater[i] = src.dater[i];
+          }
+          clear_nodata();
+       }
+    } else { 
+       data.clear();
+       if ( src.data.size() > 0 ) {
+            data = src.dump();
+       }
+       dater = NULLPTR;
+    }
 
 }
 
@@ -84,10 +109,18 @@ void GridField::set_fillval(const real val)
     int i;
      
     // replace all current fill values with the new fill value
-    for ( i=0; i<data.size(); i++) {
-        if ( data[i] == fill_value ) {
-           data[i] = val;
-        }
+    if ( use_array ) {
+       for ( i=0; i<nd; i++) {
+           if ( dater[i] == fill_value ) {
+              dater[i] = val;
+           }
+       }
+    } else {
+       for ( i=0; i<data.size(); i++) {
+           if ( data[i] == fill_value ) {
+              data[i] = val;
+           }
+       }
     }
     
     // store the new fill value       
@@ -109,16 +142,44 @@ void GridField::assign( const GridField& src)
      mksScale = src.mksScale;
     mksOffset = src.mksOffset;
    expiration = src.expiration;
-    if ( src.data.size() > 0 ) {
-         data = src.dump();
-    }
         attrs = src.attrs;
+    use_array = src.use_array;    
+    if ( use_array ) {
+       flushData();
+       if ( nd > 0 ) {
+          if ( dater != NULLPTR ) {
+             delete[] dater;
+          }
+       }
+       nd = src.nd;
+       if ( nd > 0 ) {
+          dater = new real[nd];
+          for ( int i=0; i < nd; i++ ) {
+             dater[i] = src.dater[i];
+          }
+          clear_nodata();
+       }
+    } else { 
+       data.clear();
+       if ( src.data.size() > 0 ) {
+            data = src.dump();
+       }
+       dater = NULLPTR;
+    }
 
 }
 
 void GridField::flushData()
 {
-     data.clear();
+     if ( use_array ) {
+        if ( dater != NULLPTR ) {
+           delete[] dater;
+           dater = NULLPTR;
+           nd = 0;
+        }
+     } else {
+        data.clear();
+     }
      flags = 0;
      set_nodata();
      set_cacheable();
@@ -337,6 +398,11 @@ void GridField::clear() {
    expiration = 0;
    data.clear();  
    attrs.clear();
+   if ( dater != NULLPTR ) {
+      delete[] dater;
+      dater = NULLPTR;
+   }
+   nd = 0;
    
 }
 
@@ -362,9 +428,19 @@ bool GridField::hasdata() const
 
 std::vector<real> GridField::dump()  const
 { 
+   std::vector<real> stuff;
    
    if ( hasdata() ) { 
-      return data;
+      if ( use_array ) {
+         stuff.resize(nd);
+         for ( int i=0; i < nd; i++ ) {
+             stuff.push_back( dater[i] );
+         }
+         
+         return stuff;
+      } else {
+         return data;
+      }
    } else {
        std::cerr << "GridField Has no data" << std::endl;
       throw (baddatareq());

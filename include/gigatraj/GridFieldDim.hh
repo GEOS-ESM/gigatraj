@@ -61,6 +61,11 @@ class GridFieldDim : public GridField {
       */
       GridFieldDim(const GridFieldDim& src);
 
+     /// copy assignment
+     /*! 
+         This is the copy assignment operator for the GridFieldDim class.
+     */
+     GridFieldDim& operator=(const GridFieldDim& src);
       
       /// clears contents 
       /*! This method clears the contents of the object, except for information
@@ -81,7 +86,23 @@ class GridFieldDim : public GridField {
       /*! This method returns the number of gridpoints in this dimension
           \return the number of values
       */
-      int size() const;
+      inline int size() const
+      { 
+         return nzs;
+      }
+
+      /// returns the direction of the dimension
+      /*! This method returns an indication oif the direction of this dimension.
+          If the dimensional values increasse with their grid index, then
+          the direction is +1; if they decrease with index, the direction is -1.
+          If there one or fewer dimensional values, then the direction is 0.
+      
+          \return the direction
+      */
+      inline int dir() const
+      { 
+         return zdir;
+      }
 
 
       /// returns a single data value
@@ -89,7 +110,7 @@ class GridFieldDim : public GridField {
            \param i the index of the gridpoint
            \return the value of the ith element of the data grid
       */     
-      real value( int i ) const;
+      real value( int i ) const; 
       
       /// assigns a single data value
       /*~! This method sets e value of a single gridpoint in the dimension.
@@ -116,6 +137,13 @@ class GridFieldDim : public GridField {
       */     
       real* values( int n, real* vals, int* indices ) const;
       
+      
+      /// returns a vector of the dimensional values
+      /*! This method returns a vector of the dimensional values
+            
+            \return the vector of values
+      */      
+      std::vector<real> dimension() const;
 
       /// operator overlay allowing for a = obj(i) syntax      
       /*! This operator overlay for () allows 
@@ -286,6 +314,19 @@ class GridFieldDim : public GridField {
       void set_fillval(const real val) {
           throw (badInvalidOp());
       }
+
+
+      /// takes the provides array of dimensional value is its own
+      /*! This method takes an array of values and
+         makes them its own. That is, this GridFieldDim object 
+         is therafter responsible for deleting the array. The calling routine
+         must not delete the array or change any of its elements.
+       
+          /param n the length of the array
+          /param the array of values to be "absorbed"
+            
+     */    
+      void absorb( int n, real* vals );
 
 
      class iterator;
@@ -472,8 +513,11 @@ class GridFieldDim : public GridField {
       /// used by child classes for operator= overriding methods
       void assign( const GridFieldDim& src);
 
-      /// checms dimensional values to ensure they are monotonic
+      /// checks dimensional values to ensure they are monotonic
       bool checkdim( const realvec& inx ) const;
+      
+      /// checks dimensional values to ensure they are monotonic
+      bool checkdim( int n, const real* inx ) const;
       
       //void init_md5();
       

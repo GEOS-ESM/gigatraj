@@ -181,6 +181,11 @@ class GridField {
       */
       GridField(const GridField& src);
 
+      /* Note: There is no copy assignment operator for this pure cirtual class.
+               Instantiatable subclasses will have a copy assignment operator
+               that calls the assign() method, which will next properly
+               up through its parent classes. */
+
 
       /// returns the valid-at model time of the met data
       /*! This method retrusn the valid-at time of the data the object holds.
@@ -282,10 +287,18 @@ class GridField {
       /// returns the units of the quantity
       /*! This method returns the units of the physical quantity whose values are held by this object.
       
+          \param scale a pointer to a scale factor that takes the values into MKs units
+          \param offset a pointer to an offset that takes the values into MKS units
           \return the quantity's units 
       */
-      std::string units() const
+      std::string units( real* scale=NULLPTR, real* offset=NULLPTR ) const
       {
+         if ( scale != NULLPTR ) {
+            *scale = mksScale;
+         }
+         if ( offset != NULLPTR ) {
+            *offset = mksOffset;
+         }
          return uu;
       } 
       
