@@ -33,10 +33,10 @@ GridFieldProfile::GridFieldProfile() : GridField()
 {
    
    prof = "none";
-   nzs = 0;
-   zdir = 0;
    zs.clear();
    
+   use_array = 0;
+
 }
 
 
@@ -51,11 +51,16 @@ GridFieldProfile::GridFieldProfile(const GridFieldProfile& src) : GridField(src)
 
    prof = src.profile();
    zs = src.zs;
-   zdir = src.zdir;
-   nzs = src.nzs;
 
 }
 
+// copy assignment
+GridFieldProfile& GridFieldProfile::operator=(const GridFieldProfile& src)
+{
+    this->assign( src ) ;
+    
+    return *this;
+}
 
 
 void GridFieldProfile::assign( const GridFieldProfile& src )
@@ -65,8 +70,6 @@ void GridFieldProfile::assign( const GridFieldProfile& src )
    
    prof = src.profile();
    zs = src.zs;
-   zdir = src.zdir;
-   nzs = src.nzs;
 
 }
 
@@ -75,8 +78,6 @@ void GridFieldProfile::clear() {
    prof = "none";
    
    zs.clear();
-   nzs = 0;
-   zdir = 0;
    
    GridField::clear();
       
@@ -85,149 +86,56 @@ void GridFieldProfile::clear() {
 
 std::string GridFieldProfile::vertical() const
 {
-   return vquant;
+   return zs.quantity();
 }
 
 void GridFieldProfile::set_vertical( const std::string vq )
 {
-   vquant = vq;
-   mksVScale = 1.0;
-   mksVOffset = 0.0;
+   zs.set_quantity( vq );
+
 }
 
 std::string GridFieldProfile::vunits(real *scale, real*offset) const
 {
-   if ( scale != NULLPTR ) {
-      *scale = mksVScale;
-   }
-   if ( offset != NULLPTR ) {
-      *offset = mksVOffset;
-   }
+   std::string result;
+   
+   result = zs.units( scale, offset );
+   
 
-   return vuu;
+   return result;
 }
 
 void GridFieldProfile::set_vunits( const std::string vu, real scale, real offset )
 {
-   vuu = vu;
-   mksVScale = scale;
-   mksVOffset = offset;
+   zs.set_units( vu, scale, offset );
 }         
 
 std::vector<real> GridFieldProfile::levels() const 
 { 
-   return zs;
+   return zs.dimension();
 };
 
 void GridFieldProfile::levels( const std::vector<real> &newvert )
 {
-   if ( nzs > 0 && nzs != newvert.size() ) {
-      std::cerr << "New vertical cooridnate vector doe snot match the old in size." << std::endl;
+   if ( zs.size() > 0 && zs.size() != newvert.size() ) {
+      std::cerr << "New vertical cooridnate vector does not match the old in size." << std::endl;
       throw (badDimensionMismatch());
    }
 
-   zs = newvert;
+   zs.load( newvert );
 
 }
 
 real GridFieldProfile::level( const int k ) const
 {
-   if ( k < 0 || k >= nzs ) {
-       std::cerr << "GridFieldProfile: Bad vertical index k=" << k << std::endl;
-       throw (baddatareq());
-   }    
-   return zs[k];
+   return zs(k);
 }; 
 
 
 void GridFieldProfile::zindex( real z, int* i1, int* i2 ) const
 {
-     int i;
      
-     if ( nzs <= 1 ) {
-        throw (baddataindex());
-     }
-
-     if ( zdir > 0 ) {
-        // levels increase
-
-        // find the highest-indexed z that is below the test z
-        i = 0;
-        *i1 = -1;
-        while ( i < nzs && zs[i] < z ) {
-        
-           if ( zs[i] < z ) {
-              *i1 = i;
-           } 
-           i++;
-        }
-        if ( *i1 != -1 ) {
-           // we have a lower bound for the test z in zs
-        
-           // do we have an upper bound?
-           if ( *i1 < (nzs-1) ) {
-              *i2 = *i1 + 1;
-           } else {
-              if ( ABS( zs[nzs-1] - z ) > 0.0001 ) {
-                 // test val lies above range of zs
-                 throw (baddataindex());
-              } else {
-                 // close enough
-                 *i2 = nzs-1;
-                 *i1 = *i2 - 1;
-              }           
-           }   
-        } else {
-              if ( ABS( zs[0] - z ) > 0.0001 ) {
-                 // test z lies below the range of zs
-                 throw (baddataindex());
-              } else {
-                 *i1 = 0;
-                 *i2 = 1;
-              }   
-        }
-     } else {
-        // levels decrease
-
-        // find the lowest-indexed z that is below the test z
-        i = nzs-1;
-        *i2 = -1;
-        while ( i >= 0 && zs[i] < z ) {
-        
-           if ( zs[i] < z ) {
-              *i2 = i;
-           } 
-        
-           i--;
-        }
-        if ( *i2 != -1 ) {
-           // we have an lower bound for the test z in zs
-        
-           // do we have an upper bound?
-           if ( *i2 > 0 ) {
-              *i1 = *i2 - 1;
-           } else {
-              if ( ABS( zs[0] - z ) > 0.0001 ) {
-                 // test val lies above range of zs
-                 throw (baddataindex());
-              } else {
-                 // close enough
-                 *i1 = 0;
-                 *i2 = 1;
-              }           
-           }   
-        } else {
-              if ( ABS( zs[nzs-1] - z ) > 0.0001 ) {
-                 // test z lies below the range of zs
-                 throw (baddataindex());
-              } else {
-                 *i1 = nzs-2;
-                 *i2 = nzs-1;
-              }   
-        }
-     
-     }
-
+     zs.index( z, i1, i2 );
 };
 
 
@@ -241,10 +149,10 @@ int GridFieldProfile::status() const
     if ( prof == "none" ) {
        result = result | 0x02;
     }    
-    if ( nzs <= 0 ) {
+    if ( zs.size() <= 0 ) {
        result = result | GFS_NODIMS;
     }
-    if ( data.size() != nzs ) {
+    if ( data.size() != zs.size() ) {
        result = result | GFS_GRIDERR;
     }
     
@@ -261,7 +169,7 @@ real GridFieldProfile::value( int i )  const
     }    
     
     // ensure that the coordinate index is legal
-    if ( i < 0 || i >= nzs ) {
+    if ( i < 0 || i >= zs.size() ) {
         throw (baddatareq());
     }    
     
@@ -278,7 +186,7 @@ real& GridFieldProfile::valueref( int i )
    }    
      
    // ensure that the coordinate index is legal
-   if ( i < 0 || i >= nzs ) {
+   if ( i < 0 || i >= zs.size() ) {
        throw (baddatareq());
    }    
 
@@ -313,7 +221,7 @@ real* GridFieldProfile::values( int n, real* vals, int *indices ) const
 
 void GridFieldProfile::dims( int* nx )  const
 {
-   *nx = nzs;
+   *nx = zs.size();
 };
 
 real GridFieldProfile::operator()( int i ) const 
@@ -364,79 +272,22 @@ void GridFieldProfile::transform( const std::string unyts, real scale, real offs
 
 }
 
-bool GridFieldProfile::checkdim( const realvec& inx ) const
-{
-    bool result;
-    int i;
-    real val;
-    int nv;
-    
-    result = false;
-    
-    nv = inx.size();
-    if ( nv > 0 ) {
-       result = true;
-       
-       if ( nv > 1 ) {
-          val = inx[0];
-          if ( inx[1] > inx[0] ) {
-              for ( i = 1; i < nv; i++ ) {
-                  if ( val >= inx[i] ) {
-                     result = false;
-                     break;
-                  }
-                  val = inx[i];
-              } 
-          } else {
-              for ( i = 1; i < nv; i++ ) {
-                  if ( val <= inx[i] ) {
-                     result = false;
-                     break;
-                  }
-                  val = inx[i];
-              } 
-          
-          }
-          
-       }
-    }   
-    
-    return result;
-
-}
-
-void GridFieldProfile::setZDir( const int loadFlags )
-{
-     zdir = 0;
-     
-     if ( nzs > 1 ) {
-        zdir = ( zs[1] > zs[0] );
-     }
-     
-}
 
 void GridFieldProfile::load( const realvec& inx, const realvec& indata, const int loadFlags  )
 {
    int indx = 0;
    int i;
    
-   checkdim(inx);
-      
-   nzs = inx.size();
+   zs.load( inx );   
    
-   zs = inx;
-   
-   data.resize( nzs );
+   data.resize( zs.size() );
 
    // copy the data   
-   for (int indx=0; indx<nzs; indx++ ) {
+   for (int indx=0; indx < zs.size(); indx++ ) {
        data[indx] = indata[indx];
    }
    clear_nodata();
    
-   /// determine the direction in which the coordinates go
-   setZDir( loadFlags );
-
 
 }
 
@@ -445,7 +296,7 @@ void GridFieldProfile::load( const realvec& indata, const int loadFlags  )
    int indx = 0;
    int i;
    
-   if ( nzs != indata.size() ) {
+   if ( zs.size() != indata.size() ) {
       throw(badincompatcoords());
    }      
    
@@ -459,23 +310,17 @@ void GridFieldProfile::loaddim( const realvec& inx, const int loadFlags  )
    int indx = 0;
    int i;
    
-   checkdim(inx);
-   
-   nzs = inx.size();  
-   zs = inx;
-      
+   zs.load( inx );
+         
    // Don't try to copy any data 
    data.clear();  
    set_nodata();
    if ( loadFlags & GFL_PREFILL ) {
-      for ( i=0; i<nzs; i++ ) {
+      for ( i=0; i < zs.size(); i++ ) {
          data.push_back( fill_value );
       }
       clear_nodata();   
    }
-   
-   /// determine the direction in which the coordinates go
-   setZDir( loadFlags );
    
 }
 
@@ -489,14 +334,14 @@ bool GridFieldProfile::compatible( const GridFieldProfile& obj, int flags ) cons
        // the surface types must match
        if ( obj.profile() == prof ) {
           // and the vertical coordinate types must match
-          if ( obj.vertical() == vquant && obj.vunits() == vuu ) {
+          if ( obj.vertical() == zs.quantity() && obj.vunits() == zs.units() ) {
        
              // check that the vertical levels match in number and values
              dim = obj.levels();
-             if ( dim.size() == nzs ) {
-                for ( int i=0; i<nzs; i++ ) {
+             if ( dim.size() == zs.size() ) {
+                for ( int i=0; i < zs.size(); i++ ) {
                    // levels must be within 1.0e-8 (of whatever units are being used)
-                   if ( ABS( dim[i] - zs[i] ) > 1.0e-8 ) {
+                   if ( ABS( dim[i] - zs(i) ) > 1.0e-8 ) {
                       result = false;
                    }   
                 }
@@ -541,11 +386,11 @@ bool GridFieldProfile::match( const GridFieldProfile& obj ) const
 
 int GridFieldProfile::dataSize() const
 {
-    if ( nzs <= 0  ) {
+    if ( zs.size() <= 0  ) {
        throw (badnodims());
     }
     
-    return nzs;   
+    return zs.size();   
 
 }
 
@@ -596,6 +441,7 @@ void GridFieldProfile::receive_meta()
      real* dimvals;
      int cmd;
      int i;
+     int nzs;
 
      if (  pgroup == NULLPTR || metproc < 0 ) {
          // serial processing.  Load nothing, but
@@ -623,26 +469,24 @@ void GridFieldProfile::receive_meta()
          //- std::cerr << "   GridFieldProfile::receive_meta: r-140 from " << metproc  << std::endl;
          pgroup->receive_reals( metproc, 1, &fill_value, PGR_TAG_GMETA );  // fill value
          //- std::cerr << "   GridFieldProfile::receive_meta: r-170 from " << metproc  << std::endl;
-         pgroup->receive_ints( metproc, 1, &nzs, PGR_TAG_GMETA );  // number of lats
-         //- std::cerr << "   GridFieldProfile::receive_meta: r-180 from " << metproc  << std::endl;
          pgroup->receive_string( metproc, &prof, PGR_TAG_GMETA ); // quantity
          //- std::cerr << "   GridFieldProfile::receive_meta: r-200 from " << metproc  << std::endl;
 
          set_nodata();  // there are no data
    
-         // get the coordinates
+         // get the coordinate metadata
+         zs.receive_meta();
+         
+         nzs = zs.size();
+         
          try {
             dimvals = new real[nzs];
          } catch(...) {
             throw (badmemreq());
          }
          pgroup->receive_reals( metproc, nzs, dimvals, PGR_TAG_GDIMS ); 
-         zs.clear();
-         for ( i=0; i<nzs; i++ ) {
-             zs.push_back(dimvals[i]);
-         }    
-         delete[] dimvals;
-         setZDir();
+         zs.absorb(nzs, dimvals);
+         // note; no NOT delete dimvels here; zs now owns that array
 
          metaID = 0;
    
@@ -655,6 +499,7 @@ void GridFieldProfile::svr_send_meta(int id) const
      real* dimvals;
      int cmd;
      int i;
+     int nzs;
 
      if ( metproc < 0 ) {
          // serial processing.  Send nothing, but
@@ -675,6 +520,8 @@ void GridFieldProfile::svr_send_meta(int id) const
          // the calling routine has already received that request
          // and called this method.
 
+         nzs = zs.size();
+
          // receive the metadata
          //- std::cerr << "   GridFieldProfile::svr_send_meta: s-100 with " << id << std::endl;
          pgroup->send_string( id, quant, PGR_TAG_GMETA ); // quantity
@@ -686,11 +533,11 @@ void GridFieldProfile::svr_send_meta(int id) const
          pgroup->send_doubles( id, 1, &mtime, PGR_TAG_GMETA );  // met time 
          //- std::cerr << "   GridFieldProfile::svr_send_meta: s-140 to " << id << std::endl;
          pgroup->send_reals( id, 1, &fill_value, PGR_TAG_GMETA );  // fill value
-         //- std::cerr << "   GridFieldProfile::svr_send_meta: s-160 to " << id << std::endl;
-         pgroup->send_ints( id, 1, &nzs, PGR_TAG_GMETA );  // number of lons
          //- std::cerr << "   GridFieldProfile::svr_send_meta: s-180 to " << id << std::endl;
          pgroup->send_string( id, prof, PGR_TAG_GMETA ); // surface quantity
          //- std::cerr << "   GridFieldProfile::svr_send_meta: s-200 to " << id << std::endl;
+
+         zs.svr_send_meta(id);
 
          // send the coordinates
          try  {
@@ -698,8 +545,8 @@ void GridFieldProfile::svr_send_meta(int id) const
          } catch(...)  {
             throw (badmemreq());
          }
-         for ( i=0; i<nzs; i++ ) {
-             dimvals[i] = zs[i];
+         for ( i=0; i < nzs; i++ ) {
+             dimvals[i] = zs(i);
          }    
          pgroup->send_reals( id, nzs, dimvals, PGR_TAG_GDIMS ); 
          delete[] dimvals;
@@ -733,17 +580,11 @@ void GridFieldProfile::serialize(std::ostream& os) const
       os.write( reinterpret_cast<char *>( &len), static_cast<std::streamsize>( sizeof(int)));
       os.write( prof.c_str(), static_cast<std::streamsize>( len*sizeof(char)));
       
-      // output the number of coordinates
-      ival = nzs;
-      os.write( reinterpret_cast<char *>( &ival), static_cast<std::streamsize>( sizeof(int)));
       // output the coordinates
-      for ( i=0; i<nzs; i++ ) {
-          val = zs[i];
-          os.write( reinterpret_cast<char *>( &val), static_cast<std::streamsize>( sizeof(real)));
-      }    
+      zs.serialize( os );
   
       // output the data
-      for ( i=0; i<nzs; i++ ) {
+      for ( i=0; i < zs.size(); i++ ) {
           val = value(i);
           os.write( reinterpret_cast<char *>( &val), static_cast<std::streamsize>( sizeof(real)));
       }
@@ -778,7 +619,7 @@ void GridFieldProfile::deserialize(std::istream& is)
        // read the version
        is.read(reinterpret_cast<char *>( &version), static_cast<std::streamsize>( sizeof(int)));
           
-       // read the profile
+       // read the profile name
        is.read(reinterpret_cast<char *>( &len), static_cast<std::streamsize>( sizeof(int)));
        str = "";
        if ( len >= 0 ) {
@@ -790,25 +631,22 @@ void GridFieldProfile::deserialize(std::istream& is)
        }
        prof = str;
 
-       // read the number of coordinates
-       is.read( reinterpret_cast<char *>(&nxzs), static_cast<std::streamsize>( sizeof(int)) );
-       
        // read the coordinates
-       xzs.reserve(nxzs);
-       for ( i=0; i<nxzs; i++ ) {
-           is.read( reinterpret_cast<char *>(&val), static_cast<std::streamsize>( sizeof(real)) );
-           xzs.push_back(val);
-       }    
-       // read the data
-       xdata.reserve(nxzs);
-       for ( i=0; i<nxzs; i++ ) {
-           is.read( reinterpret_cast<char *>(&val), static_cast<std::streamsize>( sizeof(real) ));
-           xdata.push_back(val);
-       }    
-              
-       // call the load method for checking, setting nlats, latdir, etc.
-       load( xzs, xdata );
+       zs.deserialize( is );
 
+       nxzs = zs.size();
+       
+       if ( nxzs > 0 ) {
+          // read the data
+          xdata.reserve(nxzs);
+          for ( i=0; i < nxzs; i++ ) {
+              is.read( reinterpret_cast<char *>(&val), static_cast<std::streamsize>( sizeof(real) ));
+              xdata.push_back(val);
+          }    
+                 
+          // call the load method for checking, setting nlats, latdir, etc.
+          load( xdata );
+       }
    } catch (...) {
        throw;
    }    

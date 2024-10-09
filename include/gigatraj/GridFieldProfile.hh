@@ -6,6 +6,7 @@
 
 #include "gigatraj/gigatraj.hh"
 #include "gigatraj/GridField.hh"
+#include "gigatraj/GridFieldDim.hh"
 
 namespace gigatraj {
 
@@ -62,6 +63,12 @@ class GridFieldProfile : public GridField {
          This is the copy contructor method for the GridFieldProfile class.
       */
       GridFieldProfile(const GridFieldProfile& src);
+
+     /// copy assignment
+     /*! 
+         This is the copy assignment operator for the GridFieldDim class.
+     */
+     GridFieldProfile& operator=(const GridFieldProfile& src);
 
       
       /// clears data contents 
@@ -567,32 +574,11 @@ class GridFieldProfile : public GridField {
       /// identifies what the vertical coordinate is for this grid
       std::string prof;
       
-
-      /// identifies what the vertical coordinate is for this grid
-      std::string vquant;
-      
-      /// the units of the vertical coordinate
-      std::string vuu;
-
-      
       /// vector of coordinates
-      std::vector<real> zs;
-      /// how many coord values
-      int nzs;    
-      /// +1 if coordinate values increase with index, -1 if they decrease, 0 if undefined
-      int zdir;
-      ///  sets the cooridnate direction
-      /*! This method sets the coordinate direction, based on whether the coordinates increase
-          or decrease with array index number.
-            \param loadFlags (reserved for future expension)  
-      */
-      void setZDir( const int loadFlags=0 ); 
+      GridFieldDim zs;
             
       /// used by child classes for operator= overriding methods
       void assign( const GridFieldProfile& src);
-
-      /// checms dimensional values ot ensure they are monotonic
-      bool checkdim( const realvec& inx ) const;
 
 };
 }
