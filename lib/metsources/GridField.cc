@@ -77,6 +77,8 @@ GridField::GridField(const GridField& src)
    expiration = src.expiration;
         attrs = src.attrs;
     use_array = src.use_array;    
+           nd = 0;
+        dater = NULLPTR;
 
     // copy only if we have data
     if ( use_array ) {
@@ -193,7 +195,7 @@ void GridField::setPgroup( ProcessGrp* pg, int met)
        // we set the met processor only if the size of the group > 1
        if ( pgroup->size() > 1 ) {
           metproc = met;
-       }
+       } 
     }   
 
 };
@@ -349,6 +351,7 @@ void GridField::svr_listen( int client ) const
 
 }
 
+
 void GridField::ask_for_meta()
 {
      real* dimvals;
@@ -373,8 +376,9 @@ void GridField::ask_for_meta()
          // send "need Sfc metadata" status to central met reader process
          cmd = PGR_CMD_GMETA;
          // send request for metadata
+         //-std::cerr << "   GridField::ask for_meta:  (met client) sending cmd " << std::endl;
          pgroup->send_ints( metproc, 1, &cmd, PGR_TAG_GREQ );
-         //- std::cerr << "   GridField::ask for_meta:  (met client) sent cmd " << std::endl;
+         //-std::cerr << "   GridField::ask for_meta:  (met client) sent cmd " << std::endl;
      }
 
 }
@@ -390,21 +394,28 @@ void GridField::clear() {
    flags = 0;
    set_nodata();
    set_cacheable();
+   // we **don't** clear these two!!
    //pgroup = NULLPTR;
    //metproc = -1;
    metaID = 0; 
    mksScale = 1.0;
    mksOffset = 0.0;
    expiration = 0;
-   data.clear();  
    attrs.clear();
+   clearData();  
+   
+}
+
+void GridField::clearData() {
+   data.clear();  
    if ( dater != NULLPTR ) {
       delete[] dater;
       dater = NULLPTR;
    }
-   nd = 0;
-   
+   nd = 0;   
+   set_nodata();
 }
+
 
 int GridField::status() const
 {

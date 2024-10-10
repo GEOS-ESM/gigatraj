@@ -361,7 +361,7 @@ class GridField {
            \param met the ID of the processor within pg that is dedicated to handling met 
                   data (or -1 if there is none)
       */
-      void setPgroup( ProcessGrp* pg, int met);
+      virtual void setPgroup( ProcessGrp* pg, int met);
 
       /// (parallel processing) syncs with other processors
       /*! In a parallel processing environment, this method
@@ -431,11 +431,17 @@ class GridField {
       */
       void svr_listen( int client = -1 ) const;
 
-      /// clears data contents 
+      /// clears data and metadata contents 
       /*! This method clears the contents of the object, except for information
           related to the process group
       */    
       virtual void clear() = 0;
+
+      /// clears just the data, not the metadata
+      /*! This method clears the data content of the object without
+          changing the metadata.
+      */    
+      void clearData();
 
       /// returns the readiness  
       /*! This object returns the readiness status: whether the object
