@@ -35,7 +35,8 @@ GridFieldProfile::GridFieldProfile() : GridField()
    prof = "none";
    zs.clear();
    
-   use_array = 0;
+   use_array = 1;
+   dater = NULLPTR;
 
 }
 
@@ -51,6 +52,7 @@ GridFieldProfile::GridFieldProfile(const GridFieldProfile& src) : GridField(src)
 
    prof = src.profile();
    zs = src.zs;
+   zs.setPgroup( pgroup, metproc );
 
 }
 
@@ -70,6 +72,7 @@ void GridFieldProfile::assign( const GridFieldProfile& src )
    
    prof = src.profile();
    zs = src.zs;
+   zs.setPgroup( pgroup, metproc );
 
 }
 
@@ -152,7 +155,7 @@ int GridFieldProfile::status() const
     if ( zs.size() <= 0 ) {
        result = result | GFS_NODIMS;
     }
-    if ( data.size() != zs.size() ) {
+    if ( nd != zs.size() ) {
        result = result | GFS_GRIDERR;
     }
     
@@ -173,7 +176,7 @@ real GridFieldProfile::value( int i )  const
         throw (baddatareq());
     }    
     
-    return data[i];
+    return dater[i];
 };
 
 
@@ -190,7 +193,7 @@ real& GridFieldProfile::valueref( int i )
        throw (baddatareq());
    }    
 
-   result = &(data[i]);
+   result = &(dater[i]);
    return *result;
 }        
 
@@ -212,7 +215,7 @@ real* GridFieldProfile::values( int n, real* vals, int *indices ) const
         }
    
         for ( indx=0; indx < n; indx++ ) {
-            vals[indx] = data[indices[indx]];
+            vals[indx] = dater[indices[indx]];
 	    }
      }
         
@@ -248,7 +251,7 @@ void GridFieldProfile::set_profile( const std::string nm )
 void GridFieldProfile::transform( const std::string unyts, real scale, real offset ) 
 {
     real ms, mo;
-    GridFieldProfile::iterator data;
+    GridFieldProfile::iterator dat;
     real s, o;
     
     uu = unyts;
@@ -261,9 +264,9 @@ void GridFieldProfile::transform( const std::string unyts, real scale, real offs
     // what the old units were and what the new units will be.
     
     // apply the scaling
-    for ( data = this->begin(); data != this->end(); data++ ) {
-        if (*data != fill_value ) {
-           *data = (*data)*s + o;
+    for ( dat = this->begin(); dat != this->end(); dat++ ) {
+        if (*dat != fill_value ) {
+           *dat  = (*dat )*s + o;
         }
     } 
 
@@ -280,11 +283,14 @@ void GridFieldProfile::load( const realvec& inx, const realvec& indata, const in
    
    zs.load( inx );   
    
-   data.resize( zs.size() );
+   clearData();
+   
+   nd = zs.size();
+   dater = new real[nd];
 
    // copy the data   
    for (int indx=0; indx < zs.size(); indx++ ) {
-       data[indx] = indata[indx];
+       dater[indx] = indata[indx];
    }
    clear_nodata();
    
@@ -300,7 +306,16 @@ void GridFieldProfile::load( const realvec& indata, const int loadFlags  )
       throw(badincompatcoords());
    }      
    
-   data = indata;
+   clearData();
+   
+   nd = zs.size();
+   dater = new real[nd];
+
+   // copy the data   
+   for (int indx=0; indx < zs.size(); indx++ ) {
+       dater[indx] = indata[indx];
+   }
+   
    clear_nodata();
 
 }
@@ -313,11 +328,10 @@ void GridFieldProfile::loaddim( const realvec& inx, const int loadFlags  )
    zs.load( inx );
          
    // Don't try to copy any data 
-   data.clear();  
-   set_nodata();
+   clearData();  
    if ( loadFlags & GFL_PREFILL ) {
       for ( i=0; i < zs.size(); i++ ) {
-         data.push_back( fill_value );
+         dater[i] = fill_value;
       }
       clear_nodata();   
    }
@@ -348,7 +362,9 @@ bool GridFieldProfile::compatible( const GridFieldProfile& obj, int flags ) cons
              } else {
                 result = false;
              }       
-          }      
+          } else {
+             result = false;
+          }    
        } else {             
           result = false;   
        }                    
@@ -369,7 +385,7 @@ bool GridFieldProfile::match( const GridFieldProfile& obj ) const
 {
     int result = true;
     std::vector<real> dim;
-    
+
     if ( ! this->compatible(obj) ) {
        result = false;
     }
@@ -584,8 +600,8 @@ void GridFieldProfile::serialize(std::ostream& os) const
       zs.serialize( os );
   
       // output the data
-      for ( i=0; i < zs.size(); i++ ) {
-          val = value(i);
+      for ( i=0; i < nd; i++ ) {
+          val = dater[i];
           os.write( reinterpret_cast<char *>( &val), static_cast<std::streamsize>( sizeof(real)));
       }
     
@@ -606,7 +622,6 @@ void GridFieldProfile::deserialize(std::istream& is)
    real val;
    int ival;
    int nxzs;
-   std::vector<real> xzs, xdata;
    std::vector<real> dat;
    int version;
    
@@ -638,14 +653,15 @@ void GridFieldProfile::deserialize(std::istream& is)
        
        if ( nxzs > 0 ) {
           // read the data
-          xdata.reserve(nxzs);
-          for ( i=0; i < nxzs; i++ ) {
+
+          nd = nxzs;
+          dater = new real[nd];
+          for ( i=0; i < nd; i++ ) {
               is.read( reinterpret_cast<char *>(&val), static_cast<std::streamsize>( sizeof(real) ));
-              xdata.push_back(val);
-          }    
+              dater[i] = val;
+          }
+          clear_nodata();
                  
-          // call the load method for checking, setting nlats, latdir, etc.
-          load( xdata );
        }
    } catch (...) {
        throw;
@@ -727,8 +743,8 @@ GridFieldProfile::iterator& GridFieldProfile::iterator::operator=(const GridFiel
 real& GridFieldProfile::iterator::operator*() const 
 {
 
-   if ( my_index >= 0 && my_index < my_grid->data.size() ) {
-      return (my_grid->data).at(my_index);
+   if ( my_index >= 0 && my_index < my_grid->nd ) {
+      return (my_grid->dater)[my_index];
    } else {
       throw (baddataindex());
    }
@@ -756,7 +772,7 @@ GridFieldProfile::iterator& GridFieldProfile::iterator::operator++(int n)
 
 void GridFieldProfile::iterator::assign( real val )
 {
-  (my_grid->data).at(my_index) = val;
+  (my_grid->dater)[my_index] = val;
 }
 
 void GridFieldProfile::iterator::indices( int* i ) const 
@@ -774,7 +790,7 @@ GridFieldProfile::iterator GridFieldProfile::begin()
 GridFieldProfile::iterator GridFieldProfile::end()
 {
    
-   return GridFieldProfile::iterator( this, data.size() );
+   return GridFieldProfile::iterator( this, nd );
 
 }
 
@@ -808,8 +824,8 @@ GridFieldProfile::const_iterator& GridFieldProfile::const_iterator::operator=(co
 real GridFieldProfile::const_iterator::operator*() const 
 {
 
-   if ( my_index >= 0 && my_index < my_grid->data.size() ) {
-      return (my_grid->data)[my_index];
+   if ( my_index >= 0 && my_index < my_grid->nd ) {
+      return (my_grid->dater)[my_index];
    } else {
       throw (baddataindex());
    }
@@ -850,9 +866,47 @@ GridFieldProfile::const_iterator GridFieldProfile::begin() const
 GridFieldProfile::const_iterator GridFieldProfile::end() const
 {
    
-   return GridFieldProfile::const_iterator( this, data.size() );
+   return GridFieldProfile::const_iterator( this, nd );
 
 }
+
+
+void GridFieldProfile::setPgroup( ProcessGrp* pg, int met)
+{
+       GridField::setPgroup( pg, met );
+       zs.setPgroup( pg, met );
+
+}
+
+void GridFieldProfile::absorb( int n, real* vals )
+{
+     
+     clearData();
+     
+     nd = n;
+     dater = vals;
+     
+     clear_nodata();
+}
+
+void GridFieldProfile::absorb( int n, real*dvals, real* vals )
+{
+     zs.absorb( n, dvals );
+          
+     clearData();
+     
+     nd = n;
+     dater = vals;
+     
+     clear_nodata();
+}
+
+void GridFieldProfile::absorbZs( int n, real* dvals )
+{
+     zs.absorb( n, dvals );     
+}
+
+
 
 namespace gigatraj {
 
