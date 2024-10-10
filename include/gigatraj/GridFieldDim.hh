@@ -316,7 +316,7 @@ class GridFieldDim : public GridField {
       }
 
 
-      /// takes the provides array of dimensional value is its own
+      /// takes the provided array of dimensional value is its own
       /*! This method takes an array of values and
          makes them its own. That is, this GridFieldDim object 
          is therafter responsible for deleting the array. The calling routine

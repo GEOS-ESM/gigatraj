@@ -243,9 +243,10 @@ void GridFieldDim::absorb( int n, real* vals )
 {
      
      if ( checkdim( n, vals ) ) {
-        clear();
+        clearData();
      
         nd = n;
+        nzs = n;
         dater = vals;
         
         setDir();
@@ -539,7 +540,7 @@ void GridFieldDim::receive_meta()
      if (  pgroup == NULLPTR || metproc < 0 ) {
          // serial processing.  Load nothing, but
          // check that the object has valid metadata
-         if ( this->status() & (~0x10) ) {
+         if ( ! this->hasdata() ) {
             throw (baddataload());
          }
          
@@ -550,7 +551,7 @@ void GridFieldDim::receive_meta()
             throw (badProcReq());
          }
      
-         // receive theta metadata
+         // receive metadata
          //- std::cerr << "   GridLatLonField3D::receive_meta: r-100 with " << metproc << std::endl;
          pgroup->receive_string( metproc, &quant, PGR_TAG_GMETA ); // quantity
          //- std::cerr << "   GridFieldDim::receive_meta: r-110 from " << metproc  << std::endl;
@@ -716,6 +717,7 @@ void GridFieldDim::svr_send_vals( int id ) const
          // serial processing.  Send nothing, but
          // check that the object has valid data
          if ( ! this->hasdata() ) {
+std::cerr << "--- Hey 08" << std::endl;
             throw (baddataload());
          }
          
@@ -919,6 +921,7 @@ GridFieldDim::const_iterator GridFieldDim::end() const
    return GridFieldDim::const_iterator( this, nd );
 
 }
+
 
 
 
