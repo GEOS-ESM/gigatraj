@@ -411,18 +411,6 @@ class GridFieldProfile : public GridField {
       void setPgroup( ProcessGrp* pg, int met);
 
 
-      /// takes the provided array of values as its own
-      /*! This method takes an array of values and
-          makes them its own. That is, this GridFieldProfile object 
-         is therafter responsible for deleting the array. The calling routine
-         must not delete the array or change any of its elements.
-       
-          /param n the length of the array
-          /param vals the array of values to be "absorbed"
-            
-     */    
-      void absorb( int n, real* vals );
-
       /// takes the provided arrays of dimensional values and data values as its own
       /*! This method takes an array of dimensional values and
           an array of data values and
@@ -430,12 +418,12 @@ class GridFieldProfile : public GridField {
          is therafter responsible for deleting the arrays. The calling routine
          must not delete the arrays or change any of heir elements.
        
-          /param n the length of the array
-          /param dvals the array of dimensional values to be "absorbed"
+          /param n the length of the arrays
           /param vals the array of data values to be "absorbed"
+          /param dvals if non-null, the array of dimensional values to be "absorbed"
             
      */    
-      void absorb( int n, real*dvals, real* vals );
+      void absorb( int n, real* vals , real* dvals=NULLPTR);
 
 
       /// takes the provided array of dimensional values as its own
