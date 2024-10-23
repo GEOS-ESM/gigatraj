@@ -31,11 +31,11 @@ const std::string GridLatLonFieldSfc::iam = "GridLatLonFieldSfc";
 // Default constructor
 GridLatLonFieldSfc::GridLatLonFieldSfc() : GridFieldSfc()
 {   
-   nlons = 0;
-   londir = 0;
-   nlats = 0; 
-   latdir = 0;  
-   wraps = 0;
+   lons.wrapping( 360.0 );
+   
+   use_array = 1;
+   nd = 0;
+   dater = NULLPTR;
    
 }
 
@@ -48,49 +48,16 @@ GridLatLonFieldSfc::~GridLatLonFieldSfc()
 GridLatLonFieldSfc::GridLatLonFieldSfc(const GridLatLonFieldSfc& src) : GridFieldSfc(src)
 {
 
-         src.dims( &nlons, &nlats );
-      
-         lons = src.longitudes();
-         lats = src.latitudes();
-        wraps = src.wraps; 
-       londir = src.londir;
-       latdir = src.latdir;
+        lons = src.lons;
+        lats = src.lats;
+
+        lons.setPgroup( pgroup, metproc );
+        lats.setPgroup( pgroup, metproc );
 
 }
 
 
-void GridLatLonFieldSfc::clear() {
-   
-   lons.clear();
-   lats.clear();
-   
-   nlons = 0;
-   londir = 0;
-   nlats = 0;
-   latdir = 0;
-   wraps = 0;
-   
-   GridFieldSfc::clear();
-   
-}
-
-int GridLatLonFieldSfc::status() const
-{
-    int result = 0;
-    
-    result = GridFieldSfc::status();
-    if ( nlons <= 0 || nlats <= 0 ) {
-       result = result | GFS_NODIMS;
-    }
-    if ( data.size() != nlons*nlats ) {
-       result = result | GFS_GRIDERR;
-    }
-    
-    return result;
-
-}
-
-
+// copy assignment
 GridLatLonFieldSfc& GridLatLonFieldSfc::operator=(const GridLatLonFieldSfc& src)
 {
     // handle assignment to self
@@ -102,20 +69,52 @@ GridLatLonFieldSfc& GridLatLonFieldSfc::operator=(const GridLatLonFieldSfc& src)
     GridLatLonFieldSfc::assign(src);
     
     // copy the elements unique to this class
-    src.dims( &nlons, &nlats );
-      lons = src.longitudes();
-    londir = src.londir;
-      lats = src.latitudes();
-    latdir = src.latdir;
-     wraps = src.wraps; 
+    lons = src.lons;
+    lats = src.lats;
+    lons.setPgroup( pgroup, metproc );
+    lats.setPgroup( pgroup, metproc );
 
     return *this;
 }      
 
+
+void GridLatLonFieldSfc::clear() {
+   
+   lons.clear();
+   lats.clear();
+   
+   GridFieldSfc::clear();
+   
+}
+
+int GridLatLonFieldSfc::status() const
+{
+    int result = 0;
+    
+    result = GridFieldSfc::status();
+    if ( lons.size() <= 0 || lats.size() <= 0 ) {
+       result = result | GFS_NODIMS;
+    }
+    if ( nd != lons.size()*lats.size() ) {
+       result = result | GFS_GRIDERR;
+    }
+    
+    return result;
+
+}
+
+void GridLatLonFieldSfc::setPgroup( ProcessGrp* pg, int met)
+{
+       GridField::setPgroup( pg, met );
+       lons.setPgroup( pg, met );
+       lats.setPgroup( pg, met );
+
+}
+
 void GridLatLonFieldSfc::dims( int* nlon, int* nlat)  const
 {
-   *nlon = nlons;
-   *nlat = nlats;
+   *nlon = lons.size();
+   *nlat = lats.size();
 };
 
 
@@ -127,25 +126,17 @@ real GridLatLonFieldSfc::value( int i, int j )  const
         throw (baddatareq());
     }    
     
-    // ensure that the longitude index is legal
-    if ( wraps ) {
-       // either wrap it
-       i = iwrap( i );
-    } else {
-       // or test it
-       if ( i < 0 || i >= nlons  ) {
-           throw (baddatareq());
-       }    
-    }   
+    i = lons.iwrap(i);
+    
     // ensure that the latitude index is legal
-    if ( j < 0 || j >= nlats ) {
+    if ( j < 0 || j >= lats.size() ) {
         throw (baddatareq());
     }    
     
     // turn the two indices into a single index into the data array
-    indx = j*nlons + i;
+    indx = j*lons.size() + i;
     
-    return data[indx];
+    return dater[indx];
 };
 
 
@@ -159,22 +150,16 @@ real& GridLatLonFieldSfc::valueref( int i, int j )
    }    
      
    // ensure that the longitude index is legal
-   if ( wraps ) {
-      i = iwrap( i );
-   } else {
-      if ( i < 0 || i >= nlons  ) {
-          throw (baddatareq());
-      }    
-   }   
+   i = lons.iwrap( i );
    // ensure that the latitude index is legal
-   if ( j < 0 || j >= nlats ) {
+   if ( j < 0 || j >= lats.size() ) {
        throw (baddatareq());
    }    
 
    // turn the two indices into a single index into the data array
-   indx = j*nlons + i;
+   indx = j*lons.size() + i;
      
-   result = &(data[indx]);
+   result = &(dater[indx]);
    return *result;
 }        
 
@@ -187,7 +172,7 @@ real GridLatLonFieldSfc::value( int indx ) const
          throw (baddatareq());
      }    
      
-     result = data[indx];
+     result = dater[indx];
 
      return result;
 
@@ -211,7 +196,7 @@ real* GridLatLonFieldSfc::values( int n, real* vals, int *indices ) const
         }
    
         for ( indx=0; indx < n; indx++ ) {
-            vals[indx] = data[indices[indx]];
+            vals[indx] = dater[indices[indx]];
 	    }
      }
         
@@ -221,339 +206,65 @@ real* GridLatLonFieldSfc::values( int n, real* vals, int *indices ) const
 
 std::vector<real> GridLatLonFieldSfc::longitudes()  const
 { 
-   return lons;
+   return lons.dimension();
 };
 
 std::vector<real> GridLatLonFieldSfc::latitudes()  const
 { 
-   return lats;
+   return lats.dimension();
 };
 
 
 real GridLatLonFieldSfc::longitude( int i )  const
 {
-   if ( wraps ) {
-      i = iwrap( i );
-   } else {
-      if ( i < 0 || i >= nlons ) {
-          throw (baddatareq());
-      }
-   }
+   i = lons.iwrap(i);
 
-   return lons[i];
+   return lons(i);
 };
    
 real GridLatLonFieldSfc::latitude( const int j ) const
 {
-   if ( j < 0 || j >= nlats ) {
+   if ( j < 0 || j >= lats.size() ) {
        throw (baddatareq());
    }    
-   return lats[j];
+   return lats(j);
 };   
  
 
 real GridLatLonFieldSfc::wrap( real lon ) const
 {
-     real extlon;
-     
-     if ( nlons <= 1 ) {
-        throw (baddataindex());
-     }
-     
-     if ( lons[0] < lons[1] ) {
-     
-        // calculate the max longitude
-        extlon = lons[0] + 360.0;
-     
-        // longitudes increase with index
-        while ( lon < lons[0] ) {
-           lon = lon + 360.0;
-        }
-        while ( lon > extlon ) {
-           lon = lon - 360.0;
-        } 
-        // in case we went one notch too far       
-        if ( lon < lons[0] ) {
-           lon = lon + 360.0;
-        }
-     } else {
-        // calculate the min longitude
-        extlon = lons[0] - 360.0;
-     
-        // longitudes decrease with index
-        while ( lon > lons[0] ) {
-           lon = lon - 360.0;
-        }
-        while ( lon < extlon ) {
-           lon = lon + 360.0;
-        }        
-        if ( lon > lons[0] ) {
-           lon = lon - 360.0;
-        }
-     }
-     
-     return lon;
+
+     return lons.wrap( lon );
 
 };
 
 int GridLatLonFieldSfc::iwrap( int i ) const
 {
-     
-     if ( nlons <= 1 ) {
-        throw (baddataindex());
-     }
-     
-     if ( wraps ) {
-        while ( i < 0 ) {
-           i = i + nlons;
-        }
-        while ( i >= nlons ) {
-           i = i - nlons;
-        } 
-     } else {
-        if ( i < 0 || i >= nlons ) {
-           throw (baddataindex());
-        }
-     }
-     
-     return i;
-
+     return lons.iwrap( i );
 };
 
 void GridLatLonFieldSfc::lonindex( real lon, int* i1, int* i2 ) const
 {
-     int i;
-     
-     lon = wrap(lon);
-     
-     if ( nlons <= 1 ) {
-        throw (baddataindex());
-     }
 
-     if ( londir > 0 ) {
-        // longitudes increase
-
-        // find the highest-indexed lon that is below the test lon
-        i = 0;
-        *i1 = -1;
-        while ( i < nlons && lons[i] < lon ) {
-        
-           if ( lons[i] < lon ) {
-              *i1 = i;
-           } 
-           i++;
-        }
-        if ( *i1 != -1 ) {
-           // we have a lower bound for the test lon in lons
-        
-           // do we have an upper bound?
-           if ( *i1 < (nlons-1) ) {
-              *i2 = *i1 + 1;
-           } else {
-              if ( wraps ) {
-                 *i2 = nlons;
-              } else {
-                 // test val lies above range of lons
-                 throw (baddataindex());
-              }           
-           }   
-        } else {
-              if ( wraps ) {
-                 *i1 = -1;
-                 *i2 =  0;
-              } else {
-                 // test lon lies below the range of lons
-                 throw (baddataindex());
-              }   
-        }
-     } else {
-        // longitudes decrease
-
-        // find the lowest-indexed lon that is below the test lon
-        i = nlons-1;
-        *i2 = -1;
-        while ( i >= 0 && lons[i] < lon ) {
-        
-           if ( lons[i] < lon ) {
-              *i2 = i;
-           } 
-        
-           i--;
-        }
-        if ( *i2 != -1 ) {
-           // we have an lower bound for the test lon in lons
-        
-           // do we have an upper bound?
-           if ( *i2 > 0 ) {
-              *i1 = *i2 - 1;
-           } else {
-              if ( wraps ) {
-                 *i1 = nlons-1;
-                 *i2 = nlons;
-              } else {
-                 // test val lies above range of lons
-                 throw (baddataindex());
-              }           
-           }   
-        } else {
-              if ( wraps ) {
-                 *i1 = 0;
-                 *i2 = -1;
-              } else {
-                 // test lon lies below the range of lons
-                 throw (baddataindex());
-              }   
-        }
-     
-     }
-
+     lons.index( lon, i1, i2 );
 
 };
 
 void GridLatLonFieldSfc::latindex( real lat, int* i1, int* i2 ) const
 {
-     int i;
-     
-     if ( nlats <= 1 ) {
-        throw (baddataindex());
-     }
 
-
-     if ( latdir > 0 ) {
-        // latitudes increase
-
-        // find the highest-indexed lat that is below the test lat
-        i = 0;
-        *i1 = -1;
-        while ( i < nlats && lats[i] < lat ) {
-        
-           if ( lats[i] < lat ) {
-              *i1 = i;
-           } 
-           i++;
-        }
-        if ( *i1 != -1 ) {
-           // we have a lower bound for the test lat in lats
-        
-           // do we have an upper bound?
-           if ( *i1 < (nlats-1) ) {
-              *i2 = *i1 + 1;
-           } else {
-              if ( ABS( lats[nlats-1] - lat ) > 0.0001 ) {
-                 // test val lies above range of lats
-                 throw (baddataindex());
-              } else {
-                 // close enough
-                 *i2 = nlats-1;
-                 *i1 = *i2 - 1;
-              }           
-           }   
-        } else {
-              if ( ABS( lats[0] - lat ) > 0.0001 ) {
-                 // test lat lies below the range of lats
-                 throw (baddataindex());
-              } else {
-                 *i1 = 0;
-                 *i2 = 1;
-              }   
-        }
-     } else {
-        // latitudes decrease
-
-        // find the lowest-indexed lat that is below the test lat
-        i = nlats-1;
-        *i2 = -1;
-        while ( i >= 0 && lats[i] < lat ) {
-        
-           if ( lats[i] < lat ) {
-              *i2 = i;
-           } 
-        
-           i--;
-        }
-        if ( *i2 != -1 ) {
-           // we have an lower bound for the test lat in lats
-        
-           // do we have an upper bound?
-           if ( *i2 > 0 ) {
-              *i1 = *i2 - 1;
-           } else {
-              if ( ABS( lats[0] - lat ) > 0.0001 ) {
-                 // test val lies above range of lats
-                 throw (baddataindex());
-              } else {
-                 // close enough
-                 *i1 = 0;
-                 *i2 = 1;
-              }           
-           }   
-        } else {
-              if ( ABS( lats[nlats-1] - lat ) > 0.0001 ) {
-                 // test lat lies below the range of lats
-                 throw (baddataindex());
-              } else {
-                 *i1 = nlats-2;
-                 *i2 = nlats-1;
-              }   
-        }
-     
-     }
+     lats.index( lat, i1, i2 );
 
 };
 
 
 
-void GridLatLonFieldSfc::setLonDir( const int loadFlags )
-{
-   londir = 0;
-   if ( nlons > 1 ) {
-      londir = ( lons[1] > lons[0] ) ? 1 : -1;
-   }
-}
-
-void GridLatLonFieldSfc::setLatDir( const int loadFlags )
-{
-   latdir = 0;
-   if ( nlats > 1 ) {
-      latdir = ( lats[1] > lats[0] ) ? 1 : -1;
-   }
-}
 
 void GridLatLonFieldSfc::setWraps( const int loadFlags )
 {
-   real dlon;
-   real past_end;
-   
-   // set the wrap flag
-   if ( loadFlags & ( GFL_WRAP | GFL_NOWRAP ) ) {
-      // the wrap flag was specificed explicitly
-      if ( loadFlags & GFL_NOWRAP ) {
-         wraps = 0;
-      }   
-      if ( loadFlags & GFL_WRAP ) {
-         wraps = 1;
-      }
-   } else {
-      // wrap flag was not specified explicitly.
-      // guess it from the longitude values
-      
-      // find the delta between longitudes
-      dlon = lons[1] - lons[0];
-      // use the delta to go oine past the last longuitd,e and then wrap around
-      if ( dlon > 0 ) {
-         past_end =  lons[nlons-1] + dlon - 360.0;
-      } else {
-         past_end =  lons[nlons-1] + dlon + 360.0;      
-      }
-      // now see if the past_end longitude is much different fomr the first longitude
-      // Note: it does not have to be exact, and the longitudes do not have to
-      // be regularly-spaced. All we are testing for is
-      // whether they are close enough that we can consider the longitudes
-      // to cover the globe
-      
-      wraps =  ( ABS( past_end - lons[0] ) <  ABS(dlon/4.0) );
-   
-   }
+
+   lons.setWraps( loadFlags );
+
 }
 
 
@@ -562,93 +273,69 @@ void GridLatLonFieldSfc::setWraps( const int loadFlags )
 
 void GridLatLonFieldSfc::load( const realvec& inlons, const realvec& inlats, const realvec& indata, const int loadFlags )
 {
-   int indx = 0;
-   int i;
+   int nlons, nlats;
    
-   checkLons(inlons);
-   checkLats(inlats);
-      
-   nlons = inlons.size();
-   nlats = inlats.size();
+   lons.load( inlons, loadFlags );
+   lats.load( inlats, loadFlags );
    
-   lons = inlons;
-   for ( i=1; i<nlons; i++ ) {
-       lons[i] = wrap(inlons[i]);
-   }    
-   lats = inlats;
+   nlons = lons.size();
+   nlats = lats.size();
    
-   data.resize( nlons*nlats );
+   clearData();
+   nd = nlons*nlats;
+   dater = new real[nd];   
 
    // copy the data   
-   for (int indx=0; indx<nlons*nlats; indx++ ) {
-       data[indx] = indata[indx];
+   for (int indx=0; indx < nd; indx++ ) {
+       dater[indx] = indata[indx];
    }
    clear_nodata();
    
-   // determine the longitudinal wrapping
-   setWraps(loadFlags);
-      
-   /// determine the direction in which latitude and longitude go
-   setLonDir( loadFlags );
-   setLatDir( loadFlags );
-
-
 }
 
 void GridLatLonFieldSfc::load( const realvec& inlons, const realvec& inlats, const int loadFlags )
 {
-   int indx = 0;
-   real dlon;
-   int i;
    
-   checkLons(inlons);
-   checkLats(inlats);
-   
-   nlons = inlons.size();
-   nlats = inlats.size();
-   
-   lons = inlons;
-   for ( i=1; i<nlons; i++ ) {
-       lons[i] = wrap(inlons[i]);
-   }    
-   lats = inlats;
-   
+   lons.load( inlons, loadFlags );
+   lats.load( inlats , loadFlags);
    
    // Don't try to copy any data 
-   data.clear();  
-   set_nodata();
+   clearData();  
+
    if ( loadFlags & GFL_PREFILL ) {
-      for ( i=0; i<nlons*nlats; i++ ) {
-         data.push_back( fill_value );
+      nd = lons.size()*lats.size();
+      dater = new real[nd];
+      for ( int i=0; i<nd; i++ ) {
+         dater[i] = fill_value;
       }
       clear_nodata();   
    }
-   
-   // determine the longitudinal wrapping
-   setWraps(loadFlags);
-      
-   /// determine the direction in which latitude and longitude go
-   setLonDir( loadFlags );
-   setLatDir( loadFlags );
    
 }
 
 void GridLatLonFieldSfc::load( const realvec& indata, const int loadFlags )
 {
    int indx = 0;
-   real dlon;
    int i;
+   int nlons, nlats;
+   
+   nlons = lons.size();
+   nlats = lats.size();
    
    if ( nlons*nlats != indata.size() ) {
       throw(badincompatcoords());
    }      
    
-   data = indata;
+   clearData();
+   nd = nlons*nlats;
+   dater = new real[nd];
+   for ( int i=0; i<nd; i++ ) {
+      dater[i] = indata[i];
+   }
+   
    clear_nodata();
 
-
    /// note: since the longitudes and latitudes are unchanged,
-   /// we do not call set_Wraps(), setLonDir(), or setLatDir() here.   
 
 }
 
@@ -668,27 +355,12 @@ bool GridLatLonFieldSfc::compatible( const GridFieldSfc& obj, int compatFlags ) 
     
        if ( compatFlags & METCOMPAT_HORIZ ) {
           // check that the longitudes match in number and values
-          dim = trueobj->longitudes();
-          if ( dim.size() == nlons ) {
-             for ( int i=0; i<nlons; i++ ) {
-                // longitudes must be within 0.001 degrees
-                if ( ABS( dim[i] - lons[i] ) > 0.001 ) {
-                   result = false;
-                }   
-             }
-          }   
-          // check that the latitudes match in number and values
-          dim = trueobj->latitudes();
-          if ( dim.size() == nlats ) {
-             for ( int i=0; i<nlats; i++ ) {
-                // latitudes must be within 0.001 degrees
-                if ( ABS( dim[i] - lats[i] ) > 0.001 ) {
-                   result = false;
-                }   
-             }
-          } else {
+          if (  ! lons.compatible( trueobj->lons ) ) {
              result = false;
-          }             
+          }   
+          if (  ! lats.compatible( trueobj->lats ) ) {
+             result = false;
+          }   
        }
 
     } else {
@@ -721,7 +393,11 @@ bool GridLatLonFieldSfc::match( const GridLatLonFieldSfc& obj ) const
 
 int GridLatLonFieldSfc::doeswrap() const
 {
-   return wraps;
+   int result = 0;
+   if ( lons.wrapping() ) {
+      result = 1;
+   }   
+   return result;
 }   
 
 real GridLatLonFieldSfc::area(int i, int j) const
@@ -729,44 +405,48 @@ real GridLatLonFieldSfc::area(int i, int j) const
     real dlon, dlat;
     real lat1, lat2, lon1, lon2;
     real ar;
+    int nlons, nlats;
+    
+    nlons = lons.size();
+    nlats = lats.size();
 
     if ( j > 0 ) {
-       lat1 = (lats[j-1] + lats[j])/2.0;
+       lat1 = (lats(j-1) + lats(j))/2.0;
     } else {
-       lat1 = lats[j];
+       lat1 = lats(j);
     }      
     if ( j < (nlats-1) ) {
-       lat2 = (lats[j] + lats[j+1])/2.0;
+       lat2 = (lats(j) + lats(j+1))/2.0;
     } else {
-       lat2 = lats[j];
+       lat2 = lats(j);
     }
     dlat = ABS( SIN(lat2/180.0*PI) - SIN(lat1/180.0*PI) );
 
     if ( i > 0 ) {
-       lon1 = ( lons[i-1] + lons[i] )/2.0;
+       lon1 = ( lons(i-1) + lons(i) )/2.0;
     } else {
        // i == 0 
-       if ( wraps ) {
-          if ( lons[nlons-1] > lons[0] ) {
-             lon1 = (lons[0] +  (lons[nlons-1] - 360.0) )/2.0;
+       if ( lons.wrapping() ) {
+          if ( lons(nlons-1) > lons(0) ) {
+             lon1 = (lons(0) +  (lons(nlons-1) - 360.0) )/2.0;
           } else {
-             lon1 = (lons[0] +  (lons[nlons-1] + 360.0) )/2.0;
+             lon1 = (lons(0) +  (lons(nlons-1) + 360.0) )/2.0;
           }
        } else {
-          lon1 = lons[0];
+          lon1 = lons(0);
        }
     }   
     if ( i < (nlons-1) ) {
-       lon2 = ( lons[i] + lons[i+1] )/2.0;
+       lon2 = ( lons(i) + lons(i+1) )/2.0;
     } else {
-       if ( wraps ) {
-          if ( lons[0] < lons[nlons-2] ) {
-             lon2 = ((lons[0] + 360.0) + lons[nlons-1])/2.0;
+       if ( lons.wrapping() ) {
+          if ( lons(0) < lons(nlons-2) ) {
+             lon2 = ((lons(0) + 360.0) + lons(nlons-1))/2.0;
           } else {
-             lon2 = ((lons[0] - 360.0) + lons[nlons-1])/2.0;
+             lon2 = ((lons(0) - 360.0) + lons(nlons-1))/2.0;
           }       
        } else {
-          lon2 = lons[i];
+          lon2 = lons(i);
        }
     }
     
@@ -785,8 +465,8 @@ real GridLatLonFieldSfc::area(int i) const
 {
     int ii,jj;
     
-    ii = i % nlons;
-    jj = i / nlons;
+    ii = i % lons.size();
+    jj = i / lons.size();
     
     return area(ii,jj);
     
@@ -795,11 +475,17 @@ real GridLatLonFieldSfc::area(int i) const
 GridFieldSfc* GridLatLonFieldSfc::areas() const
 {
     GridLatLonFieldSfc* result;
-    std::vector<real> newdata;
+    real* newdata;
     real ar;
     real dlon, dlat;
     real lat1, lat2, lon1, lon2;
     int maxlon;
+    int nlons, nlats;
+    real* newlats;
+    real* newlons;
+    
+    nlons = lons.size();
+    nlats = lats.size();
     
     result = dynamic_cast<GridLatLonFieldSfc*>(this->duplicate());
 
@@ -808,46 +494,49 @@ GridFieldSfc* GridLatLonFieldSfc::areas() const
     result->set_fillval( -999.0 );
     result->set_surface( "" );
     
-    newdata.reserve( nlons*nlats );
+    newdata = new real[nlons*nlats];
+    newlons = new real[nlons];
+    newlats = new real[nlats]; 
     for ( int j=0; j<nlats; j++ ) {
+        newlats[j] = lats(j);
         if ( j > 0 ) {
-           lat1 = (lats[j-1] + lats[j])/2.0;
+           lat1 = (lats(j-1) + lats(j))/2.0;
         } else {
-           lat1 = lats[j];
+           lat1 = lats(j);
         }      
         if ( j < (nlats-1) ) {
-           lat2 = (lats[j] + lats[j+1])/2.0;
+           lat2 = (lats(j) + lats(j+1))/2.0;
         } else {
-           lat2 = lats[j];
+           lat2 = lats(j);
         }
         dlat = ABS( SIN(lat2/180.0*PI) - SIN(lat1/180.0*PI) );
         for ( int i=0; i<nlons; i++ ) {
            
            if ( i > 0 ) {
-              lon1 = ( lons[i-1] + lons[i] )/2.0;
+              lon1 = ( lons(i-1) + lons(i) )/2.0;
            } else {
               // i == 0 
-              if ( wraps ) {
-                 if ( lons[nlons-1] > lons[0] ) {
-                    lon1 = (lons[0] +  (lons[nlons-1] - 360.0) )/2.0;
+              if ( lons.wrapping() ) {
+                 if ( lons(nlons-1) > lons(0) ) {
+                    lon1 = (lons(0) +  (lons(nlons-1) - 360.0) )/2.0;
                  } else {
-                    lon1 = (lons[0] +  (lons[nlons-1] + 360.0) )/2.0;
+                    lon1 = (lons(0) +  (lons(nlons-1) + 360.0) )/2.0;
                  }
               } else {
-                 lon1 = lons[0];
+                 lon1 = lons(0);
               }
            }   
            if ( i < (nlons-1) ) {
-              lon2 = ( lons[i] + lons[i+1] )/2.0;
+              lon2 = ( lons(i) + lons(i+1) )/2.0;
            } else {
-              if ( wraps ) {
-                 if ( lons[0] < lons[nlons-2] ) {
-                    lon2 = ((lons[0] + 360.0) + lons[nlons-1])/2.0;
+              if ( lons.wrapping() ) {
+                 if ( lons(0) < lons(nlons-2) ) {
+                    lon2 = ((lons(0) + 360.0) + lons(nlons-1))/2.0;
                  } else {
-                    lon2 = ((lons[0] - 360.0) + lons[nlons-1])/2.0;
+                    lon2 = ((lons(0) - 360.0) + lons(nlons-1))/2.0;
                  }       
               } else {
-                 lon2 = lons[i];
+                 lon2 = lons(i);
               }
            }
            
@@ -858,17 +547,50 @@ GridFieldSfc* GridLatLonFieldSfc::areas() const
            
            ar = dlon/180.0*PI * dlat;
            
-           newdata.push_back( ar );
+           newdata[ j*nlons + i ] = ar;
+
+           if ( j == 0 ) {
+              newlons[i] = lons(i);
+           }
        }
     }
-    result->load( lons, lats, newdata );    
+    result->absorb( nlons, nlats, newdata, newlons, newlats );    
 
     return result;
 
 
 }
 
+void GridLatLonFieldSfc::absorb( int nlons, int nlats, real* vals , real* lonvals, real* latvals)
+{
+      if ( lonvals != NULLPTR ) {
+         lons.absorb( nlons, lonvals );
+      }
+      if ( latvals != NULLPTR ) {
+         lats.absorb( nlats, latvals );
+      }
+      
+      clearData();
+      nd = nlons*nlats;
+      dater = vals;
+      clear_nodata();
+      
+}
 
+void GridLatLonFieldSfc::absorbLons( int n, real* lonvals )
+{
+      if ( lonvals != NULLPTR ) {
+         lons.absorb( n, lonvals );
+      }
+
+}
+
+void GridLatLonFieldSfc::absorbLats( int n, real* latvals )
+{
+      if ( latvals != NULLPTR ) {
+         lats.absorb( n, latvals );
+      }
+}
 
 GridFieldSfc* GridLatLonFieldSfc::duplicate() const
 {
@@ -884,11 +606,11 @@ GridFieldSfc* GridLatLonFieldSfc::duplicate() const
 
 int GridLatLonFieldSfc::dataSize() const
 {
-    if ( nlons == 0 || nlats == 0 ) {
+    if ( lons.size() == 0 || lats.size() == 0 ) {
        throw (badnodims());
     }
     
-    return nlons*nlats;   
+    return lons.size()*lats.size();   
 
 }
 
@@ -989,8 +711,8 @@ void GridLatLonFieldSfc::gridpoints( int n, int* indices, real* vals, int flags)
 
 void GridLatLonFieldSfc::splitIndex( int index, int* i, int* j ) const
 {
-    *i = index % nlons;
-    *j = index / nlons;
+    *i = index % lons.size();
+    *j = index / lons.size();
 
 }
 
@@ -1002,8 +724,8 @@ void GridLatLonFieldSfc::splitIndex( int n, int *index, int* i, int* j ) const
     
        for ( m=0; m < n; m++ ) {
           // now get the indices in that level
-          i[m] = index[m] % nlons;
-          j[m] = index[m] / nlons;
+          i[m] = index[m] % lons.size();
+          j[m] = index[m] / lons.size();
        }
     }
 
@@ -1014,23 +736,15 @@ int GridLatLonFieldSfc::joinIndex( int i, int j ) const
      int result;
      
      // ensure that the longitude index is legal
-     if ( wraps ) {
-        i = iwrap( i );
-     } else {
-        if ( i < 0 || i >= nlons  ) {
-            std::cerr << "GridLatLonFieldSfc: out-of-range longitude index " << i 
-            << " in joinIndex() call" << std::endl;
-            throw (baddatareq());
-        }    
-     }   
+     i = lons.iwrap(i);
      // ensure that the latitude index is legal
-     if ( j < 0 || j >= nlats ) {
+     if ( j < 0 || j >= lats.size() ) {
          std::cerr << "GridLatLonFieldSfc: out-of-range latitude or vertical index "  
-         << j << " of " << nlats << " in joinIndex() call" << std::endl;
+         << j << " of " << lats.size() << " in joinIndex() call" << std::endl;
          throw (baddatareq());
      }    
 
-     result = j*nlons + i;
+     result = j*lons.size() + i;
 
      return result;
 
@@ -1047,23 +761,15 @@ int* GridLatLonFieldSfc::joinIndex( int n, int *index, int* i, int* j ) const
         }
      
         for ( int m=0; m<n; m++ ) {           // ensure that the longitude index is legal
-            if ( wraps ) {
-               i[m] = iwrap( i[m] );
-            } else {
-               if ( i[m] < 0 || i[m] >= nlons  ) {
-                   std::cerr << "GridLatLonFieldSfc: out-of-range longitude index " 
-                   << i[m] << " in joinIndex() call" << std::endl;
-                   throw (baddatareq());
-               }    
-            }   
+            i[m] = lons.iwrap( i[m] );
             // ensure that the latitude index is legal                                                   
-            if ( j[m] < 0 || j[m] >= nlats ) {                                                                                   
+            if ( j[m] < 0 || j[m] >= lats.size() ) {                                                                                   
                 std::cerr << "GridLatLonField3D:  out-of-range latitude or vertical index "  << j[m]   
-                << " of " << nlats << " in joinIndex() call" << std::endl;                       
+                << " of " << lats.size() << " in joinIndex() call" << std::endl;                       
                 throw (baddatareq());                                                                                    
             }
                                                                                                                  
-            index[m] = j[m]*nlons + i[m];
+            index[m] = j[m]*lons.size() + i[m];
         }
      }
      
@@ -1076,11 +782,13 @@ void GridLatLonFieldSfc::receive_meta()
      real* dimvals;
      int cmd;
      int i;
+     int nlons;
+     int nlats;
 
      if (  pgroup == NULLPTR || metproc < 0 ) {
          // serial processing.  Load nothing, but
          // check that the object has valid metadata
-         if ( this->status() & (~0x10) ) {
+         if ( ! this->hasdata() ) {
             throw (baddataload());
          }
          
@@ -1103,59 +811,14 @@ void GridLatLonFieldSfc::receive_meta()
          //- std::cerr << "   GridLatLonFieldSfc::receive_meta: r-140 from " << metproc  << std::endl;
          pgroup->receive_reals( metproc, 1, &fill_value, PGR_TAG_GMETA );  // fill value
          //- std::cerr << "   GridLatLonFieldSfc::receive_meta: r-150 from " << metproc  << std::endl;
-         pgroup->receive_ints( metproc, 1, &wraps, PGR_TAG_GMETA );  // longitude wrapping flag
-         //- std::cerr << "   GridLatLonFieldSfc::receive_meta: r-160 from " << metproc  << std::endl;
-         pgroup->receive_ints( metproc, 1, &nlons, PGR_TAG_GMETA );  // number of lons
-         //- std::cerr << "   GridLatLonFieldSfc::receive_meta: r-170 from " << metproc  << std::endl;
-         pgroup->receive_ints( metproc, 1, &nlats, PGR_TAG_GMETA );  // number of lats
-         //- std::cerr << "   GridLatLonFieldSfc::receive_meta: r-180 from " << metproc  << std::endl;
          pgroup->receive_string( metproc, &sfc, PGR_TAG_GMETA ); // quantity
          //- std::cerr << "   GridLatLonFieldSfc::receive_meta: r-200 from " << metproc  << std::endl;
 
-         set_nodata();  // there are no data
+         lons.receive_meta();
+         lats.receive_meta();
+
+         clearData();
    
-         // get the longitudes
-         try {
-            dimvals = new real[nlons];
-         } catch(...) {
-            throw (badmemreq());
-         }
-         pgroup->receive_reals( metproc, nlons, dimvals, PGR_TAG_GDIMS ); 
-         lons.clear();
-         for ( i=0; i<nlons; i++ ) {
-             lons.push_back(dimvals[i]);
-         }    
-         delete[] dimvals;
-         if ( nlons > 1 ) {
-             if ( lons[1] > lons[0] ) {
-                londir = 1;
-             }    
-             if ( lons[1] < lons[0] ) {
-                londir = -1;
-             }
-         }
-
-         // get the latitudes
-         try {
-            dimvals = new real[nlats];
-         } catch(...)  {
-            throw (badmemreq());
-         }
-         pgroup->receive_reals( metproc, nlats, dimvals, PGR_TAG_GDIMS ); 
-         lats.clear();
-         for ( i=0; i<nlats; i++ ) {
-             lats.push_back(dimvals[i]);
-         }    
-         delete[] dimvals;
-         if ( nlats > 1 ) {
-             if ( lats[1] > lats[0] ) {
-                latdir = 1;
-             }    
-             if ( lats[1] < lats[0] ) {
-                latdir = -1;
-             }
-         }
-
          metaID = 0;
    
      }
@@ -1199,39 +862,12 @@ void GridLatLonFieldSfc::svr_send_meta(int id) const
          //- std::cerr << "   GridLatLonFieldSfc::svr_send_meta: s-140 to " << id << std::endl;
          pgroup->send_reals( id, 1, &fill_value, PGR_TAG_GMETA );  // fill value
          //- std::cerr << "   GridLatLonFieldSfc::svr_send_meta: s-150 to " << id << std::endl;
-         pgroup->send_ints( id, 1, &wraps, PGR_TAG_GMETA );  // longitude wrapping flag
-         //- std::cerr << "   GridLatLonFieldSfc::svr_send_meta: s-160 to " << id << std::endl;
-         pgroup->send_ints( id, 1, &nlons, PGR_TAG_GMETA );  // number of lons
-         //- std::cerr << "   GridLatLonFieldSfc::svr_send_meta: s-170 to " << id << std::endl;
-         pgroup->send_ints( id, 1, &nlats, PGR_TAG_GMETA );  // number of lats
-         //- std::cerr << "   GridLatLonFieldSfc::svr_send_meta: s-180 to " << id << std::endl;
          pgroup->send_string( id, sfc, PGR_TAG_GMETA ); // surface quantity
          //- std::cerr << "   GridLatLonFieldSfc::svr_send_meta: s-200 to " << id << std::endl;
 
-         // send the longitudes
-         try  {
-            dimvals = new real[nlons];
-         } catch(...)  {
-            throw (badmemreq());
-         }
-         for ( i=0; i<nlons; i++ ) {
-             dimvals[i] = lons[i];
-         }    
-         pgroup->send_reals( id, nlons, dimvals, PGR_TAG_GDIMS ); 
-         delete[] dimvals;
+         lons.svr_send_meta(id);
+         lats.svr_send_meta(id);
 
-         // send the latitudes
-         try {
-            dimvals = new real[nlats];
-         } catch(...)  {
-            throw (badmemreq());
-         }
-         for ( i=0; i<nlats; i++ ) {
-             dimvals[i] = lats[i];
-         }    
-         pgroup->send_reals( id, nlats, dimvals, PGR_TAG_GDIMS ); 
-         delete[] dimvals;
-   
      }
 
 }
@@ -1246,7 +882,7 @@ void GridLatLonFieldSfc::serialize(std::ostream& os) const
   real val;
   int ival;
   const char *cstr;
-  int version = 1;
+  int version = 2;
 
   
   try {
@@ -1256,26 +892,35 @@ void GridLatLonFieldSfc::serialize(std::ostream& os) const
       // output the version
       os.write( reinterpret_cast<char *>( &version), static_cast<std::streamsize>( sizeof(int)));
 
-      // output the number of longitudes
-      ival = nlons;
-      os.write( reinterpret_cast<char *>( &ival), static_cast<std::streamsize>( sizeof(int)));
-      // output the number of latitudes
-      ival = nlats;
-      os.write( reinterpret_cast<char *>( &ival), static_cast<std::streamsize>( sizeof(int)));
+      switch (version) {
+      case 1: 
+          // output the number of longitudes
+          ival = lons.size();
+          os.write( reinterpret_cast<char *>( &ival), static_cast<std::streamsize>( sizeof(int)));
+          // output the number of latitudes
+          ival = lats.size();
+          os.write( reinterpret_cast<char *>( &ival), static_cast<std::streamsize>( sizeof(int)));
   
-      // output the longitudes
-      for ( i=0; i<nlons; i++ ) {
-          val = lons[i];
-          os.write( reinterpret_cast<char *>( &val), static_cast<std::streamsize>( sizeof(real)));
-      }    
-      // output the latitudes
-      for ( i=0; i<nlats; i++ ) {
-          val = lats[i];
-          os.write( reinterpret_cast<char *>( &val), static_cast<std::streamsize>( sizeof(real)));
-      }    
+          // output the longitudes
+          for ( i=0; i<lons.size(); i++ ) {
+              val = lons(i);
+              os.write( reinterpret_cast<char *>( &val), static_cast<std::streamsize>( sizeof(real)));
+          }    
+          // output the latitudes
+          for ( i=0; i<lats.size(); i++ ) {
+              val = lats(i);
+              os.write( reinterpret_cast<char *>( &val), static_cast<std::streamsize>( sizeof(real)));
+          }  
+          break;
+      case 2: 
+          lons.serialize(os);
+          lats.serialize(os);
+          break; 
+      }
+       
       // output the data
-      for ( j=0; j<nlats; j++ ) {
-      for ( i=0; i<nlons; i++ ) {
+      for ( j=0; j<lats.size(); j++ ) {
+      for ( i=0; i<lons.size(); i++ ) {
           val = value(i,j);
           os.write( reinterpret_cast<char *>( &val), static_cast<std::streamsize>( sizeof(real)));
       }
@@ -1298,7 +943,9 @@ void GridLatLonFieldSfc::deserialize(std::istream& is)
    real val;
    int ival;
    int nxlons, nxlats;
-   std::vector<real> xlons, xlats, xdata;
+   real* xlons;
+   real *xlats;
+   real *xdata;
    int version;
    
    clear();
@@ -1310,34 +957,47 @@ void GridLatLonFieldSfc::deserialize(std::istream& is)
        // read the version
        is.read(reinterpret_cast<char *>( &version), static_cast<std::streamsize>( sizeof(int)));
        
+      switch (version) {
+      case 1: 
        
-       // read the number of longitudes
-       is.read( reinterpret_cast<char *>(&nxlons), static_cast<std::streamsize>( sizeof(int)) );
-       // read the number of latitudes
-       is.read( reinterpret_cast<char *>(&nxlats), static_cast<std::streamsize>( sizeof(int)) );
+           // read the number of longitudes
+           is.read( reinterpret_cast<char *>(&nxlons), static_cast<std::streamsize>( sizeof(int)) );
+           // read the number of latitudes
+           is.read( reinterpret_cast<char *>(&nxlats), static_cast<std::streamsize>( sizeof(int)) );
        
-       // read the longitudes
-       xlons.reserve(nxlons);
-       for ( i=0; i<nxlons; i++ ) {
-           is.read( reinterpret_cast<char *>(&val), static_cast<std::streamsize>( sizeof(real)) );
-           xlons.push_back(val);
-       }    
-       // read the latitudes
-       xlats.reserve(nxlats);
-       for ( i=0; i<nxlats; i++ ) {
-           is.read( reinterpret_cast<char *>(&val), static_cast<std::streamsize>( sizeof(real)) );
-           xlats.push_back(val);
-       }    
-       // read the data
-       xdata.reserve(nxlats*nxlons);
-       for ( i=0; i<nxlats*nxlons; i++ ) {
-           is.read( reinterpret_cast<char *>(&val), static_cast<std::streamsize>( sizeof(real) ));
-           xdata.push_back(val);
-       }    
-              
-       // call the load method for checking, setting nlats, latdir, etc.
-       load( xlons, xlats, xdata );
-       
+           // read the longitudes
+           xlons = new real[nxlons];
+           for ( i=0; i<nxlons; i++ ) {
+               is.read( reinterpret_cast<char *>(&val), static_cast<std::streamsize>( sizeof(real)) );
+               xlons[i] = val;
+           }    
+           // read the latitudes
+           xlats = new real[nxlats];
+           for ( i=0; i<nxlats; i++ ) {
+               is.read( reinterpret_cast<char *>(&val), static_cast<std::streamsize>( sizeof(real)) );
+               xlats[i] = val;
+           }    
+           lons.absorb( nxlons, xlons );
+           lats.absorb( nxlats, xlats );           
+           
+           break;
+      case 2: 
+           lons.deserialize(is);
+           lats.deserialize(is);
+           
+           nxlons = lons.size();
+           nxlats = lats.size();
+           
+           break;
+      } 
+      
+      // read the data
+      xdata = new real[nxlats*nxlons];
+      for ( i=0; i<nxlats*nxlons; i++ ) {
+          is.read( reinterpret_cast<char *>(&val), static_cast<std::streamsize>( sizeof(real) ));
+          xdata[i] = val;
+      }    
+      absorb( nxlons, nxlats, xdata );          
 
    } catch (...) {
        throw;
@@ -1347,8 +1007,8 @@ void GridLatLonFieldSfc::deserialize(std::istream& is)
 
 void GridLatLonFieldSfc::getindices( int index, int* i, int*j ) const
 {
-    *i = index % nlons;
-    *j = index / nlons;
+    *i = index % lons.size();
+    *j = index / lons.size();
 
 }
 

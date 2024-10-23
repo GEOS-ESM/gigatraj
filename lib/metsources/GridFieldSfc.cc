@@ -103,7 +103,7 @@ void GridFieldSfc::set_surface( const std::string sq )
 void GridFieldSfc::transform( const std::string unyts, real scale, real offset ) 
 {
     real ms, mo;
-    GridFieldSfc::iterator data;
+    GridFieldSfc::iterator datax;
     real s, o;
     
     uu = unyts;
@@ -116,9 +116,9 @@ void GridFieldSfc::transform( const std::string unyts, real scale, real offset )
     // what the old units were and what the new units will be.
     
     // apply the scaling
-    for ( data = this->begin(); data != this->end(); data++ ) {
-        if (*data != fill_value ) {
-           *data = (*data)*s + o;
+    for ( datax = this->begin(); datax != this->end(); datax++ ) {
+        if (*datax != fill_value ) {
+           *datax = (*datax)*s + o;
         }
     } 
 
@@ -299,10 +299,18 @@ GridFieldSfc::iterator& GridFieldSfc::iterator::operator=(const GridFieldSfc::it
 real& GridFieldSfc::iterator::operator*() const 
 {
 
-   if ( my_index >= 0 && my_index < my_grid->data.size() ) {
-      return (my_grid->data).at(my_index);
+   if ( my_grid->use_array ) {
+      if ( my_index >= 0 && my_index < my_grid->nd ) {
+         return (my_grid->dater)[my_index];
+      } else {
+         throw (baddataindex());
+      }   
    } else {
-      throw (baddataindex());
+      if ( my_index >= 0 && my_index < my_grid->data.size() ) {
+         return (my_grid->data).at(my_index);
+      } else {
+         throw (baddataindex());
+      }
    }
 }
 
@@ -333,7 +341,11 @@ void GridFieldSfc::iterator::indices( int* i, int*j ) const
 
 void GridFieldSfc::iterator::assign( real val )
 {
-  (my_grid->data).at(my_index) = val;
+  if ( my_grid->use_array ) {
+     (my_grid->dater)[my_index] = val;
+  } else {
+     (my_grid->data).at(my_index) = val;  
+  }
 }
 
 GridFieldSfc::iterator GridFieldSfc::begin()
@@ -345,8 +357,11 @@ GridFieldSfc::iterator GridFieldSfc::begin()
 
 GridFieldSfc::iterator GridFieldSfc::end()
 {
-   
-   return GridFieldSfc::iterator( this, data.size() );
+   if ( use_array ) {
+      return GridFieldSfc::iterator( this, nd );
+   } else {
+      return GridFieldSfc::iterator( this, data.size() );
+   }
 
 }
 
@@ -388,11 +403,18 @@ GridFieldSfc::const_iterator& GridFieldSfc::const_iterator::operator=(const Grid
 /// override operator *, returns the current data element
 real GridFieldSfc::const_iterator::operator*() const 
 {
-
-   if ( my_index >= 0 && my_index < my_grid->data.size() ) {
-      return (my_grid->data)[my_index];
+   if ( my_grid->use_array) {
+      if ( my_index >= 0 && my_index < my_grid->nd ) {
+         return (my_grid->dater)[my_index];
+      } else {
+         throw (baddataindex());
+      }
    } else {
-      throw (baddataindex());
+      if ( my_index >= 0 && my_index < my_grid->data.size() ) {
+         return (my_grid->data)[my_index];
+      } else {
+         throw (baddataindex());
+      }
    }
 }
 
@@ -430,9 +452,11 @@ GridFieldSfc::const_iterator GridFieldSfc::begin() const
 
 GridFieldSfc::const_iterator GridFieldSfc::end() const
 {
-   
-   return GridFieldSfc::const_iterator( this, data.size() );
-
+   if ( use_array ) {
+      return GridFieldSfc::const_iterator( this, nd );
+   } else { 
+      return GridFieldSfc::const_iterator( this, data.size() );
+   }
 }
 
 real GridFieldSfc::const_iterator::area() const

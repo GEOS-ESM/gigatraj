@@ -5,6 +5,8 @@
 #include <vector>
 
 #include "gigatraj/gigatraj.hh"
+#include "gigatraj/GridFieldDim.hh"
+#include "gigatraj/GridFieldDimLon.hh"
 #include "gigatraj/GridFieldSfc.hh"
 
 namespace gigatraj {
@@ -70,8 +72,15 @@ class GridLatLonFieldSfc : public GridFieldSfc {
       */
       GridLatLonFieldSfc(const GridLatLonFieldSfc&);
 
+
+     /// copy assignment
+     /*! 
+         This is the copy assignment operator for the GridLatLonFieldSfc class.
+     */
+     GridLatLonFieldSfc& operator=(const GridLatLonFieldSfc& src);
       
-      /// clears data contents 
+      
+      /// clears data and metadata contents 
       /*! This method clears the contents of the object, except for information
           related to the process group
       */    
@@ -84,9 +93,6 @@ class GridLatLonFieldSfc : public GridFieldSfc {
           \return returns 0 if the object is ready to be used, non-zero otherwise
       */
       int status() const;
-
-      /// assignment operator
-      GridLatLonFieldSfc& operator=(const GridLatLonFieldSfc& src);
 
       /// returns the size of the grid's three dimensions
       /*! This method returns the size of the grid's three dimensions
@@ -470,23 +476,66 @@ class GridLatLonFieldSfc : public GridFieldSfc {
       GridFieldSfc* areas() const;
       
 
+      /// takes the provided arrays of dimensional values and data values as its own
+      /*! This method takes arrays of longitude values and
+      latitude value,s as well as 
+          an array of data values; and it
+          makes them its own. That is, this GridLatLonFieldSfc object 
+         is therafter responsible for deleting the arrays. The calling routine
+         must not delete the arrays or change any of heir elements.
+       
+          /param nlons the number of longitudes
+          /param nlats the number of latitudes
+          /param vals the nlons*nlats-length array of data values to be "absorbed"
+          /param lonvals if non-null, the array of longitude values to be "absorbed"
+          /param latvals if non-null, the array of latitude values to be "absorbed"
+            
+     */    
+      void absorb( int nlons, int nlats, real* vals , real* lonvals=NULLPTR, real* latvals=NULLPTR);
+
+      /// takes the provided array of longitude values as its own
+      /*! This method takes an array of longitude values and
+          makes them its own. That is, this GridLatLonFieldSfc object 
+         is therafter responsible for deleting the array. The calling routine
+         must not delete the array or change any of its elements.
+       
+          /param n the length of the array
+          /param lonvals the array of longitudes to be "absorbed"
+            
+     */    
+      void absorbLons( int n, real* lonvals );
+
+      /// takes the provided array of latitude values as its own
+      /*! This method takes an array of latitude values and
+          makes them its own. That is, this GridLatLonFieldSfc object 
+         is therafter responsible for deleting the array. The calling routine
+         must not delete the array or change any of its elements.
+       
+          /param n the length of the array
+          /param latvals the array of latitudes to be "absorbed"
+            
+     */    
+      void absorbLats( int n, real* latvals );
+
+
+      /// (parallel processing) sets the process group and met processor 
+      /*! This method sets the process group and met processor for parallel processing.
+      
+           \param pg a pointer to the process group being used for parallel processing
+      
+           \param met the ID of the processor within pg that is dedicated to handling met 
+                  data (or -1 if there is none)
+      */
+      void setPgroup( ProcessGrp* pg, int met);
+
+
+
    protected:
 
 
       /// vector of longitudes
-      std::vector<real> lons;
-      /// how many longitudes
-      int nlons;
-      /// +1 if longitudes increase with index, -1 if they decrease, 0 if undefined
-      int londir;
-      /// sets the longitude direction
-      /*! This method sets the longitude directionm, based on whether the longitudes increase
-          or decrease with array index number.
-            \param loadFlags (reserved for future expension)  
-      */
-      void setLonDir( const int loadFlags=0 ); 
-      /// 1 if longitudes wrap around, 0 otherwise
-      int wraps;
+      GridFieldDimLon lons;
+
       /// sets the wrap flag based on flags or input data
       /*! This method sets the wrap flag, based on flags or the longitude data.
           
@@ -499,17 +548,7 @@ class GridLatLonFieldSfc : public GridFieldSfc {
       void setWraps( const int loadFlags=0); 
       
       /// vector of latitudes
-      std::vector<real> lats;
-      /// how many latitudes
-      int nlats;
-      /// +1 if latitudes increase with index, -1 if they decrease, 0 if undefined
-      int latdir;
-      ///  sets the latitude direction
-      /*! This method sets the latitude direction, based on whether the latitudes increase
-          or decrease with array index number.
-            \param loadFlags (reserved for future expension)  
-      */
-      void setLatDir( const int loadFlags=0 ); 
+      GridFieldDim  lats;
 
       /// split a single index into longutude and latitude indices
       /*! Given a simple index into the data in the GridLatLonFieldSfc object,
