@@ -607,6 +607,9 @@ class GridField {
       */
       void set_expires( time_t exptime );    
 
+      /// returns the data as a single vector (in row-major order)
+      std::vector<real> dump() const;
+
    protected:
 
       /// identifies what field this object holds
@@ -666,9 +669,6 @@ class GridField {
       int nd;
       /// data array
       real* dater;
-
-      /// returns the data as a single vector (in row-major order)
-      std::vector<real> dump() const;
 
       /// used by child classes for operator= overriding methods
       void assign( const GridField& src);
