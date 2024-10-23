@@ -59,6 +59,11 @@ GridFieldProfile::GridFieldProfile(const GridFieldProfile& src) : GridField(src)
 // copy assignment
 GridFieldProfile& GridFieldProfile::operator=(const GridFieldProfile& src)
 {
+    // handle assignment to self
+    if ( this == &src ) {
+       return *this;
+    }
+    
     this->assign( src ) ;
     
     return *this;
@@ -878,20 +883,11 @@ void GridFieldProfile::setPgroup( ProcessGrp* pg, int met)
 
 }
 
-void GridFieldProfile::absorb( int n, real* vals )
+void GridFieldProfile::absorb( int n, real* vals, real* dvals )
 {
-     
-     clearData();
-     
-     nd = n;
-     dater = vals;
-     
-     clear_nodata();
-}
-
-void GridFieldProfile::absorb( int n, real*dvals, real* vals )
-{
-     zs.absorb( n, dvals );
+     if ( dvals != NULLPTR ) {
+        zs.absorb( n, dvals );
+     }
           
      clearData();
      
