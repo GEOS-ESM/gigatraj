@@ -508,7 +508,7 @@ class GridFieldDim : public GridField {
           or decrease with array index number.
             \param loadFlags (reserved for future expension)  
       */
-      void setDir( const int loadFlags=0 ); 
+      virtual void setDir( const int loadFlags=0 ); 
             
       /// used by child classes for operator= overriding methods
       void assign( const GridFieldDim& src);

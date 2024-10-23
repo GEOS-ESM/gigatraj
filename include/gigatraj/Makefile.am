@@ -17,6 +17,7 @@ pkginclude_HEADERS = gigatraj.hh \
                     MPIGrp.hh \
                    GridField.hh \
                     GridFieldDim.hh \
+                    GridFieldDimLon.hh \
                     GridFieldProfile.hh \
                     GridFieldSfc.hh \
                     GridField3D.hh \

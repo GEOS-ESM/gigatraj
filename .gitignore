@@ -91,6 +91,9 @@ test/test_GridFieldProfile_serial
 test/test_GridFieldDim
 test/test_GridFieldDim_MPI
 test/test_GridFieldDim_serial
+test/test_GridFieldDimLon
+test/test_GridFieldDimLon_MPI
+test/test_GridFieldDimLon_serial
 test/test_LinearVinterp
 test/test_LogLinearVinterp
 test/test_MPI.sh
