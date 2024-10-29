@@ -258,6 +258,24 @@ void GridFieldDim::absorb( int n, real* vals )
 
 }
 
+
+real* GridFieldDim::extract( int *n ) const 
+{
+    real* result;
+    
+    result = new real[nd];
+    
+    for ( int i=0; i < nd; i++ ) {
+        result[i] = dater[i];
+    }
+    
+    if ( n != NULLPTR ) {
+       *n = nd;
+    }
+    
+    return result;
+}
+
 real* GridFieldDim::values( int n, real* vals, int *indices ) const
 {
      int indx;
@@ -450,6 +468,7 @@ bool GridFieldDim::compatible( const GridFieldDim& obj, int flags ) const
        for ( int i=0; i < nzs ; i++ ) {
            if ( dater[i] != obj.value(i) ) {
               result = false;
+              break;
            }
        }
        
@@ -571,8 +590,12 @@ void GridFieldDim::receive_meta()
             throw (badmemreq());
          }
          pgroup->receive_reals( metproc, nzs, dater, PGR_TAG_GDIMS ); 
-
+         //- std::cerr << "   GridFieldDim::receive_meta: r-210 " << nzs << " from " << metproc  << std::endl;
+         //- std::cerr << "   GridFieldDim::receive_meta: r-210 ; dater[1] = " << dater[1]  << std::endl;
+         
          setDir();
+         clear_nodata();
+         //- std::cerr << "   GridFieldDim::receive_meta: r-210 ; flags=" << flags  << std::endl;
 
          metaID = 0;
    

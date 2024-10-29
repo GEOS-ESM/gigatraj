@@ -328,6 +328,14 @@ class GridFieldDim : public GridField {
      */    
       void absorb( int n, real* vals );
 
+     /// returns a new array with the dimensional values 
+     /*! Thuis method duplicates the data array of this dimension
+         
+         /param n the number of values returned in the array.
+         /return a pointer to the new array. It is the responsibility of the calling rohtine to delete[] it.
+     */
+     real* extract( int* n=NULLPTR) const;    
+ 
 
      class iterator;
      friend class iterator;
