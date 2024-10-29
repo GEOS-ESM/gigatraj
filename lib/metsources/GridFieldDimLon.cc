@@ -358,6 +358,7 @@ void GridFieldDimLon::receive_meta()
          pgroup->receive_reals( metproc, nzs, dater, PGR_TAG_GDIMS ); 
 
          setDir();
+         clear_nodata();
 
          metaID = 0;
    
