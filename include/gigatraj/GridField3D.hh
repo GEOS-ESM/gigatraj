@@ -6,6 +6,7 @@
 
 #include "gigatraj/gigatraj.hh"
 #include "gigatraj/GridField.hh"
+#include "gigatraj/GridFieldDim.hh"
 #include "gigatraj/GridFieldSfc.hh"
 
 namespace gigatraj {
@@ -15,7 +16,7 @@ namespace gigatraj {
 
   \brief Holds a three-dimensional grid of meteorological data
   
-  These clases define objects that hold meteorological fields
+  These classes define objects that hold meteorological fields
   that are defined in three spatial dimensions (two horizontla and one vertical).
 */
 
@@ -215,6 +216,26 @@ class GridField3D : public GridField {
       */
       void levels( const std::vector<real> &newvert );
 
+      /// takes the provided array of vertical level values as its own
+      /*! This method takes an array of vertical level values and
+          makes them its own. That is, this GridLatLonField3D object 
+         is therafter responsible for deleting the array. The calling routine
+         must not delete the array or change any of its elements.
+       
+          /param n the length of the array
+          /param zvals the array of vertical levels to be "absorbed"
+            
+     */    
+      void absorbLevels( int n, real* zvals );
+
+     /// returns a copy of the vertical dimension
+     /*! This method returns a copy of the vertical dimension
+        of the grid.
+
+        /return a GridFieldDim object holding the vertical dimension
+     */
+     GridFieldDim getLevels() const;   
+
       /// returns a single vertical level gridpoint value
       /*! This method returns a single vertical level gridpoint value, given its index.
       
@@ -372,9 +393,11 @@ class GridField3D : public GridField {
            \param js n-element array of second-indices into the data array
            \param ks n-element array of third-indices into the data array
            \param vals n-element array of reals to hold the results
-           \param local a flag which if non-zero, will ignore any multiprocessing and fetch the gridpoints locally
+           \param flags a set of bitwise flags that control the behavior of the method:
+                   0x01 = ignore any multiprocessing and fetch the gridpoints locally
+                   0x02 = call svr_done once the gridpoints have been obtained.
       */
-      virtual void gridpoints( int n, int* is, int* js, int* ks, real* vals, int local=0) const =0;
+      virtual void gridpoints( int n, int* is, int* js, int* ks, real* vals, int flags=0) const =0;
 
       /// (parallel processing) receives metadata from a central met processor
       /*! This method receives metadata from a central met processor, if
@@ -481,6 +504,16 @@ class GridField3D : public GridField {
           for deleting the new object.
       */
       virtual GridFieldSfc* areas() const = 0;
+
+      /// (parallel processing) sets the process group and met processor 
+      /*! This method sets the process group and met processor for parallel processing.
+      
+           \param pg a pointer to the process group being used for parallel processing
+      
+           \param met the ID of the processor within pg that is dedicated to handling met 
+                  data (or -1 if there is none)
+      */
+      virtual void setPgroup( ProcessGrp* pg, int met);
 
 
      class iterator;
@@ -1015,6 +1048,7 @@ class GridField3D : public GridField {
       */
       virtual int* joinIndex( int n, int *index, int* i, int* j, int* k ) const = 0;
 
+
    protected:
 
       /// identifies what the vertical coordinate is for this grid
@@ -1027,18 +1061,7 @@ class GridField3D : public GridField {
       void assign( const GridField3D& src);
 
       /// vector of vertical coordinates
-      std::vector<real> zs;
-      /// how many levels?
-      int nzs;
-       /// +1 if levels increase with index, -1 if they decrease, 0 if undefined
-      int zdir;
-      /// sets the levels direction
-      /*! This method sets the direction of the vertical coordinate, based on the set of coordinates.
-      
-          \param loadFlags (reserved for future expansion)
-      
-      */
-      void setZDir( const int loadFlags=0 ); 
+      GridFieldDim zs;
      
 };
 }

@@ -36,7 +36,10 @@ GridField3D::GridField3D(): GridField()
    vuu = "N/A";
    mksVScale = 1.0;
    mksVOffset = 0.0;
-   nzs = 0;
+
+   use_array = 1;
+   nd = 0;
+   dater = NULLPTR;
 
 }
 
@@ -53,9 +56,9 @@ GridField3D::GridField3D(const GridField3D& src): GridField(src)
            vuu = src.vunits();
      mksVScale = src.mksVScale;
     mksVOffset = src.mksVOffset;
-           nzs = src.nzs;
-            zs = src.levels(); 
+        zs = src.zs;
 
+        zs.setPgroup( pgroup, metproc );
 }
 
 void GridField3D::assign( const GridField3D& src )
@@ -67,9 +70,9 @@ void GridField3D::assign( const GridField3D& src )
            vuu = src.vunits();
      mksVScale = src.mksVScale;
     mksVOffset = src.mksVOffset;
-            zs = src.levels(); 
-          zdir = src.zdir;
+            zs = src.zs; 
 
+    zs.setPgroup( pgroup, metproc );
 }
 
 
@@ -80,8 +83,6 @@ void GridField3D::clear() {
    mksVScale = 1.0;
    mksVOffset = 0.0;
    zs.clear();
-   nzs = 0;   
-   zdir = 0;
    
    GridField::clear();   
 
@@ -95,8 +96,8 @@ int GridField3D::status() const
     if ( vquant == "none" || vuu == "N/A" ) {
        result = result | 0x02;
     } 
-    if ( nzs <= 0 ) {
-       result = result | 0x08;
+    if ( zs.size() <= 0 ) {
+       result = result | GFS_NODIMS;
     }
     
     return result;
@@ -146,136 +147,62 @@ void GridField3D::set_vunits( const std::string vu, real scale, real offset )
    mksVOffset = offset;
 }         
 
+void GridField3D::setPgroup( ProcessGrp* pg, int met)
+{
+       GridField::setPgroup( pg, met );
+
+       zs.setPgroup( pg, met );
+
+}
+
 std::vector<real> GridField3D::levels() const 
 { 
-   return zs;
+   return zs.dimension();
 };
 
 void GridField3D::levels( const std::vector<real> &newvert )
 {
+   int nzs;
+   
+   nzs = zs.size();
+   
    if ( nzs > 0 && nzs != newvert.size() ) {
-      std::cerr << "New vertical cooridnate vector doe snot match the old in size." << std::endl;
+      std::cerr << "New vertical cooridnate vector does not match the old in size." << std::endl;
       throw (badDimensionMismatch());
    }
 
-   zs = newvert;
+   zs.load( newvert );
 
 }
 
 real GridField3D::level( const int k ) const
 {
-   if ( k < 0 || k >= nzs ) {
-       std::cerr << "GridField3D: Bad vertical index k=" << k << std::endl;
-       throw (baddatareq());
-   }    
-   return zs[k];
+   return zs(k);
 }; 
 
+void GridField3D::absorbLevels( int n, real* zvals )
+{
+      if ( zvals != NULLPTR ) {
+         zs.absorb( n, zvals );
+      }
+
+}
+
+GridFieldDim GridField3D::getLevels() const
+{
+     return zs;
+} 
 
 void GridField3D::zindex( real z, int* i1, int* i2 ) const
 {
-     int i;
-     
-     if ( nzs <= 1 ) {
-        throw (baddataindex());
-     }
-
-     if ( zdir > 0 ) {
-        // levels increase
-
-        // find the highest-indexed z that is below the test z
-        i = 0;
-        *i1 = -1;
-        while ( i < nzs && zs[i] < z ) {
-        
-           if ( zs[i] < z ) {
-              *i1 = i;
-           } 
-           i++;
-        }
-        if ( *i1 != -1 ) {
-           // we have a lower bound for the test z in zs
-        
-           // do we have an upper bound?
-           if ( *i1 < (nzs-1) ) {
-              *i2 = *i1 + 1;
-           } else {
-              if ( ABS( zs[nzs-1] - z ) > 0.0001 ) {
-                 // test val lies above range of zs
-                 throw (baddataindex());
-              } else {
-                 // close enough
-                 *i2 = nzs-1;
-                 *i1 = *i2 - 1;
-              }           
-           }   
-        } else {
-              if ( ABS( zs[0] - z ) > 0.0001 ) {
-                 // test z lies below the range of zs
-                 throw (baddataindex());
-              } else {
-                 *i1 = 0;
-                 *i2 = 1;
-              }   
-        }
-     } else {
-        // levels decrease
-
-        // find the lowest-indexed z that is below the test z
-        i = nzs-1;
-        *i2 = -1;
-        while ( i >= 0 && zs[i] < z ) {
-        
-           if ( zs[i] < z ) {
-              *i2 = i;
-           } 
-        
-           i--;
-        }
-        if ( *i2 != -1 ) {
-           // we have an lower bound for the test z in zs
-        
-           // do we have an upper bound?
-           if ( *i2 > 0 ) {
-              *i1 = *i2 - 1;
-           } else {
-              if ( ABS( zs[0] - z ) > 0.0001 ) {
-                 // test val lies above range of zs
-                 throw (baddataindex());
-              } else {
-                 // close enough
-                 *i1 = 0;
-                 *i2 = 1;
-              }           
-           }   
-        } else {
-              if ( ABS( zs[nzs-1] - z ) > 0.0001 ) {
-                 // test z lies below the range of zs
-                 throw (baddataindex());
-              } else {
-                 *i1 = nzs-2;
-                 *i2 = nzs-1;
-              }   
-        }
-     
-     }
-
+     zs.index( z, i1, i2 );
 };
-
-
-void GridField3D::setZDir( const int loadFlags )
-{
-   zdir = 0;
-   if ( nzs > 1 ) {
-      zdir = ( zs[1] > zs[0] ) ? 1 : -1;
-   }      
-}
 
 
 void GridField3D::transform( const std::string unyts, real scale, real offset ) 
 {
     real ms, mo;
-    GridField3D::iterator data;
+    GridField3D::iterator datax;
     real s, o;
     
     uu = unyts;
@@ -283,9 +210,9 @@ void GridField3D::transform( const std::string unyts, real scale, real offset )
     s = mksScale/scale;
     o = ( mksOffset - offset)/scale;
     
-    for ( data = this->begin(); data != this->end(); data++ ) {
-        if (*data != fill_value ) {
-           *data = (*data)*s + o;
+    for ( datax = this->begin(); datax != this->end(); datax++ ) {
+        if (*datax != fill_value ) {
+           *datax = (*datax)*s + o;
         }
     } 
 
@@ -299,34 +226,31 @@ bool GridField3D::compatible( const GridField3D&  obj, int flags ) const
     std::vector<real> dim;
     int result = true;
 
+    //- std::cerr << " Grid3D: compatibility start" << std::endl;
     if ( flags & METCOMPAT_VERT ) {
        // and the vertical coordinate types must match
        if ( obj.vertical() == vquant && obj.vunits() == vuu ) {
        
-          // check that the vertical levels match in number and values
-          dim = obj.levels();
-          if ( dim.size() == nzs ) {
-             for ( int i=0; i<nzs; i++ ) {
-                // levels must be within 1.0e-8 (of whatever units are being used)
-                if ( ABS( dim[i] - zs[i] ) > 1.0e-8 ) {
-                   result = false;
-                }   
-             }
-          } else {
-             result = false;
-          }             
+          //- std::cerr << " Grid3D: compatibility vert same" << std::endl;
+          result = zs.compatible( obj.zs );
+          //- std::cerr << " Grid3D: compatibility z" << result << std::endl;
+
        } else {
+          //- std::cerr << " Grid3D: compatibility vert different" << std::endl;
           result = false;
        }
     }         
 
     if ( flags & METCOMPAT_TIME ) {
        // the model times and the calendar times must both match
+          //- std::cerr << " Grid3D: compatibility time" << std::endl;
        if ( obj.time() != mtime || obj.met_time() != ctime ) {
+          //- std::cerr << " Grid3D: compatibility time different" << std::endl;
           result = false;
        }   
     }
 
+    //- std::cerr << " Grid3D: compatibility = " << result << std::endl;
     return result;
 
 }
@@ -368,7 +292,7 @@ GridField3D* GridField3D::generateVertical() const
     newgrid->mksScale = this->mksVScale;
     newgrid->mksOffset = this->mksVOffset;
 
-    for ( k=0; k<nzs; k++ ) {
+    for ( k=0; k < zs.size(); k++ ) {
         val = this->level(k);
         for ( destPnt  = newgrid->begin(k); 
               destPnt != newgrid->end(k); 
@@ -387,8 +311,7 @@ void GridField3D::newVertical( const std::vector<real>& newz )
      
      flushData();
      
-     zs = newz;
-     nzs = zs.size();
+     zs.load( newz );
      
 }
 
@@ -407,11 +330,13 @@ void GridField3D::svr_send_vals( int id ) const
          }
          
      } else {
-     
+
+        //- std::cerr << "--- metproc starts sending values" << std::endl;    
         // get the number of points desired
         pgroup->receive_ints( id, 1, &n, PGR_TAG_GNUM );
         //- std::cerr << "      (*(*(* client " << id << " wants values for " << n << " points" << std::endl;
 
+        //- std::cerr << "--- metproc n=" << n << std::endl;    
         // get the integer coordinates of the points
         try {
             coords = new int[n];
@@ -430,6 +355,7 @@ void GridField3D::svr_send_vals( int id ) const
         }
         pgroup->send_reals( id, n, vals, PGR_TAG_GVALS );
         //- std::cerr << "      (*(*(* send client " << id << " gave us indices " << std::endl;
+        //- std::cerr << "--- metproc stops sending values" << std::endl;    
         
         delete vals;
         delete coords;
@@ -558,7 +484,7 @@ GridField3D::iterator::iterator( GridField3D* grid, int n, int beg, int fin )
    first = beg;
    last = fin;
    my_grid = grid;
-   if ( last < first || first < 0 || last > grid->data.size() ) {
+   if ( last < first || first < 0 || last > grid->nd ) {
       throw (baddataindex());
    }
 }
@@ -579,10 +505,18 @@ GridField3D::iterator& GridField3D::iterator::operator=(const GridField3D::itera
 real& GridField3D::iterator::operator*() const 
 {
    
-   if ( my_index >= first && my_index <= last ) {
-      return (my_grid->data).at( my_index );
+   if ( my_grid->use_array ) {     
+      if ( my_index >= 0 && my_index < my_grid->nd ) {
+         return (my_grid->dater)[my_index];      
+      } else {
+         throw (baddataindex());      
+      }
    } else {
-      throw (baddataindex());
+     if ( my_index >= first && my_index <= last ) {
+        return (my_grid->data).at( my_index );
+     } else {
+        throw (baddataindex());
+     }
    }
 }
 
@@ -613,7 +547,11 @@ void GridField3D::iterator::indices( int* i, int*j, int *k ) const
 
 void GridField3D::iterator::assign( real val )
 {
-  (my_grid->data).at(my_index) = val;
+  if ( my_grid->use_array ) {
+     (my_grid->dater)[my_index] = val;
+  } else {
+     (my_grid->data).at(my_index) = val;  
+  }
 }
 
 
@@ -647,7 +585,7 @@ GridField3D::const_iterator::const_iterator( const GridField3D* grid, int n, int
    first = beg;
    last = fin;
    my_grid = grid;
-   if ( last < first || first < 0 || last > grid->data.size() ) {
+   if ( last < first || first < 0 || last > grid->nd ) {
       throw (baddataindex());
    }
 }
@@ -667,11 +605,18 @@ GridField3D::const_iterator& GridField3D::const_iterator::operator=(const GridFi
 /// override operator *, returns the current data element
 real GridField3D::const_iterator::operator*() const 
 {
-
-   if ( my_index >= first && my_index <= last ) {
-      return (my_grid->data)[my_index];
+   if ( my_grid->use_array) {
+      if ( my_index >= 0 && my_index < my_grid->nd ) {
+         return (my_grid->dater)[my_index];
+      } else {
+         throw (baddataindex());
+      }
    } else {
-      throw (baddataindex());
+      if ( my_index >= 0 && my_index < my_grid->data.size() ) {
+         return (my_grid->data)[my_index];
+      } else {
+         throw (baddataindex());
+      }
    }
 }
 
@@ -730,7 +675,7 @@ GridField3D::profileIterator::profileIterator( GridField3D* grid, int n, int len
     first = beg;
     last = fin;
     skip = skp;
-    if ( last < first || first < 0 || last > (grid->data).size() || skp <= 0 ) {
+    if ( last < first || first < 0 || last > grid->nd || skp <= 0 ) {
        throw (baddataindex()); 
     }
     my_index = n;
@@ -761,8 +706,8 @@ std::vector<real>* GridField3D::profileIterator::operator*() const
    if ( my_index >= first && my_index <= last ) {
       profile = new std::vector<real>;
       profile->reserve(plen);
-      for ( int k=0; k<plen ; k++ ) {
-          profile->push_back( (my_grid->data)[my_index + k*skip] );
+      for ( int k=0; k < plen ; k++ ) {
+          profile->push_back( (my_grid->dater)[my_index + k*skip] );
       }
       return profile;
    } else {
@@ -775,7 +720,7 @@ void GridField3D::profileIterator::assign( const std::vector<real>& src )
 
    if ( my_index >= first && my_index <= last && plen == src.size() ) {
       for ( int k=0; k<plen; k++ ) {
-          (my_grid->data)[my_index + k*skip] = src[k];
+          (my_grid->dater)[my_index + k*skip] = src[k];
       }
    } else {
       throw (baddataindex());
@@ -842,7 +787,7 @@ GridField3D::const_profileIterator::const_profileIterator( const GridField3D* gr
     first = beg;
     last = fin;
     skip = skp;
-    if ( last < first || first < 0 || last > (grid->data).size() || skp <= 0 ) {
+    if ( last < first || first < 0 || last > grid->nd || skp <= 0 ) {
        throw (baddataindex()); 
     }
     my_index = n;
@@ -874,7 +819,7 @@ std::vector<real>* GridField3D::const_profileIterator::operator*() const
       profile = new std::vector<real>;
       profile->reserve(plen);
       for ( int k=0; k<plen ; k++ ) {
-          profile->push_back( (my_grid->data)[my_index + k*skip] );
+          profile->push_back( (my_grid->dater)[my_index + k*skip] );
       }
       return profile;
    } else {
