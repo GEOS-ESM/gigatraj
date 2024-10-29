@@ -5,6 +5,8 @@
 #include <vector>
 
 #include "gigatraj/gigatraj.hh"
+#include "gigatraj/GridFieldDim.hh"
+#include "gigatraj/GridFieldDimLon.hh"
 #include "gigatraj/GridField3D.hh"
 #include "gigatraj/GridLatLonFieldSfc.hh"
 
@@ -68,8 +70,13 @@ class GridLatLonField3D : public GridField3D {
       */
       GridLatLonField3D(const GridLatLonField3D&);
 
+     /// copy assignment
+     /*! 
+         This is the copy assignment operator for the GridLatLonField3D class.
+     */
+     GridLatLonField3D& operator=(const GridLatLonField3D& src);
       
-      /// clears data contents 
+      /// clears data and metadata contents 
       /*! This method clears the contents of the object, except for information
           related to the process group
       */    
@@ -83,9 +90,6 @@ class GridLatLonField3D : public GridField3D {
       */
       int status() const;
 
-      /// assignment operator
-      GridLatLonField3D& operator=(const GridLatLonField3D& src);
-      
       /// returns the size of the grid's three dimensions
       /*! This method returns the size of the grid's three dimensions
           \param nlon the number of longitude values
@@ -166,7 +170,7 @@ class GridLatLonField3D : public GridField3D {
 
           \return the [j]th latitude
       */
-      real latitude( const int j ) const;
+      real latitude( int j ) const;
       
       /// restricts a given longitude to be within the range of this object's longitudes
       /*! This method returns a longitude which has had 360 degrees added or subtracted
@@ -485,6 +489,61 @@ class GridLatLonField3D : public GridField3D {
       GridFieldSfc* areas() const;
       
 
+      /// takes the provided arrays of dimensional values and data values as its own
+      /*! This method takes arrays of longitude values and
+      latitude value,s as well as 
+          an array of data values; and it
+          makes them its own. That is, this GridLatLonField3D object 
+         is therafter responsible for deleting the arrays. The calling routine
+         must not delete the arrays or change any of heir elements.
+       
+          /param nlons the number of longitudes
+          /param nlats the number of latitudes
+          /param nzs the number of vertical levels
+          /param vals the nlons*nlats-length array of data values to be "absorbed"
+          /param lonvals if non-null, the array of longitude values to be "absorbed"
+          /param latvals if non-null, the array of latitude values to be "absorbed"
+          /param zvals if non-null, the array of vertical level values to be "absorbed"
+            
+     */    
+      void absorb( int nlons, int nlats, int nzs, real* vals , real* lonvals=NULLPTR, real* latvals=NULLPTR, real* zvals=NULLPTR);
+
+      /// takes the provided array of longitude values as its own
+      /*! This method takes an array of longitude values and
+          makes them its own. That is, this GridLatLonField3D object 
+         is therafter responsible for deleting the array. The calling routine
+         must not delete the array or change any of its elements.
+       
+          /param n the length of the array
+          /param lonvals the array of longitudes to be "absorbed"
+            
+     */    
+      void absorbLons( int n, real* lonvals );
+
+      /// takes the provided array of latitude values as its own
+      /*! This method takes an array of latitude values and
+          makes them its own. That is, this GridLatLonField3D object 
+         is therafter responsible for deleting the array. The calling routine
+         must not delete the array or change any of its elements.
+       
+          /param n the length of the array
+          /param latvals the array of latitudes to be "absorbed"
+            
+     */    
+      void absorbLats( int n, real* latvals );
+
+      /// (parallel processing) sets the process group and met processor 
+      /*! This method sets the process group and met processor for parallel processing.
+      
+           \param pg a pointer to the process group being used for parallel processing
+      
+           \param met the ID of the processor within pg that is dedicated to handling met 
+                  data (or -1 if there is none)
+      */
+      void setPgroup( ProcessGrp* pg, int met);
+
+
+
 
 
      /// returns the beginning of the Grid
@@ -662,30 +721,27 @@ class GridLatLonField3D : public GridField3D {
 
    protected:
 
-      /// vector of longitudes
-      std::vector<real> lons;
-      /// how many longitudes
-      int nlons;
-      /// +1 if longitudes increase with index, -1 if they decrease, 0 if undefined
-      int londir;
-      /*! sets the longitude direction
-      */
-      void setLonDir( const int loadFlags=0 ); 
-      /// 1 if longitudes wrap around, 0 otherwise
-      int wraps;
+      /// longitudes
+      GridFieldDimLon lons;
+      /// latitudes
+      GridFieldDim lats;
+      
       /*! sets the wrap flag based on flags or input data
       */
       void setWraps( const int loadFlags=0); 
       
-      /// vector of latitudes
-      std::vector<real> lats;
-      /// how many latitudes
-      int nlats;
-      /// +1 if latitudes increase with index, -1 if they decrease, 0 if undefined
-      int latdir;
-      /*! sets the latitude direction
+
+      /// split a single index into longutude, latitude, and vertical indices
+      /*! Given a simple index into the data in the GridLatLonField3D object,
+          this returns the two horizontal and the vertical indices into the data grid that 
+          correspond to the simple index.
+          
+          \param index the simple index
+          \param i a pointer to the longitude index
+          \param j a pointer to the latitude index
+          \param k a pointer to the vertical index
       */
-      void setLatDir( const int loadFlags=0 ); 
+      void getindices( int index, int* i, int* j, int* k ) const;
       
 };
 }
