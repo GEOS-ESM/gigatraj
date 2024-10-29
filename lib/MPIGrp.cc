@@ -277,7 +277,7 @@ void MPIGrp::sync() const
 
    if ( my_id >= 0 ) {
 
-      //- std::cerr << "MPI Sync rank " << my_id << " in group " << mygroup << "!" ;
+      //- std::cerr << "MPI Sync rank " << my_id << " in group " << mygroup << "!" << std::endl;
       // synchronize by summing input(=1) from all processes
       // in this communicator/group
       ///MPI_Reduce( &input, &output, 1, MPI_INT, MPI_SUM, 0, comm);
@@ -313,8 +313,7 @@ void MPIGrp::sync(const std::string& msg) const
 
    if ( my_id >= 0 ) {
 
-      //-std::cerr << "MPI Sync: " << msg 
-      //-    << ": proc #" << id() << " in group " << group_id() << "! " ;
+      //- std::cerr << "MPI Sync: " << msg << ": proc #" << id() << " in group " << group_id() << "! "  << std::endl;
       // synchronize by summing input(=1) from all processes
       // in this communicator/group
       ///MPI_Reduce( &input, &output, 1, MPI_INT, MPI_SUM, 0, comm);
@@ -350,7 +349,7 @@ void MPIGrp::desync( int interval )
      int waittime;
      
      waittime = rnd->uniform(0.0, interval ) + 0.5;
-std::cerr << "MPI De-sync: " << id() << " in " << group_id() << " for " << waittime ;
+     //- std::cerr << "MPI De-sync: " << id() << " in " << group_id() << " for " << waittime  << std::endl;
 
      if ( waittime > 0 ) {
 
@@ -597,7 +596,7 @@ void MPIGrp::send_reals( int id, int n, const real *vals, int tag) const
          throw (badprocessor());
       }
    
-      //- std::cerr << "           ((((  Sending reals (" << vals[0] << " -- " << vals[n-1] << " to " << id << std::endl;
+      //- std::cerr << "           ((((  Sending " << n << " reals (" << vals[0] << " -- " << vals[n-1] << " eith tag " << tag << " to " << id << std::endl;
       err = MPI_Send( (void *) vals, n, MPI_REAL_VALUE, id, tag, comm);  
    
       if ( err != MPI_SUCCESS ) {
@@ -619,7 +618,7 @@ void MPIGrp::send_doubles( int id, int n, const double *vals, int tag) const
          throw (badprocessor());
       }
    
-      //- std::cerr << "           ((((  Sending doubles (" << vals[0] << " -- " << vals[n-1] << " to " << id << std::endl;
+      //- std::cerr << "           ((((  Sending " << n << " doubles (" << vals[0] << " -- " << vals[n-1] << " eith tag " << tag << " to " << id  << std::endl;
       err = MPI_Send( (void *) vals, n, MPI_DOUBLE, id, tag, comm);  
    
       if ( err != MPI_SUCCESS ) {
@@ -641,7 +640,7 @@ void MPIGrp::send_ints( int id, int n, const int *vals, int tag) const
          throw (badprocessor());
       }
    
-      //- std::cerr << "           ((((  Sending ints (" << vals[0] << " -- " << vals[n-1] << " to " << id << std::endl;
+      //- std::cerr << "           ((((  Sending " << n << " ints (" << vals[0] << " -- " << vals[n-1] << " eith tag " << tag << " to " << id  << std::endl;
       err = MPI_Send( (void *) vals, n, MPI_INT, id, tag, comm); 
    
       if ( err != MPI_SUCCESS ) {
@@ -661,7 +660,7 @@ void MPIGrp::send_string( int id, const std::string &str, int tag ) const {
       
    n = str.length();
    
-   //- std::cerr << "           ((((  Sending <<" << str << ">> string to " << id << std::endl;
+   //- std::cerr << "           ((((  Sending <<" << str << ">> string with tag " << tag << " to " << id  << std::endl;
    if ( my_id >= 0 ) {
       if ( id < 0 || id >= num_procs ) {
          throw (badprocessor());
@@ -700,7 +699,7 @@ void MPIGrp::receive_reals( int id, int n, real *vals, int tag, int *src) const
       //- std::cerr << "           )))) pre-received reals " << vals[0] << " -- " << vals[n-1] << std::endl;
       if ( id >= 0 ) {
          // receive from a specific processor
-         //- std::cerr << "           )))) " << n << " reals to be replaced from " << id << std::endl;
+         //- std::cerr << "           )))) " << n << " reals being read with tag " << tag << " from " << id  << std::endl;
          err = MPI_Recv( (void *) vals, n, MPI_REAL_VALUE, id, tag, comm, &status); 
    
          if ( err != MPI_SUCCESS ) {
@@ -708,7 +707,7 @@ void MPIGrp::receive_reals( int id, int n, real *vals, int tag, int *src) const
          }   
       } else {
          // receive from any processor in the group
-         //- std::cerr << "           )))) " << n << " reals to be replaced from ANY proc " << std::endl;
+         //- std::cerr << "           )))) " << n << " reals being read from ANY proc " << " with tag " << tag  << std::endl;
          err = MPI_Recv( (void *) vals, n, MPI_REAL_VALUE, MPI_ANY_SOURCE, tag, comm, &status); 
    
          if ( err != MPI_SUCCESS ) {
@@ -742,7 +741,7 @@ void MPIGrp::receive_doubles( int id, int n, double *vals, int tag, int *src) co
       //- std::cerr << "           )))) pre-received doubles " << vals[0] << " -- " << vals[n-1] << std::endl;
       if ( id >= 0 ) {
          // receive from a specific processor
-         //- std::cerr << "           )))) " << n << " doubles to be replaced from " << id << std::endl;
+         //- std::cerr << "           )))) " << n << " doubles being read with tag " << tag << " from " << id  << std::endl;
          err = MPI_Recv( (void *) vals, n, MPI_DOUBLE, id, tag, comm, &status);
         
          if ( err != MPI_SUCCESS ) {
@@ -750,7 +749,7 @@ void MPIGrp::receive_doubles( int id, int n, double *vals, int tag, int *src) co
          }   
       } else {
          // receive from any processor in the group
-         //- std::cerr << "           )))) " << n << " doubles to be replaced from ANY proc " << std::endl;
+         //- std::cerr << "           )))) " << n << " doubles being read from ANY proc " << " with tag " << tag  << std::endl;
          err = MPI_Recv( (void *) vals, n, MPI_DOUBLE, MPI_ANY_SOURCE, tag, comm, &status);        
          if ( err != MPI_SUCCESS ) {
             throw (badparallelism());
@@ -784,14 +783,14 @@ void MPIGrp::receive_ints( int id, int n, int *vals, int tag, int *src) const
       if ( id >= 0 ) {
          // receive from a specific processor
 
-         //- std::cerr << "           )))) " << n << " ints to be replaced from " << id << std::endl;
+         //- std::cerr << "           )))) " << n << " ints being read with tag " << tag << " from " << id  << std::endl;
          err = MPI_Recv( (void *) vals, n, MPI_INT, id, tag, comm, &status);  
          if ( err != MPI_SUCCESS ) {
             throw (badparallelism());
          }   
       } else {
          // receive from any processor in the group
-         //- std::cerr << "           )))) " << n << " inst to be replaced from ANY proc " << std::endl;
+         //- std::cerr << "           )))) " << n << " ints being read from ANY proc " << " with tag " << tag  << std::endl;
          err = MPI_Recv( (void *) vals, n, MPI_INT, MPI_ANY_SOURCE, tag, comm, &status);  
          if ( err != MPI_SUCCESS ) {
             throw (badparallelism());
@@ -869,7 +868,7 @@ void MPIGrp::receive_string( int id, std::string *str, int tag, int *src) const
       }   
    }
 
-   //- std::cerr << "           ))))  finished getting string <<" << *str << ">>" << std::endl;
+   //- std::cerr << "           ))))  finished getting string <<" << *str << ">> with tag " << tag << " from " << id   << std::endl;
 
 
 
