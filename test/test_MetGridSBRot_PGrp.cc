@@ -86,7 +86,6 @@ int main(int argc, char* argv[])
           exit(1);  
        } 
     
-    
         /* sample the temperature */
         //metsrc->dbug = 1;
         val0 = metsrc0->getData( "t", 3.0, 0.0, 45.0, 0.0 );
