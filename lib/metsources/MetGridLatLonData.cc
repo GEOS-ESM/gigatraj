@@ -295,7 +295,7 @@ real MetGridLatLonData::getData( string quantity, double time, real lon, real la
      bool is_valid;
      real badval;
      const char *nanstr = "";
-     
+
      //- std::cerr << "====MetGridLatLonData::getData Entry" << std::endl;  
 
      // handle the special case of the quantity being a simple function of the vertical coordinate
@@ -383,6 +383,7 @@ real MetGridLatLonData::getData( string quantity, double time, real lon, real la
         }
         g1->svr_done();
         is_valid = ( val1 != badval );
+        //- std::cerr << " MetGridLatLonData::getData:: is_valid=" << is_valid << std::endl;        
         if ( is_valid && (flags & METDATA_MKS) ) {
            val1 = val1 * g1->mksScale + g1->mksOffset;
         }     
@@ -603,16 +604,22 @@ void MetGridLatLonData::getVectorData( string lonquantity, string latquantity, r
         xbadval = gx1->fillval();
         ybadval = gy1->fillval();
         try {
+           //- std::cerr << "calling request_data3D /w result ";
            request_data3D(lonquantity,latquantity, ct1);
            if ( receive_svr_status() == PGR_STATUS_OK ) {
+              //- std::cerr << " OK ";
               hin->vinterpVector( lon, lat, z, lonval1, latval1, *gx1, *gy1, *vin );
+              //- std::cerr << " and vinterp ";
            } else {
+              //- std::cerr << " not OK ";
               throw (badmetfailure());
            }    
         } catch (...) {
+           //- std::cerr << " error ";
            lonval1 = xbadval;
            latval1 = ybadval;
         }
+        //- std::cerr << std::endl;
         // note: each grid's svr_done() call is done by its gridpoints() call inside vinterp() 
         is_valid = ( (lonval1 != xbadval) && (latval1 != ybadval) );
         if ( is_valid && (flags & METDATA_MKS) ) {
@@ -1113,6 +1120,7 @@ void MetGridLatLonData::getVectorData( int n, string lonquantity, string latquan
      const char *nanstr = "";
      real lat,lon,z;
      real lonval, latval;
+
 
      // Note: this call to setup **should** suffice for both component quantities,
      // but there are no guarantees. (sigh)
