@@ -656,6 +656,7 @@ GridLatLonField3D* MetGridSBRot::new_directGrid3D( const std::string quantity, c
         }
     }
 
+    //- std::cerr << "Loading lons, lats, zs into grid" << std::endl;
     grid3d->load( lons, lats, *levs, data );
     
     delete levs;
