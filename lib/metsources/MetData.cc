@@ -172,7 +172,7 @@ int MetData::receive_svr_status()
    result = PGR_STATUS_OK;
    
    if ( isMetClient() ) {
-       my_pgroup->send_ints( my_metproc, 1, &result, PGR_TAG_STATUS );
+       my_pgroup->receive_ints( my_metproc, 1, &result, PGR_TAG_STATUS );
    }
 
    return result;
