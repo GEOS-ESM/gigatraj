@@ -482,7 +482,7 @@ class GridLatLonFieldSfc : public GridFieldSfc {
           an array of data values; and it
           makes them its own. That is, this GridLatLonFieldSfc object 
          is therafter responsible for deleting the arrays. The calling routine
-         must not delete the arrays or change any of heir elements.
+         must not delete the arrays or change any of their elements.
        
           /param nlons the number of longitudes
           /param nlats the number of latitudes
@@ -516,6 +516,22 @@ class GridLatLonFieldSfc : public GridFieldSfc {
             
      */    
       void absorbLats( int n, real* latvals );
+
+     /// returns a copy of the latitude dimension
+     /*! This method returns a copy of the latitude dimension
+        of the grid.
+
+        /return a GridFieldDim object holding the latitude dimension
+     */
+     GridFieldDim getLatitudes() const;   
+
+     /// returns a copy of the longitude dimension
+     /*! This method returns a copy of the longitude dimension
+        of the grid.
+
+        /return a GridFieldDimLon object holding the longitude dimension
+     */
+     GridFieldDimLon getLongitudes() const;   
 
 
       /// (parallel processing) sets the process group and met processor 
@@ -559,7 +575,7 @@ class GridLatLonFieldSfc : public GridFieldSfc {
           \param i a pointer to the longitude index
           \param j a pointer to the latitude index
       */
-      void getindices( int index, int* i, int*j ) const;
+      void getindices( int index, int* i, int* j ) const;
 
 };
 }

@@ -592,6 +592,17 @@ void GridLatLonFieldSfc::absorbLats( int n, real* latvals )
       }
 }
 
+
+GridFieldDim GridLatLonFieldSfc::getLatitudes() const
+{
+     return lats;
+} 
+
+GridFieldDimLon GridLatLonFieldSfc::getLongitudes() const
+{
+     return lons;
+} 
+
 GridFieldSfc* GridLatLonFieldSfc::duplicate() const
 {
     GridLatLonFieldSfc* newgrid;
