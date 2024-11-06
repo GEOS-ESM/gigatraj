@@ -5110,11 +5110,278 @@ void MetMyGEOS::Source_read_data_floats( std::vector<real>&vals, int var_id, int
 }
 
 
+void MetMyGEOS::Source_read_data_floats( real** vals, int var_id, int ndims, size_t *starts, size_t *counts, ptrdiff_t *strides )
+{
+     float *buffr;
+     int totsize;
+     int nlons, nlats, nz, nt;
+     int err;
+     int idx;
+     int trial;
+     bool all_zeroes;
+     size_t my_starts[4];
+     size_t my_counts[4];
+     ptrdiff_t my_strides[4];
+     int nchunks;
+     ptrdiff_t chunksize;
+     int toread;
+     size_t lonSkip, latSkip, vSkip, tSkip;
+     ptrdiff_t lonRes, latRes, vRes, tRes;
+     size_t lonCountMax, latCountMax, vCountMax, tCountMax;
+     size_t lonStart, latStart, vStart, tStart;
+     size_t lonEnd, latEnd, vEnd, tEnd;
+     size_t lonCount, latCount, vCount, tCount;
+     size_t maxChunk;
+     int lon_index, lat_index, v_index, t_index;
+     int total_read;
+     
+      
+     my_starts[0] = 0;
+     my_starts[1] = 0;
+     my_starts[2] = 0;
+     my_starts[3] = 0;
+     my_counts[0] = 0;
+     my_counts[1] = 0;
+     my_counts[2] = 0;
+     my_counts[3] = 0;
+     my_strides[0] = 0;
+     my_strides[1] = 0;
+     my_strides[2] = 0;
+     my_strides[3] = 0;
+     
+     if ( ndims == 3 ) {
+        // three-dimensional volume
+
+       lon_index = 3;
+       lat_index = 2;
+       v_index   = 1;
+       t_index   = 0;
+
+       nz    = counts[v_index];
+       vRes  = strides[v_index];
+       vSkip = starts[v_index];
+     } else {
+        // two-dimensional surface
+        
+       lon_index = 2;
+       lat_index = 1;
+       t_index   = 0;
+       
+       v_index   = -1;
+       nz = 1;
+       vRes = 1;
+       vSkip = 0;
+     }
+
+     nlons = counts[lon_index];
+     nlats = counts[lat_index];
+     nt    = counts[t_index];
+
+     lonRes = strides[lon_index];
+     latRes = strides[lat_index];
+     tRes   = strides[t_index];
+     
+     lonSkip = starts[lon_index];
+     latSkip = starts[lat_index];
+     tSkip   = starts[t_index];
+     
+     totsize = nlons*nlats*nz*nt;
+
+     
+     if ( (! is_url) || (totsize < max_data) ) {
+        // we should read it all in at once
+        tCountMax = nt;
+        vCountMax = nz;
+        latCountMax = nlats;
+        lonCountMax = nlons;
+     } else if ( (nlons*nlats*nz) < max_data ) {
+        // have to read a few timestamps at a time
+        tCountMax = max_data/(nlons*nlats*nz);
+        vCountMax = nz;
+        latCountMax = nlats;
+        lonCountMax = nlons;        
+     } else if ( (nlons*nlats) < max_data ) {
+        // have to read a few vertical levels at a time
+        // (note that for 2D surfaces, the above clause prevents
+        // us from ever getting here)
+        tCountMax = 1;
+        vCountMax = max_data/(nlons*nlats);
+        latCountMax = nlats;
+        lonCountMax = nlons;
+     } else if ( nlons < max_data ) {
+        // have to read a few latitude circles at a time
+        tCountMax = 1;
+        vCountMax = 1;
+        latCountMax = max_data/nlons;
+        lonCountMax = nlons;
+     } else {
+        // have to read a few latitude circles at a time
+        tCountMax = 1;
+        vCountMax = 1;
+        latCountMax = 1;
+        lonCountMax = max_data;        
+     }
+     
+     
+     // we will be reading a maximum of this many floats,
+     // so we need a buffer that is this big.
+     maxChunk = tCountMax*vCountMax*latCountMax*lonCountMax;
+     
+     try {
+        buffr = new float[maxChunk];
+     } catch(...) {
+        throw (badNoMem());
+     }
+     if ( dbug > 5 ) {
+        std::cerr << "MetMyGEOS::Source_read_data: (" << ndims << "D):  about to read data! " <<  std::endl;
+     }
+
+     *vals = new real[totsize];
+     total_read = 0;
+
+     err = NC_NOERR;
+     
+     tStart = tSkip;
+     tEnd = tSkip + nt*tRes;
+        
+     while ( tStart < tEnd ) {
+     
+         tCount = tCountMax;
+         if ( ( tEnd - tStart + 1) < tCount*tRes ) {
+            tCount = (tEnd - tStart)/tRes;
+         }
+         
+         my_starts[t_index]  = tStart;
+         my_counts[t_index]  = tCount;
+         my_strides[t_index] = tRes;
+                     
+     
+         vStart = vSkip;
+         vEnd = vSkip + nz*vRes;
+         
+         while ( vStart < vEnd ) {
+         
+             vCount = vCountMax;
+             if ( ( vEnd - vStart + 1) < vCount*vRes ) {
+                vCount = (vEnd - vStart)/vRes;
+             }
+             
+             if ( ndims == 3 ) {
+                my_starts[v_index]  = vStart;
+                my_counts[v_index]  = vCount;
+                my_strides[v_index] = vRes;
+             } else {
+                // filler to make the 'toread' calculation below come out right
+                my_counts[3] = 1;
+             }
+     
+             latStart = latSkip;
+             latEnd = latSkip + nlats*latRes;
+         
+             while ( latStart < latEnd ) {
+         
+                 latCount = latCountMax;
+                 if ( ( latEnd - latStart + 1) < latCount*latRes ) {
+                    latCount = (latEnd - latStart)/latRes;
+                 }
+                 
+                 my_starts[lat_index]  = latStart;
+                 my_counts[lat_index]  = latCount;
+                 my_strides[lat_index] = latRes;
+     
+                 lonStart = lonSkip;
+                 lonEnd = lonSkip + nlons*lonRes;
+         
+                 while ( lonStart < lonEnd ) {
+                 
+                     lonCount = lonCountMax;
+                     if ( ( lonEnd - lonStart + 1) < lonCount*lonRes ) {
+                        lonCount = (lonEnd - lonStart)/lonRes;
+                     }
+                     
+                     my_starts[lon_index]  = lonStart;
+                     my_counts[lon_index]  = lonCount;
+                     my_strides[lon_index] = lonRes;
+                 
+                     toread = my_counts[0]*my_counts[1]*my_counts[2]*my_counts[3];
+                 
+                     trial = 0;
+                     do {
+
+                        if ( dbug > 5 ) {
+                           std::cerr << "MetMyGEOS::Source_read_data: (" << ndims 
+                                     << "D):  about to read data chunk " 
+                                     << toread << " of " << totsize
+                                     << " floats (trial " << trial << ")" <<  std::endl;
+                        }
+                        err = nc_get_vars_float( ncid, var_id, my_starts, my_counts, my_strides, buffr );
+
+                        if ( err == NC_NOERR ) {
+
+                           // sometimes we get a "successful" read, but the
+                           // values are all zeroes.
+                           // Detect this and treat it as a failure.
+                           all_zeroes = true;
+                           for ( int i=0; i<toread; i += 1 ) {
+                               if ( buffr[i] != 0 ) {
+                                  all_zeroes = false;
+                               }                     
+                           }
+
+                           if ( all_zeroes ) {
+                              if ( dbug > 0 ) {
+                                 std::cerr << "MetMyGEOS::Source_read_data: (" << ndims << "D):  Read all zeroes! " <<  std::endl;
+                              }
+                              err = NC_ERANGE;
+                           }
+     
+                        }
+     
+                     } while ( try_again( err, trial ) );       
+
+                     if ( err != NC_NOERR ) {
+                        delete[] buffr;   
+                        throw(badNetcdfError(err));
+                     }
+                     
+                     for (int i=0; i<toread; i++ ) {
+                         (*vals)[total_read + i] = buffr[i]; 
+                     }
+                 
+                     total_read += toread;
+                     
+                 
+                     lonStart = lonStart + lonCount*lonRes;
+         
+                 }
+
+                 latStart = latStart + latCount*latRes;
+         
+             }
+
+             vStart = vStart + vCount*vRes;
+         
+         }
+
+         tStart = tStart + tCount*tRes;
+         
+     }
+     
+     if ( total_read != totsize ) {
+        std::cerr << "Insufficient read: " << total_read << " vs. " << totsize << std::endl;
+     }
+     
+     delete[] buffr;   
+}
+
 /// 3D
 void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, GridLatLonField3D* grid3d )
 {
      int err;
-     std::vector<real> *xlons, *xlats, *xzs, *xdata;
+     real* xlons;
+     real* xlats;
+     real* xzs;
+     real* xdata;
      int xnlons, xnlats, xnzs;
      char attr_name[NC_MAX_NAME+1];
      char attr_cval[NC_MAX_NAME+1];
@@ -5201,15 +5468,9 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
         //- std::cerr << "       counts = " << nlons << ", " << nlats << ", " << nzs  << std::endl;
 
         // set up the grid dimensions for the data object
-        xlons = new std::vector<real>;
-        xlats = new std::vector<real>;
-        query_hgrid( hgrid, *xlons, *xlats );
-        xnlons = xlons->size();
-        xnlats = xlats->size();
+        query_hgrid( hgrid, &xnlons, &xlons, &xnlats, &xlats );
         
-        xzs = new std::vector<real>;
-        query_vgrid( vgrid, *xzs, vq, vu );
-        xnzs = xzs->size();
+        query_vgrid( vgrid, &xnzs, &xzs, vq, vu );
         grid3d->set_vertical(vq);
         if ( vu == "mb" || vu == "hPa" ) {
            vscale = 100.0;
@@ -5256,18 +5517,18 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
            vstride[3] = skip;
            vstarts[3] = skoff;
            
+           nlons = vcounts[3];
+           nlats = vcounts[2];
            
-           xlons->clear();
-           for (int i=0; i<vcounts[3]; i++ ) {
-               xlons->push_back( hgrid.startLon + hgrid.deltaLon*(vstarts[3] + i*vstride[3]) );
+           xlons = new real[nlons];;
+           for (int i=0; i<nlons; i++ ) {
+               xlons[i] = hgrid.startLon + hgrid.deltaLon*(vstarts[3] + i*vstride[3]);
            }    
-           xlats->clear();
-           for (int i=0; i<vcounts[2]; i++ ) {
-               xlats->push_back( hgrid.startLat + hgrid.deltaLat*(vstarts[2] + i*vstride[2]) );
+           xlats = new real[nlats];
+           for (int i=0; i<nlats; i++ ) {
+               xlats[i] = hgrid.startLat + hgrid.deltaLat*(vstarts[2] + i*vstride[2]);
            }    
            
-           nlons = xlons->size();
-           nlats = xlats->size();
         } 
 
         // read the data values here
@@ -5278,8 +5539,7 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
                 std::cerr << "MetMyGEOS::Source_getvar: (3D)         Reading " << nlons*nlats*nzs  << " floats for variable " << quantity << std::endl;
              }
           
-             xdata = new std::vector<real>;
-             Source_read_data_floats( *xdata, var_id, 3, vstarts, vcounts, vstride );
+             Source_read_data_floats( &xdata, var_id, 3, vstarts, vcounts, vstride );
            
              if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getvar: (3D)   finished reading data! " <<  std::endl;
@@ -5294,12 +5554,8 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
         } 
 
         
-        grid3d->load( *xlons, *xlats, *xzs, *xdata );
+        grid3d->absorb( nlons, nlats, nzs, xdata, xlons, xlats, xzs );
         
-        delete xlons;
-        delete xlats;
-        delete xzs;
-        delete xdata;
         
 
 }
@@ -5308,7 +5564,9 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
 void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, GridLatLonFieldSfc* grid2d )
 {
      int err;
-     std::vector<real> *xlons, *xlats, *xdata;
+     real* xlons;
+     real* xlats;
+     real* xdata;
      int xnlons, xnlats, xnzs;
      char attr_name[NC_MAX_NAME+1];
      char attr_cval[NC_MAX_NAME+1];
@@ -5395,12 +5653,8 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
         //- std::cerr << "       counts = " << nlons << ", " << nlats << ", " << nzs  << std::endl;
 
         // set up the grid dimensions for the data object
-        xlons = new std::vector<real>;
-        xlats = new std::vector<real>;
-        query_hgrid( hgrid, *xlons, *xlats );
-        xnlons = xlons->size();
-        xnlats = xlats->size();
-        
+        query_hgrid( hgrid, &xnlons, &xlons, &xnlats, &xlats );       
+
         if ( nlons != xnlons || nlats != xnlats ) {
            if ( dbug > 0 ) {
               std::cerr << "MetMyGEOS::Source_getvar: (Sfc)       Dims Mismatch:  " << nlons << "/" << xnlons 
@@ -5431,17 +5685,18 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
            vstride[2] = skip;
            vstarts[2] = skoff;
            
-           xlons->clear();
-           for (int i=0; i<vcounts[2]; i++ ) {
-               xlons->push_back( hgrid.startLon + hgrid.deltaLon*(vstarts[2] + i*vstride[2]) );
-           }    
-           xlats->clear();
-           for (int i=0; i<vcounts[1]; i++ ) {
-               xlats->push_back( hgrid.startLat + hgrid.deltaLat*(vstarts[1] + i*vstride[1]) );
-           }    
+           nlons = vcounts[2];
+           nlats = vcounts[1];
            
-           nlons = xlons->size();
-           nlats = xlats->size();
+           xlons = new real[nlons];;
+           for (int i=0; i<nlons; i++ ) {
+               xlons[i] = hgrid.startLon + hgrid.deltaLon*(vstarts[2] + i*vstride[2]);
+           }    
+           xlats = new real[nlats];
+           for (int i=0; i<nlats; i++ ) {
+               xlats[i] = hgrid.startLat + hgrid.deltaLat*(vstarts[1] + i*vstride[1]);
+           }    
+
         } 
 
         // read the data values here
@@ -5452,8 +5707,7 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
                 std::cerr << "MetMyGEOS::Source_getvar: (Sfc)       Reading " << nlons*nlats*nzs  << " floats for variable " << quantity << std::endl;
              }   
              
-             xdata = new std::vector<real>;
-             Source_read_data_floats( *xdata, var_id, 2, vstarts, vcounts, vstride );
+              Source_read_data_floats( &xdata, var_id, 2, vstarts, vcounts, vstride );
              
              if ( dbug > 5 ) {
                 std::cerr << "MetMyGEOS::Source_getvar: (Sfc) finished reading data! " <<  std::endl;
@@ -5468,12 +5722,8 @@ void MetMyGEOS::Source_getvar(const std::string& quantity, const double time, Gr
         } 
 
         
-        grid2d->load( *xlons, *xlats, *xdata );
+        grid2d->absorb( nlons, nlats, xdata, xlons, xlats );
     
-        delete xlons;
-        delete xlats;
-        delete xdata;
-        
 
 }
 
@@ -7174,9 +7424,39 @@ void MetMyGEOS::query_hgrid( const HGridSpec& qhgrid, std::vector<real>& lons, s
 
 }
 
+void MetMyGEOS::query_hgrid( const HGridSpec& qhgrid, int* nlons, real** lons, int* nlats, real** lats ) const
+{
+     *nlons = qhgrid.nLons;
+     *lons = new real[qhgrid.nLons];
+     for (int i=0; i < qhgrid.nLons; i++ ) {
+         (*lons)[i] = qhgrid.startLon + i*qhgrid.deltaLon;
+     }
+     (*lons)[ qhgrid.nLons - 1 ] = qhgrid.endLon;
+
+     *nlats = qhgrid.nLats;
+     *lats = new real[qhgrid.nLats];
+     for (int i=0; i < qhgrid.nLats; i++ ) {
+         (*lats)[i] = qhgrid.startLat + i*qhgrid.deltaLat;
+     }
+     (*lats)[ qhgrid.nLats - 1 ] = qhgrid.endLat;
+
+}
+
 void MetMyGEOS::query_vgrid( const VGridSpec& qvgrid, std::vector<real>& levels, std::string& q, std::string& u  ) const
 {
      levels = qvgrid.levs;
+     q = qvgrid.quant;
+     u = qvgrid.units;
+
+}
+
+void MetMyGEOS::query_vgrid( const VGridSpec& qvgrid, int* nlevs, real** levels, std::string& q, std::string& u  ) const
+{
+     *nlevs = qvgrid.levs.size();
+     *levels = new real[*nlevs];
+     for ( int i=0; i < *nlevs; i++ ) {
+         (*levels)[i] = qvgrid.levs[i];
+     }
      q = qvgrid.quant;
      u = qvgrid.units;
 

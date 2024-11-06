@@ -1834,6 +1834,25 @@ class MetMyGEOS : public MetGridLatLonData {
        */
        void Source_read_data_floats( std::vector<real>&vals, int var_id, int ndims, size_t *starts, size_t *counts, ptrdiff_t *strides );
 
+       /// reads a variable's float-format data
+       /*! This method reads a data variable from an open netcdf file.
+              \param vals a pointer ot the returned array of data, as an array of floats in row-major order
+              \param var_id the netcdf variable id of the data to be read
+              \param ndims 3 for three-dimensional (lon,lat,level) data, 2 for two-dimensional (lon, lat) data.
+              \param starts a 3- or 2-element array of starting-indices into the data variable. 
+                     For 3D data, the indices are, in order: time (0), level (1), latitude (2), and longitude (3).
+                     For 3D data, the indices are: time (0), latitude (1), and longitude (2).
+                     (This reflects the column-major order of storage on the remote end.)
+                     Typically, all elements are zero.
+              \param counts a 3- or 2-element array of how many value are to be read from the data variable.
+                     The index order is the same as for starts[].
+                     Typically, the 0th elements is 0, as only one time snapshot is read,
+                     and the other elements are the lengths of their respective dimensions.
+              \param strides a 3- or 2-element array of how many values are to be skipped along each dimension.
+                     The index order is the same as for starts[] and counts[].
+                     Typically all elements are 1.        
+       */
+       void Source_read_data_floats( real** vals, int var_id, int ndims, size_t *starts, size_t *counts, ptrdiff_t *strides );
 
 
        /// read just the desired 3D variable from the data source 
@@ -1911,6 +1930,18 @@ class MetMyGEOS : public MetGridLatLonData {
        */
        void query_hgrid( const HGridSpec& qhgrid, std::vector<real>& lons, std::vector<real>& lats ) const; 
 
+       /// queries a horizontal grid for its longitude and latitude values 
+       /*! 
+           This method returns the set of 
+           longitudes and latitudes used by an HGridSpec horizontal grid specification.
+
+           \param qhgrid the HGridSpec object being queried
+           \param nlons a pointer to the number of longitudfes returned
+           \param lons a pointer ot an array of longitudes returned
+           \param nlats a pointer to the number of latitudfes returned
+           \param lats a pointer to an array of latitudes returned       
+       */
+       void query_hgrid( const HGridSpec& qhgrid, int* nlons, real** lons, int* nlats, real** lats ) const;
 
        /// queries a vertical grid for its level values 
        /*! 
@@ -1918,12 +1949,24 @@ class MetMyGEOS : public MetGridLatLonData {
            vertical levels used by an VGridSpec vertical grid specification.
 
            \param qvgrid the VGridSpec object being queried
-           \param levels the vector of vetrticla levels returned
+           \param levels the vector of vertical levels returned
            \param q a reference to a string that will hold the vertical coordinate quantity
-           \param u a referecne to a string that will hold the units of the vertical coordinate quantity
+           \param u a reference to a string that will hold the units of the vertical coordinate quantity
        */
        void query_vgrid( const VGridSpec& qvgrid, std::vector<real>& levels, std::string& q, std::string& u ) const; 
 
+       /// queries a vertical grid for its level values 
+       /*! 
+           This method returns the set of 
+           vertical levels used by an VGridSpec vertical grid specification.
+
+           \param qvgrid the VGridSpec object being queried
+           \param nlevs a pointer to the number of levels
+           \param levels a pointer to an array of vertical levels returned
+           \param q a reference to a string that will hold the vertical coordinate quantity
+           \param u a reference to a string that will hold the units of the vertical coordinate quantity
+       */
+       void query_vgrid( const VGridSpec& qvgrid, int* nlevs, real** levels, std::string& q, std::string& u  ) const;
 
 
 };
