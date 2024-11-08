@@ -44,7 +44,7 @@ int main()
     std::vector<real> ozs, xzs;
     std::vector<real> odata, xdata;
     int i, j, idx;
-    int n1, n2;
+    int n1, n2, nn;
     real val, val2, val0;
     int ival, ival2;
     double tyme;
@@ -57,6 +57,7 @@ int main()
     std::ifstream *infile;
     GridFieldDimLon *arr;
     real area;
+    int ok;
     
     odata.reserve(72);
     for (i=0; i<72; i++ ) {
@@ -484,8 +485,107 @@ int main()
     }
 
 
-// add tests for decreasing longitudfes
-// add tests for non-wrapping longitudes
+    //-----------  now tests with decreasing longitudfes
+    odata.clear();
+    for (i=0; i<72; i++ ) {
+       odata.push_back( i*5.0 );
+    }
+    grid.load( odata );
+    if ( grid.match(grid2) ) {
+       cerr << " reversed grid matches grid " << endl;
+       exit(1);    
+    }
+    
+    // =========================  method index
+    // test indexing functions
+    val = odata[9]+0.5;
+    grid.index( val, &ival, &ival2 ) ;
+    if ( ival != 9 || ival2 != 10) {
+        cerr << " rev zindex " << val << " -> (9,10) failed:  " << ival << ", " << ival2 << endl;
+        exit(1);    
+    }
+    val = odata[71];
+    grid.index( val, &ival, &ival2 ) ;
+    if ( ival != 70 || ival2 != 71 ) {
+        cerr << " rev zindex " << val << " -> (70,71) failed:  " << ival << ", " << ival2 << endl;
+        exit(1);    
+    }
+    val = 0.0;
+    grid.index( val, &ival, &ival2 ) ;
+    if ( ival != 0 || ival2 != 1 ) {
+        cerr << " rev zindex " << val << " -> (0,1) failed:  " << ival << ", " << ival2 << endl;
+        exit(1);    
+    }
+    val = odata[71] + 0.5;
+    grid.index( val, &ival, &ival2 ) ;
+    if ( ival != 71 || ival2 != 72 ) {
+        cerr << " rev zindex " << val << " -> (71,72) failed:  " << ival << ", " << ival2 << endl;
+        exit(1);    
+    }
+    val = 0.0 - 0.1;
+    grid.index( val, &ival, &ival2 ) ;
+    if ( ival != n1-1 || ival2 != n1 ) {
+        cerr << " rev zindex " << val << " -> (71,72) failed:  " << ival << ", " << ival2 << endl;
+        exit(1);    
+    }
+    
+    
+    
+   //--------- add tests for non-wrapping longitudes
+    odata.clear();
+    for (i=10; i<35; i++ ) {
+       odata.push_back( i*5.0 );
+    }
+    grid.load( odata );
+    if ( grid.match(grid2) ) {
+       cerr << " non-wrapping grid matches grid " << endl;
+       exit(1);    
+    }
+    nn = odata.size();
+    
+    // =========================  method index
+    // test indexing functions
+    val = odata[9]+0.5;
+    grid.index( val, &ival, &ival2 ) ;
+    if ( ival != 9 || ival2 != 10) {
+        cerr << " non-wrapping zindex " << val << " -> (9,10) failed:  " << ival << ", " << ival2 << endl;
+        exit(1);    
+    }
+    val = odata[nn - 1];
+    grid.index( val, &ival, &ival2 ) ;
+    if ( ival != nn-2 || ival2 != nn-1 ) {
+        cerr << " non-wrapping  zindex " << val << " -> (" << nn-2 << "," << nn-1 << ") failed:  " << ival << ", " << ival2 << endl;
+        exit(1);    
+    }
+    val = odata[0];
+    grid.index( val, &ival, &ival2 ) ;
+    if ( ival != 0 || ival2 != 1 ) {
+        cerr << " non-wrapping  zindex " << val << " -> (0,1) failed:  " << ival << ", " << ival2 << endl;
+        exit(1);    
+    }
+    ok = 0;
+    val = odata[nn-1] + 0.5;
+    try {
+        grid.index( val, &ival, &ival2 ) ;
+    } catch (...) {
+       ok = 1;
+    } 
+    if ( ok != 1 ) {
+        cerr << " non-wrapping  zindex beyong range should have failed " << endl;
+        exit(1);    
+    }
+    ok = 0;
+    val = 0.0 - 0.1;
+    try {
+        grid.index( val, &ival, &ival2 ) ;
+    } catch (...) {
+       ok = 1;
+    } 
+    if ( ok != 1 ) {
+        cerr << " non-wrapping  zindex before range should have failed " << endl;
+        exit(1);    
+    }
+
 
        
     // =========================  method setPgroup (deferred to test_GridFieldDimLon_serial,test_GridFieldDimLon_MPI) 
