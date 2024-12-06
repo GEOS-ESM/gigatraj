@@ -108,11 +108,11 @@ MetGEOSDistributedCubedData::MetGEOSDistributedCubedData(
   v1->set_vertical("air_pressure");
   v1->set_time(time,ctime);
   w0->set_quantity("OMEGA");
-  w0->set_units("hPa/s");
+  w0->set_units("Pa/s");
   w0->set_vertical("air_pressure");
   w0->set_time(time,ctime);
   w1->set_quantity("OMEGA");
-  w1->set_units("hPa/s");
+  w1->set_units("Pa/s");
   w1->set_vertical("air_pressure");
   w1->set_time(time,ctime);
 
@@ -520,13 +520,13 @@ void MetGEOSDistributedCubedData :: updateField( char* ctime, float* u, float* v
    raw_v->load(xlons, xlats, xlevs,vdata);
 
    raw_w->set_quantity("OMEGA");
-   raw_w->set_units("hPa/s");
+   raw_w->set_units("Pa/s");
    raw_w->set_vertical("air_pressure");
    raw_w->set_time(time,ctime);
    raw_w->load(xlons, xlats, xlevs, wdata);
 
    raw_p->set_quantity("air_pressure");
-   raw_p->set_units("hPa");
+   raw_p->set_units("Pa");
    raw_p->set_vertical("air_pressure");
    raw_p->set_time(time,ctime);
    raw_p->load(xlons, xlats, xlevs, pdata);

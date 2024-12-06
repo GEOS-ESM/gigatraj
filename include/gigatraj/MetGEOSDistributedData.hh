@@ -47,7 +47,8 @@ class MetGEOSDistributedData {
 
       Vinterp *vin;
       HLatLonInterp *hin;
-      float wfctr = 0.01; //  omega get scaled from Pa/s to hPa/s
+      //float wfctr = 0.01; //  omega get scaled from Pa/s to hPa/s
+      float wfctr = 1.0;    //  no scale
       std::vector<float> npz;
       std::vector<float> xlats;
       std::vector<float> xlons;
