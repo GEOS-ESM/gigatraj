@@ -12,24 +12,19 @@ GridField.cc              MetGEOSfpFcast.cc     PAltOTF.cc
 GridFieldSfc.cc           MetGEOSPortal.cc      PressOTF.cc
 GridLatLonField3D.cc      MetGridData.cc        ThetaDotOTF.cc
 GridLatLonFieldSfc.cc     MetGridLatLonData.cc  ThetaOTF.cc
-GridCubedSphereField3D.cc 
+GridCubedSphereField3D.cc
 GridCubedSphereFieldSfc.cc
 Hinterp.cc                MetGridSBRot.cc       TropOTF.cc
 LinearVinterp.cc          MetMERRA2.cc          Vinterp.cc
 MetGEOSDistributedData.cc
 MetGEOSDistributedLatLonData.cc
 MetGEOSDistributedCubedData.cc
-) 
+)
 
-set (BASEDIR $ENV{BASEDIR})
 esma_add_library (${this}
     SRCS  ${srcs}
     )
 
-include_directories(${BASEDIR}/Linux/include/netcdf ${GIGATRAJ_SOURCE_DIR}/include)
-
-#target_include_directories (${this} PUBLIC
-#  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-#  $<BUILD_INTERFACE:${GIGATRAJ_SOURCE_DIR}/include>
-#  $<BUILD_INTERFACE:${BASEDIR}/Linux/include/netcdf>)
-target_link_libraries(${this}  MPI::MPI_CXX)
+target_link_libraries (${this} PUBLIC NetCDF::NetCDF_C)
+target_include_directories (${this} PRIVATE ${GIGATRAJ_SOURCE_DIR}/include)
+target_link_libraries(${this} PUBLIC MPI::MPI_CXX)
