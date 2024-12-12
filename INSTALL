@@ -39,7 +39,7 @@ Once you are satisfied that gigatraj is working (i.e., it passes its test suite)
 then you can install it with:
    make install
 
-
+(See also the doc/building_gigatraj.txt) file.
 
 What follows in the standard GNU Autotools installation description of how
 to build a software package with their system:

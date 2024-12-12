@@ -1,0 +1,37 @@
+To get the gigatraj source code, you will need git installed. 
+Use the command:
+         git clone https://github.com/nasa/gigatraj  ./gigatraj
+Then
+        cd ./gigatraj/
+   ./configure --help
+to see the options.
+You would probably want these, at least to start:
+       ./configure --prefix=$HOME/root  --with-netcdf --enable-allmet
+
+The "prefix" option says where to install the software once it is built. Use whatever is convenient for you here. If you omit this, then it tries to install under /usr/local/.
+
+The other options enable the modules you will need to do useful things.
+If your system has no netcdf library (or puts the netcdf files in unusual places), then this configure script will fail. But there are ways to work around that.
+
+The netcdf library, by the way, needs to be the netcdf4 for C (not C++), with OPeNDAP support enabled (so you will need the HDF5 libraries as well).
+
+If you want to use multiprocessing, then add the “--with-mpi” option. Again, if the configure script cannot find the MPI libraries, it will fail. And again, use the options to to work around that.
+
+By default, the configure script uses whatever C++ compiler it finds. If you need to force is issue, then (in the Bash shell) you can prepend the configure command with a CXX definitions, as in :
+    CXX=your_compiler_here ./configure 
+    
+You should probably not try to use this if you are using OpenMPI, which really , really wants you to use mpicc and mpicxx as its C and C++ compilers, respectively. The configure script should handle this correctly.
+
+If you have doxygen installed (along with LaTeX and other tools), you can build the documentation by adding "--enable-doxygen". If not, then the build system will unpack and install a tar file of pre-generated documentation.
+ 
+Once the configure script has run successfully, run these commands:
+   make
+   make check
+The first builds the software, and the second runs a series of self-tests to verify that it works properly.
+To install it, run
+   make install
+ 
+You can access the documentation by pointing a web browser at the file  share/doc/gigatraj/html/index.html under the "prefix" directory. Note that since gigatraj is actually a library toolkit meant to be used in user-constructed models, most of the docs are about various modules. But there is also information about the standalone sample programs that are included with the package. There are three such programs that you will find useful:
+   * gtmodel_s01 : a "simple" trajectory model with lots and lots of command-line options.
+   * gt_fill_met_cache : runs through a list of dates, pulling data from a met data source and creating cache files from them.
+   * gt_generate_parcels: creates file of initial parcel locations for the gtmodel_s01 program to read in. Gigatraj is *very* flexible in the formats it can read in; this parcel-generation program aims to make it easy to create disks, boxes, etc., of parcel distributions.
