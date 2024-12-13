@@ -110,7 +110,11 @@ void test_Field3D( GridLatLonField3D * field3d) {
 */
 void RK4_advance( MetGEOSDistributedData *metSrc, char* ctime, double dt, int n, float* lons, float* lats, float* levs){
 
-  int flags[n]={0};
+  int flags[n];
+  for (int i = 0; i<n; i++) {
+     flags[i] = 0;
+  }
+
   double time = metSrc->cal2Time(ctime);
   RK4.go(n, lons, lats, levs, flags, time, metSrc, &e, dt); 
 

@@ -12,6 +12,7 @@
 #include <iomanip>
 #include "math.h"
 #include "mpi.h"
+#include "string.h"
 #include "gigatraj/BilinearHinterp.hh"
 #include "gigatraj/LinearVinterp.hh"
 #include "gigatraj/GridCubedSphereField3D.hh"
@@ -160,8 +161,8 @@ void MetGEOSDistributedCubedData::get_uvw( double time, real lon, real lat, real
 
 void MetGEOSDistributedCubedData::get_uvw( double time, int n, float* lons, float* lats, float* zs, float *u, float *v, float *w){
   //double pi = 3.1415926535;
-  int II[n]{};
-  int JJ[n]{};
+  int II[n];
+  int JJ[n];
   int i0,j0;
   for (int i=0; i<n; i++){
     u0->latlonindex(lats[i], lons[i], i0, j0);
@@ -171,13 +172,15 @@ void MetGEOSDistributedCubedData::get_uvw( double time, int n, float* lons, floa
     JJ[i] = j0;
   }  
 
-  int Ranks[n] {};
+  int Ranks[n];
   for (int i=0; i<n; i++){
     Ranks[i] = CellToRank[JJ[i]][II[i]];
   }
 
-  int counts_send[npes] = {0};
-  int counts_recv[npes] = {0};
+  int counts_send[npes];
+  int counts_recv[npes];
+  memset(counts_send, 0, npes*sizeof(int));
+  memset(counts_recv, 0, npes*sizeof(int));
 
   for (int i=0; i<n; i++){
     counts_send[Ranks[i]]++;
@@ -190,24 +193,27 @@ void MetGEOSDistributedCubedData::get_uvw( double time, int n, float* lons, floa
     new_num+=counts_recv[rank];
   }
 
-  int disp_send[npes] = {0};
-  int disp_recv[npes] = {0};
+  int disp_send[npes];
+  int disp_recv[npes];
+  memset(disp_send, 0, npes*sizeof(int));
+  memset(disp_recv, 0, npes*sizeof(int));
+
 
   for (int rank = 1; rank<npes; rank++){
     disp_send[rank] = disp_send[rank-1]+ counts_send[rank-1];
     disp_recv[rank] = disp_recv[rank-1]+ counts_recv[rank-1]; 
   }
 
-  float lons_send[n] = {0.0};
-  float lats_send[n] = {0.0};
-  float levs_send[n] = {0.0};
+  float lons_send[n];
+  float lats_send[n];
+  float levs_send[n];
 
   int tmp_position[npes];
   for (int i =0; i<npes; i++){
      tmp_position[i]= disp_send[i];
   }
 
-  int pos[n] {};
+  int pos[n];
   int rank;
   for (int i =0; i<n;i++){
     rank = Ranks[i];
@@ -233,15 +239,27 @@ void MetGEOSDistributedCubedData::get_uvw( double time, int n, float* lons, floa
     std::cerr << "time t1: " << t1 << "time: " << time << " time t2: " << t2 << std::endl;
     std::cerr << "lon:lat:P: " << new_lons[0]<< ": " << new_lats[0] << ": " << new_levs[0] << std::endl;
   }
-  real lonvals [new_num] = {0.0};
-  real latvals [new_num] = {0.0};
-  real  wvals  [new_num] = {0.0};
-  real lonvals1[new_num] = {0.0};
-  real latvals1[new_num] = {0.0};
-  real wvals1  [new_num] = {0.0};
-  real lonvals2[new_num] = {0.0};
-  real latvals2[new_num] = {0.0};
-  real wvals2  [new_num] = {0.0};
+  real lonvals [new_num];
+  real latvals [new_num];
+  real  wvals  [new_num];
+  real lonvals1[new_num];
+  real latvals1[new_num];
+  real wvals1  [new_num];
+  real lonvals2[new_num];
+  real latvals2[new_num];
+  real wvals2  [new_num];
+
+  memset( lonvals, 0.0, new_num*sizeof(real));
+  memset( latvals, 0.0, new_num*sizeof(real));
+  memset(   wvals, 0.0, new_num*sizeof(real));
+  memset(lonvals1, 0.0, new_num*sizeof(real));
+  memset(latvals1, 0.0, new_num*sizeof(real));
+  memset(  wvals1, 0.0, new_num*sizeof(real));
+  memset(lonvals2, 0.0, new_num*sizeof(real));
+  memset(latvals2, 0.0, new_num*sizeof(real));
+  memset(  wvals2, 0.0, new_num*sizeof(real));
+
+
   hin->vinterpVector( new_num, new_lons, new_lats, new_levs, lonvals1, latvals1, *u0, *v0, *vin );
   hin->vinterp      ( new_num, new_lons, new_lats, new_levs, wvals1, *w0, *vin );
   if( new_num >=1){
@@ -293,9 +311,9 @@ void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, 
    std::cerr <<"time diff: " << other->time() << " !=" << time << std::endl;
   }
 
-  int Ranks[n] {};
-  int II[n]{};
-  int JJ[n]{};
+  int Ranks[n];
+  int II[n];
+  int JJ[n];
   int i0,j0;
   for (int i=0; i<n; i++){
     u0->latlonindex(lats[i], lons[i], i0,j0);
@@ -309,8 +327,10 @@ void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, 
     Ranks[i] = CellToRank[JJ[i]][II[i]];
   }
 
-  int counts_send[npes] = {0};
-  int counts_recv[npes] = {0};
+  int counts_send[npes];
+  int counts_recv[npes];
+  memset(counts_send, 0, npes*sizeof(int));
+  memset(counts_recv, 0, npes*sizeof(int));
 
   for (int i=0; i<n; i++){
     counts_send[Ranks[i]]++;
@@ -323,24 +343,26 @@ void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, 
     new_num+=counts_recv[rank];
   }
 
-  int disp_send[npes] = {0};
-  int disp_recv[npes] = {0};
+  int disp_send[npes];
+  int disp_recv[npes];
+  memset(disp_send, 0, npes*sizeof(int));
+  memset(disp_recv, 0, npes*sizeof(int));
 
   for (int rank = 1; rank<npes; rank++){
     disp_send[rank] = disp_send[rank-1]+ counts_send[rank-1];
     disp_recv[rank] = disp_recv[rank-1]+ counts_recv[rank-1]; 
   }
 
-  float lons_send[n] = {0.0};
-  float lats_send[n] = {0.0};
-  float levs_send[n] = {0.0};
+  float lons_send[n] ;
+  float lats_send[n] ;
+  float levs_send[n] ;
 
   int tmp_position[npes];
   for (int i =0; i<npes; i++){
      tmp_position[i]= disp_send[i];
   }
 
-  int pos[n] {};
+  int pos[n];
   int rank;
   for (int i =0; i<n;i++){
     rank = Ranks[i];
@@ -362,7 +384,7 @@ void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, 
   // At this point, the particles are distributed 
 
   
-  real  wvals  [new_num] = {0.0};
+  real  wvals  [new_num] ;
 
   hin->vinterp ( new_num, new_lons, new_lats, new_levs, wvals, *other, *vin );
        
@@ -388,9 +410,9 @@ void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, 
    std::cerr <<"time diff: " << gridSfc->time() << " !=" << time << std::endl;
   } 
 
-  int Ranks[n] {};
-  int II[n]{};
-  int JJ[n]{};
+  int Ranks[n];
+  int II[n];
+  int JJ[n];
   int i0,j0;
   for (int i=0; i<n; i++){
     gridSfc->latlonindex(lats[i], lons[i], i0,j0);
@@ -404,8 +426,10 @@ void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, 
     Ranks[i] = CellToRank[JJ[i]][II[i]];
   }
 
-  int counts_send[npes] = {0};
-  int counts_recv[npes] = {0};
+  int counts_send[npes];
+  int counts_recv[npes];
+  memset(counts_send, 0, npes*sizeof(int));
+  memset(counts_recv, 0, npes*sizeof(int));
 
   for (int i=0; i<n; i++){
     counts_send[Ranks[i]]++;
@@ -418,23 +442,25 @@ void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, 
     new_num+=counts_recv[rank];
   }
 
-  int disp_send[npes] = {0};
-  int disp_recv[npes] = {0};
+  int disp_send[npes];
+  int disp_recv[npes];
+  memset(disp_send, 0, npes*sizeof(int));
+  memset(disp_recv, 0, npes*sizeof(int));
 
   for (int rank = 1; rank<npes; rank++){
     disp_send[rank] = disp_send[rank-1]+ counts_send[rank-1];
     disp_recv[rank] = disp_recv[rank-1]+ counts_recv[rank-1]; 
   }
 
-  float lons_send[n] = {0.0};
-  float lats_send[n] = {0.0};
+  float lons_send[n];
+  float lats_send[n];
 
   int tmp_position[npes];
   for (int i =0; i<npes; i++){
      tmp_position[i]= disp_send[i];
   }
 
-  int pos[n] {};
+  int pos[n];
   int rank;
   for (int i =0; i<n;i++){
     rank = Ranks[i];
@@ -452,7 +478,7 @@ void MetGEOSDistributedCubedData::getData( string quantity, double time, int n, 
 
   // At this point, the particles are distributed 
   
-  real  wvals  [new_num] = {0.0};
+  real  wvals  [new_num];
   std::vector<real> lons_vec (new_lons, new_lons+new_num);
   std::vector<real> lats_vec (new_lats, new_lats+new_num);
 

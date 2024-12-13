@@ -23,7 +23,7 @@
 #include <sstream>
 
 
-extern int optind;
+extern int giga_optind; // rename to avoid conflict. Weiyuan
 
 using namespace gigatraj;
 
@@ -526,7 +526,7 @@ void Configuration::setupGetopts( GoInfo &go ) {
 
     // reset the getops option index counter
     // (extern declared at the top of this file)
-    optind = 1;
+    giga_optind = 1;
 
 
 }
@@ -943,7 +943,7 @@ int Configuration::loadCmdLine(int argc, char * const argv[] )
        }
     }
     
-    pcount = optind;
+    pcount = giga_optind;
     if ( pcount > argc ) {
        pcount = -1;
     }
